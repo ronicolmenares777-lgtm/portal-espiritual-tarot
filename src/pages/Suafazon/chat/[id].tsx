@@ -49,6 +49,7 @@ export default function ChatView() {
       id: Date.now().toString(),
       text: text.trim(),
       isFromMaestro: true,
+      isUser: false,
       timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
     };
     
