@@ -6,6 +6,31 @@ interface CardSelectionProps {
   onCardSelected?: () => void;
 }
 
+// Arcanos Mayores relacionados con el amor
+const tarotCards = [
+  {
+    id: 0,
+    name: "THE LOVERS",
+    number: "VI",
+    image: "https://images.unsplash.com/photo-1614625383606-c4d7a5d9c2d9?w=400&h=600&fit=crop",
+    meaning: "Unión divina"
+  },
+  {
+    id: 1,
+    name: "THE STAR",
+    number: "XVII",
+    image: "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=400&h=600&fit=crop",
+    meaning: "Esperanza renovada"
+  },
+  {
+    id: 2,
+    name: "THE SUN",
+    number: "XIX",
+    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=600&fit=crop",
+    meaning: "Alegría radiante"
+  }
+];
+
 export function CardSelection({ onCardSelected }: CardSelectionProps) {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
@@ -26,15 +51,15 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
             REVELA TU DESTINO
           </h2>
           <p className="text-sm text-gold/70 tracking-[0.15em] uppercase animate-in fade-in duration-700 delay-300">
-            Los ángeles guardianes te guían hacia el reencuentro
+            El cosmos ha hablado a través de tu intención sagrada
           </p>
         </div>
 
         {/* Cartas */}
         <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
-          {[0, 1, 2].map((index) => (
+          {tarotCards.map((card, index) => (
             <button
-              key={index}
+              key={card.id}
               onClick={() => handleCardClick(index)}
               onMouseEnter={() => setHoveredCard(index)}
               onMouseLeave={() => setHoveredCard(null)}
@@ -59,139 +84,157 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
                     : "0 10px 40px rgba(0, 0, 0, 0.5)",
                 }}
               >
-                {/* Card Back - Reverso angelical */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/95 via-purple-900/95 to-pink-900/90">
-                  {/* Fondo celestial */}
-                  <div className="absolute inset-0 opacity-30">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_50%)]" />
-                  </div>
+                {/* Card Back - Diseño místico mejorado */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-black">
+                  {/* Textura de fondo */}
+                  <div 
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                    }}
+                  />
                   
-                  {/* Marco dorado ornamentado */}
-                  <div className="absolute inset-3 border-2 border-gold/40 rounded-xl">
-                    <div className="absolute inset-2 border border-gold/20 rounded-lg" />
-                  </div>
+                  {/* Diseño central místico */}
+                  <div className="absolute inset-0 flex items-center justify-center p-6">
+                    <svg viewBox="0 0 200 280" className="w-full h-full">
+                      {/* Marco ornamental */}
+                      <rect
+                        x="15"
+                        y="15"
+                        width="170"
+                        height="250"
+                        fill="none"
+                        stroke="url(#goldGradient)"
+                        strokeWidth="2"
+                        rx="8"
+                      />
+                      <rect
+                        x="20"
+                        y="20"
+                        width="160"
+                        height="240"
+                        fill="none"
+                        stroke="url(#goldGradient)"
+                        strokeWidth="1"
+                        opacity="0.5"
+                        rx="6"
+                      />
 
-                  {/* Símbolos angelicales en el centro */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg viewBox="0 0 200 300" className="w-full h-full p-12 opacity-90">
-                      {/* Alas angelicales */}
-                      <g className="animate-pulse-glow">
-                        {/* Ala izquierda */}
-                        <path
-                          d="M70 100 Q40 90 30 110 Q35 130 70 120 Z"
+                      {/* Pentagrama central */}
+                      <g transform="translate(100, 100)">
+                        <circle
+                          r="45"
                           fill="none"
-                          stroke="hsl(var(--gold))"
+                          stroke="url(#goldGradient)"
                           strokeWidth="1.5"
                           opacity="0.7"
                         />
                         <path
-                          d="M65 110 Q35 105 28 125 Q33 140 65 130 Z"
+                          d="M0,-45 L13,-14 L43,-14 L18,7 L29,38 L0,17 L-29,38 L-18,7 L-43,-14 L-13,-14 Z"
                           fill="none"
-                          stroke="hsl(var(--gold))"
-                          strokeWidth="1.5"
-                          opacity="0.6"
-                        />
-                        
-                        {/* Ala derecha */}
-                        <path
-                          d="M130 100 Q160 90 170 110 Q165 130 130 120 Z"
-                          fill="none"
-                          stroke="hsl(var(--gold))"
-                          strokeWidth="1.5"
-                          opacity="0.7"
-                        />
-                        <path
-                          d="M135 110 Q165 105 172 125 Q167 140 135 130 Z"
-                          fill="none"
-                          stroke="hsl(var(--gold))"
-                          strokeWidth="1.5"
-                          opacity="0.6"
+                          stroke="url(#goldGradient)"
+                          strokeWidth="2"
+                          className="animate-pulse-glow"
                         />
                       </g>
 
-                      {/* Corazón celestial en el centro */}
+                      {/* Luna creciente superior */}
                       <path
-                        d="M100 140 L85 125 Q80 115 90 110 Q100 115 100 115 Q100 115 110 110 Q120 115 115 125 Z"
-                        fill="hsl(var(--gold))"
-                        opacity="0.5"
-                        className="animate-pulse-glow"
-                        style={{ animationDelay: "0.5s" }}
+                        d="M100 35 Q95 45 100 55 Q105 45 100 35 M100 38 Q103 45 100 52"
+                        fill="url(#goldGradient)"
+                        opacity="0.8"
                       />
 
-                      {/* Halo */}
-                      <ellipse
-                        cx="100"
-                        cy="80"
-                        rx="30"
-                        ry="8"
-                        fill="none"
-                        stroke="hsl(var(--gold))"
-                        strokeWidth="2"
-                        opacity="0.6"
-                        className="animate-pulse-glow"
-                      />
+                      {/* Sol inferior */}
+                      <circle cx="100" cy="240" r="8" fill="url(#goldGradient)" opacity="0.8" />
+                      {[...Array(8)].map((_, i) => (
+                        <line
+                          key={i}
+                          x1="100"
+                          y1="240"
+                          x2={100 + Math.cos((i * Math.PI) / 4) * 15}
+                          y2={240 + Math.sin((i * Math.PI) / 4) * 15}
+                          stroke="url(#goldGradient)"
+                          strokeWidth="1.5"
+                          opacity="0.6"
+                        />
+                      ))}
 
-                      {/* Estrellas divinas */}
+                      {/* Estrellas decorativas */}
                       {[
-                        [50, 60], [150, 60], [40, 150], [160, 150],
-                        [100, 50], [70, 180], [130, 180]
+                        [40, 60], [160, 60], [40, 220], [160, 220],
+                        [30, 140], [170, 140]
                       ].map(([x, y], i) => (
                         <g key={i}>
                           <circle
                             cx={x}
                             cy={y}
                             r="2"
-                            fill="hsl(var(--gold))"
-                            opacity="0.8"
+                            fill="url(#goldGradient)"
                             className="animate-pulse-glow"
-                            style={{ animationDelay: `${i * 0.2}s` }}
+                            style={{ animationDelay: `${i * 0.3}s` }}
                           />
-                          <line
-                            x1={x}
-                            y1={y - 5}
-                            x2={x}
-                            y2={y + 5}
-                            stroke="hsl(var(--gold))"
+                          <path
+                            d={`M${x},${y-4} L${x},${y+4} M${x-4},${y} L${x+4},${y}`}
+                            stroke="url(#goldGradient)"
                             strokeWidth="0.5"
-                            opacity="0.5"
-                          />
-                          <line
-                            x1={x - 5}
-                            y1={y}
-                            x2={x + 5}
-                            y2={y}
-                            stroke="hsl(var(--gold))"
-                            strokeWidth="0.5"
-                            opacity="0.5"
+                            opacity="0.6"
                           />
                         </g>
                       ))}
+
+                      {/* Texto místico */}
+                      <text
+                        x="100"
+                        y="180"
+                        textAnchor="middle"
+                        fill="url(#goldGradient)"
+                        fontSize="12"
+                        fontFamily="serif"
+                        letterSpacing="3"
+                        opacity="0.7"
+                      >
+                        ARCANA
+                      </text>
+
+                      {/* Gradientes */}
+                      <defs>
+                        <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="hsl(var(--gold))" />
+                          <stop offset="50%" stopColor="hsl(var(--primary))" />
+                          <stop offset="100%" stopColor="hsl(var(--gold))" />
+                        </linearGradient>
+                      </defs>
                     </svg>
                   </div>
 
-                  {/* Texto místico */}
-                  <div className="absolute bottom-8 left-0 right-0 text-center">
-                    <p className="text-gold/60 text-xs tracking-[0.3em] font-serif">ÁNGELES</p>
-                  </div>
+                  {/* Borde ornamental */}
+                  <div className="absolute inset-0 border-4 border-gold/20 rounded-2xl" />
+                  <div className="absolute inset-2 border border-gold/10 rounded-xl" />
                 </div>
 
                 {/* Glow effect on hover */}
                 {hoveredCard === index && (
-                  <div className="absolute inset-0 bg-gold/10 animate-pulse-glow" />
+                  <>
+                    <div className="absolute inset-0 bg-gold/10 animate-pulse-glow" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-gold/20 via-transparent to-gold/20" />
+                  </>
                 )}
               </div>
 
-              {/* Card number indicator */}
-              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-gold/60 text-sm tracking-widest">
-                CARTA {index + 1}
+              {/* Card meaning indicator */}
+              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
+                <p className="text-gold/60 text-xs tracking-widest uppercase">
+                  {hoveredCard === index ? card.meaning : `ARCANO ${card.number}`}
+                </p>
               </div>
             </button>
           ))}
         </div>
 
         {/* Instrucción */}
-        <p className="text-center text-sm text-muted-foreground/80 tracking-wider animate-in fade-in duration-700 delay-700">
-          Elige la carta que los ángeles te revelan
+        <p className="text-center text-sm text-muted-foreground/80 tracking-wider animate-in fade-in duration-700 delay-700 mt-12">
+          Elige la carta que resuene con la energía de tu corazón
         </p>
       </div>
     </div>

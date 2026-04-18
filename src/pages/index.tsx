@@ -10,6 +10,7 @@ import { ChatMaestro } from "@/components/ChatMaestro";
 import { SEO } from "@/components/SEO";
 import { phoneValidation } from "@/lib/config";
 import { useState } from "react";
+import { Sparkles, Moon, Star } from "lucide-react";
 
 type Screen = 
   | "form" 
@@ -47,7 +48,6 @@ export default function Home() {
   };
 
   const handlePhoneChange = (value: string) => {
-    // Solo permitir números
     const cleaned = value.replace(/[^0-9]/g, "");
     setFormData({ ...formData, whatsapp: cleaned });
     
@@ -100,31 +100,102 @@ export default function Home() {
     switch (currentScreen) {
       case "form":
         return (
-          <main className="min-h-screen flex items-center justify-center p-4 relative">
+          <main className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Background místico mejorado */}
+            <div className="absolute inset-0 bg-gradient-to-b from-background via-purple-950/20 to-background" />
+            
+            {/* Elementos decorativos de fondo */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {/* Círculos místicos */}
+              <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDuration: "4s" }} />
+              <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDuration: "5s", animationDelay: "1s" }} />
+              
+              {/* Constelación de fondo */}
+              <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 1000 1000">
+                {/* Líneas de constelación */}
+                <path d="M200,300 L300,250 L400,300 L350,400" stroke="hsl(var(--gold))" strokeWidth="0.5" fill="none" opacity="0.3" />
+                <path d="M600,200 L700,250 L650,350" stroke="hsl(var(--gold))" strokeWidth="0.5" fill="none" opacity="0.3" />
+                <path d="M150,600 L250,650 L200,750" stroke="hsl(var(--gold))" strokeWidth="0.5" fill="none" opacity="0.3" />
+                <path d="M700,600 L800,550 L850,650" stroke="hsl(var(--gold))" strokeWidth="0.5" fill="none" opacity="0.3" />
+                
+                {/* Estrellas en las constelaciones */}
+                {[
+                  [200,300], [300,250], [400,300], [350,400],
+                  [600,200], [700,250], [650,350],
+                  [150,600], [250,650], [200,750],
+                  [700,600], [800,550], [850,650]
+                ].map(([cx, cy], i) => (
+                  <g key={i}>
+                    <circle 
+                      cx={cx} 
+                      cy={cy} 
+                      r="2" 
+                      fill="hsl(var(--gold))" 
+                      className="animate-pulse-glow"
+                      style={{ animationDelay: `${i * 0.3}s` }}
+                    />
+                    <circle 
+                      cx={cx} 
+                      cy={cy} 
+                      r="4" 
+                      fill="none" 
+                      stroke="hsl(var(--gold))" 
+                      strokeWidth="0.5"
+                      opacity="0.3"
+                    />
+                  </g>
+                ))}
+              </svg>
+            </div>
+
             <div className="max-w-md w-full space-y-8 relative z-10">
-              {/* Título principal */}
-              <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                <h1 className="text-5xl md:text-6xl font-serif font-bold text-gold tracking-wider">
-                  TU CAMINO
-                  <br />
-                  COMIENZA...
-                </h1>
-                <p className="text-sm text-muted-foreground tracking-widest uppercase">
-                  Explícanos brevemente qué revelación buscas hoy
+              {/* Símbolo místico superior */}
+              <div className="flex justify-center mb-4 animate-in fade-in duration-1000">
+                <div className="relative">
+                  <Star className="w-12 h-12 text-gold animate-pulse-glow" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-gold/60 animate-spin" style={{ animationDuration: "8s" }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Título principal mejorado */}
+              <div className="text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                <div className="space-y-2">
+                  <h1 className="text-5xl md:text-6xl font-serif font-bold text-gold tracking-[0.15em] leading-tight">
+                    TU CAMINO
+                    <br />
+                    COMIENZA
+                  </h1>
+                  
+                  {/* Línea decorativa */}
+                  <div className="flex items-center justify-center gap-3 mt-4">
+                    <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold/50" />
+                    <Moon className="w-4 h-4 text-gold/70" />
+                    <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold/50" />
+                  </div>
+                </div>
+                
+                <p className="text-sm text-gold/70 tracking-[0.2em] uppercase font-light max-w-xs mx-auto leading-relaxed">
+                  Los arcanos revelan el camino hacia el amor verdadero
                 </p>
               </div>
 
-              {/* Formulario */}
+              {/* Formulario mejorado */}
               <form 
                 onSubmit={handleFormSubmit}
-                className="bg-card border border-purple-border rounded-2xl p-8 space-y-6 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300"
+                className="relative backdrop-blur-md bg-card/40 border border-gold/20 rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300"
                 style={{
-                  boxShadow: "0 0 40px hsl(var(--purple-border) / 0.3)",
+                  boxShadow: "0 0 60px hsl(var(--purple-border) / 0.2), inset 0 0 40px hsl(var(--card) / 0.5)",
                 }}
               >
+                {/* Brillo sutil en el borde */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gold/5 via-transparent to-purple-500/5 pointer-events-none" />
+                
                 {/* Campo Nombre */}
-                <div className="space-y-2">
-                  <label className="text-xs text-gold tracking-widest uppercase font-medium">
+                <div className="space-y-2 relative">
+                  <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
+                    <Sparkles className="w-3 h-3" />
                     Nombre Sagrado
                   </label>
                   <input
@@ -133,20 +204,21 @@ export default function Home() {
                     value={formData.nombre}
                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                     placeholder="Ej. María Sánchez"
-                    className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
+                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
                   />
                 </div>
 
                 {/* Campo WhatsApp */}
-                <div className="space-y-2">
-                  <label className="text-xs text-gold tracking-widest uppercase font-medium">
-                    Vínculo de Comunicación (WhatsApp)
+                <div className="space-y-2 relative">
+                  <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
+                    <Moon className="w-3 h-3" />
+                    Vínculo de Comunicación
                   </label>
                   <div className="flex gap-2">
                     <select 
                       value={formData.countryCode}
                       onChange={(e) => handleCountryChange(e.target.value)}
-                      className="bg-muted border border-border rounded-lg px-3 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50"
+                      className="bg-muted/50 border border-gold/20 rounded-lg px-3 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 backdrop-blur-sm"
                     >
                       <option value="+1">🇺🇸 +1</option>
                       <option value="+52">🇲🇽 +52</option>
@@ -163,53 +235,56 @@ export default function Home() {
                         onChange={(e) => handlePhoneChange(e.target.value)}
                         placeholder={phoneValidation[formData.countryCode]?.placeholder || "1234567890"}
                         maxLength={phoneValidation[formData.countryCode]?.digits || 15}
-                        className={`w-full bg-muted border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all ${
+                        className={`w-full bg-muted/50 border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all backdrop-blur-sm ${
                           phoneError 
                             ? "border-red-500 focus:ring-red-500/50" 
-                            : "border-border focus:ring-gold/50"
+                            : "border-gold/20 focus:ring-gold/50 focus:border-gold/50"
                         }`}
                       />
                       {phoneError && (
-                        <p className="text-xs text-red-400 mt-1">{phoneError}</p>
+                        <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                          <span className="w-1 h-1 bg-red-400 rounded-full" />
+                          {phoneError}
+                        </p>
                       )}
                     </div>
                   </div>
                 </div>
 
                 {/* Campo Problema */}
-                <div className="space-y-2">
-                  <label className="text-xs text-gold tracking-widest uppercase font-medium">
-                    ¿Qué te aflige el alma?
+                <div className="space-y-2 relative">
+                  <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
+                    <Star className="w-3 h-3" />
+                    ¿Qué te guía hasta aquí?
                   </label>
                   <textarea
                     rows={4}
                     required
                     value={formData.problema}
                     onChange={(e) => setFormData({ ...formData, problema: e.target.value })}
-                    placeholder="Ej. El regreso de mi ser amado..."
-                    className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all resize-none"
+                    placeholder="Comparte tu intención con el cosmos..."
+                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none backdrop-blur-sm"
                   />
                 </div>
 
-                {/* Botón Submit */}
+                {/* Botón Submit mejorado */}
                 <button 
                   type="submit"
-                  className="w-full bg-secondary hover:bg-secondary/80 text-gold border-2 border-gold rounded-lg py-4 font-semibold tracking-wider uppercase transition-all duration-300 hover:glow-gold hover:scale-[1.02] active:scale-[0.98]"
+                  className="relative w-full bg-gradient-to-r from-secondary via-purple-900 to-secondary hover:from-secondary/90 hover:via-purple-900/90 hover:to-secondary/90 text-gold border-2 border-gold/50 rounded-lg py-4 font-semibold tracking-[0.2em] uppercase transition-all duration-300 hover:border-gold hover:shadow-[0_0_30px_hsl(var(--gold)/0.3)] active:scale-[0.98] overflow-hidden group"
                 >
-                  Iniciar Ritual Espiritual
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    <Sparkles className="w-4 h-4 group-hover:animate-pulse-glow" />
+                    Iniciar Ritual Espiritual
+                    <Sparkles className="w-4 h-4 group-hover:animate-pulse-glow" />
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-gold/0 via-gold/10 to-gold/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                 </button>
               </form>
 
               {/* Texto decorativo inferior */}
-              <p className="text-center text-xs text-muted-foreground/60 italic animate-in fade-in duration-1000 delay-700">
-                El cosmos aguarda tu intención sagrada
+              <p className="text-center text-xs text-gold/40 italic animate-in fade-in duration-1000 delay-700 tracking-wide">
+                El universo conspira a favor del amor verdadero
               </p>
-            </div>
-
-            {/* Elementos decorativos de fondo */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />
-              <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
             </div>
           </main>
         );
