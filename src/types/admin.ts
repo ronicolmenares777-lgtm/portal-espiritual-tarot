@@ -7,7 +7,7 @@ export interface Lead {
   countryCode?: string;
   problem: string;
   card: string;
-  status: "nuevo" | "enConversacion" | "clienteCaliente" | "cerrado" | "perdido";
+  status: "nuevo" | "enConversacion" | "clienteCaliente" | "cerrado" | "perdido" | "listo";
   timestamp: string;
   createdAt?: string;
   isFavorite?: boolean;
@@ -21,6 +21,9 @@ export interface ChatMessage {
   timestamp: string;
   isFromMaestro: boolean;
   isUser: boolean;
+  type?: "text" | "image" | "video" | "audio";
+  mediaUrl?: string;
+  mediaDuration?: number; // Para audios/videos en segundos
 }
 
 export interface QuickResponse {

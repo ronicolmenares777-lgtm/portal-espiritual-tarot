@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
@@ -20,7 +20,8 @@ import {
   Mail,
   Save,
   Sparkles,
-  ImageIcon
+  ImageIcon,
+  Video
 } from "lucide-react";
 import Link from "next/link";
 
@@ -31,12 +32,22 @@ export default function ChatView() {
   const [messageInput, setMessageInput] = useState("");
   const [showQuickResponses, setShowQuickResponses] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaPreview, setMediaPreview] = useState<{
+    type: "image" | "video" | "audio";
+    url: string;
+    file: File;
+  } | null>(null);
   const [profileData, setProfileData] = useState({
     name: "Maestro Espiritual",
     headerText: "CANAL SAGRADO",
     email: "admin@tarot.com",
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
   });
+
+  // Referencias
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Cargar lead y perfil
   useEffect(() => {
@@ -113,6 +124,113 @@ export default function ChatView() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Manejar archivos adjuntos (imagen/video)
+  const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "video") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tamaño (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert("El archivo debe ser menor a 10MB");
+      return;
+    }
+
+    // Validar tipo
+    const validTypes = type === "image" 
+      ? ["image/jpeg", "image/png", "image/gif", "image/webp"]
+      : ["video/mp4", "video/webm", "video/ogg"];
+    
+    if (!validTypes.includes(file.type)) {
+      alert(`Tipo de archivo no válido para ${type}`);
+      return;
+    }
+
+    // Crear preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMediaPreview({
+        type,
+        url: reader.result as string,
+        file
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Iniciar grabación de audio
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        // Convertir a base64
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setMediaPreview({
+            type: "audio",
+            url: reader.result as string,
+            file: new File([audioBlob], "audio.webm", { type: "audio/webm" })
+          });
+        };
+        reader.readAsDataURL(audioBlob);
+
+        // Detener stream
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      alert("No se pudo acceder al micrófono");
+      console.error(error);
+    }
+  };
+
+  // Detener grabación
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  // Enviar mensaje multimedia
+  const handleSendMedia = () => {
+    if (!mediaPreview || !lead) return;
+
+    const newMessage = {
+      id: Date.now().toString(),
+      text: mediaPreview.type === "audio" ? "Audio" : mediaPreview.type === "video" ? "Video" : "Imagen",
+      type: mediaPreview.type,
+      mediaUrl: mediaPreview.url,
+      isFromMaestro: true,
+      isUser: false,
+      timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setLead({
+      ...lead,
+      messages: [...(lead.messages || []), newMessage]
+    });
+
+    setMediaPreview(null);
+  };
+
+  // Cancelar preview
+  const cancelMediaPreview = () => {
+    setMediaPreview(null);
   };
 
   if (!lead) {
@@ -197,16 +315,48 @@ export default function ChatView() {
                       className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-md px-4 py-3 rounded-2xl ${
+                        className={`max-w-md rounded-2xl overflow-hidden ${
                           msg.isUser
                             ? "bg-gold/10 text-foreground ml-12"
                             : "bg-muted/50 text-foreground mr-12"
                         }`}
                       >
-                        <p className="text-sm">{msg.text}</p>
-                        <span className="text-xs text-muted-foreground mt-1 block">
-                          {msg.timestamp}
-                        </span>
+                        {/* Contenido del mensaje */}
+                        {msg.type === "image" && msg.mediaUrl && (
+                          <img
+                            src={msg.mediaUrl}
+                            alt="Imagen enviada"
+                            className="w-full max-w-sm rounded-t-2xl"
+                          />
+                        )}
+                        {msg.type === "video" && msg.mediaUrl && (
+                          <video
+                            src={msg.mediaUrl}
+                            controls
+                            className="w-full max-w-sm rounded-t-2xl"
+                          />
+                        )}
+                        {msg.type === "audio" && msg.mediaUrl && (
+                          <div className="px-4 py-3">
+                            <audio
+                              src={msg.mediaUrl}
+                              controls
+                              className="w-full"
+                            />
+                          </div>
+                        )}
+                        {(!msg.type || msg.type === "text") && (
+                          <div className="px-4 py-3">
+                            <p className="text-sm">{msg.text}</p>
+                          </div>
+                        )}
+                        
+                        {/* Timestamp */}
+                        <div className="px-4 pb-2">
+                          <span className="text-xs text-muted-foreground">
+                            {msg.timestamp}
+                          </span>
+                        </div>
                       </div>
                     </motion.div>
                   ))
@@ -252,31 +402,147 @@ export default function ChatView() {
                   )}
                 </AnimatePresence>
 
-                {/* Input */}
-                <div className="flex items-center gap-3">
-                  <button className="p-3 hover:bg-card/50 rounded-lg transition-colors">
-                    <Paperclip className="w-5 h-5 text-gold/60" />
-                  </button>
-                  
+                {/* Input de mensaje */}
+                <div className="border-t border-border bg-card p-4">
+                  {/* Preview de multimedia */}
+                  <AnimatePresence>
+                    {mediaPreview && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="mb-4 p-4 bg-muted/50 rounded-xl border border-gold/20"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            {mediaPreview.type === "image" && (
+                              <img
+                                src={mediaPreview.url}
+                                alt="Preview"
+                                className="w-full max-w-xs rounded-lg"
+                              />
+                            )}
+                            {mediaPreview.type === "video" && (
+                              <video
+                                src={mediaPreview.url}
+                                controls
+                                className="w-full max-w-xs rounded-lg"
+                              />
+                            )}
+                            {mediaPreview.type === "audio" && (
+                              <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
+                                <Mic className="w-5 h-5 text-gold" />
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium">Audio grabado</p>
+                                  <audio
+                                    src={mediaPreview.url}
+                                    controls
+                                    className="w-full mt-2"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            onClick={cancelMediaPreview}
+                            className="p-2 hover:bg-muted rounded-lg transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={cancelMediaPreview}
+                            className="flex-1 px-4 py-2 rounded-lg border border-gold/30 text-muted-foreground hover:text-foreground hover:border-gold/50 transition-all text-sm"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={handleSendMedia}
+                            className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-sm"
+                          >
+                            Enviar
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Inputs ocultos para archivos */}
                   <input
-                    type="text"
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(messageInput)}
-                    placeholder="Escribe un mensaje..."
-                    className="flex-1 bg-card/50 border border-gold/20 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileAttach(e, "image")}
+                    className="hidden"
+                    id="image-upload"
                   />
-                  
-                  <button 
-                    onClick={() => handleSendMessage(messageInput)}
-                    className="p-3 bg-gradient-to-r from-gold via-amber-400 to-gold hover:shadow-[0_0_20px_hsl(var(--gold))] rounded-lg transition-all"
-                  >
-                    <Send className="w-5 h-5 text-black" />
-                  </button>
-                  
-                  <button className="p-3 hover:bg-card/50 rounded-lg transition-colors">
-                    <Mic className="w-5 h-5 text-gold/60" />
-                  </button>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => handleFileAttach(e, "video")}
+                    className="hidden"
+                    id="video-upload"
+                  />
+
+                  <div className="flex items-end gap-2">
+                    {/* Botones de adjuntar */}
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => document.getElementById("image-upload")?.click()}
+                        className="p-2 hover:bg-muted/50 rounded-lg transition-colors group"
+                        title="Enviar imagen"
+                      >
+                        <ImageIcon className="w-5 h-5 text-muted-foreground group-hover:text-gold transition-colors" />
+                      </button>
+                      <button
+                        onClick={() => document.getElementById("video-upload")?.click()}
+                        className="p-2 hover:bg-muted/50 rounded-lg transition-colors group"
+                        title="Enviar video"
+                      >
+                        <Video className="w-5 h-5 text-muted-foreground group-hover:text-gold transition-colors" />
+                      </button>
+                      <button
+                        onClick={isRecording ? stopRecording : startRecording}
+                        className={`p-2 hover:bg-muted/50 rounded-lg transition-colors group ${
+                          isRecording ? "bg-red-500/20" : ""
+                        }`}
+                        title={isRecording ? "Detener grabación" : "Grabar audio"}
+                      >
+                        <Mic className={`w-5 h-5 transition-colors ${
+                          isRecording 
+                            ? "text-red-500 animate-pulse" 
+                            : "text-muted-foreground group-hover:text-gold"
+                        }`} />
+                      </button>
+                    </div>
+
+                    {/* Input de texto */}
+                    <div className="flex-1 relative">
+                      <textarea
+                        value={messageInput}
+                        onChange={(e) => setMessageInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage(messageInput);
+                          }
+                        }}
+                        placeholder="Escribe un mensaje..."
+                        rows={1}
+                        className="w-full bg-muted/30 border border-gold/20 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none"
+                        style={{ minHeight: "44px", maxHeight: "120px" }}
+                      />
+                    </div>
+
+                    {/* Botón enviar */}
+                    <button
+                      onClick={() => handleSendMessage(messageInput)}
+                      disabled={!messageInput.trim()}
+                      className="p-3 bg-gradient-to-r from-gold to-accent text-background rounded-xl hover:shadow-lg hover:shadow-gold/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Send className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -329,8 +595,9 @@ export default function ChatView() {
                 <div className="space-y-2">
                   {[
                     { value: "nuevo", label: "Nuevo", color: "blue" },
-                    { value: "en_conversacion", label: "En Conversación", color: "yellow" },
-                    { value: "cliente_caliente", label: "Cliente Caliente", color: "orange" },
+                    { value: "enConversacion", label: "En Conversación", color: "purple" },
+                    { value: "clienteCaliente", label: "Cliente Caliente", color: "orange" },
+                    { value: "listo", label: "Listo", color: "emerald" },
                     { value: "cerrado", label: "Cerrado", color: "green" },
                     { value: "perdido", label: "Perdido", color: "gray" }
                   ].map((status) => (
@@ -379,9 +646,13 @@ export default function ChatView() {
                 />
               </div>
 
-              {/* Finalizar Contacto */}
-              <button className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-400 rounded-lg py-3 text-sm font-medium uppercase tracking-wider transition-all">
-                Finalizar Contacto
+              {/* Marcar como Listo */}
+              <button 
+                onClick={() => handleStatusChange("listo")}
+                className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 rounded-lg py-3 text-sm font-medium uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Marcar como Listo
               </button>
             </div>
           </div>

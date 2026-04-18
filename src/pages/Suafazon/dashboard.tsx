@@ -33,7 +33,7 @@ type Tab = "chats" | "leads";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"chats" | "leads">("chats");
+  const [activeTab, setActiveTab] = useState<"chats" | "leads" | "listo">("chats");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");
   const [leads, setLeads] = useState<Lead[]>(mockLeads);
@@ -56,17 +56,24 @@ export default function AdminDashboard() {
     
     const matchesStatus = selectedStatus === "todos" || lead.status === selectedStatus;
     
-    return matchesSearch && matchesStatus;
+    // Filtrar por tab activa
+    const matchesTab = 
+      activeTab === "chats" ? lead.status !== "listo" :
+      activeTab === "listo" ? lead.status === "listo" :
+      true; // "leads" muestra todos
+    
+    return matchesSearch && matchesStatus && matchesTab;
   });
 
   // Contar leads por estado
   const statusCounts = {
-    todos: leads.length,
+    todos: leads.filter(l => activeTab === "chats" ? l.status !== "listo" : activeTab === "listo" ? l.status === "listo" : true).length,
     nuevo: leads.filter(l => l.status === "nuevo").length,
     enConversacion: leads.filter(l => l.status === "enConversacion").length,
     clienteCaliente: leads.filter(l => l.status === "clienteCaliente").length,
     cerrado: leads.filter(l => l.status === "cerrado").length,
     perdido: leads.filter(l => l.status === "perdido").length,
+    listo: leads.filter(l => l.status === "listo").length,
   };
 
   // Cargar perfil y monitorear nuevos leads
@@ -263,26 +270,48 @@ export default function AdminDashboard() {
 
           {/* Tabs */}
           <div className="px-4 flex gap-2 border-b border-gold/10 pb-3">
-            <button
-              onClick={() => setActiveTab("chats")}
-              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "chats"
-                  ? "bg-blue-500 text-white"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
-            >
-              CHATS
-            </button>
-            <button
-              onClick={() => setActiveTab("leads")}
-              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "leads"
-                  ? "bg-blue-500 text-white"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
-            >
-              LEADS
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveTab("chats")}
+                className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${
+                  activeTab === "chats"
+                    ? "bg-gold/10 text-gold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                CHATS
+                {newLeadsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
+                    {newLeadsCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("leads")}
+                className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === "leads"
+                    ? "bg-gold/10 text-gold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                LEADS
+              </button>
+              <button
+                onClick={() => setActiveTab("listo")}
+                className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${
+                  activeTab === "listo"
+                    ? "bg-gold/10 text-gold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                LISTO
+                {statusCounts.listo > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {statusCounts.listo}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Search */}
@@ -296,6 +325,84 @@ export default function AdminDashboard() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-muted/30 border border-gold/20 rounded-lg pl-10 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
               />
+            </div>
+          </div>
+
+          {/* Filtros por estado */}
+          <div className="px-4 mb-3">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedStatus("todos")}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  selectedStatus === "todos"
+                    ? "bg-gold text-background"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                Todos ({statusCounts.todos})
+              </button>
+              <button
+                onClick={() => setSelectedStatus("nuevo")}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  selectedStatus === "nuevo"
+                    ? "bg-blue-500 text-white"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                Nuevo ({statusCounts.nuevo})
+              </button>
+              <button
+                onClick={() => setSelectedStatus("enConversacion")}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  selectedStatus === "enConversacion"
+                    ? "bg-purple-500 text-white"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                En Chat ({statusCounts.enConversacion})
+              </button>
+              <button
+                onClick={() => setSelectedStatus("clienteCaliente")}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  selectedStatus === "clienteCaliente"
+                    ? "bg-orange-500 text-white"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                Caliente ({statusCounts.clienteCaliente})
+              </button>
+              <button
+                onClick={() => setSelectedStatus("cerrado")}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  selectedStatus === "cerrado"
+                    ? "bg-green-500 text-white"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                Cerrado ({statusCounts.cerrado})
+              </button>
+              <button
+                onClick={() => setSelectedStatus("perdido")}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  selectedStatus === "perdido"
+                    ? "bg-red-500 text-white"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                Perdido ({statusCounts.perdido})
+              </button>
+              {activeTab === "listo" && (
+                <button
+                  onClick={() => setSelectedStatus("listo")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    selectedStatus === "listo"
+                      ? "bg-emerald-500 text-white"
+                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  Listo ({statusCounts.listo})
+                </button>
+              )}
             </div>
           </div>
 
@@ -317,8 +424,32 @@ export default function AdminDashboard() {
                       {getTimeAgo(lead.timestamp)}
                     </p>
                   </div>
-                  <span className={`px-2 py-1 rounded text-xs font-medium text-white ${getStatusColor(lead.status)}`}>
-                    {getStatusLabel(lead.status)}
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      lead.status === "nuevo"
+                        ? "bg-blue-500/20 text-blue-400"
+                        : lead.status === "clienteCaliente"
+                        ? "bg-orange-500/20 text-orange-400"
+                        : lead.status === "cerrado"
+                        ? "bg-green-500/20 text-green-400"
+                        : lead.status === "perdido"
+                        ? "bg-red-500/20 text-red-400"
+                        : lead.status === "listo"
+                        ? "bg-emerald-500/20 text-emerald-400"
+                        : "bg-purple-500/20 text-purple-400"
+                    }`}
+                  >
+                    {lead.status === "nuevo"
+                      ? "NUEVO"
+                      : lead.status === "clienteCaliente"
+                      ? "CLIENTE"
+                      : lead.status === "cerrado"
+                      ? "CERRADO"
+                      : lead.status === "perdido"
+                      ? "PERDIDO"
+                      : lead.status === "listo"
+                      ? "LISTO"
+                      : "EN CHAT"}
                   </span>
                 </div>
               </motion.button>
