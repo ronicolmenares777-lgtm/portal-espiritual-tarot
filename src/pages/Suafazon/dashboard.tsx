@@ -50,6 +50,12 @@ export default function AdminDashboard() {
     if (savedProfile) {
       setProfileData(JSON.parse(savedProfile));
     }
+    
+    // Cargar stats desde localStorage
+    const savedStats = localStorage.getItem("adminStats");
+    if (savedStats) {
+      setStats(JSON.parse(savedStats));
+    }
   }, []);
 
   // Guardar perfil en localStorage
@@ -58,13 +64,24 @@ export default function AdminDashboard() {
     setShowProfile(false);
   };
 
-  // Reiniciar métricas
+  // Reiniciar solo las métricas numéricas (no eliminar chats)
   const handleResetMetrics = () => {
-    if (confirm("¿Estás seguro de reiniciar todas las métricas?")) {
-      setStats(mockStats);
-      setLeads(mockLeads);
-      localStorage.removeItem("adminStats");
-      localStorage.removeItem("adminLeads");
+    if (confirm("¿Reiniciar contadores de métricas a cero? (Los chats se mantienen)")) {
+      const resetStats = {
+        totalAlmas: 0,
+        clickWA: 0,
+        atendidos: 0,
+        sinResponder: 0,
+        pipeline: {
+          nuevo: 0,
+          enConversacion: 0,
+          clienteCaliente: 0,
+          cerrado: 0,
+          perdido: 0
+        }
+      };
+      setStats(resetStats);
+      localStorage.setItem("adminStats", JSON.stringify(resetStats));
     }
   };
 
