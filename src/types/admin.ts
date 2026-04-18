@@ -18,8 +18,9 @@ export interface Lead {
 export interface ChatMessage {
   id: string;
   text: string;
-  isFromMaestro: boolean;
   timestamp: string;
+  isFromMaestro: boolean;
+  isUser: boolean;
 }
 
 export interface QuickResponse {
