@@ -1,67 +1,96 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import { motion } from "framer-motion";
 import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { mockLeads, mockStats } from "@/lib/mockData";
 import type { Lead } from "@/types/admin";
-import { motion } from "framer-motion";
-import { Users, MessageCircle, UserCheck, AlertCircle, Search, Menu, LogOut, User as UserIcon, CheckCircle, Sparkles } from "lucide-react";
-import Link from "next/link";
+import {
+  Users,
+  MessageCircle,
+  CheckCircle,
+  AlertCircle,
+  Search,
+  LogOut,
+  Sparkles,
+  BarChart3,
+  TrendingUp,
+  Circle,
+  HelpCircle
+} from "lucide-react";
 
-export default function AdminDashboard() {
+type Tab = "chats" | "leads";
+
+export default function Dashboard() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<Tab>("chats");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTab, setSelectedTab] = useState<"chats" | "leads">("chats");
-  const [filteredLeads, setFilteredLeads] = useState<Lead[]>(mockLeads);
+  const [leads, setLeads] = useState<Lead[]>(mockLeads);
+  const [stats, setStats] = useState(mockStats);
 
-  // Verificar autenticación
   useEffect(() => {
-    const isAuth = localStorage.getItem("admin_authenticated");
-    if (!isAuth) {
+    const isAuthenticated = localStorage.getItem("adminAuth");
+    if (!isAuthenticated) {
       router.push("/Suafazon");
     }
   }, [router]);
 
-  // Filtrar leads por búsqueda
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = mockLeads.filter(lead =>
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.whatsapp.includes(searchTerm)
-      );
-      setFilteredLeads(filtered);
-    } else {
-      setFilteredLeads(mockLeads);
-    }
-  }, [searchTerm]);
-
   const handleLogout = () => {
-    localStorage.removeItem("admin_authenticated");
+    localStorage.removeItem("adminAuth");
     router.push("/Suafazon");
   };
 
-  const getStatusColor = (status: Lead["status"]) => {
+  const filteredLeads = leads.filter((lead) =>
+    lead.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case "nuevo": return "bg-blue-500";
-      case "en_conversacion": return "bg-yellow-500";
-      case "cliente_caliente": return "bg-orange-500";
-      case "cerrado": return "bg-green-500";
-      case "perdido": return "bg-gray-500";
-      default: return "bg-blue-500";
+      case "nuevo":
+        return "bg-blue-500";
+      case "enConversacion":
+        return "bg-yellow-500";
+      case "clienteCaliente":
+        return "bg-orange-500";
+      case "cerrado":
+        return "bg-green-500";
+      case "perdido":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
     }
   };
 
-  const getStatusLabel = (status: Lead["status"]) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
-      case "nuevo": return "NUEVO";
-      case "en_conversacion": return "CONVERSACIÓN";
-      case "cliente_caliente": return "CALIENTE";
-      case "cerrado": return "CERRADO";
-      case "perdido": return "PERDIDO";
-      default: return "NUEVO";
+      case "nuevo":
+        return "NUEVO";
+      case "enConversacion":
+        return "CLIENTE";
+      case "clienteCaliente":
+        return "CLIENTE";
+      case "cerrado":
+        return "CERRADO";
+      case "perdido":
+        return "PERDIDO";
+      default:
+        return status;
     }
   };
+
+  const getTimeAgo = (timestamp: string) => {
+    const hours = parseInt(timestamp.replace(/\D/g, "")) || 1;
+    return `alrededor de ${hours} hora${hours > 1 ? "s" : ""}`;
+  };
+
+  const pipelineData = [
+    { label: "NUEVO", count: stats.pipeline.nuevo, color: "bg-blue-500", max: 35 },
+    { label: "EN CONVERSACIÓN", count: stats.pipeline.enConversacion, color: "bg-yellow-500", max: 35 },
+    { label: "CLIENTE CALIENTE", count: stats.pipeline.clienteCaliente, color: "bg-orange-500", max: 35 },
+    { label: "CERRADO", count: stats.pipeline.cerrado, color: "bg-green-500", max: 35 },
+    { label: "PERDIDO", count: stats.pipeline.perdido, color: "bg-red-500", max: 35 },
+  ];
 
   return (
     <>
@@ -72,287 +101,223 @@ export default function AdminDashboard() {
       <CustomCursor />
       <FloatingParticles />
       
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="flex h-screen bg-background overflow-hidden">
         {/* Sidebar */}
-        <div className="w-64 bg-black/95 border-r border-gold/20 p-6 flex flex-col">
+        <div className="w-80 bg-gradient-to-b from-[#0a0a0f] to-[#13131a] border-r border-gold/20 flex flex-col">
           {/* Logo */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2 text-gold">
-              <div className="w-8 h-8 rounded-full border-2 border-gold/50 flex items-center justify-center">
-                <span className="text-lg">✨</span>
-              </div>
-              <h1 className="font-serif text-lg tracking-wider">Portal Maestro</h1>
-            </div>
-          </div>
-
-          {/* Usuario */}
-          <div className="mb-8 p-4 bg-card/50 rounded-xl border border-gold/10">
+          <div className="p-6 border-b border-gold/20">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/30 to-purple-500/30 flex items-center justify-center">
-                <span className="text-sm">ME</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Maestro Espiritual</p>
-                <p className="text-xs text-muted-foreground">Canal Sagrado</p>
-              </div>
+              <Sparkles className="w-6 h-6 text-gold" />
+              <span className="text-lg font-serif text-gold tracking-wider">Portal Maestro</span>
             </div>
           </div>
 
-          {/* Navegación */}
-          <nav className="flex-1 space-y-2">
-            <button
-              onClick={() => setSelectedTab("chats")}
-              className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
-                selectedTab === "chats"
-                  ? "bg-gold/20 text-gold border border-gold/30"
-                  : "text-muted-foreground hover:bg-card/50"
-              }`}
+          {/* Resumen Estadístico Button */}
+          <div className="p-4">
+            <button 
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-gold/20 to-accent/20 border border-gold/30 hover:border-gold/50 transition-all group"
             >
-              <div className="flex items-center gap-3">
-                <MessageCircle className="w-5 h-5" />
-                <span className="text-sm font-medium uppercase tracking-wider">Chats</span>
-              </div>
+              <BarChart3 className="w-5 h-5 text-gold group-hover:scale-110 transition-transform" />
+              <span className="text-sm tracking-wider text-gold">RESUMEN ESTADÍSTICO</span>
             </button>
-
-            <button
-              onClick={() => setSelectedTab("leads")}
-              className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
-                selectedTab === "leads"
-                  ? "bg-gold/20 text-gold border border-gold/30"
-                  : "text-muted-foreground hover:bg-card/50"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5" />
-                <span className="text-sm font-medium uppercase tracking-wider">Leads</span>
-              </div>
-            </button>
-          </nav>
-
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="mt-auto px-4 py-3 rounded-lg text-muted-foreground hover:bg-red-500/10 hover:text-red-400 transition-all flex items-center gap-3"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-medium uppercase tracking-wider">Salir</span>
-          </button>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <div className="bg-black/95 border-b border-gold/20 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gold/60 tracking-[0.3em] uppercase mb-1">Canal Sagrado</p>
-                <h2 className="text-2xl font-serif text-gold">Resumen Estadístico</h2>
-              </div>
-              <button className="p-2 hover:bg-card/50 rounded-lg transition-colors">
-                <Menu className="w-6 h-6 text-gold" />
-              </button>
-            </div>
           </div>
 
-          {/* Stats */}
-          <div className="bg-gradient-to-b from-black/50 to-transparent p-8">
-            <div className="text-center mb-8">
-              <h3 className="text-xl font-serif text-gold mb-2">VISIÓN DEL DESTINO</h3>
-              <p className="text-xs text-muted-foreground tracking-[0.2em] uppercase">
-                Resumen estadístico de almas y conexiones
-              </p>
-            </div>
+          {/* Tabs */}
+          <div className="px-4 flex gap-2 border-b border-gold/10 pb-3">
+            <button
+              onClick={() => setActiveTab("chats")}
+              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === "chats"
+                  ? "bg-blue-500 text-white"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              CHATS
+            </button>
+            <button
+              onClick={() => setActiveTab("leads")}
+              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === "leads"
+                  ? "bg-blue-500 text-white"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              LEADS
+            </button>
+          </div>
 
-            <div className="grid grid-cols-4 gap-6 max-w-4xl mx-auto">
-              {/* Total Almas */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-center"
-              >
-                <div className="mb-3">
-                  <Users className="w-8 h-8 text-blue-400 mx-auto" />
-                </div>
-                <div className="text-3xl font-bold text-foreground mb-1">{mockStats.totalAlmas}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">Total Almas</div>
-              </motion.div>
-
-              {/* Click WA */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-center"
-              >
-                <div className="mb-3">
-                  <MessageCircle className="w-8 h-8 text-green-400 mx-auto" />
-                </div>
-                <div className="text-3xl font-bold text-foreground mb-1">{mockStats.clickWA}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">Click WA</div>
-              </motion.div>
-
-              {/* Atendidos */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-center"
-              >
-                <div className="mb-3">
-                  <UserCheck className="w-8 h-8 text-yellow-400 mx-auto" />
-                </div>
-                <div className="text-3xl font-bold text-foreground mb-1">{mockStats.atendidos}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">Atendidos</div>
-              </motion.div>
-
-              {/* Sin Responder */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="text-center"
-              >
-                <div className="mb-3">
-                  <AlertCircle className="w-8 h-8 text-red-400 mx-auto" />
-                </div>
-                <div className="text-3xl font-bold text-foreground mb-1">{mockStats.sinResponder}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">Sin Responder</div>
-              </motion.div>
-            </div>
-
-            {/* Pipeline */}
-            <div className="mt-8 max-w-4xl mx-auto">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-xs text-gold/60 tracking-[0.2em] uppercase">★ Estado del Pipeline</span>
-                <div className="flex-1 h-px bg-gold/10"></div>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <div className="w-32 text-xs text-muted-foreground uppercase tracking-wider">Nuevo</div>
-                  <div className="flex-1 h-8 bg-card/50 rounded-lg overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-blue-500 to-blue-400 flex items-center justify-end pr-3"
-                      style={{ width: `${(mockStats.pipeline.nuevo / 32) * 100}%` }}
-                    >
-                      <span className="text-xs font-bold text-white">{mockStats.pipeline.nuevo}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="w-32 text-xs text-muted-foreground uppercase tracking-wider">En Conversación</div>
-                  <div className="flex-1 h-8 bg-card/50 rounded-lg overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-yellow-500 to-yellow-400 flex items-center justify-end pr-3"
-                      style={{ width: `${(mockStats.pipeline.enConversacion / 32) * 100}%` }}
-                    >
-                      <span className="text-xs font-bold text-white">{mockStats.pipeline.enConversacion}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="w-32 text-xs text-muted-foreground uppercase tracking-wider">Cliente Caliente</div>
-                  <div className="flex-1 h-8 bg-card/50 rounded-lg overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-orange-500 to-orange-400 flex items-center justify-end pr-3"
-                      style={{ width: `${(mockStats.pipeline.clienteCaliente / 32) * 100}%` }}
-                    >
-                      <span className="text-xs font-bold text-white">{mockStats.pipeline.clienteCaliente}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="w-32 text-xs text-muted-foreground uppercase tracking-wider">Cerrado</div>
-                  <div className="flex-1 h-8 bg-card/50 rounded-lg overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-green-500 to-green-400 flex items-center justify-end pr-3"
-                      style={{ width: `${(mockStats.pipeline.cerrado / 32) * 100}%` }}
-                    >
-                      <span className="text-xs font-bold text-white">{mockStats.pipeline.cerrado}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="w-32 text-xs text-muted-foreground uppercase tracking-wider">Perdido</div>
-                  <div className="flex-1 h-8 bg-card/50 rounded-lg overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-gray-500 to-gray-400 flex items-center justify-end pr-3"
-                      style={{ width: `${(mockStats.pipeline.perdido / 32) * 100}%` }}
-                    >
-                      <span className="text-xs font-bold text-white">{mockStats.pipeline.perdido}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Search */}
+          <div className="p-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Buscar almas..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-muted/30 border border-gold/20 rounded-lg pl-10 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+              />
             </div>
           </div>
 
           {/* Leads List */}
-          <div className="flex-1 p-8">
-            {/* Search */}
-            <div className="mb-6">
-              <div className="relative max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Buscar alma..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-card/50 border border-gold/20 rounded-xl pl-12 pr-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
-                />
+          <div className="flex-1 overflow-y-auto px-4 space-y-2">
+            {filteredLeads.map((lead) => (
+              <motion.button
+                key={lead.id}
+                onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                className="w-full p-3 rounded-lg bg-muted/20 hover:bg-muted/40 border border-transparent hover:border-gold/30 transition-all text-left group"
+                whileHover={{ x: 4 }}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate group-hover:text-gold transition-colors">
+                      {lead.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {getTimeAgo(lead.timestamp)}
+                    </p>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-xs font-medium text-white ${getStatusColor(lead.status)}`}>
+                    {getStatusLabel(lead.status)}
+                  </span>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="bg-black border-b border-gold/20 px-8 py-4">
+            <div className="flex items-center justify-between">
+              <button className="p-2 hover:bg-muted/20 rounded-lg transition-colors">
+                <HelpCircle className="w-5 h-5 text-muted-foreground" />
+              </button>
+
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-gold" />
+                <span className="text-sm tracking-[0.3em] text-gold">CANAL SAGRADO</span>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-foreground">Maestro Espiritual</span>
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30">
+                  <img
+                    src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
+                    alt="Maestro"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 hover:bg-muted/20 rounded-lg transition-colors"
+                >
+                  <LogOut className="w-5 h-5 text-muted-foreground hover:text-red-400" />
+                </button>
               </div>
             </div>
+          </div>
 
-            {/* Leads */}
-            <div className="space-y-3">
-              {filteredLeads.map((lead) => (
-                <Link
-                  key={lead.id}
-                  href={`/Suafazon/chat/${lead.id}`}
-                  className="block"
+          {/* Dashboard Content */}
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="max-w-6xl mx-auto space-y-12">
+              {/* Title */}
+              <div className="text-center space-y-3">
+                <h1 className="text-5xl font-serif text-gold tracking-wider">
+                  VISIÓN DEL DESTINO
+                </h1>
+                <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase">
+                  Resumen Estadístico de Almas y Conexiones
+                </p>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-4 gap-6">
+                <motion.div 
+                  className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/30 rounded-xl p-6 text-center hover:border-blue-500/50 transition-all"
+                  whileHover={{ y: -4, boxShadow: "0 10px 40px rgba(59, 130, 246, 0.3)" }}
                 >
-                  <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    className="bg-card/30 border border-gold/10 rounded-xl p-4 hover:bg-card/50 hover:border-gold/30 transition-all cursor-pointer"
-                  >
-                    <div className="flex items-center gap-4">
-                      {/* Avatar */}
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold/30 to-purple-500/30 flex items-center justify-center flex-shrink-0">
-                        <span className="text-lg font-serif text-gold">
-                          {lead.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
+                  <Users className="w-8 h-8 text-blue-500 mx-auto mb-3" />
+                  <div className="text-4xl font-bold text-blue-500 mb-1">{stats.totalAlmas}</div>
+                  <div className="text-xs tracking-wider text-blue-400 uppercase">Total Almas</div>
+                </motion.div>
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium text-foreground truncate">{lead.name}</h3>
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${getStatusColor(lead.status)} text-white`}>
-                            {getStatusLabel(lead.status)}
-                          </span>
+                <motion.div 
+                  className="bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/30 rounded-xl p-6 text-center hover:border-green-500/50 transition-all"
+                  whileHover={{ y: -4, boxShadow: "0 10px 40px rgba(34, 197, 94, 0.3)" }}
+                >
+                  <MessageCircle className="w-8 h-8 text-green-500 mx-auto mb-3" />
+                  <div className="text-4xl font-bold text-green-500 mb-1">{stats.clickWA}</div>
+                  <div className="text-xs tracking-wider text-green-400 uppercase">Click WA</div>
+                </motion.div>
+
+                <motion.div 
+                  className="bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/30 rounded-xl p-6 text-center hover:border-gold/50 transition-all"
+                  whileHover={{ y: -4, boxShadow: "0 10px 40px hsl(var(--gold) / 0.3)" }}
+                >
+                  <CheckCircle className="w-8 h-8 text-gold mx-auto mb-3" />
+                  <div className="text-4xl font-bold text-gold mb-1">{stats.atendidos}</div>
+                  <div className="text-xs tracking-wider text-gold uppercase">Atendidos</div>
+                </motion.div>
+
+                <motion.div 
+                  className="bg-gradient-to-br from-red-500/10 to-red-500/5 border border-red-500/30 rounded-xl p-6 text-center hover:border-red-500/50 transition-all"
+                  whileHover={{ y: -4, boxShadow: "0 10px 40px rgba(239, 68, 68, 0.3)" }}
+                >
+                  <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-3" />
+                  <div className="text-4xl font-bold text-red-500 mb-1">{stats.sinResponder}</div>
+                  <div className="text-xs tracking-wider text-red-400 uppercase">Sin Responder</div>
+                </motion.div>
+              </div>
+
+              {/* Pipeline */}
+              <div className="bg-card border border-gold/20 rounded-2xl p-8">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold to-accent flex items-center justify-center animate-pulse">
+                    <Sparkles className="w-4 h-4 text-background" />
+                  </div>
+                  <h2 className="text-xl font-serif text-gold tracking-wider">ESTADO DEL PIPELINE</h2>
+                  <div className="flex-1 h-px bg-gradient-to-r from-gold/50 to-transparent" />
+                  <span className="text-sm text-muted-foreground">24 horas</span>
+                </div>
+
+                <div className="space-y-6">
+                  {pipelineData.map((item, index) => (
+                    <motion.div
+                      key={item.label}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="space-y-2"
+                    >
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <Circle className={`w-3 h-3 ${item.color.replace("bg-", "text-")}`} fill="currentColor" />
+                          <span className="text-muted-foreground tracking-wider">{item.label}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {lead.problem}
-                        </p>
-                        <p className="text-xs text-muted-foreground/60 mt-1">
-                          {lead.createdAt}
-                        </p>
+                        <span className="font-medium text-foreground">{item.count}</span>
                       </div>
-
-                      {/* Metadata */}
-                      <div className="text-right text-xs text-muted-foreground">
-                        <div>{lead.card}</div>
-                        <div className="text-gold/60">{lead.whatsapp}</div>
+                      <div className="h-3 bg-muted/20 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(item.count / item.max) * 100}%` }}
+                          transition={{ duration: 1, delay: index * 0.1 + 0.2 }}
+                          className={`h-full ${item.color} rounded-full relative`}
+                          style={{
+                            boxShadow: `0 0 20px ${item.color.includes("blue") ? "rgba(59, 130, 246, 0.5)" : 
+                                                     item.color.includes("yellow") ? "rgba(234, 179, 8, 0.5)" :
+                                                     item.color.includes("orange") ? "rgba(249, 115, 22, 0.5)" :
+                                                     item.color.includes("green") ? "rgba(34, 197, 94, 0.5)" :
+                                                     "rgba(239, 68, 68, 0.5)"}`
+                          }}
+                        />
                       </div>
-                    </div>
-                  </motion.div>
-                </Link>
-              ))}
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
