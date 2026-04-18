@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { SEO } from "@/components/SEO";
+import { CustomCursor } from "@/components/CustomCursor";
+import { FloatingParticles } from "@/components/FloatingParticles";
 import { mockLeads, mockStats } from "@/lib/mockData";
 import type { Lead } from "@/types/admin";
 import { motion } from "framer-motion";
-import { Users, MessageCircle, UserCheck, AlertCircle, Search, Menu, LogOut, User as UserIcon } from "lucide-react";
+import { Users, MessageCircle, UserCheck, AlertCircle, Search, Menu, LogOut, User as UserIcon, CheckCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboard() {
@@ -64,11 +66,13 @@ export default function AdminDashboard() {
   return (
     <>
       <SEO 
-        title="Dashboard - Portal Maestro"
-        description="Panel de administración de consultas espirituales"
+        title="Portal Maestro - Dashboard"
+        description="Panel de administración del Portal Espiritual"
       />
-
-      <div className="min-h-screen bg-background flex">
+      <CustomCursor />
+      <FloatingParticles />
+      
+      <div className="min-h-screen bg-background text-foreground">
         {/* Sidebar */}
         <div className="w-64 bg-black/95 border-r border-gold/20 p-6 flex flex-col">
           {/* Logo */}

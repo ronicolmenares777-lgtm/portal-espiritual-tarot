@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { SEO } from "@/components/SEO";
+import { CustomCursor } from "@/components/CustomCursor";
+import { FloatingParticles } from "@/components/FloatingParticles";
 import { mockLeads, mockQuickResponses } from "@/lib/mockData";
 import type { Lead, QuickResponse } from "@/types/admin";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, Send, Mic, Paperclip, Star, MessageCircle, 
-  X, Settings, User, Sparkles, Circle
+  X, Settings, User, Sparkles, Circle, CheckCircle, Phone, Mail, Save
 } from "lucide-react";
 import Link from "next/link";
 
@@ -17,8 +19,12 @@ export default function ChatView() {
   const [messageInput, setMessageInput] = useState("");
   const [showQuickResponses, setShowQuickResponses] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [maestroName, setMaestroName] = useState("Maestro Espiritual");
-  const [maestroEmail, setMaestroEmail] = useState("admin@tarot.com");
+  const [profileData, setProfileData] = useState({
+    name: "Maestro Espiritual",
+    headerText: "CANAL SAGRADO",
+    email: "admin@tarot.com",
+    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
+  });
 
   useEffect(() => {
     const isAuth = localStorage.getItem("admin_authenticated");
@@ -83,44 +89,44 @@ export default function ChatView() {
   return (
     <>
       <SEO 
-        title={`Chat con ${lead.name} - Portal Maestro`}
+        title={`Chat con ${lead?.name || "Lead"}`}
         description="Gestión de conversación espiritual"
       />
+      <CustomCursor />
+      <FloatingParticles />
 
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header */}
         <div className="bg-black/95 border-b border-gold/20 p-4">
           <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <div className="flex items-center gap-4">
-              <Link href="/Suafazon/dashboard">
-                <button className="p-2 hover:bg-card/50 rounded-lg transition-colors">
-                  <ArrowLeft className="w-5 h-5 text-gold" />
-                </button>
-              </Link>
-              
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/30 to-purple-500/30 flex items-center justify-center">
-                  <span className="text-sm font-serif text-gold">
-                    {lead.name.charAt(0).toUpperCase()}
+                <button
+                  onClick={() => router.push("/Suafazon/dashboard")}
+                  className="p-2 hover:bg-muted/50 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-gold" />
+                  <span className="text-sm tracking-[0.3em] text-gold">
+                    {profileData.headerText}
                   </span>
                 </div>
-                <div>
-                  <h1 className="text-lg font-serif text-gold">Chat con {lead.name}</h1>
-                  <div className="flex items-center gap-2 text-xs text-green-400">
-                    <Circle className="w-2 h-2 fill-current" />
-                    <span>En línea</span>
-                  </div>
-                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => setShowProfile(true)}
-                className="px-4 py-2 bg-card/50 hover:bg-card rounded-lg text-sm text-gold border border-gold/20 transition-all flex items-center gap-2"
+                className="flex items-center gap-3 hover:bg-muted/50 px-3 py-2 rounded-lg transition-colors"
               >
-                <User className="w-4 h-4" />
-                Perfil
+                <span className="text-sm">{profileData.name}</span>
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30">
+                  <img
+                    src={profileData.avatar}
+                    alt="Maestro"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </button>
             </div>
           </div>
@@ -337,73 +343,117 @@ export default function ChatView() {
         </div>
       </div>
 
-      {/* Modal Perfil del Maestro */}
+      {/* Modal de Perfil del Maestro */}
       <AnimatePresence>
         {showProfile && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-black border-2 border-gold/30 rounded-3xl p-8 max-w-md w-full relative"
+              className="w-full max-w-md bg-card rounded-2xl p-8 border border-gold/30 relative"
+              style={{
+                boxShadow: "0 0 50px hsl(var(--gold) / 0.3)",
+              }}
             >
+              {/* Botón cerrar */}
               <button
                 onClick={() => setShowProfile(false)}
-                className="absolute top-4 right-4 p-2 hover:bg-card/50 rounded-lg transition-colors"
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
               >
-                <X className="w-5 h-5 text-gold" />
+                <X className="w-5 h-5" />
               </button>
 
-              <div className="text-center space-y-6">
-                <div className="flex justify-center">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gold/30 to-purple-500/30 flex items-center justify-center">
-                    <User className="w-12 h-12 text-gold" />
-                  </div>
-                </div>
+              {/* Título */}
+              <h2 className="text-2xl font-serif text-gold text-center mb-8 tracking-wider">
+                PERFIL SAGRADO
+              </h2>
 
-                <h2 className="text-2xl font-serif text-gold tracking-wider">
-                  PERFIL SAGRADO
-                </h2>
-
-                <div className="space-y-4 text-left">
-                  <div>
-                    <label className="text-xs text-gold/60 tracking-[0.2em] uppercase block mb-2">
-                      Nombre del Maestro
-                    </label>
-                    <input
-                      type="text"
-                      value={maestroName}
-                      onChange={(e) => setMaestroName(e.target.value)}
-                      className="w-full bg-card/50 border border-gold/20 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+              {/* Avatar */}
+              <div className="flex justify-center mb-8">
+                <div className="relative">
+                  <div 
+                    className="w-32 h-32 rounded-full overflow-hidden border-2 border-gold/50"
+                    style={{
+                      boxShadow: "0 0 30px hsl(var(--gold) / 0.4)",
+                    }}
+                  >
+                    <img
+                      src={profileData.avatar}
+                      alt="Maestro"
+                      className="w-full h-full object-cover"
                     />
                   </div>
-
-                  <div>
-                    <label className="text-xs text-gold/60 tracking-[0.2em] uppercase block mb-2">
-                      E-mail de Acceso
-                    </label>
-                    <input
-                      type="email"
-                      value={maestroEmail}
-                      onChange={(e) => setMaestroEmail(e.target.value)}
-                      className="w-full bg-card/50 border border-gold/20 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
-                    />
+                  <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-gold rounded-full flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-background" />
                   </div>
                 </div>
+              </div>
 
-                <button
-                  onClick={handleSaveProfile}
-                  className="w-full bg-gradient-to-r from-gold via-amber-400 to-gold text-black font-semibold py-4 rounded-xl tracking-wider uppercase transition-all duration-300 hover:shadow-[0_0_30px_hsl(var(--gold))]"
-                >
-                  Guardar Cambios
-                </button>
+              {/* Formulario editable */}
+              <div className="space-y-6">
+                {/* Nombre del Maestro */}
+                <div className="space-y-2">
+                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
+                    <User className="w-3 h-3" />
+                    Nombre del Maestro
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.name}
+                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+                  />
+                </div>
 
-                <button
-                  onClick={() => setShowProfile(false)}
-                  className="text-muted-foreground/60 text-sm hover:text-gold transition-colors uppercase tracking-wider"
-                >
-                  Cancelar
-                </button>
+                {/* Texto del Header */}
+                <div className="space-y-2">
+                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
+                    <Sparkles className="w-3 h-3" />
+                    Texto del Header
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.headerText}
+                    onChange={(e) => setProfileData({ ...profileData, headerText: e.target.value })}
+                    placeholder="Ej: CANAL SAGRADO, VISIÓN ESPIRITUAL, etc."
+                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+                  />
+                </div>
+
+                {/* E-mail de Acceso */}
+                <div className="space-y-2">
+                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
+                    <Mail className="w-3 h-3" />
+                    E-mail de Acceso
+                  </label>
+                  <input
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+                  />
+                </div>
+
+                {/* Botones */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setShowProfile(false)}
+                    className="flex-1 px-6 py-3 rounded-lg border border-gold/30 text-muted-foreground hover:text-foreground hover:border-gold/50 transition-all"
+                  >
+                    CANCELAR
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Aquí se guardarían los cambios
+                      setShowProfile(false);
+                    }}
+                    className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    GUARDAR CAMBIOS
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
