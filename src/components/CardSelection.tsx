@@ -26,7 +26,7 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
             REVELA TU DESTINO
           </h2>
           <p className="text-sm text-gold/70 tracking-[0.15em] uppercase animate-in fade-in duration-700 delay-300">
-            El cosmos ha hablado a través de tu intención sagrada
+            Los ángeles guardianes te guían hacia el reencuentro
           </p>
         </div>
 
@@ -59,58 +59,119 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
                     : "0 10px 40px rgba(0, 0, 0, 0.5)",
                 }}
               >
-                {/* Card Back - Imagen de reverso místico */}
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 via-purple-800/90 to-purple-900/90 border-4 border-gold/30">
-                  <img 
-                    src="https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=400&h=600&fit=crop"
-                    alt="Card back"
-                    className="w-full h-full object-cover opacity-40"
-                  />
+                {/* Card Back - Reverso angelical */}
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/95 via-purple-900/95 to-pink-900/90">
+                  {/* Fondo celestial */}
+                  <div className="absolute inset-0 opacity-30">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_50%)]" />
+                  </div>
                   
-                  {/* Símbolos místicos overlay */}
+                  {/* Marco dorado ornamentado */}
+                  <div className="absolute inset-3 border-2 border-gold/40 rounded-xl">
+                    <div className="absolute inset-2 border border-gold/20 rounded-lg" />
+                  </div>
+
+                  {/* Símbolos angelicales en el centro */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <svg viewBox="0 0 200 300" className="w-full h-full p-8 opacity-80">
-                      {/* Pentagram */}
+                    <svg viewBox="0 0 200 300" className="w-full h-full p-12 opacity-90">
+                      {/* Alas angelicales */}
+                      <g className="animate-pulse-glow">
+                        {/* Ala izquierda */}
+                        <path
+                          d="M70 100 Q40 90 30 110 Q35 130 70 120 Z"
+                          fill="none"
+                          stroke="hsl(var(--gold))"
+                          strokeWidth="1.5"
+                          opacity="0.7"
+                        />
+                        <path
+                          d="M65 110 Q35 105 28 125 Q33 140 65 130 Z"
+                          fill="none"
+                          stroke="hsl(var(--gold))"
+                          strokeWidth="1.5"
+                          opacity="0.6"
+                        />
+                        
+                        {/* Ala derecha */}
+                        <path
+                          d="M130 100 Q160 90 170 110 Q165 130 130 120 Z"
+                          fill="none"
+                          stroke="hsl(var(--gold))"
+                          strokeWidth="1.5"
+                          opacity="0.7"
+                        />
+                        <path
+                          d="M135 110 Q165 105 172 125 Q167 140 135 130 Z"
+                          fill="none"
+                          stroke="hsl(var(--gold))"
+                          strokeWidth="1.5"
+                          opacity="0.6"
+                        />
+                      </g>
+
+                      {/* Corazón celestial en el centro */}
                       <path
-                        d="M100 40 L115 85 L165 85 L125 115 L140 160 L100 130 L60 160 L75 115 L35 85 L85 85 Z"
+                        d="M100 140 L85 125 Q80 115 90 110 Q100 115 100 115 Q100 115 110 110 Q120 115 115 125 Z"
+                        fill="hsl(var(--gold))"
+                        opacity="0.5"
+                        className="animate-pulse-glow"
+                        style={{ animationDelay: "0.5s" }}
+                      />
+
+                      {/* Halo */}
+                      <ellipse
+                        cx="100"
+                        cy="80"
+                        rx="30"
+                        ry="8"
                         fill="none"
                         stroke="hsl(var(--gold))"
                         strokeWidth="2"
+                        opacity="0.6"
                         className="animate-pulse-glow"
                       />
-                      
-                      {/* Círculo exterior */}
-                      <circle
-                        cx="100"
-                        cy="100"
-                        r="70"
-                        fill="none"
-                        stroke="hsl(var(--gold))"
-                        strokeWidth="1.5"
-                        opacity="0.5"
-                      />
-                      
-                      {/* Luna */}
-                      <path
-                        d="M100 180 Q110 200 100 220 Q90 200 100 180"
-                        fill="hsl(var(--gold))"
-                        opacity="0.6"
-                      />
-                      
-                      {/* Estrellas pequeñas */}
-                      {[30, 50, 150, 170].map((x, i) => (
-                        <circle
-                          key={i}
-                          cx={x}
-                          cy={40 + i * 60}
-                          r="2"
-                          fill="hsl(var(--gold))"
-                          opacity="0.8"
-                          className="animate-pulse-glow"
-                          style={{ animationDelay: `${i * 0.3}s` }}
-                        />
+
+                      {/* Estrellas divinas */}
+                      {[
+                        [50, 60], [150, 60], [40, 150], [160, 150],
+                        [100, 50], [70, 180], [130, 180]
+                      ].map(([x, y], i) => (
+                        <g key={i}>
+                          <circle
+                            cx={x}
+                            cy={y}
+                            r="2"
+                            fill="hsl(var(--gold))"
+                            opacity="0.8"
+                            className="animate-pulse-glow"
+                            style={{ animationDelay: `${i * 0.2}s` }}
+                          />
+                          <line
+                            x1={x}
+                            y1={y - 5}
+                            x2={x}
+                            y2={y + 5}
+                            stroke="hsl(var(--gold))"
+                            strokeWidth="0.5"
+                            opacity="0.5"
+                          />
+                          <line
+                            x1={x - 5}
+                            y1={y}
+                            x2={x + 5}
+                            y2={y}
+                            stroke="hsl(var(--gold))"
+                            strokeWidth="0.5"
+                            opacity="0.5"
+                          />
+                        </g>
                       ))}
                     </svg>
+                  </div>
+
+                  {/* Texto místico */}
+                  <div className="absolute bottom-8 left-0 right-0 text-center">
+                    <p className="text-gold/60 text-xs tracking-[0.3em] font-serif">ÁNGELES</p>
                   </div>
                 </div>
 
@@ -130,7 +191,7 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
 
         {/* Instrucción */}
         <p className="text-center text-sm text-muted-foreground/80 tracking-wider animate-in fade-in duration-700 delay-700">
-          Elige la carta que resuene con tu energía interior
+          Elige la carta que los ángeles te revelan
         </p>
       </div>
     </div>

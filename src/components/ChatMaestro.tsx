@@ -1,27 +1,63 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Mic, Paperclip } from "lucide-react";
+import { Send, Mic, Paperclip, X, Image as ImageIcon } from "lucide-react";
 import { chatConfig } from "@/lib/config";
+
+interface Message {
+  texto: string;
+  timestamp: string;
+  isUser?: boolean;
+  imageUrl?: string;
+}
 
 export function ChatMaestro() {
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState(chatConfig.maestro.mensajes);
+  const [messages, setMessages] = useState<Message[]>(chatConfig.maestro.mensajes);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSend = () => {
-    if (!message.trim()) return;
+    if (!message.trim() && !selectedImage) return;
     
-    setMessages([...messages, {
-      texto: message,
+    const newMessage: Message = {
+      texto: message || "(imagen)",
       timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-      isUser: true
-    }]);
+      isUser: true,
+      imageUrl: selectedImage || undefined
+    };
+
+    setMessages([...messages, newMessage]);
     setMessage("");
+    setSelectedImage(null);
+    setPreviewImage(null);
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setSelectedImage(result);
+        setPreviewImage(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setPreviewImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
@@ -57,7 +93,17 @@ export function ChatMaestro() {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className={`max-w-[80%] ${msg.isUser ? 'bg-gold/20 border-gold/30' : 'bg-purple-900/50 border-purple-700/30'} rounded-2xl p-3 border backdrop-blur-sm`}>
-                <p className="text-sm text-foreground leading-relaxed">{msg.texto}</p>
+                {msg.imageUrl && (
+                  <img 
+                    src={msg.imageUrl} 
+                    alt="Imagen enviada" 
+                    className="rounded-lg mb-2 max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setPreviewImage(msg.imageUrl || null)}
+                  />
+                )}
+                {msg.texto !== "(imagen)" && (
+                  <p className="text-sm text-foreground leading-relaxed">{msg.texto}</p>
+                )}
                 <p className="text-xs text-muted-foreground mt-1 text-right">{msg.timestamp}</p>
               </div>
             </div>
@@ -65,11 +111,42 @@ export function ChatMaestro() {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Preview de imagen seleccionada */}
+        {previewImage && (
+          <div className="px-4 pb-2">
+            <div className="relative inline-block">
+              <img 
+                src={previewImage} 
+                alt="Preview" 
+                className="h-20 rounded-lg border-2 border-gold/30"
+              />
+              <button
+                onClick={handleRemoveImage}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Input */}
         <div className="bg-gradient-to-r from-purple-900/60 to-purple-800/60 backdrop-blur-sm p-4 border-t border-gold/20">
           <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-gold/10 rounded-full transition-colors">
-              <Paperclip className="w-5 h-5 text-gold/70" />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+            
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 hover:bg-gold/10 rounded-full transition-colors"
+              title="Adjuntar imagen"
+            >
+              <ImageIcon className="w-5 h-5 text-gold/70" />
             </button>
             
             <input
@@ -94,6 +171,28 @@ export function ChatMaestro() {
           </div>
         </div>
       </div>
+
+      {/* Modal de preview de imagen */}
+      {previewImage && previewImage !== selectedImage && (
+        <div 
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <img 
+              src={previewImage} 
+              alt="Preview completo" 
+              className="max-w-full max-h-[90vh] rounded-lg"
+            />
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 w-10 h-10 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

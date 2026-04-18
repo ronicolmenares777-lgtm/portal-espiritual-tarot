@@ -297,8 +297,8 @@ export default function Home() {
         description="Experiencia mística de tarot premium. Conecta con el cosmos y revela tu destino a través de una lectura espiritual guiada."
       />
       
-      {currentScreen !== "chat" && <CustomCursor />}
-      {currentScreen !== "chat" && <FloatingParticles />}
+      <CustomCursor />
+      <FloatingParticles />
       
       {renderScreen()}
     </>
