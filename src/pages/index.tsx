@@ -9,23 +9,26 @@ import { WarningMessage } from "@/components/WarningMessage";
 import { ChatMaestro } from "@/components/ChatMaestro";
 import { SEO } from "@/components/SEO";
 import { phoneValidation } from "@/lib/config";
+import type { TarotCard } from "@/lib/tarotCards";
 import { useState } from "react";
 import { Sparkles, Moon, Star } from "lucide-react";
 
-type Screen = 
-  | "form" 
-  | "loading" 
-  | "cards" 
-  | "suspense" 
-  | "reveal" 
-  | "question1" 
-  | "question2" 
-  | "warning" 
-  | "transition" 
+type Screen =
+  | "form"
+  | "loading"
+  | "cards"
+  | "suspense"
+  | "reveal"
+  | "question1"
+  | "question2"
+  | "warning"
+  | "transition"
   | "chat";
 
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("form");
+  const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
+  const [selectedCardIndex, setSelectedCardIndex] = useState<number>(0);
   const [formData, setFormData] = useState({
     nombre: "",
     countryCode: "+1",
@@ -33,6 +36,10 @@ export default function Home() {
     problema: "",
   });
   const [phoneError, setPhoneError] = useState<string>("");
+  const [answers, setAnswers] = useState({
+    question1: "",
+    question2: "",
+  });
 
   const validatePhone = (phone: string, countryCode: string): boolean => {
     const validation = phoneValidation[countryCode];
@@ -74,26 +81,33 @@ export default function Home() {
     setTimeout(() => setCurrentScreen("cards"), 3000);
   };
 
-  const handleCardSelected = () => {
+  const handleCardSelected = (card: TarotCard, cardIndex: number) => {
+    setSelectedCard(card);
+    setSelectedCardIndex(cardIndex);
     setCurrentScreen("suspense");
   };
 
   const handleReveal = () => {
     setCurrentScreen("reveal");
-    setTimeout(() => setCurrentScreen("question1"), 3000);
   };
 
-  const handleQuestion1Answer = () => {
+  const handleRevealComplete = () => {
+    setCurrentScreen("question1");
+  };
+
+  const handleQuestion1Answer = (answer: string) => {
+    setAnswers({ ...answers, question1: answer });
     setCurrentScreen("question2");
   };
 
-  const handleQuestion2Answer = () => {
+  const handleQuestion2Answer = (answer: string) => {
+    setAnswers({ ...answers, question2: answer });
     setCurrentScreen("warning");
   };
 
   const handleWarningContinue = () => {
     setCurrentScreen("transition");
-    setTimeout(() => setCurrentScreen("chat"), 3000);
+    setTimeout(() => setCurrentScreen("chat"), 2000);
   };
 
   const renderScreen = () => {
@@ -293,13 +307,23 @@ export default function Home() {
         return <LoadingScreen onComplete={() => setCurrentScreen("cards")} />;
 
       case "cards":
-        return <CardSelection onCardSelected={handleCardSelected} />;
+        return (
+          <CardSelection 
+            onCardSelected={handleCardSelected}
+          />
+        );
 
       case "suspense":
         return <SuspenseScreen onReveal={handleReveal} />;
 
       case "reveal":
-        return <CardReveal onComplete={() => setCurrentScreen("question1")} />;
+        return selectedCard ? (
+          <CardReveal 
+            card={selectedCard}
+            cardIndex={selectedCardIndex}
+            onComplete={handleRevealComplete}
+          />
+        ) : null;
 
       case "question1":
         return (
