@@ -147,9 +147,10 @@ export default function AdminLogin() {
               {/* Botón de submit */}
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-gold via-amber-400 to-gold text-black font-semibold py-4 rounded-xl tracking-wider uppercase transition-all duration-300 hover:shadow-[0_0_30px_hsl(var(--gold))] hover:scale-[1.02] active:scale-[0.98]"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-gold via-amber-400 to-gold text-black font-semibold py-4 rounded-xl tracking-wider uppercase transition-all duration-300 hover:shadow-[0_0_30px_hsl(var(--gold))] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Entrar al Templo
+                {isLoading ? "ENTRANDO..." : "Entrar al Templo"}
               </button>
 
               {/* Volver */}
