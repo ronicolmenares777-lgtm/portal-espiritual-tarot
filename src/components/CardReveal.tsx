@@ -23,7 +23,7 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
     // Completar después de mostrar la carta
     const completeTimer = setTimeout(() => {
       onComplete();
-    }, 5000);
+    }, 3000); // Reducido de 5000ms a 3000ms (3 segundos)
 
     return () => {
       clearTimeout(flipTimer);
