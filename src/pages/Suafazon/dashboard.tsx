@@ -37,6 +37,7 @@ export default function AdminDashboard() {
   const [leads, setLeads] = useState<Lead[]>(mockLeads);
   const [stats, setStats] = useState(mockStats);
   const [showProfile, setShowProfile] = useState(false);
+  const [newLeadsCount, setNewLeadsCount] = useState(0);
   const [profileData, setProfileData] = useState({
     name: "Maestro Espiritual",
     headerText: "CANAL SAGRADO",
@@ -44,7 +45,7 @@ export default function AdminDashboard() {
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
   });
 
-  // Cargar perfil desde localStorage
+  // Cargar perfil y monitorear nuevos leads
   useEffect(() => {
     const savedProfile = localStorage.getItem("maestroProfile");
     if (savedProfile) {
@@ -56,12 +57,74 @@ export default function AdminDashboard() {
     if (savedStats) {
       setStats(JSON.parse(savedStats));
     }
-  }, []);
+
+    // Monitorear nuevos leads cada 5 segundos
+    const checkNewLeads = () => {
+      const lastLeadCount = parseInt(localStorage.getItem("lastLeadCount") || "0");
+      const currentLeadCount = leads.filter(l => l.status === "nuevo").length;
+      
+      if (currentLeadCount > lastLeadCount) {
+        const newCount = currentLeadCount - lastLeadCount;
+        setNewLeadsCount(newCount);
+        
+        // Mostrar notificación del navegador si está permitido
+        if (Notification.permission === "granted") {
+          new Notification("Portal Maestro", {
+            body: `${newCount} nuevo${newCount > 1 ? 's' : ''} lead${newCount > 1 ? 's' : ''}`,
+            icon: "/favicon.ico"
+          });
+        }
+      }
+      
+      localStorage.setItem("lastLeadCount", currentLeadCount.toString());
+    };
+
+    const interval = setInterval(checkNewLeads, 5000);
+    
+    // Solicitar permiso para notificaciones
+    if (Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
+    return () => clearInterval(interval);
+  }, [leads]);
+
+  // Limpiar notificaciones al ver los leads
+  useEffect(() => {
+    if (activeTab === "chats") {
+      setNewLeadsCount(0);
+    }
+  }, [activeTab]);
 
   // Guardar perfil en localStorage
   const handleSaveProfile = () => {
     localStorage.setItem("maestroProfile", JSON.stringify(profileData));
     setShowProfile(false);
+  };
+
+  // Subir imagen del maestro
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tamaño (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert("La imagen debe ser menor a 2MB");
+        return;
+      }
+      
+      // Validar tipo
+      if (!file.type.startsWith("image/")) {
+        alert("Solo se permiten imágenes");
+        return;
+      }
+      
+      // Convertir a base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileData({ ...profileData, avatar: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Reiniciar solo las métricas numéricas (no eliminar chats)
@@ -439,19 +502,31 @@ export default function AdminDashboard() {
 
               {/* Formulario editable */}
               <div className="space-y-6">
-                {/* URL del Avatar */}
+                {/* Upload de Foto */}
                 <div className="space-y-2">
                   <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
                     <ImageIcon className="w-3 h-3" />
-                    URL de la Foto
+                    Foto del Maestro
                   </label>
-                  <input
-                    type="url"
-                    value={profileData.avatar}
-                    onChange={(e) => setProfileData({ ...profileData, avatar: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all text-sm"
-                  />
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="avatar-upload"
+                    />
+                    <label
+                      htmlFor="avatar-upload"
+                      className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground hover:bg-muted/70 transition-all cursor-pointer flex items-center justify-center gap-2 text-sm"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      Seleccionar imagen
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Tamaño máximo: 2MB
+                  </p>
                 </div>
 
                 {/* Nombre del Maestro */}
@@ -479,20 +554,6 @@ export default function AdminDashboard() {
                     value={profileData.headerText}
                     onChange={(e) => setProfileData({ ...profileData, headerText: e.target.value })}
                     placeholder="Ej: CANAL SAGRADO, VISIÓN ESPIRITUAL, etc."
-                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
-                  />
-                </div>
-
-                {/* E-mail de Acceso */}
-                <div className="space-y-2">
-                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
-                    <Mail className="w-3 h-3" />
-                    E-mail de Acceso
-                  </label>
-                  <input
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                     className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
                   />
                 </div>

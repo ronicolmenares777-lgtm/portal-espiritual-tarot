@@ -90,6 +90,31 @@ export default function ChatView() {
     setShowProfile(false);
   };
 
+  // Subir imagen del maestro
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tamaño (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert("La imagen debe ser menor a 2MB");
+        return;
+      }
+      
+      // Validar tipo
+      if (!file.type.startsWith("image/")) {
+        alert("Solo se permiten imágenes");
+        return;
+      }
+      
+      // Convertir a base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileData({ ...profileData, avatar: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   if (!lead) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -412,19 +437,31 @@ export default function ChatView() {
 
               {/* Formulario editable */}
               <div className="space-y-6">
-                {/* URL del Avatar */}
+                {/* Upload de Foto */}
                 <div className="space-y-2">
                   <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
                     <ImageIcon className="w-3 h-3" />
-                    URL de la Foto
+                    Foto del Maestro
                   </label>
-                  <input
-                    type="url"
-                    value={profileData.avatar}
-                    onChange={(e) => setProfileData({ ...profileData, avatar: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all text-sm"
-                  />
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="avatar-upload-chat"
+                    />
+                    <label
+                      htmlFor="avatar-upload-chat"
+                      className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground hover:bg-muted/70 transition-all cursor-pointer flex items-center justify-center gap-2 text-sm"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      Seleccionar imagen
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Tamaño máximo: 2MB
+                  </p>
                 </div>
 
                 {/* Nombre del Maestro */}
@@ -452,20 +489,6 @@ export default function ChatView() {
                     value={profileData.headerText}
                     onChange={(e) => setProfileData({ ...profileData, headerText: e.target.value })}
                     placeholder="Ej: CANAL SAGRADO, VISIÓN ESPIRITUAL, etc."
-                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
-                  />
-                </div>
-
-                {/* E-mail de Acceso */}
-                <div className="space-y-2">
-                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
-                    <Mail className="w-3 h-3" />
-                    E-mail de Acceso
-                  </label>
-                  <input
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                     className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
                   />
                 </div>
