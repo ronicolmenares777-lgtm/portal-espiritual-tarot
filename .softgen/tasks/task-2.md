@@ -1,6 +1,6 @@
 ---
 title: Pantalla de formulario inicial
-status: todo
+status: in_progress
 priority: high
 type: feature
 tags: [formulario, onboarding]

@@ -1,6 +1,6 @@
 ---
 title: Crear estructura base y sistema de diseño
-status: in_progress
+status: done
 priority: urgent
 type: feature
 tags: [diseño, setup]
@@ -10,7 +10,7 @@ position: 1
 ---
 
 ## Notes
-Configurar el sistema de diseño místico con paleta púrpura nocturno + dorado celestial, fuentes elegantes (Cormorant Garamond + Raleway), y elementos visuales únicos como cursor dorado personalizado y partículas flotantes.
+Configurar el sistema de diseño místico con paleta púrpura nocturno + dorado celestial, fuentes elegantes (Cormorant Garamond + Raleway), y elementos visualos únicos como cursor dorado personalizado y partículas flotantes.
 
 ## Checklist
 - [x] Crear .softgen/project.md con visión y diseño
