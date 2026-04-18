@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getRandomCards, type TarotCard } from "@/lib/tarotCards";
 
 interface CardSelectionProps {
@@ -25,177 +26,218 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
   };
 
   if (cards.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-gold border-t-transparent rounded-full" />
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-in fade-in duration-1000">
-      <div className="max-w-6xl w-full space-y-12 relative z-10">
-        {/* Título */}
-        <div className="text-center space-y-4">
-          <h2 className="text-4xl md:text-5xl font-serif font-bold text-gold tracking-[0.2em] animate-in slide-in-from-top duration-700">
-            REVELA TU DESTINO
-          </h2>
-          <p className="text-sm text-gold/70 tracking-[0.15em] uppercase animate-in fade-in duration-700 delay-300">
-            El cosmos ha hablado a través de tu intención sagrada
-          </p>
-        </div>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Título */}
+      <motion.div
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="text-center space-y-4 mb-16"
+      >
+        <h1 className="font-serif text-4xl md:text-6xl text-gold tracking-wider">
+          SELECCIONA TU CARTA
+        </h1>
+        <p className="text-gold/70 text-sm tracking-[0.3em] uppercase max-w-lg mx-auto">
+          El cosmos aguarda tu elección
+        </p>
+      </motion.div>
 
-        {/* Cartas */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
-          {cards.map((card, index) => (
-            <button
-              key={card.id}
-              onClick={() => handleCardClick(index)}
-              onMouseEnter={() => setHoveredCard(index)}
-              onMouseLeave={() => setHoveredCard(null)}
-              disabled={selectedCard !== null}
-              className={`relative group transition-all duration-500 animate-in slide-in-from-bottom delay-${index * 200} ${
-                selectedCard === index ? "scale-110" : ""
-              } ${
-                selectedCard !== null && selectedCard !== index ? "opacity-30 scale-90" : ""
-              }`}
+      {/* Cartas */}
+      <div className="flex gap-6 md:gap-12 items-center justify-center mb-12 flex-wrap max-w-4xl">
+        {cards.map((card, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ 
+              opacity: selectedCard === null || selectedCard === index ? 1 : 0.3,
+              scale: 1,
+              y: 0
+            }}
+            transition={{ 
+              duration: 0.6,
+              delay: index * 0.15,
+              type: "spring",
+              stiffness: 100
+            }}
+            className="relative cursor-pointer"
+            onHoverStart={() => setHoveredCard(index)}
+            onHoverEnd={() => setHoveredCard(null)}
+            onClick={() => handleCardClick(index)}
+            style={{
+              perspective: "1000px",
+            }}
+          >
+            <motion.div
+              className="w-36 h-52 md:w-44 md:h-64"
+              animate={{
+                rotateY: hoveredCard === index ? 5 : 0,
+                z: hoveredCard === index ? 50 : 0,
+              }}
+              transition={{
+                duration: 0.3,
+                type: "spring",
+                stiffness: 300,
+              }}
+              style={{
+                transformStyle: "preserve-3d",
+              }}
             >
-              {/* Card Container */}
-              <div 
-                className={`relative w-48 h-72 md:w-56 md:h-80 rounded-2xl overflow-hidden transition-all duration-500 ${
-                  hoveredCard === index ? "scale-105" : ""
-                }`}
-                style={{
-                  boxShadow: hoveredCard === index 
-                    ? "0 0 40px hsl(var(--gold) / 0.6), 0 0 80px hsl(var(--gold) / 0.3)"
-                    : "0 10px 40px rgba(0, 0, 0, 0.5)",
-                }}
-              >
-                {/* Card Back - Diseño mejorado con símbolos místicos */}
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-purple-950">
-                  {/* Patron de fondo */}
-                  <div className="absolute inset-0 opacity-30">
-                    <svg className="w-full h-full" viewBox="0 0 200 300">
-                      <defs>
-                        <pattern id={`stars-${index}`} x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-                          <circle cx="5" cy="5" r="1" fill="hsl(var(--gold))" opacity="0.3" />
-                          <circle cx="25" cy="15" r="0.5" fill="hsl(var(--gold))" opacity="0.4" />
-                          <circle cx="15" cy="30" r="0.8" fill="hsl(var(--gold))" opacity="0.3" />
-                        </pattern>
-                      </defs>
-                      <rect width="200" height="300" fill={`url(#stars-${index})`} />
+              {/* Carta - Reverso místico */}
+              <div className="w-full h-full bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 rounded-2xl border-2 border-gold/30 flex items-center justify-center relative overflow-hidden shadow-2xl transition-all duration-300">
+                {/* Patrón de fondo místico */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <svg width="100" height="100" viewBox="0 0 120 120">
+                      <circle cx="60" cy="60" r="50" fill="none" stroke="hsl(var(--gold))" strokeWidth="2"/>
+                      <circle cx="60" cy="60" r="40" fill="none" stroke="hsl(var(--gold))" strokeWidth="1.5"/>
+                      <path d="M60 10 L60 110 M10 60 L110 60" stroke="hsl(var(--gold))" strokeWidth="1"/>
+                      <path d="M25 25 L95 95 M95 25 L25 95" stroke="hsl(var(--gold))" strokeWidth="1"/>
                     </svg>
-                  </div>
-
-                  {/* Marco ornamental dorado */}
-                  <div className="absolute inset-4 border-2 border-gold/40 rounded-xl">
-                    <div className="absolute inset-2 border border-gold/20 rounded-lg" />
-                  </div>
-
-                  {/* Símbolos centrales */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg viewBox="0 0 200 300" className="w-full h-full p-12">
-                      {/* Pentagrama central */}
-                      <g className="animate-pulse-glow" style={{ animationDuration: "3s" }}>
-                        <path
-                          d="M100 80 L115 120 L160 120 L125 145 L140 185 L100 160 L60 185 L75 145 L40 120 L85 120 Z"
-                          fill="none"
-                          stroke="hsl(var(--gold))"
-                          strokeWidth="2"
-                          opacity="0.8"
-                        />
-                        <circle
-                          cx="100"
-                          cy="132.5"
-                          r="55"
-                          fill="none"
-                          stroke="hsl(var(--gold))"
-                          strokeWidth="1.5"
-                          opacity="0.6"
-                        />
-                      </g>
-
-                      {/* Luna creciente superior */}
-                      <g transform="translate(100, 40)">
-                        <path
-                          d="M -10 0 Q 0 -15 10 0 Q 0 10 -10 0"
-                          fill="hsl(var(--gold))"
-                          opacity="0.7"
-                          className="animate-pulse-glow"
-                          style={{ animationDelay: "0.5s", animationDuration: "4s" }}
-                        />
-                      </g>
-
-                      {/* Sol inferior */}
-                      <g transform="translate(100, 220)">
-                        <circle cx="0" cy="0" r="12" fill="hsl(var(--gold))" opacity="0.7" />
-                        {[...Array(8)].map((_, i) => (
-                          <line
-                            key={i}
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="-20"
-                            stroke="hsl(var(--gold))"
-                            strokeWidth="2"
-                            opacity="0.6"
-                            transform={`rotate(${i * 45})`}
-                          />
-                        ))}
-                      </g>
-
-                      {/* Estrellas en las esquinas */}
-                      {[
-                        { x: 30, y: 50 },
-                        { x: 170, y: 50 },
-                        { x: 30, y: 250 },
-                        { x: 170, y: 250 }
-                      ].map((pos, i) => (
-                        <g key={i} transform={`translate(${pos.x}, ${pos.y})`}>
-                          <path
-                            d="M 0 -5 L 1 -1 L 5 0 L 1 1 L 0 5 L -1 1 L -5 0 L -1 -1 Z"
-                            fill="hsl(var(--gold))"
-                            opacity="0.7"
-                            className="animate-pulse-glow"
-                            style={{ animationDelay: `${i * 0.3}s` }}
-                          />
-                        </g>
-                      ))}
-                    </svg>
-                  </div>
-
-                  {/* Texto místico en el centro */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center space-y-2">
-                      <p className="text-gold/80 text-xs tracking-[0.3em] font-serif uppercase">
-                        Arcano
-                      </p>
-                      <div className="w-16 h-px bg-gold/50 mx-auto" />
-                      <p className="text-gold/80 text-xs tracking-[0.3em] font-serif uppercase">
-                        Mayor
-                      </p>
-                    </div>
                   </div>
                 </div>
+                
+                {/* Pentagrama central */}
+                <motion.svg
+                  width="70"
+                  height="70"
+                  viewBox="0 0 100 100"
+                  className="relative z-10"
+                  animate={{
+                    rotate: hoveredCard === index ? 360 : 0,
+                  }}
+                  transition={{
+                    duration: 20,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  <path
+                    d="M50 10 L61 40 L92 40 L67 58 L78 88 L50 70 L22 88 L33 58 L8 40 L39 40 Z"
+                    fill="none"
+                    stroke="hsl(var(--gold))"
+                    strokeWidth="2"
+                  />
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="hsl(var(--gold))" strokeWidth="1.5"/>
+                </motion.svg>
 
-                {/* Glow effect on hover */}
-                {hoveredCard === index && (
-                  <div className="absolute inset-0 bg-gold/10 animate-pulse-glow" />
-                )}
+                {/* Símbolos en las esquinas */}
+                <div className="absolute top-3 left-3 text-gold/50 text-xs">☽</div>
+                <div className="absolute top-3 right-3 text-gold/50 text-xs">☀</div>
+                <div className="absolute bottom-3 left-3 text-gold/50 text-xs">✦</div>
+                <div className="absolute bottom-3 right-3 text-gold/50 text-xs">✧</div>
+
+                {/* Efecto de brillo en hover */}
+                <AnimatePresence>
+                  {hoveredCard === index && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 bg-gradient-to-br from-gold/20 via-transparent to-gold/20 pointer-events-none"
+                    />
+                  )}
+                </AnimatePresence>
+
+                {/* Borde brillante en hover */}
+                <motion.div
+                  className="absolute inset-0 rounded-2xl pointer-events-none"
+                  animate={{
+                    boxShadow: hoveredCard === index
+                      ? "0 0 40px rgba(218, 165, 32, 0.6), inset 0 0 20px rgba(218, 165, 32, 0.2)"
+                      : "0 0 0px rgba(218, 165, 32, 0)",
+                  }}
+                  transition={{ duration: 0.3 }}
+                />
               </div>
+            </motion.div>
 
-              {/* Card number indicator */}
-              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-gold/60 text-sm tracking-widest">
-                CARTA {index + 1}
-              </div>
-            </button>
-          ))}
-        </div>
+            {/* Sombra dinámica */}
+            <motion.div
+              className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-28 h-6 bg-gold/20 rounded-full blur-xl"
+              animate={{
+                opacity: hoveredCard === index ? 0.6 : 0.3,
+                scale: hoveredCard === index ? 1.2 : 1,
+              }}
+              transition={{ duration: 0.3 }}
+            />
 
-        {/* Instrucción */}
-        <p className="text-center text-sm text-muted-foreground/80 tracking-wider animate-in fade-in duration-700 delay-700">
+            {/* Partículas brillantes en hover */}
+            <AnimatePresence>
+              {hoveredCard === index && (
+                <>
+                  {[...Array(6)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-1 h-1 bg-gold/80 rounded-full"
+                      initial={{
+                        x: "50%",
+                        y: "50%",
+                        opacity: 0,
+                      }}
+                      animate={{
+                        x: `${50 + Math.cos((i * Math.PI) / 3) * 100}%`,
+                        y: `${50 + Math.sin((i * Math.PI) / 3) * 100}%`,
+                        opacity: [0, 1, 0],
+                      }}
+                      exit={{ opacity: 0 }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        delay: i * 0.1,
+                      }}
+                    />
+                  ))}
+                </>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Instrucción */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8, duration: 0.8 }}
+        className="text-center space-y-2"
+      >
+        <p className="text-foreground/80 text-base md:text-lg">
+          Cierra los ojos, respira profundo y deja que tu intuición te guíe
+        </p>
+        <p className="text-gold/60 text-sm tracking-wider">
           Elige la carta que resuene con la energía de tu corazón
         </p>
+      </motion.div>
+
+      {/* Círculos decorativos animados */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {[...Array(5)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full border border-gold/10"
+            style={{
+              width: `${200 + i * 100}px`,
+              height: `${200 + i * 100}px`,
+              left: "50%",
+              top: "50%",
+              x: "-50%",
+              y: "-50%",
+            }}
+            animate={{
+              scale: [1, 1.1, 1],
+              opacity: [0.1, 0.2, 0.1],
+            }}
+            transition={{
+              duration: 4 + i,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
       </div>
     </div>
   );
