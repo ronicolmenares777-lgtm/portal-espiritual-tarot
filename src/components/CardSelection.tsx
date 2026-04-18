@@ -4,29 +4,27 @@ import { useState, useEffect } from "react";
 import { getRandomCards, type TarotCard } from "@/lib/tarotCards";
 
 interface CardSelectionProps {
-  onCardSelected?: (card: TarotCard, cardIndex: number) => void;
+  onCardSelected: (card: TarotCard, index: number) => void;
 }
 
 export function CardSelection({ onCardSelected }: CardSelectionProps) {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
-  const [randomCards, setRandomCards] = useState<TarotCard[]>([]);
+  const [cards, setCards] = useState<TarotCard[]>([]);
 
+  // Generar 3 cartas aleatorias al montar
   useEffect(() => {
-    // Generar 3 cartas aleatorias diferentes cada vez que se monta el componente
-    setRandomCards(getRandomCards(3));
+    setCards(getRandomCards());
   }, []);
 
   const handleCardClick = (index: number) => {
-    if (randomCards.length === 0) return;
-    
     setSelectedCard(index);
     setTimeout(() => {
-      onCardSelected?.(randomCards[index], index);
+      onCardSelected(cards[index], index);
     }, 800);
   };
 
-  if (randomCards.length === 0) {
+  if (cards.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin w-12 h-12 border-4 border-gold border-t-transparent rounded-full" />
@@ -49,7 +47,7 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
 
         {/* Cartas */}
         <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
-          {randomCards.map((card, index) => (
+          {cards.map((card, index) => (
             <button
               key={card.id}
               onClick={() => handleCardClick(index)}
