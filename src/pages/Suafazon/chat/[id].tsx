@@ -6,9 +6,21 @@ import { FloatingParticles } from "@/components/FloatingParticles";
 import { mockLeads, mockQuickResponses } from "@/lib/mockData";
 import type { Lead, QuickResponse } from "@/types/admin";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ArrowLeft, Send, Mic, Paperclip, Star, MessageCircle, 
-  X, Settings, User, Sparkles, Circle, CheckCircle, Phone, Mail, Save
+import {
+  ArrowLeft,
+  Send,
+  Mic,
+  Paperclip,
+  Star,
+  Phone,
+  X,
+  Circle,
+  CheckCircle,
+  User,
+  Mail,
+  Save,
+  Sparkles,
+  ImageIcon
 } from "lucide-react";
 import Link from "next/link";
 
@@ -26,20 +38,21 @@ export default function ChatView() {
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
   });
 
+  // Cargar lead y perfil
   useEffect(() => {
-    const isAuth = localStorage.getItem("admin_authenticated");
-    if (!isAuth) {
-      router.push("/Suafazon");
-      return;
-    }
-
     if (id) {
       const foundLead = mockLeads.find(l => l.id === id);
       if (foundLead) {
         setLead(foundLead);
       }
     }
-  }, [id, router]);
+    
+    // Cargar perfil desde localStorage
+    const savedProfile = localStorage.getItem("maestroProfile");
+    if (savedProfile) {
+      setProfileData(JSON.parse(savedProfile));
+    }
+  }, [id]);
 
   const handleSendMessage = (text: string) => {
     if (!text.trim() || !lead) return;
@@ -71,8 +84,9 @@ export default function ChatView() {
     setLead({ ...lead, status: newStatus });
   };
 
+  // Guardar perfil
   const handleSaveProfile = () => {
-    // Mock: guardar perfil (en producción se guardará en Supabase)
+    localStorage.setItem("maestroProfile", JSON.stringify(profileData));
     setShowProfile(false);
   };
 
@@ -398,6 +412,21 @@ export default function ChatView() {
 
               {/* Formulario editable */}
               <div className="space-y-6">
+                {/* URL del Avatar */}
+                <div className="space-y-2">
+                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
+                    <ImageIcon className="w-3 h-3" />
+                    URL de la Foto
+                  </label>
+                  <input
+                    type="url"
+                    value={profileData.avatar}
+                    onChange={(e) => setProfileData({ ...profileData, avatar: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all text-sm"
+                  />
+                </div>
+
                 {/* Nombre del Maestro */}
                 <div className="space-y-2">
                   <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
@@ -416,7 +445,7 @@ export default function ChatView() {
                 <div className="space-y-2">
                   <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
                     <Sparkles className="w-3 h-3" />
-                    Texto del Header
+                    Estado / Texto del Header
                   </label>
                   <input
                     type="text"
@@ -450,14 +479,11 @@ export default function ChatView() {
                     CANCELAR
                   </button>
                   <button
-                    onClick={() => {
-                      // Aquí se guardarían los cambios
-                      setShowProfile(false);
-                    }}
+                    onClick={handleSaveProfile}
                     className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all flex items-center justify-center gap-2"
                   >
                     <Save className="w-4 h-4" />
-                    GUARDAR CAMBIOS
+                    GUARDAR
                   </button>
                 </div>
               </div>

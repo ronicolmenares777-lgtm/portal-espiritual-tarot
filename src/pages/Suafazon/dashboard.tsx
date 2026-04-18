@@ -17,17 +17,56 @@ import {
   BarChart3,
   TrendingUp,
   Circle,
-  HelpCircle
+  HelpCircle,
+  RefreshCw,
+  Star,
+  User,
+  Mail,
+  Save,
+  X,
+  Image as ImageIcon
 } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 
 type Tab = "chats" | "leads";
 
-export default function Dashboard() {
+export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>("chats");
+  const [activeTab, setActiveTab] = useState<"chats" | "leads">("chats");
   const [searchTerm, setSearchTerm] = useState("");
   const [leads, setLeads] = useState<Lead[]>(mockLeads);
   const [stats, setStats] = useState(mockStats);
+  const [showProfile, setShowProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: "Maestro Espiritual",
+    headerText: "CANAL SAGRADO",
+    email: "admin@tarot.com",
+    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
+  });
+
+  // Cargar perfil desde localStorage
+  useEffect(() => {
+    const savedProfile = localStorage.getItem("maestroProfile");
+    if (savedProfile) {
+      setProfileData(JSON.parse(savedProfile));
+    }
+  }, []);
+
+  // Guardar perfil en localStorage
+  const handleSaveProfile = () => {
+    localStorage.setItem("maestroProfile", JSON.stringify(profileData));
+    setShowProfile(false);
+  };
+
+  // Reiniciar métricas
+  const handleResetMetrics = () => {
+    if (confirm("¿Estás seguro de reiniciar todas las métricas?")) {
+      setStats(mockStats);
+      setLeads(mockLeads);
+      localStorage.removeItem("adminStats");
+      localStorage.removeItem("adminLeads");
+    }
+  };
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("adminAuth");
@@ -192,29 +231,40 @@ export default function Dashboard() {
           {/* Header */}
           <div className="bg-black border-b border-gold/20 px-8 py-4">
             <div className="flex items-center justify-between">
-              <button className="p-2 hover:bg-muted/20 rounded-lg transition-colors">
-                <HelpCircle className="w-5 h-5 text-muted-foreground" />
-              </button>
-
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-gold" />
-                <span className="text-sm tracking-[0.3em] text-gold">CANAL SAGRADO</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gold/10 rounded-lg">
+                  <Sparkles className="w-4 h-4 text-gold" />
+                  <span className="text-xs tracking-[0.3em] text-gold font-medium">
+                    {profileData.headerText}
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-foreground">Maestro Espiritual</span>
-                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30">
-                  <img
-                    src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
-                    alt="Maestro"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={handleLogout}
-                  className="p-2 hover:bg-muted/20 rounded-lg transition-colors"
+                  onClick={handleResetMetrics}
+                  className="p-2 hover:bg-muted/50 rounded-lg transition-colors group"
+                  title="Reiniciar métricas"
                 >
-                  <LogOut className="w-5 h-5 text-muted-foreground hover:text-red-400" />
+                  <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-gold group-hover:rotate-180 transition-all duration-300" />
+                </button>
+
+                <button className="p-2 hover:bg-muted/50 rounded-lg transition-colors">
+                  <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-gold transition-colors" />
+                </button>
+
+                <button
+                  onClick={() => setShowProfile(true)}
+                  className="flex items-center gap-3 hover:bg-muted/50 px-3 py-2 rounded-lg transition-colors"
+                >
+                  <span className="text-sm font-medium">{profileData.name}</span>
+                  <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gold/30">
+                    <img
+                      src={profileData.avatar}
+                      alt="Maestro"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </button>
               </div>
             </div>
@@ -322,6 +372,135 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Perfil del Maestro */}
+      <AnimatePresence>
+        {showProfile && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="w-full max-w-md bg-card rounded-2xl p-8 border border-gold/30 relative"
+              style={{
+                boxShadow: "0 0 50px hsl(var(--gold) / 0.3)",
+              }}
+            >
+              {/* Botón cerrar */}
+              <button
+                onClick={() => setShowProfile(false)}
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Título */}
+              <h2 className="text-2xl font-serif text-gold text-center mb-8 tracking-wider">
+                PERFIL SAGRADO
+              </h2>
+
+              {/* Avatar */}
+              <div className="flex justify-center mb-8">
+                <div className="relative">
+                  <div 
+                    className="w-32 h-32 rounded-full overflow-hidden border-2 border-gold/50"
+                    style={{
+                      boxShadow: "0 0 30px hsl(var(--gold) / 0.4)",
+                    }}
+                  >
+                    <img
+                      src={profileData.avatar}
+                      alt="Maestro"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-gold rounded-full flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-background" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Formulario editable */}
+              <div className="space-y-6">
+                {/* URL del Avatar */}
+                <div className="space-y-2">
+                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
+                    <ImageIcon className="w-3 h-3" />
+                    URL de la Foto
+                  </label>
+                  <input
+                    type="url"
+                    value={profileData.avatar}
+                    onChange={(e) => setProfileData({ ...profileData, avatar: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all text-sm"
+                  />
+                </div>
+
+                {/* Nombre del Maestro */}
+                <div className="space-y-2">
+                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
+                    <User className="w-3 h-3" />
+                    Nombre del Maestro
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.name}
+                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+                  />
+                </div>
+
+                {/* Texto del Header */}
+                <div className="space-y-2">
+                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
+                    <Sparkles className="w-3 h-3" />
+                    Estado / Texto del Header
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.headerText}
+                    onChange={(e) => setProfileData({ ...profileData, headerText: e.target.value })}
+                    placeholder="Ej: CANAL SAGRADO, VISIÓN ESPIRITUAL, etc."
+                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+                  />
+                </div>
+
+                {/* E-mail de Acceso */}
+                <div className="space-y-2">
+                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
+                    <Mail className="w-3 h-3" />
+                    E-mail de Acceso
+                  </label>
+                  <input
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+                  />
+                </div>
+
+                {/* Botones */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setShowProfile(false)}
+                    className="flex-1 px-6 py-3 rounded-lg border border-gold/30 text-muted-foreground hover:text-foreground hover:border-gold/50 transition-all"
+                  >
+                    CANCELAR
+                  </button>
+                  <button
+                    onClick={handleSaveProfile}
+                    className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    GUARDAR
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
