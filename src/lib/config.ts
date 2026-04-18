@@ -6,11 +6,13 @@ export const chatConfig = {
     mensajes: [
       {
         texto: "Hola, soy el Maestro. Veo que el destino te ha guiado hasta el portal con éxito.",
-        timestamp: "22:02"
+        timestamp: "22:02",
+        isUser: false
       },
       {
         texto: "Deseo ayudarte a encontrar la claridad y resolver lo que te aflige. Cuéntame con confianza, ¿qué situación sentimental o espiritual te trajo aquí y cómo puedo guiarte hoy?",
-        timestamp: "22:02"
+        timestamp: "22:02",
+        isUser: false
       }
     ]
   }
