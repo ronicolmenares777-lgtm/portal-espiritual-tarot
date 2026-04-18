@@ -3,111 +3,133 @@
 import { useState } from "react";
 
 interface CardSelectionProps {
-  onCardSelected?: (cardIndex: number) => void;
+  onCardSelected?: () => void;
 }
 
 export function CardSelection({ onCardSelected }: CardSelectionProps) {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [selectedCard, setSelectedCard] = useState<number | null>(null);
 
   const handleCardClick = (index: number) => {
-    onCardSelected?.(index);
+    setSelectedCard(index);
+    setTimeout(() => {
+      onCardSelected?.();
+    }, 800);
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-in fade-in duration-1000">
-      <div className="max-w-5xl w-full space-y-12 relative z-10">
+      <div className="max-w-6xl w-full space-y-12 relative z-10">
         {/* Título */}
-        <div className="text-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-1000">
-          <h2 className="text-4xl md:text-6xl font-serif font-bold text-gold tracking-[0.2em]">
+        <div className="text-center space-y-4">
+          <h2 className="text-4xl md:text-5xl font-serif font-bold text-gold tracking-[0.2em] animate-in slide-in-from-top duration-700">
             REVELA TU DESTINO
           </h2>
-          <p className="text-sm text-foreground/70 tracking-widest uppercase italic">
+          <p className="text-sm text-gold/70 tracking-[0.15em] uppercase animate-in fade-in duration-700 delay-300">
             El cosmos ha hablado a través de tu intención sagrada
           </p>
         </div>
 
         {/* Cartas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
           {[0, 1, 2].map((index) => (
             <button
               key={index}
               onClick={() => handleCardClick(index)}
               onMouseEnter={() => setHoveredCard(index)}
               onMouseLeave={() => setHoveredCard(null)}
-              className="group relative aspect-[2/3] rounded-2xl overflow-hidden transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+              disabled={selectedCard !== null}
+              className={`relative group transition-all duration-500 ${
+                selectedCard === index ? "scale-110" : ""
+              } ${
+                selectedCard !== null && selectedCard !== index ? "opacity-30 scale-90" : ""
+              }`}
               style={{
-                animationDelay: `${index * 150}ms`,
+                animationDelay: `${index * 200}ms`,
               }}
             >
-              {/* Fondo de la carta */}
+              {/* Card Container */}
               <div 
-                className={`absolute inset-0 bg-gradient-to-br from-purple-card via-secondary to-purple-deep border-2 transition-all duration-500 ${
-                  hoveredCard === index 
-                    ? "border-gold shadow-[0_0_40px_rgba(212,175,55,0.6)]" 
-                    : "border-purple-border shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+                className={`relative w-48 h-72 md:w-56 md:h-80 rounded-2xl overflow-hidden transition-all duration-500 ${
+                  hoveredCard === index ? "scale-105" : ""
                 }`}
-              />
-
-              {/* Diseño del reverso de la carta */}
-              <div className="absolute inset-0 p-6 flex flex-col items-center justify-center">
-                {/* Marco decorativo exterior */}
-                <div className="absolute inset-4 border-2 border-gold/30 rounded-lg" />
-                
-                {/* Símbolo central - Pentagrama */}
-                <div className="relative w-32 h-32 mb-4">
-                  <svg viewBox="0 0 100 100" className={`w-full h-full transition-all duration-500 ${hoveredCard === index ? "scale-110 rotate-12" : ""}`}>
-                    {/* Pentagrama */}
-                    <path
-                      d="M 50 10 L 61 40 L 95 40 L 68 60 L 79 90 L 50 70 L 21 90 L 32 60 L 5 40 L 39 40 Z"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="text-gold/60"
-                    />
-                    {/* Círculo exterior */}
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="45"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      className="text-gold/40"
-                    />
-                  </svg>
-                </div>
-
-                {/* Símbolos místicos decorativos */}
-                <div className="space-y-2 text-center">
-                  <div className="flex justify-center gap-2">
-                    <span className="text-gold/50 text-2xl">☽</span>
-                    <span className="text-gold/50 text-2xl">✧</span>
-                    <span className="text-gold/50 text-2xl">☾</span>
+                style={{
+                  boxShadow: hoveredCard === index 
+                    ? "0 0 40px hsl(var(--gold) / 0.6), 0 0 80px hsl(var(--gold) / 0.3)"
+                    : "0 10px 40px rgba(0, 0, 0, 0.5)",
+                }}
+              >
+                {/* Card Back - Imagen de reverso místico */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 via-purple-800/90 to-purple-900/90 border-4 border-gold/30">
+                  <img 
+                    src="https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=400&h=600&fit=crop"
+                    alt="Card back"
+                    className="w-full h-full object-cover opacity-40"
+                  />
+                  
+                  {/* Símbolos místicos overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <svg viewBox="0 0 200 300" className="w-full h-full p-8 opacity-80">
+                      {/* Pentagram */}
+                      <path
+                        d="M100 40 L115 85 L165 85 L125 115 L140 160 L100 130 L60 160 L75 115 L35 85 L85 85 Z"
+                        fill="none"
+                        stroke="hsl(var(--gold))"
+                        strokeWidth="2"
+                        className="animate-pulse-glow"
+                      />
+                      
+                      {/* Círculo exterior */}
+                      <circle
+                        cx="100"
+                        cy="100"
+                        r="70"
+                        fill="none"
+                        stroke="hsl(var(--gold))"
+                        strokeWidth="1.5"
+                        opacity="0.5"
+                      />
+                      
+                      {/* Luna */}
+                      <path
+                        d="M100 180 Q110 200 100 220 Q90 200 100 180"
+                        fill="hsl(var(--gold))"
+                        opacity="0.6"
+                      />
+                      
+                      {/* Estrellas pequeñas */}
+                      {[30, 50, 150, 170].map((x, i) => (
+                        <circle
+                          key={i}
+                          cx={x}
+                          cy={40 + i * 60}
+                          r="2"
+                          fill="hsl(var(--gold))"
+                          opacity="0.8"
+                          className="animate-pulse-glow"
+                          style={{ animationDelay: `${i * 0.3}s` }}
+                        />
+                      ))}
+                    </svg>
                   </div>
                 </div>
 
-                {/* Destellos en hover */}
+                {/* Glow effect on hover */}
                 {hoveredCard === index && (
-                  <>
-                    <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-gold rounded-full animate-ping" />
-                    <div className="absolute top-1/3 right-1/4 w-2 h-2 bg-gold rounded-full animate-ping delay-75" />
-                    <div className="absolute bottom-1/3 left-1/3 w-2 h-2 bg-gold rounded-full animate-ping delay-150" />
-                  </>
+                  <div className="absolute inset-0 bg-gold/10 animate-pulse-glow" />
                 )}
               </div>
 
-              {/* Brillo en hover */}
-              <div 
-                className={`absolute inset-0 bg-gradient-to-t from-gold/0 via-gold/5 to-gold/0 transition-opacity duration-500 ${
-                  hoveredCard === index ? "opacity-100" : "opacity-0"
-                }`}
-              />
+              {/* Card number indicator */}
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-gold/60 text-sm tracking-widest">
+                CARTA {index + 1}
+              </div>
             </button>
           ))}
         </div>
 
-        {/* Texto decorativo */}
-        <p className="text-center text-xs text-muted-foreground/60 italic animate-in fade-in duration-1000 delay-700">
+        {/* Instrucción */}
+        <p className="text-center text-sm text-muted-foreground/80 tracking-wider animate-in fade-in duration-700 delay-700">
           Elige la carta que resuene con tu energía interior
         </p>
       </div>

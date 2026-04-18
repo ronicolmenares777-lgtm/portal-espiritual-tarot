@@ -8,6 +8,7 @@ import { QuestionScreen } from "@/components/QuestionScreen";
 import { WarningMessage } from "@/components/WarningMessage";
 import { ChatMaestro } from "@/components/ChatMaestro";
 import { SEO } from "@/components/SEO";
+import { phoneValidation } from "@/lib/config";
 import { useState } from "react";
 
 type Screen = 
@@ -30,9 +31,45 @@ export default function Home() {
     whatsapp: "",
     problema: "",
   });
+  const [phoneError, setPhoneError] = useState<string>("");
+
+  const validatePhone = (phone: string, countryCode: string): boolean => {
+    const validation = phoneValidation[countryCode];
+    if (!validation) return true;
+    
+    const regex = new RegExp(validation.pattern);
+    if (!regex.test(phone)) {
+      setPhoneError(`Debe tener ${validation.digits} dígitos`);
+      return false;
+    }
+    setPhoneError("");
+    return true;
+  };
+
+  const handlePhoneChange = (value: string) => {
+    // Solo permitir números
+    const cleaned = value.replace(/[^0-9]/g, "");
+    setFormData({ ...formData, whatsapp: cleaned });
+    
+    if (cleaned.length > 0) {
+      validatePhone(cleaned, formData.countryCode);
+    } else {
+      setPhoneError("");
+    }
+  };
+
+  const handleCountryChange = (code: string) => {
+    setFormData({ ...formData, countryCode: code, whatsapp: "" });
+    setPhoneError("");
+  };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validatePhone(formData.whatsapp, formData.countryCode)) {
+      return;
+    }
+    
     setCurrentScreen("loading");
     setTimeout(() => setCurrentScreen("cards"), 3000);
   };
@@ -108,22 +145,34 @@ export default function Home() {
                   <div className="flex gap-2">
                     <select 
                       value={formData.countryCode}
-                      onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
+                      onChange={(e) => handleCountryChange(e.target.value)}
                       className="bg-muted border border-border rounded-lg px-3 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50"
                     >
                       <option value="+1">🇺🇸 +1</option>
                       <option value="+52">🇲🇽 +52</option>
                       <option value="+34">🇪🇸 +34</option>
                       <option value="+54">🇦🇷 +54</option>
+                      <option value="+57">🇨🇴 +57</option>
+                      <option value="+58">🇻🇪 +58</option>
                     </select>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.whatsapp}
-                      onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                      placeholder="1234567890"
-                      className="flex-1 bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
-                    />
+                    <div className="flex-1">
+                      <input
+                        type="tel"
+                        required
+                        value={formData.whatsapp}
+                        onChange={(e) => handlePhoneChange(e.target.value)}
+                        placeholder={phoneValidation[formData.countryCode]?.placeholder || "1234567890"}
+                        maxLength={phoneValidation[formData.countryCode]?.digits || 15}
+                        className={`w-full bg-muted border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all ${
+                          phoneError 
+                            ? "border-red-500 focus:ring-red-500/50" 
+                            : "border-border focus:ring-gold/50"
+                        }`}
+                      />
+                      {phoneError && (
+                        <p className="text-xs text-red-400 mt-1">{phoneError}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
