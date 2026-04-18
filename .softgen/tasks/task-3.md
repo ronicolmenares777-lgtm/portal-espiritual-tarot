@@ -1,6 +1,6 @@
 ---
 title: Pantallas de carga y selección de cartas
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [animaciones, tarot]
@@ -20,4 +20,4 @@ Después del formulario: pantalla de carga con animación circular "CONEXIÓN DI
 - [x] Diseño de reverso de carta con símbolos esotéricos
 - [x] Animación hover con glow dorado
 - [x] Click handler para selección
-- [ ] Transición a pantalla de revelación
+- [x] Transición a pantalla de revelación
