@@ -27,11 +27,17 @@ export default function AdminLogin() {
     
     // Validación simple (mock)
     if (email === "admin@tarot.com" && password === "maestro2024") {
-      localStorage.setItem("adminAuth", "true");
-      localStorage.setItem("adminEmail", email);
+      setIsLoading(true);
       
-      // Redirigir al dashboard
-      router.push("/Suafazon/dashboard");
+      // Simular autenticación
+      setTimeout(() => {
+        // Guardar sesión en localStorage
+        localStorage.setItem("adminAuth", "true");
+        localStorage.setItem("adminEmail", email);
+        
+        // Redirigir al dashboard
+        router.push("/Suafazon/dashboard");
+      }, 1500);
     } else {
       alert("Credenciales incorrectas. Usa admin@tarot.com / maestro2024");
     }
@@ -132,17 +138,6 @@ export default function AdminLogin() {
                   </button>
                 </div>
               </div>
-
-              {/* Error */}
-              {error && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm text-center"
-                >
-                  {error}
-                </motion.p>
-              )}
 
               {/* Botón de submit */}
               <button
