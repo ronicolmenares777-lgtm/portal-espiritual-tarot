@@ -1,156 +1,239 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import type { TarotCard } from "@/lib/tarotCards";
 
 interface CardRevealProps {
   card: TarotCard;
   cardIndex: number;
-  onComplete?: () => void;
+  onComplete: () => void;
 }
 
-export function CardReveal({ card, onComplete }: CardRevealProps) {
-  const [isRevealed, setIsRevealed] = useState(false);
+export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
+  const [isRevealing, setIsRevealing] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    // Trigger reveal animation after mount
-    setTimeout(() => setIsRevealed(true), 500);
-    
-    // Auto-advance after revealing
-    setTimeout(() => {
-      onComplete?.();
-    }, 4000);
+    const timer = setTimeout(() => {
+      setIsRevealing(false);
+    }, 2000);
+
+    const completeTimer = setTimeout(() => {
+      onComplete();
+    }, 5000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(completeTimer);
+    };
   }, [onComplete]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-in fade-in duration-1000">
-      <div className="max-w-6xl w-full space-y-12 relative z-10">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Rayos de luz dorada desde el centro */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute top-1/2 left-1/2 w-1 bg-gradient-to-t from-gold/0 via-gold/30 to-gold/0 origin-bottom animate-pulse"
+            style={{
+              height: "150vh",
+              transform: `rotate(${i * 30}deg) translateY(-50%)`,
+              animationDelay: `${i * 0.1}s`,
+              animationDuration: "3s",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Partículas doradas flotantes */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-gold rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${3 + Math.random() * 2}s`,
+              opacity: 0.3 + Math.random() * 0.4,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Contenido principal */}
+      <div className="relative z-10 w-full max-w-6xl mx-auto">
         {/* Título */}
-        <div className="text-center space-y-4">
-          <h2 className="text-4xl md:text-5xl font-serif font-bold text-gold tracking-[0.2em] animate-in slide-in-from-top duration-700">
+        <div className="text-center mb-12 space-y-4">
+          <h1 
+            className="font-serif text-4xl md:text-6xl text-gold tracking-wider animate-in fade-in slide-in-from-bottom-4 duration-1000"
+            style={{
+              textShadow: "0 0 20px hsl(var(--gold) / 0.5)",
+            }}
+          >
             REVELA TU DESTINO
-          </h2>
-          <p className="text-sm text-gold/70 tracking-[0.15em] uppercase animate-in fade-in duration-700 delay-300">
-            El cosmos ha hablado a través de tu intención sagrada
+          </h1>
+          <p className="text-foreground/80 text-sm md:text-base tracking-widest animate-in fade-in duration-1000 delay-300">
+            EL COSMOS HA HABLADO A TRAVÉS DE TU INTENCIÓN SAGRADA
           </p>
         </div>
 
         {/* Cartas */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
-          {/* Carta izquierda - oscurecida */}
-          <div 
-            className="relative w-48 h-72 md:w-56 md:h-80 rounded-2xl overflow-hidden opacity-20 scale-90 transition-all duration-1000"
-            style={{
-              boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)",
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 via-purple-800/90 to-purple-900/90 border-4 border-gold/30">
-              {/* Reverso de carta */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 via-purple-800/90 to-purple-900/90 flex items-center justify-center p-6">
-                <svg viewBox="0 0 200 300" className="w-full h-full opacity-60">
-                  <circle cx="100" cy="150" r="80" fill="none" stroke="hsl(var(--gold))" strokeWidth="2"/>
-                  <path d="M100 80 L115 135 L170 135 L125 170 L140 225 L100 190 L60 225 L75 170 L30 135 L85 135 Z" 
-                    fill="none" stroke="hsl(var(--gold))" strokeWidth="2"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Carta central - REVELADA con imagen real */}
-          <div 
-            className={`relative transition-all duration-1000 ${
-              isRevealed ? "scale-110" : "scale-100"
-            }`}
-          >
-            <div 
-              className="relative w-56 h-80 md:w-64 md:h-96 rounded-2xl overflow-hidden bg-white"
+        <div className="grid grid-cols-3 gap-4 md:gap-8 mb-8">
+          {[0, 1, 2].map((index) => (
+            <div
+              key={index}
+              className={`relative aspect-[2/3] transition-all duration-1000 ${
+                index === cardIndex
+                  ? "scale-110 z-20"
+                  : "scale-90 opacity-30 blur-sm"
+              }`}
               style={{
-                boxShadow: isRevealed
-                  ? "0 0 60px hsl(var(--gold) / 0.8), 0 0 120px hsl(var(--gold) / 0.4)"
-                  : "0 10px 40px rgba(0, 0, 0, 0.5)",
+                animationDelay: `${index * 0.2}s`,
               }}
             >
-              {/* IMAGEN REAL DEL TAROT */}
-              <img 
-                src={card.image}
-                alt={card.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  console.error("Error loading tarot card image:", card.image);
-                  // Fallback en caso de error
-                  (e.target as HTMLImageElement).src = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/TheLovers.jpg/400px-TheLovers.jpg";
+              {/* Marco exterior */}
+              <div
+                className={`absolute inset-0 rounded-xl ${
+                  index === cardIndex
+                    ? "bg-gradient-to-br from-gold via-accent to-gold"
+                    : "bg-purple-900/20"
+                }`}
+                style={{
+                  padding: "3px",
+                  boxShadow:
+                    index === cardIndex
+                      ? "0 0 60px hsl(var(--gold) / 0.8), 0 0 100px hsl(var(--gold) / 0.4)"
+                      : "none",
                 }}
-              />
-              
-              {/* Overlay con brillo dorado cuando se revela */}
-              {isRevealed && (
-                <div className="absolute inset-0 bg-gradient-to-t from-gold/10 via-transparent to-gold/10 animate-pulse-glow pointer-events-none" />
-              )}
+              >
+                {/* Carta interior */}
+                <div className="w-full h-full bg-white rounded-xl overflow-hidden relative">
+                  {index === cardIndex ? (
+                    <>
+                      {/* Imagen real del tarot */}
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={card.image}
+                          alt={card.name}
+                          fill
+                          className="object-cover"
+                          priority
+                          onError={() => setImageError(true)}
+                          unoptimized
+                        />
+                        {imageError && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 p-4">
+                            <div className="text-center space-y-2">
+                              <div className="text-6xl">🌟</div>
+                              <p className="font-serif text-amber-900 text-lg">{card.name}</p>
+                              <p className="text-amber-700 text-sm">{card.number}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
-              {/* Marco dorado */}
-              <div className="absolute inset-0 border-4 border-gold/50 rounded-2xl pointer-events-none" />
-              
-              {/* Título de la carta en la parte inferior */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                <p className="text-gold font-serif text-xl md:text-2xl tracking-wider text-center drop-shadow-lg">
-                  {card.name}
-                </p>
-                <p className="text-gold/60 text-sm tracking-widest uppercase text-center">
-                  {card.number}
-                </p>
+                      {/* Overlay con efecto de brillo */}
+                      <div 
+                        className="absolute inset-0 bg-gradient-to-t from-transparent via-white/10 to-transparent pointer-events-none animate-pulse"
+                        style={{ animationDuration: "2s" }}
+                      />
+                    </>
+                  ) : (
+                    /* Cartas laterales - reverso */
+                    <div className="w-full h-full bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 flex items-center justify-center">
+                      <div className="absolute inset-0 opacity-20">
+                        <svg className="w-full h-full" viewBox="0 0 200 300">
+                          <circle cx="100" cy="150" r="60" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold" />
+                          <path d="M100,90 L120,140 L180,150 L120,160 L100,210 L80,160 L20,150 L80,140 Z" fill="currentColor" className="text-gold/50" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Rayos de luz emanando */}
-            {isRevealed && (
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%]">
+              {/* Corazones flotantes alrededor de la carta seleccionada */}
+              {index === cardIndex && (
+                <>
                   {[...Array(8)].map((_, i) => (
                     <div
                       key={i}
-                      className="absolute top-1/2 left-1/2 w-1 h-full bg-gradient-to-t from-transparent via-gold/20 to-transparent origin-bottom"
+                      className="absolute text-gold/60 animate-float"
                       style={{
-                        transform: `rotate(${i * 45}deg)`,
-                        animation: "pulse 2s ease-in-out infinite",
-                        animationDelay: `${i * 0.1}s`,
+                        fontSize: `${12 + Math.random() * 8}px`,
+                        left: `${Math.random() * 100}%`,
+                        top: `${Math.random() * 100}%`,
+                        animationDelay: `${Math.random() * 2}s`,
+                        animationDuration: `${2 + Math.random()}s`,
                       }}
-                    />
+                    >
+                      ♥
+                    </div>
                   ))}
-                </div>
-              </div>
-            )}
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Nombre y mensaje de la carta */}
+        <div className="text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-700">
+          <div className="inline-block">
+            <div 
+              className="font-serif text-2xl md:text-4xl text-gold mb-2 tracking-wider px-8 py-4 rounded-lg bg-purple-900/30 backdrop-blur-sm border border-gold/30"
+              style={{
+                textShadow: "0 0 20px hsl(var(--gold) / 0.6)",
+              }}
+            >
+              {card.name}
+            </div>
+            <div className="text-gold/60 text-sm tracking-[0.3em] mt-2">
+              {card.number}
+            </div>
           </div>
 
-          {/* Carta derecha - oscurecida */}
-          <div 
-            className="relative w-48 h-72 md:w-56 md:h-80 rounded-2xl overflow-hidden opacity-20 scale-90 transition-all duration-1000"
-            style={{
-              boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)",
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 via-purple-800/90 to-purple-900/90 border-4 border-gold/30">
-              {/* Reverso de carta */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 via-purple-800/90 to-purple-900/90 flex items-center justify-center p-6">
-                <svg viewBox="0 0 200 300" className="w-full h-full opacity-60">
-                  <circle cx="100" cy="150" r="80" fill="none" stroke="hsl(var(--gold))" strokeWidth="2"/>
-                  <path d="M100 80 L115 135 L170 135 L125 170 L140 225 L100 190 L60 225 L75 170 L30 135 L85 135 Z" 
-                    fill="none" stroke="hsl(var(--gold))" strokeWidth="2"/>
-                </svg>
-              </div>
-            </div>
+          <div className="max-w-2xl mx-auto space-y-3">
+            <p className="text-foreground text-lg md:text-xl leading-relaxed px-4">
+              {card.loveMessage}
+            </p>
+            <div className="h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent my-6" />
+            <p className="text-accent text-sm md:text-base italic px-4">
+              ✨ Los astros confirman: El amor verdadero regresa ✨
+            </p>
           </div>
         </div>
 
-        {/* Mensaje de revelación */}
-        <div className="text-center space-y-3 animate-in fade-in duration-1000 delay-1000">
-          <p className="text-lg md:text-xl text-foreground font-medium tracking-wide">
-            {card.loveMessage}
-          </p>
-          <p className="text-sm text-gold/80 tracking-[0.2em] uppercase italic">
+        {/* Texto inferior */}
+        <div className="text-center mt-12 animate-in fade-in duration-1000 delay-1000">
+          <p className="text-muted-foreground/60 text-xs tracking-[0.3em] uppercase animate-pulse">
             Interpretando las fuerzas cósmicas...
           </p>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0) translateX(0);
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-100px) translateX(20px);
+            opacity: 0;
+          }
+        }
+        
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
