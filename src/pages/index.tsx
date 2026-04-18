@@ -10,7 +10,7 @@ import { ChatMaestro } from "@/components/ChatMaestro";
 import { SEO } from "@/components/SEO";
 import { phoneValidation } from "@/lib/config";
 import type { TarotCard } from "@/lib/tarotCards";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles, Moon, Star } from "lucide-react";
 
 type Screen =
@@ -25,6 +25,16 @@ type Screen =
   | "transition"
   | "chat";
 
+const nombreEjemplos = [
+  "María González",
+  "Ana Martínez", 
+  "Sofia Rodríguez",
+  "Laura Torres",
+  "Carmen Silva",
+  "Isabel Morales",
+  "Valentina Cruz"
+];
+
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("form");
   const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
@@ -36,10 +46,21 @@ export default function Home() {
     problema: "",
   });
   const [phoneError, setPhoneError] = useState<string>("");
+  const [nombrePlaceholder, setNombrePlaceholder] = useState(nombreEjemplos[0]);
   const [answers, setAnswers] = useState({
     question1: "",
     question2: "",
   });
+
+  // Cambiar placeholder de nombre cada 3 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * nombreEjemplos.length);
+      setNombrePlaceholder(nombreEjemplos[randomIndex]);
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const validatePhone = (phone: string, countryCode: string): boolean => {
     const validation = phoneValidation[countryCode];
@@ -217,7 +238,7 @@ export default function Home() {
                     required
                     value={formData.nombre}
                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                    placeholder="Ej. María Sánchez"
+                    placeholder={nombrePlaceholder}
                     className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
                   />
                 </div>
@@ -265,11 +286,11 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Campo Problema */}
+                {/* Campo Problema - AHORA OBLIGATORIO */}
                 <div className="space-y-2 relative">
                   <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
                     <Star className="w-3 h-3" />
-                    ¿Qué te guía hasta aquí?
+                    ¿Qué te guía hasta aquí? <span className="text-accent">*</span>
                   </label>
                   <textarea
                     rows={4}
