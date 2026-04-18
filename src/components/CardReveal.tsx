@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import type { TarotCard } from "@/lib/tarotCards";
 
 interface CardRevealProps {
@@ -11,20 +10,14 @@ interface CardRevealProps {
 }
 
 export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
-  const [isRevealing, setIsRevealing] = useState(true);
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsRevealing(false);
-    }, 2000);
-
     const completeTimer = setTimeout(() => {
       onComplete();
     }, 5000);
 
     return () => {
-      clearTimeout(timer);
       clearTimeout(completeTimer);
     };
   }, [onComplete]);
@@ -115,26 +108,22 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
                   {index === cardIndex ? (
                     <>
                       {/* Imagen real del tarot */}
-                      <div className="relative w-full h-full">
-                        <Image
+                      {!imageError ? (
+                        <img
                           src={card.image}
                           alt={card.name}
-                          fill
-                          className="object-cover"
-                          priority
+                          className="w-full h-full object-cover"
                           onError={() => setImageError(true)}
-                          unoptimized
                         />
-                        {imageError && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 p-4">
-                            <div className="text-center space-y-2">
-                              <div className="text-6xl">🌟</div>
-                              <p className="font-serif text-amber-900 text-lg">{card.name}</p>
-                              <p className="text-amber-700 text-sm">{card.number}</p>
-                            </div>
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 p-4">
+                          <div className="text-center space-y-2">
+                            <div className="text-6xl">🌟</div>
+                            <p className="font-serif text-amber-900 text-lg">{card.name}</p>
+                            <p className="text-amber-700 text-sm">{card.number}</p>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
 
                       {/* Overlay con efecto de brillo */}
                       <div 
