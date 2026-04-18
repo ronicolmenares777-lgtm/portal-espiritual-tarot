@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
@@ -9,23 +9,31 @@ import Link from "next/link";
 
 export default function AdminLogin() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Verificar si ya está autenticado
+  useEffect(() => {
+    const isAuth = localStorage.getItem("adminAuth");
+    if (isAuth === "true") {
+      router.push("/Suafazon/dashboard");
+    }
+  }, [router]);
+
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Autenticación mock - cambiar cuando se conecte Supabase
-    if (formData.email === "admin@tarot.com" && formData.password === "maestro2024") {
-      localStorage.setItem("admin_authenticated", "true");
+    // Validación simple (mock)
+    if (email === "admin@tarot.com" && password === "maestro2024") {
+      localStorage.setItem("adminAuth", "true");
+      localStorage.setItem("adminEmail", email);
+      
+      // Redirigir al dashboard
       router.push("/Suafazon/dashboard");
     } else {
-      setError("Credenciales incorrectas. Las energías no se alinean.");
-      setTimeout(() => setError(""), 3000);
+      alert("Credenciales incorrectas. Usa admin@tarot.com / maestro2024");
     }
   };
 
@@ -81,7 +89,7 @@ export default function AdminLogin() {
             </div>
 
             {/* Formulario */}
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-6">
               {/* Email */}
               <div className="space-y-2">
                 <label className="text-xs text-gold/80 tracking-[0.2em] uppercase font-medium">
@@ -92,8 +100,8 @@ export default function AdminLogin() {
                   <input
                     type="email"
                     required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="admin@tarot.com"
                     className="w-full bg-black/50 border border-gold/20 rounded-xl pl-12 pr-4 py-3 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
                   />
@@ -110,8 +118,8 @@ export default function AdminLogin() {
                   <input
                     type={showPassword ? "text" : "password"}
                     required
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     className="w-full bg-black/50 border border-gold/20 rounded-xl pl-12 pr-12 py-3 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
                   />
