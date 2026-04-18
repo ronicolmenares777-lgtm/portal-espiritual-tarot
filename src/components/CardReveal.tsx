@@ -13,6 +13,7 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
+    console.log("CardReveal - Carta recibida:", card.name, "Imagen URL:", card.image);
     const completeTimer = setTimeout(() => {
       onComplete();
     }, 5000);
@@ -20,7 +21,16 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
     return () => {
       clearTimeout(completeTimer);
     };
-  }, [onComplete]);
+  }, [card, onComplete]);
+
+  const handleImageError = () => {
+    console.error("Error cargando imagen:", card.image);
+    setImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    console.log("Imagen cargada correctamente:", card.image);
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -113,7 +123,9 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
                           src={card.image}
                           alt={card.name}
                           className="w-full h-full object-cover"
-                          onError={() => setImageError(true)}
+                          onError={handleImageError}
+                          onLoad={handleImageLoad}
+                          crossOrigin="anonymous"
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 p-4">
