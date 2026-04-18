@@ -24,7 +24,8 @@ import {
   Mail,
   Save,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Filter
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 
@@ -34,6 +35,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"chats" | "leads">("chats");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("todos");
   const [leads, setLeads] = useState<Lead[]>(mockLeads);
   const [stats, setStats] = useState(mockStats);
   const [showProfile, setShowProfile] = useState(false);
@@ -44,6 +46,28 @@ export default function AdminDashboard() {
     email: "admin@tarot.com",
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
   });
+
+  // Filtrar leads por búsqueda y estado
+  const filteredLeads = leads.filter(lead => {
+    const matchesSearch = 
+      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.whatsapp.includes(searchTerm) ||
+      lead.problem.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = selectedStatus === "todos" || lead.status === selectedStatus;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  // Contar leads por estado
+  const statusCounts = {
+    todos: leads.length,
+    nuevo: leads.filter(l => l.status === "nuevo").length,
+    enConversacion: leads.filter(l => l.status === "enConversacion").length,
+    clienteCaliente: leads.filter(l => l.status === "clienteCaliente").length,
+    cerrado: leads.filter(l => l.status === "cerrado").length,
+    perdido: leads.filter(l => l.status === "perdido").length,
+  };
 
   // Cargar perfil y monitorear nuevos leads
   useEffect(() => {
@@ -159,10 +183,6 @@ export default function AdminDashboard() {
     localStorage.removeItem("adminAuth");
     router.push("/Suafazon");
   };
-
-  const filteredLeads = leads.filter((lead) =>
-    lead.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
