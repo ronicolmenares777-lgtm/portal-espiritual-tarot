@@ -54,7 +54,7 @@ export default function ChatView() {
     
     setLead({
       ...lead,
-      messages: [...lead.messages, newMessage]
+      messages: [...(lead.messages || []), newMessage]
     });
     
     setMessageInput("");
@@ -140,30 +140,35 @@ export default function ChatView() {
             <div className="flex-1 p-6 overflow-y-auto bg-gradient-to-b from-black/30 to-transparent">
               <div className="space-y-4 max-w-3xl mx-auto">
                 {/* Mensajes mock */}
-                {lead.messages.length === 0 ? (
+                {!lead.messages || lead.messages.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-4xl mb-4">💫</div>
                     <p className="text-muted-foreground text-sm">
-                      Inicia la conversación sagrada
+                      Aún no hay mensajes. Inicia la conversación espiritual.
                     </p>
                   </div>
                 ) : (
-                  lead.messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.isFromMaestro ? 'justify-end' : 'justify-start'}`}
+                  lead.messages.map((msg, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-md rounded-2xl px-4 py-3 ${
-                          msg.isFromMaestro
-                            ? 'bg-gold/20 border border-gold/30 text-foreground'
-                            : 'bg-card/50 border border-gold/10 text-foreground'
+                        className={`max-w-md px-4 py-3 rounded-2xl ${
+                          msg.isUser
+                            ? "bg-gold/10 text-foreground ml-12"
+                            : "bg-muted/50 text-foreground mr-12"
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                        <p className="text-xs text-muted-foreground/60 mt-1">{msg.timestamp}</p>
+                        <p className="text-sm">{msg.text}</p>
+                        <span className="text-xs text-muted-foreground mt-1 block">
+                          {msg.timestamp}
+                        </span>
                       </div>
-                    </div>
+                    </motion.div>
                   ))
                 )}
               </div>
