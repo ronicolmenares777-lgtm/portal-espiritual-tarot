@@ -4,17 +4,11 @@ export interface Lead {
   id: string;
   name: string;
   whatsapp: string;
-  countryCode: string;
   problem: string;
   card: string;
-  answers: {
-    question1: string;
-    question2: string;
-  };
-  status: "nuevo" | "en_conversacion" | "cliente_caliente" | "cerrado" | "perdido";
-  createdAt: string;
-  lastMessage?: string;
-  messages: ChatMessage[];
+  status: "nuevo" | "enConversacion" | "clienteCaliente" | "cerrado" | "perdido";
+  timestamp: string;
+  isFavorite?: boolean;
   notes?: string;
 }
 
