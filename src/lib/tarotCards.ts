@@ -7,63 +7,49 @@ export interface TarotCard {
   loveMessage: string;
 }
 
-// Pool de 8 cartas de amor del Tarot Rider-Waite (URLs de Wikimedia Commons)
+// Pool de 6 cartas de amor del Tarot Rider-Waite
 const loveCards: TarotCard[] = [
   {
     id: "lovers",
     name: "LOS ENAMORADOS",
     number: "VI",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/TheLovers.jpg/400px-TheLovers.jpg",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/TheLovers.jpg",
     loveMessage: "La unión divina está destinada. El amor verdadero siempre encuentra su camino de regreso a ti."
   },
   {
     id: "star",
     name: "LA ESTRELLA",
     number: "XVII",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/RWS_Tarot_17_Star.jpg/400px-RWS_Tarot_17_Star.jpg",
+    image: "https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_17_Star.jpg",
     loveMessage: "La esperanza renace. Los astros confirman que tu amor regresará con renovada fuerza."
   },
   {
     id: "sun",
     name: "EL SOL",
     number: "XIX",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/RWS_Tarot_19_Sun.jpg/400px-RWS_Tarot_19_Sun.jpg",
+    image: "https://upload.wikimedia.org/wikipedia/commons/1/17/RWS_Tarot_19_Sun.jpg",
     loveMessage: "La alegría y el éxito iluminan tu relación. El amor florecerá con luz radiante."
-  },
-  {
-    id: "empress",
-    name: "LA EMPERATRIZ",
-    number: "III",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/RWS_Tarot_03_Empress.jpg/400px-RWS_Tarot_03_Empress.jpg",
-    loveMessage: "El amor abundante te rodea. La fertilidad emocional traerá de vuelta lo que amas."
   },
   {
     id: "priestess",
     name: "LA SACERDOTISA",
     number: "II",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/RWS_Tarot_02_High_Priestess.jpg/400px-RWS_Tarot_02_High_Priestess.jpg",
+    image: "https://upload.wikimedia.org/wikipedia/commons/8/88/RWS_Tarot_02_High_Priestess.jpg",
     loveMessage: "La intuición profunda revela secretos del corazón. El amor oculto saldrá a la luz."
+  },
+  {
+    id: "empress",
+    name: "LA EMPERATRIZ",
+    number: "III",
+    image: "https://upload.wikimedia.org/wikipedia/commons/d/d2/RWS_Tarot_03_Empress.jpg",
+    loveMessage: "El amor abundante te rodea. La fertilidad emocional traerá de vuelta lo que amas."
   },
   {
     id: "wheel",
     name: "LA RUEDA DE LA FORTUNA",
     number: "X",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg/400px-RWS_Tarot_10_Wheel_of_Fortune.jpg",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg",
     loveMessage: "Los ciclos favorables giran a tu favor. El destino conspira para reunirte con tu amor."
-  },
-  {
-    id: "world",
-    name: "EL MUNDO",
-    number: "XXI",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/RWS_Tarot_21_World.jpg/400px-RWS_Tarot_21_World.jpg",
-    loveMessage: "La plenitud amorosa está completa. Tu relación alcanzará la perfección soñada."
-  },
-  {
-    id: "magician",
-    name: "EL MAGO",
-    number: "I",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/RWS_Tarot_01_Magician.jpg/400px-RWS_Tarot_01_Magician.jpg",
-    loveMessage: "Tienes el poder de manifestar el amor. La energía se alinea para materializar tus deseos."
   }
 ];
 
