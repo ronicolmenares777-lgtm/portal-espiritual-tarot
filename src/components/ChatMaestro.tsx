@@ -12,6 +12,14 @@ interface Message {
   imageUrl?: string;
 }
 
+interface ChatMaestroProps {
+  userName: string;
+  userPhone?: string;
+  userProblem?: string;
+  userCard?: string;
+  onBack?: () => void;
+}
+
 export function ChatMaestro({ userName, userPhone = "", userProblem = "", userCard = "", onBack }: ChatMaestroProps) {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>(chatConfig.maestro.mensajes);

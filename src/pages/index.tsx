@@ -42,10 +42,10 @@ export default function Home() {
   const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
   const [selectedCardIndex, setSelectedCardIndex] = useState<number>(0);
   const [formData, setFormData] = useState({
-    nombre: "",
+    name: "",
     countryCode: "+1",
     whatsapp: "",
-    problema: "",
+    problem: "",
   });
   const [phoneError, setPhoneError] = useState<string>("");
   const [nombrePlaceholder, setNombrePlaceholder] = useState(nombreEjemplos[0]);
@@ -304,8 +304,8 @@ export default function Home() {
                   <input
                     type="text"
                     required
-                    value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder={nombrePlaceholder}
                     className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
                   />
@@ -363,8 +363,8 @@ export default function Home() {
                   <textarea
                     rows={4}
                     required
-                    value={formData.problema}
-                    onChange={(e) => setFormData({ ...formData, problema: e.target.value })}
+                    value={formData.problem}
+                    onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
                     placeholder="Comparte tu intención con el cosmos..."
                     className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none backdrop-blur-sm"
                   />
