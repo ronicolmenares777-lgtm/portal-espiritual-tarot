@@ -130,6 +130,28 @@ export default function ChatView() {
     }
   };
 
+  // Marcar como listo
+  const handleMarkAsComplete = () => {
+    if (!lead) return;
+    
+    const updatedLead = { ...lead, status: "listo" };
+    setLead(updatedLead);
+    
+    // Actualizar en localStorage
+    const storedLeads = localStorage.getItem("leads");
+    if (storedLeads) {
+      const leads: Lead[] = JSON.parse(storedLeads);
+      const leadIndex = leads.findIndex(l => l.id === lead.id);
+      
+      if (leadIndex !== -1) {
+        leads[leadIndex] = updatedLead;
+        localStorage.setItem("leads", JSON.stringify(leads));
+      }
+    }
+    
+    alert("Marcado como listo. Ahora aparecerá en la sección LISTO del dashboard.");
+  };
+
   // Guardar perfil
   const handleSaveProfile = () => {
     localStorage.setItem("maestroProfile", JSON.stringify(profileData));
