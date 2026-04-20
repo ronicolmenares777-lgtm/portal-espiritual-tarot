@@ -311,504 +311,358 @@ export default function ChatView() {
         <div className="flex-1 flex max-w-7xl w-full mx-auto">
           {/* Layout del chat */}
           <div className="flex h-[calc(100vh-57px)] md:h-[calc(100vh-65px)] overflow-hidden">
-            {/* Área de mensajes */}
-            <div className="flex-1 flex flex-col min-w-0">
-              {/* Chat Area */}
-              <div className="flex-1 flex flex-col">
-                {/* Messages */}
-                <div className="flex-1 p-6 overflow-y-auto bg-gradient-to-b from-black/30 to-transparent">
-                  <div className="space-y-4 max-w-3xl mx-auto">
-                    {/* Mensajes mock */}
-                    {!lead.messages || lead.messages.length === 0 ? (
-                      <div className="text-center py-12">
-                        <div className="text-4xl mb-4">💫</div>
-                        <p className="text-muted-foreground text-sm">
-                          Aún no hay mensajes. Inicia la conversación espiritual.
-                        </p>
-                      </div>
-                    ) : (
-                      lead.messages.map((msg, idx) => (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.1 }}
-                          className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}
-                        >
-                          <div
-                            className={`max-w-md rounded-2xl overflow-hidden ${
-                              msg.isUser
-                                ? "bg-gold/10 text-foreground ml-12"
-                                : "bg-muted/50 text-foreground mr-12"
-                            }`}
-                          >
-                            {/* Contenido del mensaje */}
-                            {msg.type === "image" && msg.mediaUrl && (
-                              <img
-                                src={msg.mediaUrl}
-                                alt="Imagen enviada"
-                                className="w-full max-w-sm rounded-t-2xl"
-                              />
-                            )}
-                            {msg.type === "video" && msg.mediaUrl && (
-                              <video
-                                src={msg.mediaUrl}
-                                controls
-                                className="w-full max-w-sm rounded-t-2xl"
-                              />
-                            )}
-                            {msg.type === "audio" && msg.mediaUrl && (
-                              <div className="px-4 py-3">
-                                <audio
-                                  src={msg.mediaUrl}
-                                  controls
-                                  className="w-full"
-                                />
-                              </div>
-                            )}
-                            {(!msg.type || msg.type === "text") && (
-                              <div className="px-4 py-3">
-                                <p className="text-sm">{msg.text}</p>
-                              </div>
-                            )}
-                            
-                            {/* Timestamp */}
-                            <div className="px-4 pb-2">
-                              <span className="text-xs text-muted-foreground">
-                                {msg.timestamp}
-                              </span>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))
-                    )}
+            {/* Área de mensajes - siempre visible */}
+            <div className="flex-1 flex flex-col min-w-0 bg-background">
+              {/* Mensajes */}
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+                {!lead ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <Sparkles className="w-12 h-12 text-gold mx-auto mb-4 animate-pulse" />
+                      <p className="text-muted-foreground">Cargando conversación espiritual...</p>
+                    </div>
                   </div>
-                </div>
-
-                {/* Input Area */}
-                <div className="p-4 bg-black/95 border-t border-gold/20">
-                  <div className="max-w-3xl mx-auto">
-                    {/* Quick Responses Toggle */}
-                    <div className="mb-3 flex justify-between items-center">
-                      <button
-                        onClick={() => setShowQuickResponses(!showQuickResponses)}
-                        className="text-xs text-gold/60 hover:text-gold transition-colors flex items-center gap-2"
+                ) : !lead.messages || lead.messages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center space-y-4">
+                      <div className="text-6xl">🌙</div>
+                      <p className="text-gold font-serif text-xl">Aún no hay mensajes. Inicia la conversación espiritual.</p>
+                    </div>
+                  </div>
+                ) : (
+                  lead.messages.map((msg, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-md rounded-2xl overflow-hidden ${
+                          msg.isUser
+                            ? "bg-gold/10 text-foreground ml-12"
+                            : "bg-muted/50 text-foreground mr-12"
+                        }`}
                       >
-                        <Sparkles className="w-3 h-3" />
-                        Respuestas rápidas
-                      </button>
-                    </div>
-
-                    {/* Quick Responses */}
-                    <AnimatePresence>
-                      {showQuickResponses && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="mb-3 overflow-hidden"
-                        >
-                          <div className="flex flex-wrap gap-2">
-                            {mockQuickResponses.slice(0, 6).map((qr) => (
-                              <button
-                                key={qr.id}
-                                onClick={() => handleQuickResponse(qr.message)}
-                                className="px-3 py-1.5 bg-card/50 hover:bg-gold/20 border border-gold/20 rounded-full text-xs text-foreground transition-all"
-                              >
-                                {qr.label}
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Input de mensaje */}
-                    <div className="border-t border-border bg-card p-4">
-                      {/* Preview de multimedia */}
-                      <AnimatePresence>
-                        {mediaPreview && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 20 }}
-                            className="mb-4 p-4 bg-muted/50 rounded-xl border border-gold/20"
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                {mediaPreview.type === "image" && (
-                                  <img
-                                    src={mediaPreview.url}
-                                    alt="Preview"
-                                    className="w-full max-w-xs rounded-lg"
-                                  />
-                                )}
-                                {mediaPreview.type === "video" && (
-                                  <video
-                                    src={mediaPreview.url}
-                                    controls
-                                    className="w-full max-w-xs rounded-lg"
-                                  />
-                                )}
-                                {mediaPreview.type === "audio" && (
-                                  <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
-                                    <Mic className="w-5 h-5 text-gold" />
-                                    <div className="flex-1">
-                                      <p className="text-sm font-medium">Audio grabado</p>
-                                      <audio
-                                        src={mediaPreview.url}
-                                        controls
-                                        className="w-full mt-2"
-                                      />
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                              <button
-                                onClick={cancelMediaPreview}
-                                className="p-2 hover:bg-muted rounded-lg transition-colors"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                            <div className="flex gap-2 mt-3">
-                              <button
-                                onClick={cancelMediaPreview}
-                                className="flex-1 px-4 py-2 rounded-lg border border-gold/30 text-muted-foreground hover:text-foreground hover:border-gold/50 transition-all text-sm"
-                              >
-                                Cancelar
-                              </button>
-                              <button
-                                onClick={handleSendMedia}
-                                className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-sm"
-                              >
-                                Enviar
-                              </button>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      {/* Inputs ocultos para archivos */}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleFileAttach(e, "image")}
-                        className="hidden"
-                        id="image-upload"
-                      />
-                      <input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) => handleFileAttach(e, "video")}
-                        className="hidden"
-                        id="video-upload"
-                      />
-
-                      <div className="flex items-end gap-2">
-                        {/* Botones de adjuntar */}
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => document.getElementById("image-upload")?.click()}
-                            className="p-2 hover:bg-muted/50 rounded-lg transition-colors group"
-                            title="Enviar imagen"
-                          >
-                            <ImageIcon className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
-                          </button>
-                          <button
-                            onClick={() => document.getElementById("video-upload")?.click()}
-                            className="p-2 hover:bg-muted/50 rounded-lg transition-colors group"
-                            title="Enviar video"
-                          >
-                            <Paperclip className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
-                          </button>
-                          <button
-                            onClick={isRecording ? stopRecording : startRecording}
-                            className={`p-2 hover:bg-muted/50 rounded-lg transition-colors group ${
-                              isRecording ? "bg-red-500/20" : ""
-                            }`}
-                            title={isRecording ? "Detener grabación" : "Grabar audio"}
-                          >
-                            <Mic className={`w-4 h-4 md:w-5 md:h-5 transition-colors ${
-                              isRecording 
-                                ? "text-red-500 animate-pulse" 
-                                : "text-muted-foreground group-hover:text-gold"
-                            }`} />
-                          </button>
-                        </div>
-
-                        {/* Input de texto */}
-                        <div className="flex-1 relative">
-                          <textarea
-                            value={messageInput}
-                            onChange={(e) => setMessageInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSendMessage(messageInput);
-                              }
-                            }}
-                            placeholder="Escribe un mensaje..."
-                            rows={1}
-                            className="w-full bg-muted/30 border border-gold/20 rounded-xl px-3 md:px-4 py-2 md:py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none"
-                            style={{ minHeight: "40px", maxHeight: "120px" }}
+                        {/* Contenido del mensaje */}
+                        {msg.type === "image" && msg.mediaUrl && (
+                          <img
+                            src={msg.mediaUrl}
+                            alt="Imagen enviada"
+                            className="w-full max-w-sm rounded-t-2xl"
                           />
-                        </div>
-
-                        {/* Botón enviar */}
-                        <button
-                          onClick={() => handleSendMessage(messageInput)}
-                          disabled={!messageInput.trim()}
-                          className="p-2 md:p-3 bg-gradient-to-r from-gold to-accent text-background rounded-xl hover:shadow-lg hover:shadow-gold/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Send className="w-4 h-4 md:w-5 md:h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Panel - Atributos del Alma */}
-              <div className="w-96 bg-black/95 border-l border-gold/20 p-6 overflow-y-auto">
-                <div className="space-y-6">
-                  {/* Avatar y Estrella */}
-                  <div className="text-center space-y-4">
-                    <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-                      Atributos del Alma
-                    </p>
-                    
-                    <div className="flex justify-center">
-                      <div className="relative">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gold/30 to-purple-500/30 flex items-center justify-center">
-                          <span className="text-3xl font-serif text-gold">
-                            {lead.name.charAt(0).toUpperCase()}
+                        )}
+                        {msg.type === "video" && msg.mediaUrl && (
+                          <video
+                            src={msg.mediaUrl}
+                            controls
+                            className="w-full max-w-sm rounded-t-2xl"
+                          />
+                        )}
+                        {msg.type === "audio" && msg.mediaUrl && (
+                          <div className="px-4 py-3">
+                            <audio
+                              src={msg.mediaUrl}
+                              controls
+                              className="w-full"
+                            />
+                          </div>
+                        )}
+                        {(!msg.type || msg.type === "text") && (
+                          <div className="px-4 py-3">
+                            <p className="text-sm">{msg.text}</p>
+                          </div>
+                        )}
+                        
+                        {/* Timestamp */}
+                        <div className="px-4 pb-2">
+                          <span className="text-xs text-muted-foreground">
+                            {msg.timestamp}
                           </span>
                         </div>
-                        <button className="absolute -top-2 -right-2 w-10 h-10 bg-black border-2 border-gold/50 rounded-full flex items-center justify-center hover:bg-gold/20 transition-all">
-                          <Star className="w-5 h-5 text-gold" />
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+
+              {/* Input de mensaje */}
+              <div className="border-t border-border bg-card p-3 md:p-4">
+                {/* Preview de multimedia */}
+                <AnimatePresence>
+                  {mediaPreview && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      className="mb-4 p-4 bg-muted/50 rounded-xl border border-gold/20"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          {mediaPreview.type === "image" && (
+                            <img
+                              src={mediaPreview.url}
+                              alt="Preview"
+                              className="w-full max-w-xs rounded-lg"
+                            />
+                          )}
+                          {mediaPreview.type === "video" && (
+                            <video
+                              src={mediaPreview.url}
+                              controls
+                              className="w-full max-w-xs rounded-lg"
+                            />
+                          )}
+                          {mediaPreview.type === "audio" && (
+                            <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
+                              <Mic className="w-5 h-5 text-gold" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">Audio grabado</p>
+                                <audio
+                                  src={mediaPreview.url}
+                                  controls
+                                  className="w-full mt-2"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={cancelMediaPreview}
+                          className="p-2 hover:bg-muted rounded-lg transition-colors"
+                        >
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
-                    </div>
-
-                    <h2 className="text-xl font-serif text-gold">{lead.name}</h2>
-                    <p className="text-xs text-muted-foreground">
-                      Desde hace {lead.createdAt}
-                    </p>
-                  </div>
-
-                  {/* Motivo de Consulta */}
-                  <div className="space-y-2">
-                    <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-                      Motivo de Consulta
-                    </p>
-                    <p className="text-sm text-foreground/80 bg-card/30 rounded-lg p-3 border border-gold/10">
-                      "{lead.problem}"
-                    </p>
-                  </div>
-
-                  {/* Estado del Ritual */}
-                  <div className="space-y-3">
-                    <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-                      Estado del Ritual
-                    </p>
-                    
-                    <div className="space-y-2">
-                      {[
-                        { value: "nuevo", label: "Nuevo", color: "blue" },
-                        { value: "enConversacion", label: "En Conversación", color: "purple" },
-                        { value: "clienteCaliente", label: "Cliente Caliente", color: "orange" },
-                        { value: "listo", label: "Listo", color: "emerald" },
-                        { value: "cerrado", label: "Cerrado", color: "green" },
-                        { value: "perdido", label: "Perdido", color: "gray" }
-                      ].map((status) => (
+                      <div className="flex gap-2 mt-3">
                         <button
-                          key={status.value}
-                          onClick={() => handleStatusChange(status.value as Lead["status"])}
-                          className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
-                            lead.status === status.value
-                              ? `bg-${status.color}-500/20 border-2 border-${status.color}-500 text-${status.color}-400`
-                              : 'bg-card/30 border border-gold/10 text-muted-foreground hover:bg-card/50'
-                          }`}
+                          onClick={cancelMediaPreview}
+                          className="flex-1 px-4 py-2 rounded-lg border border-gold/30 text-muted-foreground hover:text-foreground hover:border-gold/50 transition-all text-sm"
                         >
-                          <div className="flex items-center gap-2">
-                            <Circle className={`w-2 h-2 fill-current ${
-                              lead.status === status.value ? `text-${status.color}-400` : 'text-muted-foreground'
-                            }`} />
-                            <span className="text-sm">{status.label}</span>
-                          </div>
+                          Cancelar
                         </button>
-                      ))}
-                    </div>
+                        <button
+                          onClick={handleSendMedia}
+                          className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-sm"
+                        >
+                          Enviar
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Inputs ocultos para archivos */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileAttach(e, "image")}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => handleFileAttach(e, "video")}
+                  className="hidden"
+                  id="video-upload"
+                />
+
+                <div className="flex items-end gap-2">
+                  {/* Botones de adjuntar */}
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => document.getElementById("image-upload")?.click()}
+                      className="p-2 hover:bg-muted/50 rounded-lg transition-colors group"
+                      title="Enviar imagen"
+                    >
+                      <ImageIcon className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
+                    </button>
+                    <button
+                      onClick={() => document.getElementById("video-upload")?.click()}
+                      className="p-2 hover:bg-muted/50 rounded-lg transition-colors group"
+                      title="Enviar video"
+                    >
+                      <Paperclip className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
+                    </button>
+                    <button
+                      onClick={isRecording ? stopRecording : startRecording}
+                      className={`p-2 hover:bg-muted/50 rounded-lg transition-colors group ${
+                        isRecording ? "bg-red-500/20" : ""
+                      }`}
+                      title={isRecording ? "Detener grabación" : "Grabar audio"}
+                    >
+                      <Mic className={`w-4 h-4 md:w-5 md:h-5 transition-colors ${
+                        isRecording 
+                          ? "text-red-500 animate-pulse" 
+                          : "text-muted-foreground group-hover:text-gold"
+                      }`} />
+                    </button>
                   </div>
 
-                  {/* WhatsApp */}
-                  <div className="space-y-2">
-                    <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">WhatsApp</p>
-                    <div className="flex items-center justify-between bg-card/30 rounded-lg p-3 border border-gold/10">
-                      <span className="text-sm text-foreground">{lead.whatsapp}</span>
-                      <button className="text-xs text-green-400 hover:text-green-300 transition-colors uppercase tracking-wider">
-                        Contactar
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Notas Internas */}
-                  <div className="space-y-2">
-                    <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-                      Notas Internas
-                    </p>
+                  {/* Input de texto */}
+                  <div className="flex-1 relative">
                     <textarea
-                      rows={4}
-                      value={lead.notes || ""}
-                      onChange={(e) => setLead({ ...lead, notes: e.target.value })}
-                      placeholder="Añade anotaciones..."
-                      className="w-full bg-card/30 border border-gold/10 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none"
+                      value={messageInput}
+                      onChange={(e) => setMessageInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage(messageInput);
+                        }
+                      }}
+                      placeholder="Escribe un mensaje..."
+                      rows={1}
+                      className="w-full bg-muted/30 border border-gold/20 rounded-xl px-3 md:px-4 py-2 md:py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none"
+                      style={{ minHeight: "40px", maxHeight: "120px" }}
                     />
                   </div>
 
-                  {/* Marcar como Listo */}
-                  <button 
-                    onClick={() => handleStatusChange("listo")}
-                    className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 rounded-lg py-3 text-sm font-medium uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                  {/* Botón enviar */}
+                  <button
+                    onClick={() => handleSendMessage(messageInput)}
+                    disabled={!messageInput.trim()}
+                    className="p-2 md:p-3 bg-gradient-to-r from-gold to-accent text-background rounded-xl hover:shadow-lg hover:shadow-gold/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <CheckCircle className="w-4 h-4" />
-                    Marcar como Listo
+                    <Send className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Panel lateral derecho - Atributos del Alma */}
-      {showSidebar && (
-        <div
-          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
-          onClick={() => setShowSidebar(false)}
-        />
-      )}
-      
-      <div className={`
-        fixed lg:relative inset-y-0 right-0 z-50
-        w-80 md:w-96
-        bg-card/30 border-l border-gold/20 p-4 md:p-6 overflow-y-auto
-        transform transition-transform duration-300 ease-in-out
-        ${showSidebar ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
-      `}>
-        {/* Botón cerrar en móvil */}
-        <button
-          onClick={() => setShowSidebar(false)}
-          className="lg:hidden absolute top-4 right-4 p-2 hover:bg-muted/50 rounded-lg transition-colors"
-        >
-          <X className="w-5 h-5 text-muted-foreground" />
-        </button>
-
-        <div className="space-y-6">
-          {/* Avatar y Estrella */}
-          <div className="text-center space-y-4">
-            <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-              Atributos del Alma
-            </p>
+            {/* Panel lateral derecho - Atributos del Alma */}
+            {/* Overlay para móvil */}
+            {showSidebar && (
+              <div
+                className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+                onClick={() => setShowSidebar(false)}
+              />
+            )}
             
-            <div className="flex justify-center">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gold/30 to-purple-500/30 flex items-center justify-center">
-                  <span className="text-3xl font-serif text-gold">
-                    {lead.name.charAt(0).toUpperCase()}
-                  </span>
+            <div className={`
+              fixed lg:relative inset-y-0 right-0 z-50
+              w-80 md:w-96
+              bg-card/30 border-l border-gold/20 p-4 md:p-6 overflow-y-auto
+              transform transition-transform duration-300 ease-in-out
+              ${showSidebar ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+              hidden lg:block
+            `}>
+              {/* Botón cerrar en móvil */}
+              <button
+                onClick={() => setShowSidebar(false)}
+                className="lg:hidden absolute top-4 right-4 p-2 hover:bg-muted/50 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+
+              <div className="space-y-6">
+                {/* Avatar y Estrella */}
+                <div className="text-center space-y-4">
+                  <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
+                    Atributos del Alma
+                  </p>
+                  
+                  <div className="flex justify-center">
+                    <div className="relative">
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gold/30 to-purple-500/30 flex items-center justify-center">
+                        <span className="text-3xl font-serif text-gold">
+                          {lead.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <button className="absolute -top-2 -right-2 w-10 h-10 bg-black border-2 border-gold/50 rounded-full flex items-center justify-center hover:bg-gold/20 transition-all">
+                        <Star className="w-5 h-5 text-gold" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <h2 className="text-xl font-serif text-gold">{lead.name}</h2>
+                  <p className="text-xs text-muted-foreground">
+                    Desde hace {lead.createdAt}
+                  </p>
                 </div>
-                <button className="absolute -top-2 -right-2 w-10 h-10 bg-black border-2 border-gold/50 rounded-full flex items-center justify-center hover:bg-gold/20 transition-all">
-                  <Star className="w-5 h-5 text-gold" />
+
+                {/* Motivo de Consulta */}
+                <div className="space-y-2">
+                  <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
+                    Motivo de Consulta
+                  </p>
+                  <p className="text-sm text-foreground/80 bg-card/30 rounded-lg p-3 border border-gold/10">
+                    "{lead.problem}"
+                  </p>
+                </div>
+
+                {/* Estado del Ritual */}
+                <div className="space-y-3">
+                  <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
+                    Estado del Ritual
+                  </p>
+                  
+                  <div className="space-y-2">
+                    {[
+                      { value: "nuevo", label: "Nuevo", color: "blue" },
+                      { value: "enConversacion", label: "En Conversación", color: "purple" },
+                      { value: "clienteCaliente", label: "Cliente Caliente", color: "orange" },
+                      { value: "listo", label: "Listo", color: "emerald" },
+                      { value: "cerrado", label: "Cerrado", color: "green" },
+                      { value: "perdido", label: "Perdido", color: "gray" }
+                    ].map((status) => (
+                      <button
+                        key={status.value}
+                        onClick={() => handleStatusChange(status.value as Lead["status"])}
+                        className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
+                          lead.status === status.value
+                            ? `bg-${status.color}-500/20 border-2 border-${status.color}-500 text-${status.color}-400`
+                            : 'bg-card/30 border border-gold/10 text-muted-foreground hover:bg-card/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Circle className={`w-2 h-2 fill-current ${
+                            lead.status === status.value ? `text-${status.color}-400` : 'text-muted-foreground'
+                          }`} />
+                          <span className="text-sm">{status.label}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* WhatsApp */}
+                <div className="space-y-2">
+                  <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">WhatsApp</p>
+                  <div className="flex items-center justify-between bg-card/30 rounded-lg p-3 border border-gold/10">
+                    <span className="text-sm text-foreground">{lead.whatsapp}</span>
+                    <button className="text-xs text-green-400 hover:text-green-300 transition-colors uppercase tracking-wider">
+                      Contactar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Notas Internas */}
+                <div className="space-y-2">
+                  <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
+                    Notas Internas
+                  </p>
+                  <textarea
+                    rows={4}
+                    value={lead.notes || ""}
+                    onChange={(e) => setLead({ ...lead, notes: e.target.value })}
+                    placeholder="Añade anotaciones..."
+                    className="w-full bg-card/30 border border-gold/10 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none"
+                  />
+                </div>
+
+                {/* Marcar como Listo */}
+                <button 
+                  onClick={() => handleStatusChange("listo")}
+                  className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 rounded-lg py-3 text-sm font-medium uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Marcar como Listo
                 </button>
               </div>
             </div>
-
-            <h2 className="text-xl font-serif text-gold">{lead.name}</h2>
-            <p className="text-xs text-muted-foreground">
-              Desde hace {lead.createdAt}
-            </p>
           </div>
-
-          {/* Motivo de Consulta */}
-          <div className="space-y-2">
-            <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-              Motivo de Consulta
-            </p>
-            <p className="text-sm text-foreground/80 bg-card/30 rounded-lg p-3 border border-gold/10">
-              "{lead.problem}"
-            </p>
-          </div>
-
-          {/* Estado del Ritual */}
-          <div className="space-y-3">
-            <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-              Estado del Ritual
-            </p>
-            
-            <div className="space-y-2">
-              {[
-                { value: "nuevo", label: "Nuevo", color: "blue" },
-                { value: "enConversacion", label: "En Conversación", color: "purple" },
-                { value: "clienteCaliente", label: "Cliente Caliente", color: "orange" },
-                { value: "listo", label: "Listo", color: "emerald" },
-                { value: "cerrado", label: "Cerrado", color: "green" },
-                { value: "perdido", label: "Perdido", color: "gray" }
-              ].map((status) => (
-                <button
-                  key={status.value}
-                  onClick={() => handleStatusChange(status.value as Lead["status"])}
-                  className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
-                    lead.status === status.value
-                      ? `bg-${status.color}-500/20 border-2 border-${status.color}-500 text-${status.color}-400`
-                      : 'bg-card/30 border border-gold/10 text-muted-foreground hover:bg-card/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Circle className={`w-2 h-2 fill-current ${
-                      lead.status === status.value ? `text-${status.color}-400` : 'text-muted-foreground'
-                    }`} />
-                    <span className="text-sm">{status.label}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* WhatsApp */}
-          <div className="space-y-2">
-            <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">WhatsApp</p>
-            <div className="flex items-center justify-between bg-card/30 rounded-lg p-3 border border-gold/10">
-              <span className="text-sm text-foreground">{lead.whatsapp}</span>
-              <button className="text-xs text-green-400 hover:text-green-300 transition-colors uppercase tracking-wider">
-                Contactar
-              </button>
-            </div>
-          </div>
-
-          {/* Notas Internas */}
-          <div className="space-y-2">
-            <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-              Notas Internas
-            </p>
-            <textarea
-              rows={4}
-              value={lead.notes || ""}
-              onChange={(e) => setLead({ ...lead, notes: e.target.value })}
-              placeholder="Añade anotaciones..."
-              className="w-full bg-card/30 border border-gold/10 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none"
-            />
-          </div>
-
-          {/* Marcar como Listo */}
-          <button 
-            onClick={() => handleStatusChange("listo")}
-            className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 rounded-lg py-3 text-sm font-medium uppercase tracking-wider transition-all flex items-center justify-center gap-2"
-          >
-            <CheckCircle className="w-4 h-4" />
-            Marcar como Listo
-          </button>
         </div>
       </div>
 
