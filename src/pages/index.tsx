@@ -11,7 +11,7 @@ import { SEO } from "@/components/SEO";
 import { phoneValidation } from "@/lib/config";
 import type { TarotCard } from "@/lib/tarotCards";
 import { useState, useEffect } from "react";
-import { Sparkles, Moon, Star } from "lucide-react";
+import { Sparkles, Moon, Star, Facebook } from "lucide-react";
 
 type Screen =
   | "form"
@@ -192,6 +192,19 @@ export default function Home() {
                     <Sparkles className="w-6 h-6 text-gold/60 animate-spin" style={{ animationDuration: "8s" }} />
                   </div>
                 </div>
+              </div>
+
+              {/* Botón de Facebook */}
+              <div className="flex justify-center animate-in fade-in duration-1000 delay-200">
+                <a
+                  href="https://www.facebook.com/centronlin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all hover:shadow-lg hover:shadow-blue-500/50 group"
+                >
+                  <Facebook className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <span className="font-medium tracking-wider">Síguenos en Facebook</span>
+                </a>
               </div>
 
               {/* Título principal mejorado */}

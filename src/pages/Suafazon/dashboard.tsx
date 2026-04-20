@@ -427,54 +427,74 @@ export default function AdminDashboard() {
 
             {/* Leads List */}
             <div className="flex-1 overflow-y-auto px-4 space-y-2">
-              {filteredLeads.map((lead) => (
-                <button
-                  key={lead.id}
-                  onClick={() => {
-                    router.push(`/Suafazon/chat/${lead.id}`);
-                    setSidebarOpen(false);
-                  }}
-                  className="w-full text-left p-3 rounded-lg hover:bg-muted/30 transition-all group border border-transparent hover:border-gold/20"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate group-hover:text-gold transition-colors">
-                        {lead.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {getTimeAgo(lead.timestamp)}
-                      </p>
-                    </div>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        lead.status === "nuevo"
-                          ? "bg-blue-500/20 text-blue-400"
-                          : lead.status === "clienteCaliente"
-                          ? "bg-orange-500/20 text-orange-400"
-                          : lead.status === "cerrado"
-                          ? "bg-green-500/20 text-green-400"
-                          : lead.status === "perdido"
-                          ? "bg-red-500/20 text-red-400"
-                          : lead.status === "listo"
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-purple-500/20 text-purple-400"
-                      }`}
+              {filteredLeads.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-3">🔍</div>
+                  <p className="text-sm text-muted-foreground">
+                    No se encontraron resultados
+                  </p>
+                  {(searchTerm || selectedStatus !== "todos") && (
+                    <button
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSelectedStatus("todos");
+                      }}
+                      className="mt-3 text-xs text-gold hover:underline"
                     >
-                      {lead.status === "nuevo"
-                        ? "NUEVO"
-                        : lead.status === "clienteCaliente"
-                        ? "CLIENTE"
-                        : lead.status === "cerrado"
-                        ? "CERRADO"
-                        : lead.status === "perdido"
-                        ? "PERDIDO"
-                        : lead.status === "listo"
-                        ? "LISTO"
-                        : "EN CHAT"}
-                    </span>
-                  </div>
-                </button>
-              ))}
+                      Limpiar filtros
+                    </button>
+                  )}
+                </div>
+              ) : (
+                filteredLeads.map((lead) => (
+                  <button
+                    key={lead.id}
+                    onClick={() => {
+                      router.push(`/Suafazon/chat/${lead.id}`);
+                      setSidebarOpen(false);
+                    }}
+                    className="w-full text-left p-3 rounded-lg hover:bg-muted/30 transition-all group border border-transparent hover:border-gold/20"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate group-hover:text-gold transition-colors">
+                          {lead.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {getTimeAgo(lead.timestamp)}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          lead.status === "nuevo"
+                            ? "bg-blue-500/20 text-blue-400"
+                            : lead.status === "clienteCaliente"
+                            ? "bg-orange-500/20 text-orange-400"
+                            : lead.status === "cerrado"
+                            ? "bg-green-500/20 text-green-400"
+                            : lead.status === "perdido"
+                            ? "bg-red-500/20 text-red-400"
+                            : lead.status === "listo"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "bg-purple-500/20 text-purple-400"
+                        }`}
+                      >
+                        {lead.status === "nuevo"
+                          ? "NUEVO"
+                          : lead.status === "clienteCaliente"
+                          ? "CLIENTE"
+                          : lead.status === "cerrado"
+                          ? "CERRADO"
+                          : lead.status === "perdido"
+                          ? "PERDIDO"
+                          : lead.status === "listo"
+                          ? "LISTO"
+                          : "EN CHAT"}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              )}
             </div>
           </div>
 
