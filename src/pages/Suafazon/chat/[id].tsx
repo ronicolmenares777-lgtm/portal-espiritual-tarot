@@ -37,11 +37,13 @@ export default function ChatView() {
   const [mediaPreview, setMediaPreview] = useState<{
     type: "image" | "video" | "audio";
     url: string;
+    file?: File;
   } | null>(null);
   const [profileData, setProfileData] = useState({
     name: "Maestro Espiritual",
     email: "maestro@portal.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro"
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro",
+    headerText: ""
   });
 
   // Referencias
