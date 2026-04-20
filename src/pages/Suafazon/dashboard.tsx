@@ -25,7 +25,8 @@ import {
   Save,
   X,
   Image as ImageIcon,
-  Filter
+  Filter,
+  Menu
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 
@@ -40,6 +41,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(mockStats);
   const [showProfile, setShowProfile] = useState(false);
   const [newLeadsCount, setNewLeadsCount] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     name: "Maestro Espiritual",
     headerText: "CANAL SAGRADO",
@@ -248,355 +250,563 @@ export default function AdminDashboard() {
       <FloatingParticles />
       
       <div className="flex h-screen bg-background overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-80 bg-gradient-to-b from-[#0a0a0f] to-[#13131a] border-r border-gold/20 flex flex-col">
-          {/* Logo */}
-          <div className="p-6 border-b border-gold/20">
-            <div className="flex items-center gap-3">
-              <Sparkles className="w-6 h-6 text-gold" />
-              <span className="text-lg font-serif text-gold tracking-wider">Portal Maestro</span>
+        {/* Layout principal */}
+        <div className="flex h-[calc(100vh-57px)] md:h-[calc(100vh-65px)] overflow-hidden">
+          {/* Overlay para móvil */}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+
+          {/* Sidebar izquierdo */}
+          <div className={`
+            fixed lg:relative inset-y-0 left-0 z-50
+            w-72 md:w-80 lg:w-96
+            bg-[hsl(260,35%,10%)] border-r border-gold/10
+            transform transition-transform duration-300 ease-in-out
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            flex flex-col
+          `}>
+            {/* Logo */}
+            <div className="p-6 border-b border-gold/20">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-6 h-6 text-gold" />
+                <span className="text-lg font-serif text-gold tracking-wider">Portal Maestro</span>
+              </div>
             </div>
-          </div>
 
-          {/* Resumen Estadístico Button */}
-          <div className="p-4">
-            <button 
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-gold/20 to-accent/20 border border-gold/30 hover:border-gold/50 transition-all group"
-            >
-              <BarChart3 className="w-5 h-5 text-gold group-hover:scale-110 transition-transform" />
-              <span className="text-sm tracking-wider text-gold">RESUMEN ESTADÍSTICO</span>
-            </button>
-          </div>
-
-          {/* Tabs */}
-          <div className="px-4 flex gap-2 border-b border-gold/10 pb-3">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setActiveTab("chats")}
-                className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${
-                  activeTab === "chats"
-                    ? "bg-gold/10 text-gold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+            {/* Resumen Estadístico Button */}
+            <div className="p-4">
+              <button 
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-gold/20 to-accent/20 border border-gold/30 hover:border-gold/50 transition-all group"
               >
-                CHATS
-                {newLeadsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
-                    {newLeadsCount}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab("leads")}
-                className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === "leads"
-                    ? "bg-gold/10 text-gold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                LEADS
-              </button>
-              <button
-                onClick={() => setActiveTab("listo")}
-                className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${
-                  activeTab === "listo"
-                    ? "bg-gold/10 text-gold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                LISTO
-                {statusCounts.listo > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {statusCounts.listo}
-                  </span>
-                )}
+                <BarChart3 className="w-5 h-5 text-gold group-hover:scale-110 transition-transform" />
+                <span className="text-sm tracking-wider text-gold">RESUMEN ESTADÍSTICO</span>
               </button>
             </div>
-          </div>
 
-          {/* Search */}
-          <div className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Buscar almas..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-muted/30 border border-gold/20 rounded-lg pl-10 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Filtros por estado */}
-          <div className="px-4 mb-3">
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedStatus("todos")}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  selectedStatus === "todos"
-                    ? "bg-gold text-background"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                Todos ({statusCounts.todos})
-              </button>
-              <button
-                onClick={() => setSelectedStatus("nuevo")}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  selectedStatus === "nuevo"
-                    ? "bg-blue-500 text-white"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                Nuevo ({statusCounts.nuevo})
-              </button>
-              <button
-                onClick={() => setSelectedStatus("enConversacion")}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  selectedStatus === "enConversacion"
-                    ? "bg-purple-500 text-white"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                En Chat ({statusCounts.enConversacion})
-              </button>
-              <button
-                onClick={() => setSelectedStatus("clienteCaliente")}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  selectedStatus === "clienteCaliente"
-                    ? "bg-orange-500 text-white"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                Caliente ({statusCounts.clienteCaliente})
-              </button>
-              <button
-                onClick={() => setSelectedStatus("cerrado")}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  selectedStatus === "cerrado"
-                    ? "bg-green-500 text-white"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                Cerrado ({statusCounts.cerrado})
-              </button>
-              <button
-                onClick={() => setSelectedStatus("perdido")}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  selectedStatus === "perdido"
-                    ? "bg-red-500 text-white"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                Perdido ({statusCounts.perdido})
-              </button>
-              {activeTab === "listo" && (
+            {/* Tabs */}
+            <div className="px-4 flex gap-2 border-b border-gold/10 pb-3">
+              <div className="flex gap-2">
                 <button
-                  onClick={() => setSelectedStatus("listo")}
+                  onClick={() => setActiveTab("chats")}
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${
+                    activeTab === "chats"
+                      ? "bg-gold/10 text-gold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  CHATS
+                  {newLeadsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
+                      {newLeadsCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab("leads")}
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === "leads"
+                      ? "bg-gold/10 text-gold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  LEADS
+                </button>
+                <button
+                  onClick={() => setActiveTab("listo")}
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${
+                    activeTab === "listo"
+                      ? "bg-gold/10 text-gold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  LISTO
+                  {statusCounts.listo > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {statusCounts.listo}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div className="p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Buscar almas..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-muted/30 border border-gold/20 rounded-lg pl-10 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Filtros por estado */}
+            <div className="px-4 mb-3">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedStatus("todos")}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedStatus === "listo"
-                      ? "bg-emerald-500 text-white"
+                    selectedStatus === "todos"
+                      ? "bg-gold text-background"
                       : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
                   }`}
                 >
-                  Listo ({statusCounts.listo})
+                  Todos ({statusCounts.todos})
                 </button>
-              )}
-            </div>
-          </div>
-
-          {/* Leads List */}
-          <div className="flex-1 overflow-y-auto px-4 space-y-2">
-            {filteredLeads.map((lead) => (
-              <motion.button
-                key={lead.id}
-                onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                className="w-full p-3 rounded-lg bg-muted/20 hover:bg-muted/40 border border-transparent hover:border-gold/30 transition-all text-left group"
-                whileHover={{ x: 4 }}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate group-hover:text-gold transition-colors">
-                      {lead.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {getTimeAgo(lead.timestamp)}
-                    </p>
-                  </div>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      lead.status === "nuevo"
-                        ? "bg-blue-500/20 text-blue-400"
-                        : lead.status === "clienteCaliente"
-                        ? "bg-orange-500/20 text-orange-400"
-                        : lead.status === "cerrado"
-                        ? "bg-green-500/20 text-green-400"
-                        : lead.status === "perdido"
-                        ? "bg-red-500/20 text-red-400"
-                        : lead.status === "listo"
-                        ? "bg-emerald-500/20 text-emerald-400"
-                        : "bg-purple-500/20 text-purple-400"
+                <button
+                  onClick={() => setSelectedStatus("nuevo")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    selectedStatus === "nuevo"
+                      ? "bg-blue-500 text-white"
+                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  Nuevo ({statusCounts.nuevo})
+                </button>
+                <button
+                  onClick={() => setSelectedStatus("enConversacion")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    selectedStatus === "enConversacion"
+                      ? "bg-purple-500 text-white"
+                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  En Chat ({statusCounts.enConversacion})
+                </button>
+                <button
+                  onClick={() => setSelectedStatus("clienteCaliente")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    selectedStatus === "clienteCaliente"
+                      ? "bg-orange-500 text-white"
+                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  Caliente ({statusCounts.clienteCaliente})
+                </button>
+                <button
+                  onClick={() => setSelectedStatus("cerrado")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    selectedStatus === "cerrado"
+                      ? "bg-green-500 text-white"
+                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  Cerrado ({statusCounts.cerrado})
+                </button>
+                <button
+                  onClick={() => setSelectedStatus("perdido")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    selectedStatus === "perdido"
+                      ? "bg-red-500 text-white"
+                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  Perdido ({statusCounts.perdido})
+                </button>
+                {activeTab === "listo" && (
+                  <button
+                    onClick={() => setSelectedStatus("listo")}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      selectedStatus === "listo"
+                        ? "bg-emerald-500 text-white"
+                        : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
                     }`}
                   >
-                    {lead.status === "nuevo"
-                      ? "NUEVO"
-                      : lead.status === "clienteCaliente"
-                      ? "CLIENTE"
-                      : lead.status === "cerrado"
-                      ? "CERRADO"
-                      : lead.status === "perdido"
-                      ? "PERDIDO"
-                      : lead.status === "listo"
-                      ? "LISTO"
-                      : "EN CHAT"}
-                  </span>
-                </div>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="bg-black border-b border-gold/20 px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-gold/10 rounded-lg">
-                  <Sparkles className="w-4 h-4 text-gold" />
-                  <span className="text-xs tracking-[0.3em] text-gold font-medium">
-                    {profileData.headerText}
-                  </span>
-                </div>
+                    Listo ({statusCounts.listo})
+                  </button>
+                )}
               </div>
+            </div>
 
-              <div className="flex items-center gap-3">
+            {/* Leads List */}
+            <div className="flex-1 overflow-y-auto px-4 space-y-2">
+              {filteredLeads.map((lead) => (
                 <button
-                  onClick={handleResetMetrics}
-                  className="p-2 hover:bg-muted/50 rounded-lg transition-colors group"
-                  title="Reiniciar métricas"
+                  key={lead.id}
+                  onClick={() => {
+                    router.push(`/Suafazon/chat/${lead.id}`);
+                    setSidebarOpen(false);
+                  }}
+                  className="w-full text-left p-3 rounded-lg hover:bg-muted/30 transition-all group border border-transparent hover:border-gold/20"
                 >
-                  <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-gold group-hover:rotate-180 transition-all duration-300" />
-                </button>
-
-                <button className="p-2 hover:bg-muted/50 rounded-lg transition-colors">
-                  <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-gold transition-colors" />
-                </button>
-
-                <button
-                  onClick={() => setShowProfile(true)}
-                  className="flex items-center gap-3 hover:bg-muted/50 px-3 py-2 rounded-lg transition-colors"
-                >
-                  <span className="text-sm font-medium">{profileData.name}</span>
-                  <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gold/30">
-                    <img
-                      src={profileData.avatar}
-                      alt="Maestro"
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate group-hover:text-gold transition-colors">
+                        {lead.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {getTimeAgo(lead.timestamp)}
+                      </p>
+                    </div>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        lead.status === "nuevo"
+                          ? "bg-blue-500/20 text-blue-400"
+                          : lead.status === "clienteCaliente"
+                          ? "bg-orange-500/20 text-orange-400"
+                          : lead.status === "cerrado"
+                          ? "bg-green-500/20 text-green-400"
+                          : lead.status === "perdido"
+                          ? "bg-red-500/20 text-red-400"
+                          : lead.status === "listo"
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : "bg-purple-500/20 text-purple-400"
+                      }`}
+                    >
+                      {lead.status === "nuevo"
+                        ? "NUEVO"
+                        : lead.status === "clienteCaliente"
+                        ? "CLIENTE"
+                        : lead.status === "cerrado"
+                        ? "CERRADO"
+                        : lead.status === "perdido"
+                        ? "PERDIDO"
+                        : lead.status === "listo"
+                        ? "LISTO"
+                        : "EN CHAT"}
+                    </span>
                   </div>
                 </button>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Dashboard Content */}
-          <div className="flex-1 overflow-y-auto p-8">
-            <div className="max-w-6xl mx-auto space-y-12">
-              {/* Title */}
-              <div className="text-center space-y-3">
-                <h1 className="text-5xl font-serif text-gold tracking-wider">
-                  VISIÓN DEL DESTINO
-                </h1>
-                <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase">
-                  Resumen Estadístico de Almas y Conexiones
-                </p>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-4 gap-6">
-                <motion.div 
-                  className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/30 rounded-xl p-6 text-center hover:border-blue-500/50 transition-all"
-                  whileHover={{ y: -4, boxShadow: "0 10px 40px rgba(59, 130, 246, 0.3)" }}
-                >
-                  <Users className="w-8 h-8 text-blue-500 mx-auto mb-3" />
-                  <div className="text-4xl font-bold text-blue-500 mb-1">{stats.totalAlmas}</div>
-                  <div className="text-xs tracking-wider text-blue-400 uppercase">Total Almas</div>
-                </motion.div>
-
-                <motion.div 
-                  className="bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/30 rounded-xl p-6 text-center hover:border-green-500/50 transition-all"
-                  whileHover={{ y: -4, boxShadow: "0 10px 40px rgba(34, 197, 94, 0.3)" }}
-                >
-                  <MessageCircle className="w-8 h-8 text-green-500 mx-auto mb-3" />
-                  <div className="text-4xl font-bold text-green-500 mb-1">{stats.clickWA}</div>
-                  <div className="text-xs tracking-wider text-green-400 uppercase">Click WA</div>
-                </motion.div>
-
-                <motion.div 
-                  className="bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/30 rounded-xl p-6 text-center hover:border-gold/50 transition-all"
-                  whileHover={{ y: -4, boxShadow: "0 10px 40px hsl(var(--gold) / 0.3)" }}
-                >
-                  <CheckCircle className="w-8 h-8 text-gold mx-auto mb-3" />
-                  <div className="text-4xl font-bold text-gold mb-1">{stats.atendidos}</div>
-                  <div className="text-xs tracking-wider text-gold uppercase">Atendidos</div>
-                </motion.div>
-
-                <motion.div 
-                  className="bg-gradient-to-br from-red-500/10 to-red-500/5 border border-red-500/30 rounded-xl p-6 text-center hover:border-red-500/50 transition-all"
-                  whileHover={{ y: -4, boxShadow: "0 10px 40px rgba(239, 68, 68, 0.3)" }}
-                >
-                  <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-3" />
-                  <div className="text-4xl font-bold text-red-500 mb-1">{stats.sinResponder}</div>
-                  <div className="text-xs tracking-wider text-red-400 uppercase">Sin Responder</div>
-                </motion.div>
-              </div>
-
-              {/* Pipeline */}
-              <div className="bg-card border border-gold/20 rounded-2xl p-8">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold to-accent flex items-center justify-center animate-pulse">
-                    <Sparkles className="w-4 h-4 text-background" />
-                  </div>
-                  <h2 className="text-xl font-serif text-gold tracking-wider">ESTADO DEL PIPELINE</h2>
-                  <div className="flex-1 h-px bg-gradient-to-r from-gold/50 to-transparent" />
-                  <span className="text-sm text-muted-foreground">24 horas</span>
-                </div>
-
-                <div className="space-y-6">
-                  {pipelineData.map((item, index) => (
-                    <motion.div
-                      key={item.label}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="space-y-2"
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="bg-black border-b border-gold/20 px-4 md:px-6 py-3">
+              <div className="max-w-7xl mx-auto">
+                <div className="flex items-center justify-between">
+                  {/* Logo y botón hamburguesa */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSidebarOpen(!sidebarOpen)}
+                      className="lg:hidden p-2 hover:bg-muted/50 rounded-lg transition-colors"
                     >
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <Circle className={`w-3 h-3 ${item.color.replace("bg-", "text-")}`} fill="currentColor" />
-                          <span className="text-muted-foreground tracking-wider">{item.label}</span>
-                        </div>
-                        <span className="font-medium text-foreground">{item.count}</span>
+                      <Menu className="w-5 h-5 text-gold" />
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-gold" />
+                      <h1 className="text-gold font-serif text-base md:text-lg tracking-wider hidden sm:block">
+                        Portal Maestro
+                      </h1>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-center flex-1 px-4">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gold/10 rounded-lg">
+                      <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-gold" />
+                      <span className="text-xs md:text-sm tracking-[0.2em] md:tracking-[0.3em] text-gold font-medium">
+                        {profileData.headerText}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <button
+                      onClick={handleResetMetrics}
+                      className="p-2 hover:bg-muted/50 rounded-lg transition-colors group hidden sm:block"
+                      title="Reiniciar métricas"
+                    >
+                      <RefreshCw className="w-4 h-4 text-muted-foreground group-hover:text-gold group-hover:rotate-180 transition-all duration-300" />
+                    </button>
+
+                    <button className="p-2 hover:bg-muted/50 rounded-lg transition-colors hidden sm:block">
+                      <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-gold transition-colors" />
+                    </button>
+
+                    <button
+                      onClick={() => setShowProfile(true)}
+                      className="flex items-center gap-2 md:gap-3 hover:bg-muted/50 px-2 md:px-3 py-2 rounded-lg transition-colors"
+                    >
+                      <span className="text-xs md:text-sm font-medium hidden md:block">{profileData.name}</span>
+                      <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden border-2 border-gold/30">
+                        <img
+                          src={profileData.avatar}
+                          alt="Maestro"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                      <div className="h-3 bg-muted/20 rounded-full overflow-hidden">
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Área de contenido principal */}
+            <div className="flex-1 overflow-hidden flex flex-col bg-background">
+              {/* Título y métricas */}
+              <div className="p-4 md:p-8 overflow-y-auto">
+                <div className="max-w-6xl mx-auto">
+                  {/* Título */}
+                  <div className="text-center mb-8 md:mb-12">
+                    <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif text-gold tracking-[0.2em] md:tracking-[0.3em] mb-2">
+                      VISIÓN DEL DESTINO
+                    </h1>
+                    <p className="text-xs md:text-sm text-gold/60 tracking-[0.2em] md:tracking-[0.3em]">
+                      RESUMEN ESTADÍSTICO DE ALMAS Y CONEXIONES
+                    </p>
+                  </div>
+
+                  {/* Métricas */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-12">
+                    {/* Total Almas */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                      style={{
+                        boxShadow: "0 0 20px hsl(220 90% 56% / 0.1)",
+                      }}
+                    >
+                      <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-400 mx-auto mb-2 md:mb-3" />
+                      <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                        {stats.totalAlmas}
+                      </p>
+                      <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                        Total Almas
+                      </p>
+                    </motion.div>
+
+                    {/* Click WA */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                      style={{
+                        boxShadow: "0 0 20px hsl(142 76% 36% / 0.1)",
+                      }}
+                    >
+                      <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-green-400 mx-auto mb-2 md:mb-3" />
+                      <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                        {stats.clickWA}
+                      </p>
+                      <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                        Click WA
+                      </p>
+                    </motion.div>
+
+                    {/* Atendidos */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                      style={{
+                        boxShadow: "0 0 20px hsl(var(--gold) / 0.1)",
+                      }}
+                    >
+                      <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-gold mx-auto mb-2 md:mb-3" />
+                      <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                        {stats.atendidos}
+                      </p>
+                      <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                        Atendidos
+                      </p>
+                    </motion.div>
+
+                    {/* Sin Responder */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                      style={{
+                        boxShadow: "0 0 20px hsl(0 84% 60% / 0.1)",
+                      }}
+                    >
+                      <AlertCircle className="w-6 h-6 md:w-8 md:h-8 text-red-400 mx-auto mb-2 md:mb-3" />
+                      <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                        {stats.sinResponder}
+                      </p>
+                      <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                        Sin Responder
+                      </p>
+                    </motion.div>
+                  </div>
+
+                  {/* Pipeline */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="bg-card/30 rounded-xl p-4 md:p-8 border border-gold/20"
+                  >
+                    <div className="flex items-center justify-between mb-4 md:mb-6">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-gold" />
+                        <h2 className="text-base md:text-lg font-medium text-gold tracking-wider uppercase">
+                          Estado del Pipeline
+                        </h2>
+                      </div>
+                      <span className="text-xs md:text-sm text-muted-foreground">
+                        24 horas
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 md:space-y-4">
+                      {pipelineData.map((item, index) => (
+                        <motion.div
+                          key={item.label}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="space-y-2"
+                        >
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <Circle className={`w-3 h-3 ${item.color.replace("bg-", "text-")}`} fill="currentColor" />
+                              <span className="text-muted-foreground tracking-wider">{item.label}</span>
+                            </div>
+                            <span className="font-medium text-foreground">{item.count}</span>
+                          </div>
+                          <div className="h-3 bg-muted/20 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(item.count / item.max) * 100}%` }}
+                              transition={{ duration: 1, delay: index * 0.1 + 0.2 }}
+                              className={`h-full ${item.color} rounded-full relative`}
+                              style={{
+                                boxShadow: `0 0 20px ${item.color.includes("blue") ? "rgba(59, 130, 246, 0.5)" : 
+                                                                 item.color.includes("yellow") ? "rgba(234, 179, 8, 0.5)" :
+                                                                 item.color.includes("orange") ? "rgba(249, 115, 22, 0.5)" :
+                                                                 item.color.includes("green") ? "rgba(34, 197, 94, 0.5)" :
+                                                                 "rgba(239, 68, 68, 0.5)"}`
+                              }}
+                            />
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Nuevo */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-blue-400" />
+                          Nuevo
+                        </span>
+                        <span className="text-base md:text-xl font-bold text-foreground">
+                          {stats.pipeline.nuevo}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
-                          animate={{ width: `${(item.count / item.max) * 100}%` }}
-                          transition={{ duration: 1, delay: index * 0.1 + 0.2 }}
-                          className={`h-full ${item.color} rounded-full relative`}
+                          animate={{ width: `${(stats.pipeline.nuevo / stats.totalAlmas) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                          className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
                           style={{
-                            boxShadow: `0 0 20px ${item.color.includes("blue") ? "rgba(59, 130, 246, 0.5)" : 
-                                                     item.color.includes("yellow") ? "rgba(234, 179, 8, 0.5)" :
-                                                     item.color.includes("orange") ? "rgba(249, 115, 22, 0.5)" :
-                                                     item.color.includes("green") ? "rgba(34, 197, 94, 0.5)" :
-                                                     "rgba(239, 68, 68, 0.5)"}`
+                            boxShadow: "0 0 10px hsl(220 90% 56% / 0.5)",
                           }}
                         />
                       </div>
-                    </motion.div>
-                  ))}
+                    </div>
+
+                    {/* En Conversación */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-purple-400" />
+                          En Conversación
+                        </span>
+                        <span className="text-base md:text-xl font-bold text-foreground">
+                          {stats.pipeline.enConversacion}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stats.pipeline.enConversacion / stats.totalAlmas) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.6 }}
+                          className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full"
+                          style={{
+                            boxShadow: "0 0 10px hsl(270 91% 65% / 0.5)",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Cliente Caliente */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-orange-400" />
+                          Cliente Caliente
+                        </span>
+                        <span className="text-base md:text-xl font-bold text-foreground">
+                          {stats.pipeline.clienteCaliente}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stats.pipeline.clienteCaliente / stats.totalAlmas) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.7 }}
+                          className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full"
+                          style={{
+                            boxShadow: "0 0 10px hsl(25 95% 53% / 0.5)",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Cerrado */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-green-400" />
+                          Cerrado
+                        </span>
+                        <span className="text-base md:text-xl font-bold text-foreground">
+                          {stats.pipeline.cerrado}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stats.pipeline.cerrado / stats.totalAlmas) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.8 }}
+                          className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
+                          style={{
+                            boxShadow: "0 0 10px hsl(142 76% 36% / 0.5)",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Perdido */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-gray-400" />
+                          Perdido
+                        </span>
+                        <span className="text-base md:text-xl font-bold text-foreground">
+                          {stats.pipeline.perdido}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stats.pipeline.perdido / stats.totalAlmas) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.9 }}
+                          className="h-full bg-gradient-to-r from-gray-500 to-gray-400 rounded-full"
+                          style={{
+                            boxShadow: "0 0 10px hsl(0 0% 50% / 0.5)",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
               </div>
             </div>
