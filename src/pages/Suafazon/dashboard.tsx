@@ -134,6 +134,52 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, [leads]);
 
+  // Sincronización en tiempo real - escuchar cambios en localStorage
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "leads" && e.newValue) {
+        console.log("🔄 Leads actualizados desde otra página");
+        try {
+          const updatedLeads = JSON.parse(e.newValue);
+          setLeads(updatedLeads);
+        } catch (error) {
+          console.error("Error al sincronizar leads:", error);
+        }
+      }
+    };
+
+    // Escuchar cambios en localStorage desde otras pestañas/ventanas
+    window.addEventListener("storage", handleStorageChange);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
+  // Recargar leads al volver a la página (cuando el componente se vuelve visible)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log("🔄 Página visible de nuevo - recargando leads");
+        const storedLeads = localStorage.getItem("leads");
+        if (storedLeads) {
+          try {
+            const parsedLeads = JSON.parse(storedLeads);
+            setLeads(parsedLeads);
+          } catch (error) {
+            console.error("Error al recargar leads:", error);
+          }
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   // Limpiar notificaciones al ver los leads
   useEffect(() => {
     if (activeTab === "chats") {

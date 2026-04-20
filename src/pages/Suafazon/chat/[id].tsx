@@ -50,6 +50,27 @@ export default function ChatView() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
+  // Función helper para actualizar lead en localStorage
+  const updateLeadInStorage = (updatedLead: Lead) => {
+    const storedLeads = localStorage.getItem("leads");
+    if (storedLeads) {
+      const leads: Lead[] = JSON.parse(storedLeads);
+      const leadIndex = leads.findIndex(l => l.id === updatedLead.id);
+      
+      if (leadIndex !== -1) {
+        leads[leadIndex] = updatedLead;
+        localStorage.setItem("leads", JSON.stringify(leads));
+        console.log("💾 Lead actualizado en localStorage:", updatedLead.id);
+        
+        // Disparar evento personalizado para notificar a otras páginas
+        window.dispatchEvent(new Event("leadsUpdated"));
+        
+        return true;
+      }
+    }
+    return false;
+  };
+
   // Cargar lead y perfil
   useEffect(() => {
     if (!router.isReady) return;
@@ -93,22 +114,27 @@ export default function ChatView() {
 
   const handleSendMessage = (text: string) => {
     if (!text.trim() || !lead) return;
-    
-    // Mock: agregar mensaje (en producción se guardará en Supabase)
+
     const newMessage = {
       id: Date.now().toString(),
       text: text.trim(),
+      timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
       isFromMaestro: true,
-      isUser: false,
-      timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+      isUser: false
+    };
+
+    const updatedMessages = [...(lead.messages || []), newMessage];
+    const updatedLead: Lead = { 
+      ...lead, 
+      messages: updatedMessages,
+      status: lead.status === "nuevo" ? "enConversacion" : lead.status
     };
     
-    setLead({
-      ...lead,
-      messages: [...(lead.messages || []), newMessage]
-    });
-    
+    setLead(updatedLead);
     setMessageInput("");
+    
+    // Actualizar en localStorage
+    updateLeadInStorage(updatedLead);
   };
 
   const handleQuickResponse = (message: string) => {
@@ -123,36 +149,18 @@ export default function ChatView() {
     setLead(updatedLead);
     
     // Actualizar en localStorage
-    const storedLeads = localStorage.getItem("leads");
-    if (storedLeads) {
-      const leads: Lead[] = JSON.parse(storedLeads);
-      const leadIndex = leads.findIndex(l => l.id === lead.id);
-      
-      if (leadIndex !== -1) {
-        leads[leadIndex] = updatedLead;
-        localStorage.setItem("leads", JSON.stringify(leads));
-      }
-    }
+    updateLeadInStorage(updatedLead);
   };
 
   // Toggle favorito
   const handleFavoriteToggle = () => {
     if (!lead) return;
     
-    const updatedLead = { ...lead, isFavorite: !lead.isFavorite };
+    const updatedLead: Lead = { ...lead, isFavorite: !lead.isFavorite };
     setLead(updatedLead);
     
     // Actualizar en localStorage
-    const storedLeads = localStorage.getItem("leads");
-    if (storedLeads) {
-      const leads: Lead[] = JSON.parse(storedLeads);
-      const leadIndex = leads.findIndex(l => l.id === lead.id);
-      
-      if (leadIndex !== -1) {
-        leads[leadIndex] = updatedLead;
-        localStorage.setItem("leads", JSON.stringify(leads));
-      }
-    }
+    updateLeadInStorage(updatedLead);
   };
 
   // Marcar como listo
@@ -163,18 +171,21 @@ export default function ChatView() {
     setLead(updatedLead);
     
     // Actualizar en localStorage
-    const storedLeads = localStorage.getItem("leads");
-    if (storedLeads) {
-      const leads: Lead[] = JSON.parse(storedLeads);
-      const leadIndex = leads.findIndex(l => l.id === lead.id);
-      
-      if (leadIndex !== -1) {
-        leads[leadIndex] = updatedLead;
-        localStorage.setItem("leads", JSON.stringify(leads));
-      }
+    if (updateLeadInStorage(updatedLead)) {
+      alert("✅ Marcado como listo. El lead ahora aparecerá en la sección LISTO del dashboard.");
     }
+  };
+
+  // Guardar notas
+  const handleSaveNotes = () => {
+    if (!lead) return;
     
-    alert("Marcado como listo. Ahora aparecerá en la sección LISTO del dashboard.");
+    const updatedLead = { ...lead, notes: lead.notes };
+    
+    // Actualizar en localStorage
+    if (updateLeadInStorage(updatedLead)) {
+      alert("✅ Notas guardadas correctamente");
+    }
   };
 
   // Guardar perfil
@@ -288,26 +299,31 @@ export default function ChatView() {
     }
   };
 
-  // Enviar mensaje multimedia
   const handleSendMedia = () => {
     if (!mediaPreview || !lead) return;
 
     const newMessage = {
       id: Date.now().toString(),
-      text: mediaPreview.type === "audio" ? "Audio" : mediaPreview.type === "video" ? "Video" : "Imagen",
-      type: mediaPreview.type,
+      text: "",
       mediaUrl: mediaPreview.url,
+      type: mediaPreview.type,
+      timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
       isFromMaestro: true,
-      isUser: false,
-      timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+      isUser: false
     };
 
-    setLead({
-      ...lead,
-      messages: [...(lead.messages || []), newMessage]
-    });
-
+    const updatedMessages = [...(lead.messages || []), newMessage];
+    const updatedLead: Lead = { 
+      ...lead, 
+      messages: updatedMessages,
+      status: lead.status === "nuevo" ? "enConversacion" : lead.status
+    };
+    
+    setLead(updatedLead);
     setMediaPreview(null);
+    
+    // Actualizar en localStorage
+    updateLeadInStorage(updatedLead);
   };
 
   // Cancelar preview
