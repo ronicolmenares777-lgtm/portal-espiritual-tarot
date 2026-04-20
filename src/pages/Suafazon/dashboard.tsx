@@ -510,6 +510,8 @@ export default function AdminDashboard() {
                   <button
                     key={lead.id}
                     onClick={() => {
+                      console.log("🔗 Navegando al chat con ID:", lead.id);
+                      console.log("🔗 Lead completo:", lead);
                       router.push(`/Suafazon/chat/${lead.id}`);
                       setSidebarOpen(false);
                     }}
