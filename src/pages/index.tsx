@@ -10,8 +10,10 @@ import { ChatMaestro } from "@/components/ChatMaestro";
 import { SEO } from "@/components/SEO";
 import { phoneValidation } from "@/lib/config";
 import type { TarotCard } from "@/lib/tarotCards";
+import type { Lead } from "@/types/admin";
 import { useState, useEffect } from "react";
 import { Sparkles, Moon, Star, Facebook } from "lucide-react";
+import { motion } from "framer-motion";
 
 type Screen =
   | "form"
@@ -51,6 +53,16 @@ export default function Home() {
     question1: "",
     question2: "",
   });
+  const [currentStep, setCurrentStep] = useState<"initial" | "loading" | "cards" | "suspense" | "reveal" | "questions" | "warning" | "chat">("initial");
+  const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
+  const [revealedCard, setRevealedCard] = useState<TarotCard | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginData, setLoginData] = useState({
+    name: "",
+    whatsapp: "",
+    countryCode: "+52"
+  });
+  const [loginError, setLoginError] = useState("");
 
   // Cambiar placeholder de nombre cada 3 segundos
   useEffect(() => {
@@ -89,6 +101,38 @@ export default function Home() {
   const handleCountryChange = (code: string) => {
     setFormData({ ...formData, countryCode: code, whatsapp: "" });
     setPhoneError("");
+  };
+
+  const handleStart = () => {
+    setCurrentStep("loading");
+  };
+
+  const handleLogin = () => {
+    // Validar campos
+    if (!loginData.name.trim() || !loginData.whatsapp.trim()) {
+      setLoginError("Por favor, completa todos los campos");
+      return;
+    }
+
+    // Buscar usuario en localStorage
+    const storedLeads = localStorage.getItem("leads");
+    if (storedLeads) {
+      const leads = JSON.parse(storedLeads);
+      const fullPhone = loginData.countryCode + loginData.whatsapp;
+      const user = leads.find((lead: Lead) => 
+        lead.name.toLowerCase() === loginData.name.toLowerCase() && 
+        lead.whatsapp === fullPhone
+      );
+
+      if (user) {
+        // Usuario encontrado - guardar sesión y redirigir
+        localStorage.setItem("userAuth", JSON.stringify(user));
+        window.location.href = "/chat-usuario";
+        return;
+      }
+    }
+
+    setLoginError("No se encontró ninguna consulta con estos datos");
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -205,6 +249,17 @@ export default function Home() {
                   <Facebook className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   <span className="font-medium tracking-wider">Síguenos en Facebook</span>
                 </a>
+              </div>
+
+              {/* Botón Ingresar */}
+              <div className="flex justify-center animate-in fade-in duration-1000 delay-300">
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-gradient-to-r from-gold/20 to-accent/20 border-2 border-gold/50 text-gold hover:bg-gold/30 transition-all hover:shadow-lg hover:shadow-gold/50 group font-medium tracking-wider"
+                >
+                  <Star className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+                  INGRESAR A MI CONSULTA
+                </button>
               </div>
 
               {/* Título principal mejorado */}
@@ -434,6 +489,120 @@ export default function Home() {
       <FloatingParticles />
       
       {renderScreen()}
+
+      {/* Modal de Login */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card border-2 border-gold/30 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl shadow-gold/20"
+          >
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-4 border-2 border-gold/30">
+                <Sparkles className="w-8 h-8 text-gold" />
+              </div>
+              <h2 className="text-2xl font-serif text-gold tracking-wider mb-2">
+                ACCEDE A TU CONSULTA
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Ingresa los datos que usaste en tu primera consulta
+              </p>
+            </div>
+
+            {/* Formulario */}
+            <div className="space-y-4">
+              {/* Nombre */}
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gold/80 mb-2">
+                  Tu Nombre
+                </label>
+                <input
+                  type="text"
+                  value={loginData.name}
+                  onChange={(e) => {
+                    setLoginData({ ...loginData, name: e.target.value });
+                    setLoginError("");
+                  }}
+                  placeholder="Escribe tu nombre"
+                  className="w-full px-4 py-3 bg-muted/30 border border-gold/20 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
+                />
+              </div>
+
+              {/* WhatsApp */}
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-gold/80 mb-2">
+                  Tu WhatsApp
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={loginData.countryCode}
+                    onChange={(e) => setLoginData({ ...loginData, countryCode: e.target.value })}
+                    className="px-3 py-3 bg-muted/30 border border-gold/20 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
+                  >
+                    {phoneValidation.countryCodes.map(country => (
+                      <option key={country.code} value={country.code}>
+                        {country.flag} {country.code}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="tel"
+                    value={loginData.whatsapp}
+                    onChange={(e) => {
+                      setLoginData({ ...loginData, whatsapp: e.target.value.replace(/\D/g, "") });
+                      setLoginError("");
+                    }}
+                    placeholder="1234567890"
+                    className="flex-1 px-4 py-3 bg-muted/30 border border-gold/20 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Error */}
+              {loginError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                  {loginError}
+                </div>
+              )}
+
+              {/* Botones */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    setLoginError("");
+                    setLoginData({ name: "", whatsapp: "", countryCode: "+52" });
+                  }}
+                  className="flex-1 px-4 py-3 rounded-xl border-2 border-gold/30 text-muted-foreground hover:text-foreground hover:border-gold/50 transition-all font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleLogin}
+                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all"
+                >
+                  Ingresar
+                </button>
+              </div>
+
+              {/* Ayuda */}
+              <div className="text-center mt-4 pt-4 border-t border-gold/10">
+                <p className="text-xs text-muted-foreground">
+                  ¿Primera vez aquí?{" "}
+                  <button
+                    onClick={() => setShowLoginModal(false)}
+                    className="text-gold hover:underline"
+                  >
+                    Inicia tu consulta
+                  </button>
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </>
   );
 }
