@@ -238,30 +238,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Botón de Facebook */}
-              <div className="flex justify-center animate-in fade-in duration-1000 delay-200">
-                <a
-                  href="https://www.facebook.com/centronlin"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all hover:shadow-lg hover:shadow-blue-500/50 group"
-                >
-                  <Facebook className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium tracking-wider">Síguenos en Facebook</span>
-                </a>
-              </div>
-
-              {/* Botón Ingresar */}
-              <div className="flex justify-center animate-in fade-in duration-1000 delay-300">
-                <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-gradient-to-r from-gold/20 to-accent/20 border-2 border-gold/50 text-gold hover:bg-gold/30 transition-all hover:shadow-lg hover:shadow-gold/50 group font-medium tracking-wider"
-                >
-                  <Star className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
-                  INGRESAR A MI CONSULTA
-                </button>
-              </div>
-
               {/* Título principal mejorado */}
               <div className="text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                 <div className="space-y-2">
@@ -489,14 +465,56 @@ export default function Home() {
   return (
     <>
       <SEO 
-        title="Portal Espiritual - Descubre Tu Destino"
-        description="Experiencia mística de tarot premium. Conecta con el cosmos y revela tu destino a través de una lectura espiritual guiada."
+        title="Portal Espiritual - Tarot Místico"
+        description="Descubre tu destino a través del tarot. Una experiencia mística única que revelará tu camino espiritual."
       />
       
       <CustomCursor />
       <FloatingParticles />
-      
-      {renderScreen()}
+
+      {/* Header Superior con Botones */}
+      <div className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-b from-background via-background/95 to-transparent backdrop-blur-sm border-b border-gold/10">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          {/* Logo / Título */}
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-gold" />
+            <span className="font-serif text-gold text-sm md:text-base tracking-wider hidden sm:block">
+              Portal Espiritual
+            </span>
+          </div>
+
+          {/* Botones */}
+          <div className="flex items-center gap-2 md:gap-3">
+            {/* Botón Facebook */}
+            <a
+              href="https://www.facebook.com/centronlin"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all hover:shadow-lg hover:shadow-blue-500/50 group text-xs md:text-sm"
+            >
+              <Facebook className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
+              <span className="font-medium hidden sm:inline">Facebook</span>
+            </a>
+
+            {/* Botón Ingresar */}
+            <button
+              onClick={() => setShowLoginModal(true)}
+              className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 rounded-lg bg-gradient-to-r from-gold/20 to-accent/20 border border-gold/50 text-gold hover:bg-gold/30 transition-all hover:shadow-lg hover:shadow-gold/50 group text-xs md:text-sm font-medium"
+            >
+              <Star className="w-4 h-4 md:w-5 md:h-5 group-hover:rotate-180 transition-transform duration-500" />
+              <span className="hidden md:inline">Ingresar</span>
+              <span className="md:hidden">Login</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Contenido Principal */}
+      <div className="min-h-screen flex items-center justify-center px-4 pt-24 pb-12">
+        <div className="w-full">
+          {renderScreen()}
+        </div>
+      </div>
 
       {/* Modal de Login */}
       {showLoginModal && (
