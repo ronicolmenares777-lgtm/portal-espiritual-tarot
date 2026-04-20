@@ -94,7 +94,7 @@ export default function ChatView() {
   const handleStatusChange = (newStatus: Lead["status"]) => {
     if (!lead) return;
     
-    const updatedLead = { ...lead, status: newStatus };
+    const updatedLead: Lead = { ...lead, status: newStatus };
     setLead(updatedLead);
     
     // Actualizar en localStorage
@@ -134,7 +134,7 @@ export default function ChatView() {
   const handleMarkAsComplete = () => {
     if (!lead) return;
     
-    const updatedLead = { ...lead, status: "listo" };
+    const updatedLead: Lead = { ...lead, status: "listo" as const };
     setLead(updatedLead);
     
     // Actualizar en localStorage
