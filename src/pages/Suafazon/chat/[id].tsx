@@ -312,9 +312,9 @@ export default function ChatView() {
           {/* Layout del chat */}
           <div className="flex h-[calc(100vh-57px)] md:h-[calc(100vh-65px)] overflow-hidden">
             {/* Área de mensajes - siempre visible */}
-            <div className="flex-1 flex flex-col min-w-0 bg-background">
+            <div className="flex-1 flex flex-col min-w-0 bg-[hsl(260,35%,12%)]">
               {/* Mensajes */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 bg-gradient-to-b from-[hsl(260,35%,10%)] to-[hsl(260,35%,12%)]">
                 {!lead ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
@@ -348,17 +348,17 @@ export default function ChatView() {
                       <div className={`flex gap-2 max-w-[85%] md:max-w-[70%] ${msg.isUser ? "flex-row-reverse" : "flex-row"}`}>
                         {/* Avatar del remitente */}
                         {!msg.isUser && (
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold/30 to-accent/30 flex items-center justify-center border border-gold/40 flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold/30 to-accent/30 flex items-center justify-center border-2 border-gold/50 flex-shrink-0 shadow-lg shadow-gold/20">
                             <Sparkles className="w-4 h-4 text-gold" />
                           </div>
                         )}
                         
                         {/* Contenedor del mensaje */}
                         <div
-                          className={`rounded-2xl overflow-hidden shadow-sm ${
+                          className={`rounded-2xl overflow-hidden shadow-lg ${
                             msg.isUser
-                              ? "bg-gradient-to-br from-gold/20 to-accent/20 border border-gold/30"
-                              : "bg-card border border-border"
+                              ? "bg-gradient-to-br from-gold/30 to-accent/30 border-2 border-gold/50 shadow-gold/20"
+                              : "bg-[hsl(260,40%,18%)] border-2 border-[hsl(260,30%,25%)] shadow-black/40"
                           }`}
                         >
                           {/* Contenido multimedia */}
@@ -383,7 +383,7 @@ export default function ChatView() {
                           {msg.type === "audio" && msg.mediaUrl && (
                             <div className="px-4 py-3">
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center">
+                                <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center border border-gold/30">
                                   <Mic className="w-4 h-4 text-gold" />
                                 </div>
                                 <audio
@@ -399,7 +399,9 @@ export default function ChatView() {
                           {/* Contenido de texto */}
                           {(!msg.type || msg.type === "text") && msg.text && (
                             <div className="px-4 py-2.5">
-                              <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap break-words">
+                              <p className={`text-sm leading-relaxed whitespace-pre-wrap break-words ${
+                                msg.isUser ? "text-foreground" : "text-foreground"
+                              }`}>
                                 {msg.text}
                               </p>
                             </div>
@@ -407,7 +409,7 @@ export default function ChatView() {
                           
                           {/* Timestamp */}
                           <div className={`px-4 pb-2 ${(!msg.type || msg.type === "text") && msg.text ? "" : "pt-2"}`}>
-                            <span className="text-xs text-muted-foreground">
+                            <span className={`text-xs ${msg.isUser ? "text-gold/70" : "text-muted-foreground"}`}>
                               {msg.timestamp}
                             </span>
                           </div>
@@ -415,8 +417,8 @@ export default function ChatView() {
 
                         {/* Avatar del usuario */}
                         {msg.isUser && (
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center border border-blue-500/40 flex-shrink-0">
-                            <User className="w-4 h-4 text-blue-400" />
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/40 to-purple-500/40 flex items-center justify-center border-2 border-blue-500/60 flex-shrink-0 shadow-lg shadow-blue-500/20">
+                            <User className="w-4 h-4 text-blue-300" />
                           </div>
                         )}
                       </div>
@@ -426,7 +428,7 @@ export default function ChatView() {
               </div>
 
               {/* Input de mensaje */}
-              <div className="border-t border-border bg-gradient-to-b from-card/50 to-card p-4 shadow-lg">
+              <div className="border-t-2 border-gold/20 bg-[hsl(260,35%,14%)] p-4 shadow-2xl">
                 {/* Preview de multimedia */}
                 <AnimatePresence>
                   {mediaPreview && (
@@ -434,45 +436,45 @@ export default function ChatView() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 20 }}
-                      className="mb-4 p-4 bg-muted/30 rounded-xl border border-gold/20 backdrop-blur-sm"
+                      className="mb-4 p-4 bg-[hsl(260,40%,18%)] rounded-xl border-2 border-gold/30 backdrop-blur-sm shadow-lg"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           {mediaPreview.type === "image" && (
-                            <div className="relative rounded-lg overflow-hidden">
+                            <div className="relative rounded-lg overflow-hidden border-2 border-gold/20">
                               <img
                                 src={mediaPreview.url}
                                 alt="Preview"
                                 className="w-full max-w-xs rounded-lg"
                               />
                               <div className="absolute top-2 right-2">
-                                <div className="px-2 py-1 bg-black/60 rounded text-xs text-white">
+                                <div className="px-3 py-1.5 bg-black/80 rounded-lg text-xs text-gold font-medium border border-gold/30">
                                   Imagen
                                 </div>
                               </div>
                             </div>
                           )}
                           {mediaPreview.type === "video" && (
-                            <div className="relative rounded-lg overflow-hidden">
+                            <div className="relative rounded-lg overflow-hidden border-2 border-gold/20">
                               <video
                                 src={mediaPreview.url}
                                 controls
                                 className="w-full max-w-xs rounded-lg"
                               />
                               <div className="absolute top-2 right-2">
-                                <div className="px-2 py-1 bg-black/60 rounded text-xs text-white">
+                                <div className="px-3 py-1.5 bg-black/80 rounded-lg text-xs text-gold font-medium border border-gold/30">
                                   Video
                                 </div>
                               </div>
                             </div>
                           )}
                           {mediaPreview.type === "audio" && (
-                            <div className="flex items-center gap-3 p-4 bg-card rounded-lg border border-gold/20">
-                              <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
+                            <div className="flex items-center gap-3 p-4 bg-[hsl(260,35%,16%)] rounded-lg border-2 border-gold/30">
+                              <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center border border-gold/40">
                                 <Mic className="w-5 h-5 text-gold" />
                               </div>
                               <div className="flex-1">
-                                <p className="text-sm font-medium mb-1">Audio grabado</p>
+                                <p className="text-sm font-medium mb-1 text-gold">Audio grabado</p>
                                 <audio
                                   src={mediaPreview.url}
                                   controls
@@ -484,22 +486,22 @@ export default function ChatView() {
                         </div>
                         <button
                           onClick={cancelMediaPreview}
-                          className="p-2 hover:bg-muted/50 rounded-lg transition-colors"
+                          className="p-2 hover:bg-red-500/20 rounded-lg transition-colors border border-transparent hover:border-red-500/50"
                           title="Cancelar"
                         >
-                          <X className="w-5 h-5 text-muted-foreground" />
+                          <X className="w-5 h-5 text-muted-foreground hover:text-red-400" />
                         </button>
                       </div>
                       <div className="flex gap-2 mt-4">
                         <button
                           onClick={cancelMediaPreview}
-                          className="flex-1 px-4 py-2.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all text-sm font-medium"
+                          className="flex-1 px-4 py-2.5 rounded-lg border-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-gold/30 transition-all text-sm font-medium"
                         >
                           Cancelar
                         </button>
                         <button
                           onClick={handleSendMedia}
-                          className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-sm"
+                          className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-sm border-2 border-gold/50"
                         >
                           Enviar
                         </button>
@@ -526,33 +528,33 @@ export default function ChatView() {
 
                 <div className="flex items-end gap-2.5">
                   {/* Botones de adjuntar */}
-                  <div className="flex gap-1">
+                  <div className="flex gap-1.5">
                     <button
                       onClick={() => document.getElementById("image-upload")?.click()}
-                      className="p-2.5 hover:bg-gold/10 rounded-lg transition-all group border border-transparent hover:border-gold/20"
+                      className="p-2.5 hover:bg-gold/20 rounded-lg transition-all group border-2 border-transparent hover:border-gold/40 shadow-sm"
                       title="Enviar imagen"
                     >
                       <ImageIcon className="w-5 h-5 text-muted-foreground group-hover:text-gold transition-colors" />
                     </button>
                     <button
                       onClick={() => document.getElementById("video-upload")?.click()}
-                      className="p-2.5 hover:bg-gold/10 rounded-lg transition-all group border border-transparent hover:border-gold/20"
+                      className="p-2.5 hover:bg-gold/20 rounded-lg transition-all group border-2 border-transparent hover:border-gold/40 shadow-sm"
                       title="Enviar video"
                     >
                       <Paperclip className="w-5 h-5 text-muted-foreground group-hover:text-gold transition-colors" />
                     </button>
                     <button
                       onClick={isRecording ? stopRecording : startRecording}
-                      className={`p-2.5 rounded-lg transition-all group border ${
+                      className={`p-2.5 rounded-lg transition-all group border-2 shadow-sm ${
                         isRecording 
-                          ? "bg-red-500/20 border-red-500/50" 
-                          : "border-transparent hover:border-gold/20 hover:bg-gold/10"
+                          ? "bg-red-500/30 border-red-500/60 shadow-red-500/20" 
+                          : "border-transparent hover:border-gold/40 hover:bg-gold/20"
                       }`}
                       title={isRecording ? "Detener grabación" : "Grabar audio"}
                     >
                       <Mic className={`w-5 h-5 transition-colors ${
                         isRecording 
-                          ? "text-red-500 animate-pulse" 
+                          ? "text-red-400 animate-pulse" 
                           : "text-muted-foreground group-hover:text-gold"
                       }`} />
                     </button>
@@ -571,7 +573,7 @@ export default function ChatView() {
                       }}
                       placeholder="Escribe un mensaje..."
                       rows={1}
-                      className="w-full bg-muted/40 border border-gold/10 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/30 transition-all resize-none shadow-sm"
+                      className="w-full bg-[hsl(260,40%,18%)] border-2 border-gold/20 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40 transition-all resize-none shadow-md"
                       style={{ minHeight: "44px", maxHeight: "120px" }}
                     />
                   </div>
@@ -580,7 +582,7 @@ export default function ChatView() {
                   <button
                     onClick={() => handleSendMessage(messageInput)}
                     disabled={!messageInput.trim()}
-                    className="p-3 bg-gradient-to-r from-gold to-accent text-background rounded-xl hover:shadow-lg hover:shadow-gold/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                    className="p-3 bg-gradient-to-r from-gold to-accent text-background rounded-xl hover:shadow-xl hover:shadow-gold/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none border-2 border-gold/50 disabled:border-gold/20"
                   >
                     <Send className="w-5 h-5" />
                   </button>
