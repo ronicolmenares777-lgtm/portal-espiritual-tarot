@@ -52,19 +52,7 @@ export default function AdminDashboard() {
 
   // Filtrar leads según tab activo y filtros
   const filteredLeads = leads.filter((lead) => {
-    // Filtro por tab
-    if (activeTab === "chats") {
-      // Tab CHATS: mostrar solo leads con mensajes (en conversación)
-      if (!lead.messages || lead.messages.length === 0) return false;
-    } else if (activeTab === "leads") {
-      // Tab LEADS: mostrar todos los leads nuevos sin conversación activa
-      if (lead.status === "listo") return false;
-    } else if (activeTab === "listo") {
-      // Tab LISTO: mostrar solo los marcados como listo
-      if (lead.status !== "listo") return false;
-    }
-
-    // Filtro por búsqueda
+    // Primero: filtro por búsqueda (si existe)
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       const matchName = lead.name.toLowerCase().includes(search);
@@ -73,12 +61,22 @@ export default function AdminDashboard() {
       if (!matchName && !matchPhone && !matchProblem) return false;
     }
 
-    // Filtro por estado
+    // Segundo: filtro por estado seleccionado (si no es "todos")
     if (selectedStatus !== "todos") {
       if (lead.status !== selectedStatus) return false;
     }
 
-    return true;
+    // Tercero: filtro por tab activo
+    if (activeTab === "listo") {
+      // Tab LISTO: solo mostrar leads con status "listo"
+      return lead.status === "listo";
+    } else if (activeTab === "chats") {
+      // Tab CHATS: mostrar leads con mensajes
+      return lead.messages && lead.messages.length > 0;
+    } else {
+      // Tab LEADS: mostrar todos menos los de status "listo"
+      return lead.status !== "listo";
+    }
   });
 
   // Contar leads por estado
@@ -201,6 +199,24 @@ export default function AdminDashboard() {
       router.push("/Suafazon");
     }
   }, [router]);
+
+  useEffect(() => {
+    const storedLeads = localStorage.getItem("leads");
+    if (storedLeads) {
+      try {
+        const parsedLeads = JSON.parse(storedLeads);
+        console.log("📊 Leads cargados desde localStorage:", parsedLeads);
+        console.log("📊 Total de leads:", parsedLeads.length);
+        setLeads(parsedLeads);
+      } catch (error) {
+        console.error("Error al cargar leads:", error);
+        setLeads([]);
+      }
+    } else {
+      console.log("⚠️ No hay leads en localStorage");
+      setLeads([]);
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("adminAuth");
@@ -443,6 +459,11 @@ export default function AdminDashboard() {
                   <div className="text-5xl mb-4">🔍</div>
                   <p className="text-sm text-muted-foreground mb-2">
                     No se encontraron resultados
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 mb-4">
+                    Total de leads: {leads.length} | 
+                    Tab actual: {activeTab} | 
+                    Filtro: {selectedStatus}
                   </p>
                   {(searchTerm || selectedStatus !== "todos") && (
                     <button
