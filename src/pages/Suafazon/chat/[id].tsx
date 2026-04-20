@@ -546,7 +546,6 @@ export default function ChatView() {
               bg-card/30 border-l border-gold/20 p-4 md:p-6 overflow-y-auto
               transform transition-transform duration-300 ease-in-out
               ${showSidebar ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
-              hidden lg:block
             `}>
               {/* Botón cerrar en móvil */}
               <button
