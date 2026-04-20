@@ -314,7 +314,7 @@ export default function ChatView() {
             {/* Área de mensajes - siempre visible */}
             <div className="flex-1 flex flex-col min-w-0 bg-background">
               {/* Mensajes */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
                 {!lead ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
@@ -324,9 +324,16 @@ export default function ChatView() {
                   </div>
                 ) : !lead.messages || lead.messages.length === 0 ? (
                   <div className="flex items-center justify-center h-full">
-                    <div className="text-center space-y-4">
-                      <div className="text-6xl">🌙</div>
-                      <p className="text-gold font-serif text-xl">Aún no hay mensajes. Inicia la conversación espiritual.</p>
+                    <div className="text-center space-y-4 max-w-sm mx-auto">
+                      <div className="w-20 h-20 rounded-full bg-gold/10 flex items-center justify-center mx-auto border border-gold/20">
+                        <Sparkles className="w-10 h-10 text-gold" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-serif text-gold mb-2">Conversación Espiritual</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Aún no hay mensajes. Inicia la conexión espiritual enviando el primer mensaje.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -335,52 +342,83 @@ export default function ChatView() {
                       key={idx}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.1 }}
+                      transition={{ delay: idx * 0.05 }}
                       className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}
                     >
-                      <div
-                        className={`max-w-md rounded-2xl overflow-hidden ${
-                          msg.isUser
-                            ? "bg-gold/10 text-foreground ml-12"
-                            : "bg-muted/50 text-foreground mr-12"
-                        }`}
-                      >
-                        {/* Contenido del mensaje */}
-                        {msg.type === "image" && msg.mediaUrl && (
-                          <img
-                            src={msg.mediaUrl}
-                            alt="Imagen enviada"
-                            className="w-full max-w-sm rounded-t-2xl"
-                          />
-                        )}
-                        {msg.type === "video" && msg.mediaUrl && (
-                          <video
-                            src={msg.mediaUrl}
-                            controls
-                            className="w-full max-w-sm rounded-t-2xl"
-                          />
-                        )}
-                        {msg.type === "audio" && msg.mediaUrl && (
-                          <div className="px-4 py-3">
-                            <audio
-                              src={msg.mediaUrl}
-                              controls
-                              className="w-full"
-                            />
-                          </div>
-                        )}
-                        {(!msg.type || msg.type === "text") && (
-                          <div className="px-4 py-3">
-                            <p className="text-sm">{msg.text}</p>
+                      <div className={`flex gap-2 max-w-[85%] md:max-w-[70%] ${msg.isUser ? "flex-row-reverse" : "flex-row"}`}>
+                        {/* Avatar del remitente */}
+                        {!msg.isUser && (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold/30 to-accent/30 flex items-center justify-center border border-gold/40 flex-shrink-0">
+                            <Sparkles className="w-4 h-4 text-gold" />
                           </div>
                         )}
                         
-                        {/* Timestamp */}
-                        <div className="px-4 pb-2">
-                          <span className="text-xs text-muted-foreground">
-                            {msg.timestamp}
-                          </span>
+                        {/* Contenedor del mensaje */}
+                        <div
+                          className={`rounded-2xl overflow-hidden shadow-sm ${
+                            msg.isUser
+                              ? "bg-gradient-to-br from-gold/20 to-accent/20 border border-gold/30"
+                              : "bg-card border border-border"
+                          }`}
+                        >
+                          {/* Contenido multimedia */}
+                          {msg.type === "image" && msg.mediaUrl && (
+                            <div className="relative">
+                              <img
+                                src={msg.mediaUrl}
+                                alt="Imagen enviada"
+                                className="w-full max-w-sm object-cover"
+                              />
+                            </div>
+                          )}
+                          {msg.type === "video" && msg.mediaUrl && (
+                            <div className="relative">
+                              <video
+                                src={msg.mediaUrl}
+                                controls
+                                className="w-full max-w-sm"
+                              />
+                            </div>
+                          )}
+                          {msg.type === "audio" && msg.mediaUrl && (
+                            <div className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center">
+                                  <Mic className="w-4 h-4 text-gold" />
+                                </div>
+                                <audio
+                                  src={msg.mediaUrl}
+                                  controls
+                                  className="flex-1"
+                                  style={{ maxWidth: "250px" }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Contenido de texto */}
+                          {(!msg.type || msg.type === "text") && msg.text && (
+                            <div className="px-4 py-2.5">
+                              <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap break-words">
+                                {msg.text}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {/* Timestamp */}
+                          <div className={`px-4 pb-2 ${(!msg.type || msg.type === "text") && msg.text ? "" : "pt-2"}`}>
+                            <span className="text-xs text-muted-foreground">
+                              {msg.timestamp}
+                            </span>
+                          </div>
                         </div>
+
+                        {/* Avatar del usuario */}
+                        {msg.isUser && (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center border border-blue-500/40 flex-shrink-0">
+                            <User className="w-4 h-4 text-blue-400" />
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   ))
@@ -388,7 +426,7 @@ export default function ChatView() {
               </div>
 
               {/* Input de mensaje */}
-              <div className="border-t border-border bg-card p-3 md:p-4">
+              <div className="border-t border-border bg-gradient-to-b from-card/50 to-card p-4 shadow-lg">
                 {/* Preview de multimedia */}
                 <AnimatePresence>
                   {mediaPreview && (
@@ -396,33 +434,49 @@ export default function ChatView() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 20 }}
-                      className="mb-4 p-4 bg-muted/50 rounded-xl border border-gold/20"
+                      className="mb-4 p-4 bg-muted/30 rounded-xl border border-gold/20 backdrop-blur-sm"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           {mediaPreview.type === "image" && (
-                            <img
-                              src={mediaPreview.url}
-                              alt="Preview"
-                              className="w-full max-w-xs rounded-lg"
-                            />
+                            <div className="relative rounded-lg overflow-hidden">
+                              <img
+                                src={mediaPreview.url}
+                                alt="Preview"
+                                className="w-full max-w-xs rounded-lg"
+                              />
+                              <div className="absolute top-2 right-2">
+                                <div className="px-2 py-1 bg-black/60 rounded text-xs text-white">
+                                  Imagen
+                                </div>
+                              </div>
+                            </div>
                           )}
                           {mediaPreview.type === "video" && (
-                            <video
-                              src={mediaPreview.url}
-                              controls
-                              className="w-full max-w-xs rounded-lg"
-                            />
+                            <div className="relative rounded-lg overflow-hidden">
+                              <video
+                                src={mediaPreview.url}
+                                controls
+                                className="w-full max-w-xs rounded-lg"
+                              />
+                              <div className="absolute top-2 right-2">
+                                <div className="px-2 py-1 bg-black/60 rounded text-xs text-white">
+                                  Video
+                                </div>
+                              </div>
+                            </div>
                           )}
                           {mediaPreview.type === "audio" && (
-                            <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
-                              <Mic className="w-5 h-5 text-gold" />
+                            <div className="flex items-center gap-3 p-4 bg-card rounded-lg border border-gold/20">
+                              <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
+                                <Mic className="w-5 h-5 text-gold" />
+                              </div>
                               <div className="flex-1">
-                                <p className="text-sm font-medium">Audio grabado</p>
+                                <p className="text-sm font-medium mb-1">Audio grabado</p>
                                 <audio
                                   src={mediaPreview.url}
                                   controls
-                                  className="w-full mt-2"
+                                  className="w-full"
                                 />
                               </div>
                             </div>
@@ -430,21 +484,22 @@ export default function ChatView() {
                         </div>
                         <button
                           onClick={cancelMediaPreview}
-                          className="p-2 hover:bg-muted rounded-lg transition-colors"
+                          className="p-2 hover:bg-muted/50 rounded-lg transition-colors"
+                          title="Cancelar"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-5 h-5 text-muted-foreground" />
                         </button>
                       </div>
-                      <div className="flex gap-2 mt-3">
+                      <div className="flex gap-2 mt-4">
                         <button
                           onClick={cancelMediaPreview}
-                          className="flex-1 px-4 py-2 rounded-lg border border-gold/30 text-muted-foreground hover:text-foreground hover:border-gold/50 transition-all text-sm"
+                          className="flex-1 px-4 py-2.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all text-sm font-medium"
                         >
                           Cancelar
                         </button>
                         <button
                           onClick={handleSendMedia}
-                          className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-sm"
+                          className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-sm"
                         >
                           Enviar
                         </button>
@@ -469,31 +524,33 @@ export default function ChatView() {
                   id="video-upload"
                 />
 
-                <div className="flex items-end gap-2">
+                <div className="flex items-end gap-2.5">
                   {/* Botones de adjuntar */}
                   <div className="flex gap-1">
                     <button
                       onClick={() => document.getElementById("image-upload")?.click()}
-                      className="p-2 hover:bg-muted/50 rounded-lg transition-colors group"
+                      className="p-2.5 hover:bg-gold/10 rounded-lg transition-all group border border-transparent hover:border-gold/20"
                       title="Enviar imagen"
                     >
-                      <ImageIcon className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
+                      <ImageIcon className="w-5 h-5 text-muted-foreground group-hover:text-gold transition-colors" />
                     </button>
                     <button
                       onClick={() => document.getElementById("video-upload")?.click()}
-                      className="p-2 hover:bg-muted/50 rounded-lg transition-colors group"
+                      className="p-2.5 hover:bg-gold/10 rounded-lg transition-all group border border-transparent hover:border-gold/20"
                       title="Enviar video"
                     >
-                      <Paperclip className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
+                      <Paperclip className="w-5 h-5 text-muted-foreground group-hover:text-gold transition-colors" />
                     </button>
                     <button
                       onClick={isRecording ? stopRecording : startRecording}
-                      className={`p-2 hover:bg-muted/50 rounded-lg transition-colors group ${
-                        isRecording ? "bg-red-500/20" : ""
+                      className={`p-2.5 rounded-lg transition-all group border ${
+                        isRecording 
+                          ? "bg-red-500/20 border-red-500/50" 
+                          : "border-transparent hover:border-gold/20 hover:bg-gold/10"
                       }`}
                       title={isRecording ? "Detener grabación" : "Grabar audio"}
                     >
-                      <Mic className={`w-4 h-4 md:w-5 md:h-5 transition-colors ${
+                      <Mic className={`w-5 h-5 transition-colors ${
                         isRecording 
                           ? "text-red-500 animate-pulse" 
                           : "text-muted-foreground group-hover:text-gold"
@@ -514,8 +571,8 @@ export default function ChatView() {
                       }}
                       placeholder="Escribe un mensaje..."
                       rows={1}
-                      className="w-full bg-muted/30 border border-gold/20 rounded-xl px-3 md:px-4 py-2 md:py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none"
-                      style={{ minHeight: "40px", maxHeight: "120px" }}
+                      className="w-full bg-muted/40 border border-gold/10 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/30 transition-all resize-none shadow-sm"
+                      style={{ minHeight: "44px", maxHeight: "120px" }}
                     />
                   </div>
 
@@ -523,9 +580,9 @@ export default function ChatView() {
                   <button
                     onClick={() => handleSendMessage(messageInput)}
                     disabled={!messageInput.trim()}
-                    className="p-2 md:p-3 bg-gradient-to-r from-gold to-accent text-background rounded-xl hover:shadow-lg hover:shadow-gold/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-3 bg-gradient-to-r from-gold to-accent text-background rounded-xl hover:shadow-lg hover:shadow-gold/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
                   >
-                    <Send className="w-4 h-4 md:w-5 md:h-5" />
+                    <Send className="w-5 h-5" />
                   </button>
                 </div>
               </div>
