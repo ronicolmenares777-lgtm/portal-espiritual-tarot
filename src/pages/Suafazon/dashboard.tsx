@@ -24,9 +24,10 @@ import {
   Mail,
   Save,
   X,
-  Image as ImageIcon,
+  ImageIcon,
   Filter,
-  Menu
+  Menu,
+  Phone
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 
@@ -425,12 +426,12 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Leads List */}
-            <div className="flex-1 overflow-y-auto px-4 space-y-2">
+            {/* Lista de leads */}
+            <div className="flex-1 overflow-y-auto px-4 space-y-1">
               {filteredLeads.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-3">🔍</div>
-                  <p className="text-sm text-muted-foreground">
+                <div className="text-center py-12">
+                  <div className="text-5xl mb-4">🔍</div>
+                  <p className="text-sm text-muted-foreground mb-2">
                     No se encontraron resultados
                   </p>
                   {(searchTerm || selectedStatus !== "todos") && (
@@ -453,44 +454,81 @@ export default function AdminDashboard() {
                       router.push(`/Suafazon/chat/${lead.id}`);
                       setSidebarOpen(false);
                     }}
-                    className="w-full text-left p-3 rounded-lg hover:bg-muted/30 transition-all group border border-transparent hover:border-gold/20"
+                    className="w-full text-left p-4 rounded-xl hover:bg-muted/40 transition-all group border border-gold/5 hover:border-gold/20 bg-card/20 hover:bg-card/40"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate group-hover:text-gold transition-colors">
-                          {lead.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {getTimeAgo(lead.timestamp)}
-                        </p>
+                    {/* Header del chat */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {/* Avatar con inicial */}
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-accent/20 flex items-center justify-center border border-gold/30 flex-shrink-0">
+                          <span className="text-sm font-semibold text-gold">
+                            {lead.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        
+                        {/* Nombre y tiempo */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-gold transition-colors">
+                              {lead.name}
+                            </h4>
+                            {lead.isFavorite && (
+                              <Star className="w-3 h-3 fill-gold text-gold flex-shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {getTimeAgo(lead.timestamp)}
+                          </p>
+                        </div>
                       </div>
+                      
+                      {/* Badge de estado */}
                       <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
                           lead.status === "nuevo"
-                            ? "bg-blue-500/20 text-blue-400"
+                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
                             : lead.status === "clienteCaliente"
-                            ? "bg-orange-500/20 text-orange-400"
+                            ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
                             : lead.status === "cerrado"
-                            ? "bg-green-500/20 text-green-400"
+                            ? "bg-green-500/20 text-green-400 border border-green-500/30"
                             : lead.status === "perdido"
-                            ? "bg-red-500/20 text-red-400"
+                            ? "bg-red-500/20 text-red-400 border border-red-500/30"
                             : lead.status === "listo"
-                            ? "bg-emerald-500/20 text-emerald-400"
-                            : "bg-purple-500/20 text-purple-400"
+                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                            : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
                         }`}
                       >
                         {lead.status === "nuevo"
-                          ? "NUEVO"
+                          ? "Nuevo"
                           : lead.status === "clienteCaliente"
-                          ? "CLIENTE"
+                          ? "Caliente"
                           : lead.status === "cerrado"
-                          ? "CERRADO"
+                          ? "Cerrado"
                           : lead.status === "perdido"
-                          ? "PERDIDO"
+                          ? "Perdido"
                           : lead.status === "listo"
-                          ? "LISTO"
-                          : "EN CHAT"}
+                          ? "Listo"
+                          : "En Chat"}
                       </span>
+                    </div>
+
+                    {/* Información del problema */}
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {lead.problem}
+                      </p>
+                      
+                      {/* Footer con metadata */}
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2 border-t border-gold/5">
+                        <div className="flex items-center gap-1">
+                          <Phone className="w-3 h-3" />
+                          <span>{lead.whatsapp}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" />
+                          <span>{lead.card}</span>
+                        </div>
+                      </div>
                     </div>
                   </button>
                 ))
