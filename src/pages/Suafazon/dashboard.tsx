@@ -460,21 +460,27 @@ export default function AdminDashboard() {
                   <p className="text-sm text-muted-foreground mb-2">
                     No se encontraron resultados
                   </p>
-                  <p className="text-xs text-muted-foreground/60 mb-4">
-                    Total de leads: {leads.length} | 
-                    Tab actual: {activeTab} | 
-                    Filtro: {selectedStatus}
-                  </p>
+                  <div className="text-xs text-muted-foreground/60 mb-4 space-y-1">
+                    <p>Total de leads en sistema: {leads.length}</p>
+                    <p>Tab actual: <span className="text-gold">{activeTab}</span></p>
+                    <p>Filtro de estado: <span className="text-gold">{selectedStatus}</span></p>
+                    {searchTerm && <p>Búsqueda: <span className="text-gold">"{searchTerm}"</span></p>}
+                  </div>
                   {(searchTerm || selectedStatus !== "todos") && (
                     <button
                       onClick={() => {
                         setSearchTerm("");
                         setSelectedStatus("todos");
                       }}
-                      className="mt-3 text-xs text-gold hover:underline"
+                      className="mt-3 px-4 py-2 rounded-lg bg-gold/20 border border-gold/50 text-gold hover:bg-gold/30 transition-all text-xs"
                     >
-                      Limpiar filtros
+                      Limpiar todos los filtros
                     </button>
+                  )}
+                  {leads.length === 0 && (
+                    <p className="mt-4 text-xs text-muted-foreground">
+                      No hay leads registrados aún. Los usuarios deben completar el formulario inicial.
+                    </p>
                   )}
                 </div>
               ) : (
