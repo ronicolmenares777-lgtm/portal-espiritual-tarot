@@ -96,6 +96,12 @@ export default function ChatView() {
     setLead({ ...lead, status: newStatus });
   };
 
+  // Toggle favorito
+  const handleFavoriteToggle = () => {
+    if (!lead) return;
+    setLead({ ...lead, isFavorite: !lead.isFavorite });
+  };
+
   // Guardar perfil
   const handleSaveProfile = () => {
     localStorage.setItem("maestroProfile", JSON.stringify(profileData));
