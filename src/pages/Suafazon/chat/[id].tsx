@@ -93,13 +93,41 @@ export default function ChatView() {
 
   const handleStatusChange = (newStatus: Lead["status"]) => {
     if (!lead) return;
-    setLead({ ...lead, status: newStatus });
+    
+    const updatedLead = { ...lead, status: newStatus };
+    setLead(updatedLead);
+    
+    // Actualizar en localStorage
+    const storedLeads = localStorage.getItem("leads");
+    if (storedLeads) {
+      const leads: Lead[] = JSON.parse(storedLeads);
+      const leadIndex = leads.findIndex(l => l.id === lead.id);
+      
+      if (leadIndex !== -1) {
+        leads[leadIndex] = updatedLead;
+        localStorage.setItem("leads", JSON.stringify(leads));
+      }
+    }
   };
 
   // Toggle favorito
   const handleFavoriteToggle = () => {
     if (!lead) return;
-    setLead({ ...lead, isFavorite: !lead.isFavorite });
+    
+    const updatedLead = { ...lead, isFavorite: !lead.isFavorite };
+    setLead(updatedLead);
+    
+    // Actualizar en localStorage
+    const storedLeads = localStorage.getItem("leads");
+    if (storedLeads) {
+      const leads: Lead[] = JSON.parse(storedLeads);
+      const leadIndex = leads.findIndex(l => l.id === lead.id);
+      
+      if (leadIndex !== -1) {
+        leads[leadIndex] = updatedLead;
+        localStorage.setItem("leads", JSON.stringify(leads));
+      }
+    }
   };
 
   // Guardar perfil
@@ -710,13 +738,13 @@ export default function ChatView() {
                   />
                 </div>
 
-                {/* Marcar como Listo */}
-                <button 
-                  onClick={() => handleStatusChange("listo")}
-                  className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 rounded-lg py-3 text-sm font-medium uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                {/* Botón Marcar como Listo */}
+                <button
+                  onClick={handleMarkAsComplete}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium"
                 >
-                  <CheckCircle className="w-4 h-4" />
-                  Marcar como Listo
+                  <CheckCircle className="w-5 h-5" />
+                  MARCAR COMO LISTO
                 </button>
               </div>
             </div>

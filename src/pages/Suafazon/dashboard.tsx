@@ -50,22 +50,35 @@ export default function AdminDashboard() {
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
   });
 
-  // Filtrar leads por búsqueda y estado
-  const filteredLeads = leads.filter(lead => {
-    const matchesSearch = 
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.whatsapp.includes(searchTerm) ||
-      lead.problem.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = selectedStatus === "todos" || lead.status === selectedStatus;
-    
-    // Filtrar por tab activa
-    const matchesTab = 
-      activeTab === "chats" ? lead.status !== "listo" :
-      activeTab === "listo" ? lead.status === "listo" :
-      true; // "leads" muestra todos
-    
-    return matchesSearch && matchesStatus && matchesTab;
+  // Filtrar leads según tab activo y filtros
+  const filteredLeads = leads.filter((lead) => {
+    // Filtro por tab
+    if (activeTab === "chats") {
+      // Tab CHATS: mostrar solo leads con mensajes (en conversación)
+      if (!lead.messages || lead.messages.length === 0) return false;
+    } else if (activeTab === "leads") {
+      // Tab LEADS: mostrar todos los leads nuevos sin conversación activa
+      if (lead.status === "listo") return false;
+    } else if (activeTab === "listo") {
+      // Tab LISTO: mostrar solo los marcados como listo
+      if (lead.status !== "listo") return false;
+    }
+
+    // Filtro por búsqueda
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      const matchName = lead.name.toLowerCase().includes(search);
+      const matchPhone = lead.whatsapp.includes(search);
+      const matchProblem = lead.problem.toLowerCase().includes(search);
+      if (!matchName && !matchPhone && !matchProblem) return false;
+    }
+
+    // Filtro por estado
+    if (selectedStatus !== "todos") {
+      if (lead.status !== selectedStatus) return false;
+    }
+
+    return true;
   });
 
   // Contar leads por estado
@@ -289,49 +302,46 @@ export default function AdminDashboard() {
             </div>
 
             {/* Tabs */}
-            <div className="px-4 flex gap-2 border-b border-gold/10 pb-3">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setActiveTab("chats")}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${
-                    activeTab === "chats"
-                      ? "bg-gold/10 text-gold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  CHATS
-                  {newLeadsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
-                      {newLeadsCount}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("leads")}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === "leads"
-                      ? "bg-gold/10 text-gold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  LEADS
-                </button>
-                <button
-                  onClick={() => setActiveTab("listo")}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${
-                    activeTab === "listo"
-                      ? "bg-gold/10 text-gold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  LISTO
-                  {statusCounts.listo > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">
-                      {statusCounts.listo}
-                    </span>
-                  )}
-                </button>
-              </div>
+            <div className="flex gap-2 mb-4 px-4">
+              <button
+                onClick={() => setActiveTab("chats")}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                  activeTab === "chats"
+                    ? "bg-gold/20 text-gold border border-gold/50"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <span className="text-xs uppercase tracking-wider">Chats</span>
+                <span className="ml-2 text-xs opacity-60">
+                  ({leads.filter(l => l.messages && l.messages.length > 0).length})
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveTab("leads")}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                  activeTab === "leads"
+                    ? "bg-gold/20 text-gold border border-gold/50"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <span className="text-xs uppercase tracking-wider">Leads</span>
+                <span className="ml-2 text-xs opacity-60">
+                  ({leads.filter(l => l.status !== "listo").length})
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveTab("listo")}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                  activeTab === "listo"
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <span className="text-xs uppercase tracking-wider">Listo</span>
+                <span className="ml-2 text-xs opacity-60">
+                  ({leads.filter(l => l.status === "listo").length})
+                </span>
+              </button>
             </div>
 
             {/* Search */}
