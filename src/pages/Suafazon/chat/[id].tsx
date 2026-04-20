@@ -21,7 +21,7 @@ import {
   Save,
   Sparkles,
   ImageIcon,
-  Video
+  Facebook
 } from "lucide-react";
 import Link from "next/link";
 
