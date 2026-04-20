@@ -541,11 +541,12 @@ export default function Home() {
                     onChange={(e) => setLoginData({ ...loginData, countryCode: e.target.value })}
                     className="px-3 py-3 bg-muted/30 border border-gold/20 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
                   >
-                    {phoneValidation.countryCodes.map(country => (
-                      <option key={country.code} value={country.code}>
-                        {country.flag} {country.code}
-                      </option>
-                    ))}
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+52">🇲🇽 +52</option>
+                    <option value="+34">🇪🇸 +34</option>
+                    <option value="+54">🇦🇷 +54</option>
+                    <option value="+57">🇨🇴 +57</option>
+                    <option value="+58">🇻🇪 +58</option>
                   </select>
                   <input
                     type="tel"
