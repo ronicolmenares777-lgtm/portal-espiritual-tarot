@@ -1,0 +1,108 @@
+[
+  {
+    "id": "1",
+    "name": "María González",
+    "whatsapp": "+521234567890",
+    "problem": "Necesito guía espiritual para tomar una decisión importante",
+    "card": "La Estrella",
+    "status": "nuevo",
+    "timestamp": "hace 1 hora",
+    "createdAt": "2024-01-20T10:00:00.000Z",
+    "isFavorite": false,
+    "messages": []
+  },
+  {
+    "id": "2",
+    "name": "Carlos Martínez",
+    "whatsapp": "+529876543210",
+    "problem": "Busco claridad en mi vida amorosa",
+    "card": "Los Enamorados",
+    "status": "enConversacion",
+    "timestamp": "hace 2 horas",
+    "createdAt": "2024-01-20T09:00:00.000Z",
+    "isFavorite": true,
+    "messages": [
+      {
+        "id": "msg1",
+        "text": "Bienvenido al portal espiritual",
+        "timestamp": "10:30",
+        "isFromMaestro": true,
+        "isUser": false
+      },
+      {
+        "id": "msg2",
+        "text": "Gracias maestro",
+        "timestamp": "10:31",
+        "isFromMaestro": false,
+        "isUser": true
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "name": "Ana Rodríguez",
+    "whatsapp": "+525555555555",
+    "problem": "Problemas familiares que necesito resolver",
+    "card": "La Emperatriz",
+    "status": "clienteCaliente",
+    "timestamp": "hace 3 horas",
+    "createdAt": "2024-01-20T08:00:00.000Z",
+    "isFavorite": false,
+    "messages": [
+      {
+        "id": "msg3",
+        "text": "¿Cómo puedo ayudarte?",
+        "timestamp": "09:00",
+        "isFromMaestro": true,
+        "isUser": false
+      }
+    ]
+  },
+  {
+    "id": "4",
+    "name": "Luis Fernández",
+    "whatsapp": "+524444444444",
+    "problem": "Consulta laboral y profesional",
+    "card": "El Sol",
+    "status": "listo",
+    "timestamp": "hace 5 horas",
+    "createdAt": "2024-01-20T06:00:00.000Z",
+    "isFavorite": false,
+    "messages": [
+      {
+        "id": "msg4",
+        "text": "Gracias por tu consulta",
+        "timestamp": "07:00",
+        "isFromMaestro": true,
+        "isUser": false
+      },
+      {
+        "id": "msg5",
+        "text": "Muchas gracias maestro",
+        "timestamp": "07:05",
+        "isFromMaestro": false,
+        "isUser": true
+      }
+    ]
+  },
+  {
+    "id": "5",
+    "name": "Sofia López",
+    "whatsapp": "+523333333333",
+    "problem": "Necesito encontrar mi camino espiritual",
+    "card": "La Sacerdotisa",
+    "status": "cerrado",
+    "timestamp": "hace 1 día",
+    "createdAt": "2024-01-19T10:00:00.000Z",
+    "isFavorite": true,
+    "messages": [
+      {
+        "id": "msg6",
+        "text": "Has encontrado tu camino",
+        "timestamp": "11:00",
+        "isFromMaestro": true,
+        "isUser": false
+      }
+    ]
+  }
+]

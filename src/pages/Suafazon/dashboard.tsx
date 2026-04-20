@@ -372,6 +372,28 @@ export default function AdminDashboard() {
                   className="w-full bg-muted/30 border border-gold/20 rounded-lg pl-10 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
                 />
               </div>
+              
+              {/* Botón temporal para cargar leads de prueba */}
+              {leads.length === 0 && (
+                <button
+                  onClick={() => {
+                    fetch("/test-leads.json")
+                      .then(res => res.json())
+                      .then(testLeads => {
+                        localStorage.setItem("leads", JSON.stringify(testLeads));
+                        setLeads(testLeads);
+                        alert("Leads de prueba cargados correctamente");
+                      })
+                      .catch(err => {
+                        console.error("Error cargando leads de prueba:", err);
+                        alert("Error al cargar leads de prueba");
+                      });
+                  }}
+                  className="w-full mt-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/50 text-blue-400 hover:bg-blue-500/30 transition-all text-xs"
+                >
+                  📋 Cargar Leads de Prueba
+                </button>
+              )}
             </div>
 
             {/* Filtros por estado */}
