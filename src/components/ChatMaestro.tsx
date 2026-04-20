@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Mic, Paperclip, X, Image as ImageIcon } from "lucide-react";
 import { chatConfig } from "@/lib/config";
+import type { Lead } from "@/types/admin";
 
 interface Message {
   texto: string;
@@ -11,13 +12,51 @@ interface Message {
   imageUrl?: string;
 }
 
-export function ChatMaestro() {
+export function ChatMaestro({ userName, userPhone = "", userProblem = "", userCard = "", onBack }: ChatMaestroProps) {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>(chatConfig.maestro.mensajes);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Guardar lead en localStorage cuando se monta el componente
+  useEffect(() => {
+    if (userName && userPhone) {
+      const existingLeads = localStorage.getItem("leads");
+      const leads: Lead[] = existingLeads ? JSON.parse(existingLeads) : [];
+      
+      // Verificar si el lead ya existe
+      const existingLead = leads.find(lead => lead.whatsapp === userPhone);
+      
+      if (!existingLead) {
+        // Crear nuevo lead
+        const newLead: Lead = {
+          id: Date.now().toString(),
+          name: userName,
+          whatsapp: userPhone,
+          problem: userProblem,
+          card: userCard,
+          status: "nuevo",
+          timestamp: "hace 1 hora",
+          createdAt: new Date().toISOString(),
+          messages: messages.map(msg => ({
+            id: Date.now().toString() + Math.random(),
+            text: msg.texto,
+            timestamp: msg.timestamp,
+            isFromMaestro: !msg.isUser,
+            isUser: msg.isUser
+          }))
+        };
+        
+        leads.push(newLead);
+        localStorage.setItem("leads", JSON.stringify(leads));
+        
+        // Guardar autenticación del usuario
+        localStorage.setItem("userAuth", JSON.stringify(newLead));
+      }
+    }
+  }, [userName, userPhone, userProblem, userCard]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -37,6 +76,33 @@ export function ChatMaestro() {
     setMessage("");
     setSelectedImage(null);
     setPreviewImage(null);
+
+    // Actualizar el lead en localStorage con el nuevo mensaje
+    if (userPhone) {
+      const existingLeads = localStorage.getItem("leads");
+      if (existingLeads) {
+        const leads: Lead[] = JSON.parse(existingLeads);
+        const leadIndex = leads.findIndex(lead => lead.whatsapp === userPhone);
+        
+        if (leadIndex !== -1) {
+          leads[leadIndex].messages = [
+            ...(leads[leadIndex].messages || []),
+            {
+              id: Date.now().toString(),
+              text: message,
+              timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+              isFromMaestro: false,
+              isUser: true
+            }
+          ];
+          leads[leadIndex].status = "enConversacion";
+          localStorage.setItem("leads", JSON.stringify(leads));
+          
+          // Actualizar también userAuth
+          localStorage.setItem("userAuth", JSON.stringify(leads[leadIndex]));
+        }
+      }
+    }
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

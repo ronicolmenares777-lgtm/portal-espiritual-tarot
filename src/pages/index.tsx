@@ -471,7 +471,15 @@ export default function Home() {
         );
 
       case "chat":
-        return <ChatMaestro />;
+        return (
+          <ChatMaestro
+            userName={formData.name}
+            userPhone={formData.countryCode + formData.whatsapp}
+            userProblem={formData.problem}
+            userCard={revealedCard?.name || ""}
+            onBack={() => setCurrentStep("warning")}
+          />
+        );
 
       default:
         return null;
