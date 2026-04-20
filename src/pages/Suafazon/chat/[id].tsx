@@ -27,8 +27,8 @@ import Link from "next/link";
 
 export default function ChatView() {
   const router = useRouter();
-  const { id } = router.query;
   const [lead, setLead] = useState<Lead | null>(null);
+  const [loading, setLoading] = useState(true);
   const [messageInput, setMessageInput] = useState("");
   const [showQuickResponses, setShowQuickResponses] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -37,13 +37,11 @@ export default function ChatView() {
   const [mediaPreview, setMediaPreview] = useState<{
     type: "image" | "video" | "audio";
     url: string;
-    file: File;
   } | null>(null);
   const [profileData, setProfileData] = useState({
     name: "Maestro Espiritual",
-    headerText: "CANAL SAGRADO",
-    email: "admin@tarot.com",
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
+    email: "maestro@portal.com",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro"
   });
 
   // Referencias
@@ -52,19 +50,44 @@ export default function ChatView() {
 
   // Cargar lead y perfil
   useEffect(() => {
-    if (id) {
-      const foundLead = mockLeads.find(l => l.id === id);
-      if (foundLead) {
-        setLead(foundLead);
+    if (!router.isReady) return;
+
+    const { id } = router.query;
+    console.log("🔍 Buscando lead con ID:", id);
+    
+    if (!id) {
+      console.log("⚠️ No hay ID en la URL");
+      setLoading(false);
+      return;
+    }
+
+    // Cargar lead desde localStorage
+    const storedLeads = localStorage.getItem("leads");
+    console.log("📦 Leads en localStorage:", storedLeads);
+    
+    if (storedLeads) {
+      try {
+        const leads: Lead[] = JSON.parse(storedLeads);
+        console.log("📊 Total de leads encontrados:", leads.length);
+        console.log("📊 IDs disponibles:", leads.map(l => l.id));
+        
+        const foundLead = leads.find((l) => l.id === id);
+        console.log("✅ Lead encontrado:", foundLead);
+        
+        if (foundLead) {
+          setLead(foundLead);
+        } else {
+          console.error("❌ No se encontró lead con ID:", id);
+        }
+      } catch (error) {
+        console.error("❌ Error parseando leads:", error);
       }
+    } else {
+      console.log("⚠️ No hay leads en localStorage");
     }
     
-    // Cargar perfil desde localStorage
-    const savedProfile = localStorage.getItem("maestroProfile");
-    if (savedProfile) {
-      setProfileData(JSON.parse(savedProfile));
-    }
-  }, [id]);
+    setLoading(false);
+  }, [router.isReady, router.query]);
 
   const handleSendMessage = (text: string) => {
     if (!text.trim() || !lead) return;
@@ -290,12 +313,33 @@ export default function ChatView() {
     setMediaPreview(null);
   };
 
-  if (!lead) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-gold text-4xl mb-4">✨</div>
-          <p className="text-muted-foreground">Cargando alma...</p>
+          <Sparkles className="w-12 h-12 text-gold mx-auto mb-4 animate-pulse" />
+          <p className="text-muted-foreground">Cargando conversación espiritual...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!lead) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">❌</div>
+          <h2 className="text-xl font-serif text-gold mb-2">Lead no encontrado</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            No se pudo encontrar la conversación solicitada. 
+            Puede que haya sido eliminada o el enlace sea incorrecto.
+          </p>
+          <button
+            onClick={() => router.push("/Suafazon/dashboard")}
+            className="px-6 py-3 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all"
+          >
+            Volver al Dashboard
+          </button>
         </div>
       </div>
     );
