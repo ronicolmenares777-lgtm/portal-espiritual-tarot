@@ -8,23 +8,12 @@ import { QuestionScreen } from "@/components/QuestionScreen";
 import { WarningMessage } from "@/components/WarningMessage";
 import { ChatMaestro } from "@/components/ChatMaestro";
 import { SEO } from "@/components/SEO";
-import { phoneValidation } from "@/lib/config";
 import { sanitizeText, validateName, validatePhone, validateProblem, rateLimiter, detectSuspiciousContent } from "@/lib/security";
 import { LeadService } from "@/services/leadService";
 import type { TarotCard } from "@/lib/tarotCards";
 import { useState, useEffect } from "react";
 import { Sparkles, Moon, Star, Facebook } from "lucide-react";
 import { motion } from "framer-motion";
-
-type Screen =
-  | "form"
-  | "loading"
-  | "cards"
-  | "suspense"
-  | "reveal"
-  | "questions"
-  | "warning"
-  | "chat";
 
 const nombreEjemplos = [
   "María González",
@@ -49,18 +38,41 @@ export default function Home() {
   });
   
   const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
+  const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
+  const [selectedCardIndex, setSelectedCardIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
+  const [nombrePlaceholder, setNombrePlaceholder] = useState(nombreEjemplos[0]);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginData, setLoginData] = useState({
+    name: "",
+    whatsapp: "",
+    countryCode: "+52"
+  });
+  const [loginError, setLoginError] = useState("");
+  const [formErrors, setFormErrors] = useState({
+    name: "",
+    whatsapp: "",
+    problem: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Log solo para debugging (no causa re-renders)
   useEffect(() => {
     console.log("🔄 Pantalla actual:", currentScreen);
   }, [currentScreen]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * nombreEjemplos.length);
+      setNombrePlaceholder(nombreEjemplos[randomIndex]);
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Validaciones
     if (!validateName(formData.name)) {
       alert("⚠️ Por favor ingresa un nombre válido");
       setIsSubmitting(false);
@@ -79,7 +91,6 @@ export default function Home() {
       return;
     }
 
-    // Rate limiting (3 intentos por minuto)
     const clientKey = `form_${formData.whatsapp}`;
     if (!rateLimiter.isAllowed(clientKey, 3, 60000)) {
       const remainingTime = rateLimiter.getRemainingTime(clientKey, 3, 60000);
@@ -88,7 +99,6 @@ export default function Home() {
       return;
     }
 
-    // Detección de contenido sospechoso
     const isSuspicious = detectSuspiciousContent(formData.problem);
     if (isSuspicious) {
       alert("⚠️ Por favor describe tu situación de forma más específica");
@@ -105,23 +115,8 @@ export default function Home() {
     console.log("🎴 Carta seleccionada:", card);
     setSelectedCard(card);
     setSelectedCardIndex(cardIndex);
+    setSelectedCards([card]);
     setCurrentScreen("suspense");
-  };
-
-  const handleRevealComplete = () => {
-    console.log("➡️ Revelación completada, avanzando a preguntas");
-    setCurrentScreen("questions");
-  };
-
-  const handleQuestion1Answer = (answer: string) => {
-    console.log("📝 Respuesta 1:", answer);
-    setAnswers({ ...answers, question1: answer });
-    setCurrentScreen("warning");
-  };
-
-  const handleWarningContinue = () => {
-    console.log("💬 Avanzando a chat");
-    handleFinalSubmit();
   };
 
   const handleFinalSubmit = async () => {
@@ -180,208 +175,6 @@ export default function Home() {
     setLoginError("No se encontró ninguna consulta con estos datos");
   };
 
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case "form":
-        return (
-          <main className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-background via-purple-950/20 to-background" />
-            
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDuration: "4s" }} />
-              <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDuration: "5s", animationDelay: "1s" }} />
-            </div>
-
-            <div className="max-w-md w-full space-y-8 relative z-10">
-              <div className="flex justify-center mb-4 animate-in fade-in duration-1000">
-                <div className="relative">
-                  <Star className="w-12 h-12 text-gold animate-pulse-glow" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-gold/60 animate-spin" style={{ animationDuration: "8s" }} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                <div className="space-y-2">
-                  <h1 className="text-5xl md:text-6xl font-serif font-bold text-gold tracking-[0.15em] leading-tight">
-                    TU CAMINO
-                    <br />
-                    COMIENZA
-                  </h1>
-                  
-                  <div className="flex items-center justify-center gap-3 mt-4">
-                    <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold/50" />
-                    <Moon className="w-4 h-4 text-gold/70" />
-                    <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold/50" />
-                  </div>
-                </div>
-                
-                <p className="text-sm text-gold/70 tracking-[0.2em] uppercase font-light max-w-xs mx-auto leading-relaxed">
-                  Los arcanos revelan el camino hacia el amor verdadero
-                </p>
-              </div>
-
-              <form 
-                onSubmit={handleSubmit}
-                className="relative backdrop-blur-md bg-card/40 border border-gold/20 rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300"
-                style={{
-                  boxShadow: "0 0 60px hsl(var(--purple-border) / 0.2), inset 0 0 40px hsl(var(--card) / 0.5)",
-                }}
-              >
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gold/5 via-transparent to-purple-500/5 pointer-events-none" />
-                
-                <div className="space-y-2 relative">
-                  <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
-                    <Sparkles className="w-3 h-3" />
-                    Nombre Sagrado
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => {
-                      setFormData({ ...formData, name: e.target.value });
-                      setFormErrors({ ...formErrors, name: "" });
-                    }}
-                    placeholder={nombrePlaceholder}
-                    className={`w-full bg-muted/50 border ${formErrors.name ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm`}
-                  />
-                  {formErrors.name && (
-                    <p className="text-xs text-red-400 mt-1">{formErrors.name}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
-                    <Moon className="w-3 h-3" />
-                    Canal de Conexión (WhatsApp)
-                  </label>
-                  <div className="flex gap-2">
-                    <select
-                      value={formData.countryCode}
-                      onChange={(e) => {
-                        setFormData({ ...formData, countryCode: e.target.value });
-                        setFormErrors({ ...formErrors, whatsapp: "" });
-                      }}
-                      className="px-3 bg-muted/50 border border-gold/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
-                    >
-                      <option value="+1">🇺🇸 +1</option>
-                      <option value="+52">🇲🇽 +52</option>
-                      <option value="+34">🇪🇸 +34</option>
-                      <option value="+54">🇦🇷 +54</option>
-                      <option value="+57">🇨🇴 +57</option>
-                      <option value="+58">🇻🇪 +58</option>
-                    </select>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.whatsapp}
-                      onChange={(e) => {
-                        setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") });
-                        setFormErrors({ ...formErrors, whatsapp: "" });
-                      }}
-                      placeholder="1234567890"
-                      className={`flex-1 bg-muted/50 border ${formErrors.whatsapp ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm`}
-                    />
-                  </div>
-                  {formErrors.whatsapp && (
-                    <p className="text-xs text-red-400 mt-1">{formErrors.whatsapp}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2 relative">
-                  <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
-                    <Star className="w-3 h-3" />
-                    ¿Qué te guía hasta aquí? <span className="text-accent">*</span>
-                  </label>
-                  <textarea
-                    rows={4}
-                    required
-                    value={formData.problem}
-                    onChange={(e) => {
-                      setFormData({ ...formData, problem: e.target.value });
-                      setFormErrors({ ...formErrors, problem: "" });
-                    }}
-                    placeholder="Comparte tu intención con el cosmos..."
-                    className={`w-full bg-muted/50 border ${formErrors.problem ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none backdrop-blur-sm`}
-                  />
-                  {formErrors.problem && (
-                    <p className="text-xs text-red-400 mt-1">{formErrors.problem}</p>
-                  )}
-                </div>
-
-                <motion.button
-                  type="submit"
-                  disabled={isSubmitting}
-                  whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
-                  whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                  className={`w-full bg-gradient-to-r from-gold to-accent text-background py-4 rounded-lg font-medium tracking-wider hover:shadow-xl hover:shadow-gold/50 transition-all ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {isSubmitting ? 'VALIDANDO...' : 'COMENZAR LECTURA'}
-                </motion.button>
-              </form>
-
-              <p className="text-center text-xs text-gold/40 italic animate-in fade-in duration-1000 delay-700 tracking-wide">
-                El universo conspira a favor del amor verdadero
-              </p>
-            </div>
-          </main>
-        );
-
-      case "loading":
-        return <LoadingScreen onComplete={() => {
-          console.log("✅ LoadingScreen completado, avanzando a cards");
-          setCurrentScreen("cards");
-        }} />;
-
-      case "cards":
-        return (
-          <CardSelection 
-            onCardSelected={handleCardSelected}
-          />
-        );
-
-      case "suspense":
-        return <SuspenseScreen onReveal={() => setCurrentScreen("reveal")} />;
-
-      case "reveal":
-        return selectedCard ? (
-          <CardReveal 
-            card={selectedCard}
-            cardIndex={selectedCardIndex}
-            onComplete={handleRevealComplete}
-          />
-        ) : null;
-
-      case "questions":
-        return (
-          <QuestionScreen
-            question="¿Esa persona cambió contigo?"
-            options={["Sí", "No", "Mucho"]}
-            onAnswer={handleQuestion1Answer}
-          />
-        );
-
-      case "warning":
-        return <WarningMessage onContinue={handleWarningContinue} />;
-
-      case "chat":
-        return (
-          <ChatMaestro
-            userName={formData.name}
-            userPhone={formData.countryCode + formData.whatsapp}
-            userProblem={formData.problem}
-            userCard={selectedCard?.name || ""}
-            onBack={() => setCurrentScreen("warning")}
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
-
   return (
     <>
       <SEO 
@@ -426,18 +219,205 @@ export default function Home() {
 
       <div className="min-h-screen flex items-center justify-center px-4 pt-24 pb-12">
         <div className="w-full">
-          {renderScreen()}
+          {currentScreen === "form" && (
+            <main className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-background via-purple-950/20 to-background" />
+              
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDuration: "4s" }} />
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDuration: "5s", animationDelay: "1s" }} />
+              </div>
+
+              <div className="max-w-md w-full space-y-8 relative z-10">
+                <div className="flex justify-center mb-4 animate-in fade-in duration-1000">
+                  <div className="relative">
+                    <Star className="w-12 h-12 text-gold animate-pulse-glow" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-gold/60 animate-spin" style={{ animationDuration: "8s" }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                  <div className="space-y-2">
+                    <h1 className="text-5xl md:text-6xl font-serif font-bold text-gold tracking-[0.15em] leading-tight">
+                      TU CAMINO
+                      <br />
+                      COMIENZA
+                    </h1>
+                    
+                    <div className="flex items-center justify-center gap-3 mt-4">
+                      <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold/50" />
+                      <Moon className="w-4 h-4 text-gold/70" />
+                      <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold/50" />
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-gold/70 tracking-[0.2em] uppercase font-light max-w-xs mx-auto leading-relaxed">
+                    Los arcanos revelan el camino hacia el amor verdadero
+                  </p>
+                </div>
+
+                <form 
+                  onSubmit={handleSubmit}
+                  className="relative backdrop-blur-md bg-card/40 border border-gold/20 rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300"
+                  style={{
+                    boxShadow: "0 0 60px hsl(var(--purple-border) / 0.2), inset 0 0 40px hsl(var(--card) / 0.5)",
+                  }}
+                >
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gold/5 via-transparent to-purple-500/5 pointer-events-none" />
+                  
+                  <div className="space-y-2 relative">
+                    <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
+                      <Sparkles className="w-3 h-3" />
+                      Nombre Sagrado
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => {
+                        setFormData({ ...formData, name: e.target.value });
+                        setFormErrors({ ...formErrors, name: "" });
+                      }}
+                      placeholder={nombrePlaceholder}
+                      className={`w-full bg-muted/50 border ${formErrors.name ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm`}
+                    />
+                    {formErrors.name && (
+                      <p className="text-xs text-red-400 mt-1">{formErrors.name}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
+                      <Moon className="w-3 h-3" />
+                      Canal de Conexión (WhatsApp)
+                    </label>
+                    <div className="flex gap-2">
+                      <select
+                        value={formData.countryCode}
+                        onChange={(e) => {
+                          setFormData({ ...formData, countryCode: e.target.value });
+                          setFormErrors({ ...formErrors, whatsapp: "" });
+                        }}
+                        className="px-3 bg-muted/50 border border-gold/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
+                      >
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+52">🇲🇽 +52</option>
+                        <option value="+34">🇪🇸 +34</option>
+                        <option value="+54">🇦🇷 +54</option>
+                        <option value="+57">🇨🇴 +57</option>
+                        <option value="+58">🇻🇪 +58</option>
+                      </select>
+                      <input
+                        type="tel"
+                        required
+                        value={formData.whatsapp}
+                        onChange={(e) => {
+                          setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") });
+                          setFormErrors({ ...formErrors, whatsapp: "" });
+                        }}
+                        placeholder="1234567890"
+                        className={`flex-1 bg-muted/50 border ${formErrors.whatsapp ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm`}
+                      />
+                    </div>
+                    {formErrors.whatsapp && (
+                      <p className="text-xs text-red-400 mt-1">{formErrors.whatsapp}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 relative">
+                    <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
+                      <Star className="w-3 h-3" />
+                      ¿Qué te guía hasta aquí? <span className="text-accent">*</span>
+                    </label>
+                    <textarea
+                      rows={4}
+                      required
+                      value={formData.problem}
+                      onChange={(e) => {
+                        setFormData({ ...formData, problem: e.target.value });
+                        setFormErrors({ ...formErrors, problem: "" });
+                      }}
+                      placeholder="Comparte tu intención con el cosmos..."
+                      className={`w-full bg-muted/50 border ${formErrors.problem ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none backdrop-blur-sm`}
+                    />
+                    {formErrors.problem && (
+                      <p className="text-xs text-red-400 mt-1">{formErrors.problem}</p>
+                    )}
+                  </div>
+
+                  <motion.button
+                    type="submit"
+                    disabled={isSubmitting}
+                    whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                    whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
+                    className={`w-full bg-gradient-to-r from-gold to-accent text-background py-4 rounded-lg font-medium tracking-wider hover:shadow-xl hover:shadow-gold/50 transition-all ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {isSubmitting ? 'VALIDANDO...' : 'COMENZAR LECTURA'}
+                  </motion.button>
+                </form>
+
+                <p className="text-center text-xs text-gold/40 italic animate-in fade-in duration-1000 delay-700 tracking-wide">
+                  El universo conspira a favor del amor verdadero
+                </p>
+              </div>
+            </main>
+          )}
+
+          {currentScreen === "loading" && (
+            <LoadingScreen 
+              onComplete={() => {
+                console.log("✅ LoadingScreen completado, avanzando a cards");
+                setCurrentScreen("cards");
+              }}
+            />
+          )}
+
+          {currentScreen === "cards" && (
+            <CardSelection 
+              onCardSelected={handleCardSelected}
+            />
+          )}
+
+          {currentScreen === "suspense" && (
+            <SuspenseScreen onReveal={() => setCurrentScreen("reveal")} />
+          )}
+
+          {currentScreen === "reveal" && selectedCard && (
+            <CardReveal 
+              card={selectedCard}
+              cardIndex={selectedCardIndex}
+              onComplete={() => setCurrentScreen("questions")}
+            />
+          )}
+
+          {currentScreen === "questions" && (
+            <QuestionScreen
+              question="¿Esa persona cambió contigo?"
+              options={["Sí", "No", "Mucho"]}
+              onAnswer={(answer) => {
+                setAnswers([answer]);
+                setCurrentScreen("warning");
+              }}
+            />
+          )}
+
+          {currentScreen === "warning" && (
+            <WarningMessage onContinue={handleFinalSubmit} />
+          )}
+
+          {currentScreen === "chat" && selectedCard && (
+            <ChatMaestro
+              userName={formData.name}
+              userPhone={formData.countryCode + formData.whatsapp}
+              userProblem={formData.problem}
+              userCard={selectedCard.name}
+              onBack={() => setCurrentScreen("warning")}
+            />
+          )}
         </div>
       </div>
-
-      {currentScreen === "loading" && (
-        <LoadingScreen 
-          onComplete={() => {
-            console.log("✅ LoadingScreen completado, avanzando a cards");
-            setCurrentScreen("cards");
-          }}
-        />
-      )}
 
       {showLoginModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
