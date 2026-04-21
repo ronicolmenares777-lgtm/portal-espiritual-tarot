@@ -51,9 +51,11 @@ export default function Dashboard() {
   }, [router]);
 
   const [activeTab, setActiveTab] = useState<"chats" | "leads" | "listo">("chats");
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalAlmas: 0,
     clickWA: 0,
@@ -72,20 +74,23 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     name: "Maestro Espiritual",
-    headerText: "CANAL SAGRADO",
     email: "admin@tarot.com",
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
+    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces",
+    headerText: "CANAL SAGRADO"
   });
 
   // Proteger ruta - redirige a login si no está autenticado
   // useRequireAuth("/Suafazon");
   
-  // Filtrar leads según tab activo y búsqueda
+  // Filtrar leads según tab activo, búsqueda y estado seleccionado
   const filteredLeads = leads.filter((lead) => {
     // Filtro por tab
     if (activeTab === "leads" && lead.status !== "nuevo") return false;
     if (activeTab === "chats" && !["enConversacion", "caliente"].includes(lead.status || "")) return false;
     if (activeTab === "listo" && lead.status !== "listo") return false;
+
+    // Filtro por estado seleccionado
+    if (selectedStatus !== "todos" && lead.status !== selectedStatus) return false;
 
     // Filtro por búsqueda
     if (searchQuery) {
@@ -370,7 +375,7 @@ export default function Dashboard() {
               >
                 <span className="text-xs uppercase tracking-wider">Chats</span>
                 <span className="ml-2 text-xs opacity-60">
-                  ({leads.filter(l => l.messages && l.messages.length > 0).length})
+                  ({leads.filter(l => ["enConversacion", "caliente"].includes(l.status || "")).length})
                 </span>
               </button>
               <button
@@ -383,7 +388,7 @@ export default function Dashboard() {
               >
                 <span className="text-xs uppercase tracking-wider">Leads</span>
                 <span className="ml-2 text-xs opacity-60">
-                  ({leads.filter(l => l.status !== "listo").length})
+                  ({leads.filter(l => l.status === "nuevo").length})
                 </span>
               </button>
               <button
@@ -408,8 +413,8 @@ export default function Dashboard() {
                 <input
                   type="text"
                   placeholder="Buscar almas..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-muted/30 border border-gold/20 rounded-lg pl-10 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
                 />
               </div>
@@ -449,7 +454,7 @@ export default function Dashboard() {
                       : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
                   }`}
                 >
-                  Todos ({statusCounts.todos})
+                  Todos ({filteredLeads.length})
                 </button>
                 <button
                   onClick={() => setSelectedStatus("nuevo")}
@@ -459,7 +464,7 @@ export default function Dashboard() {
                       : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
                   }`}
                 >
-                  Nuevo ({statusCounts.nuevo})
+                  Nuevo ({leads.filter(l => l.status === "nuevo").length})
                 </button>
                 <button
                   onClick={() => setSelectedStatus("enConversacion")}
@@ -469,17 +474,17 @@ export default function Dashboard() {
                       : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
                   }`}
                 >
-                  En Chat ({statusCounts.enConversacion})
+                  En Chat ({leads.filter(l => l.status === "enConversacion").length})
                 </button>
                 <button
-                  onClick={() => setSelectedStatus("clienteCaliente")}
+                  onClick={() => setSelectedStatus("caliente")}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedStatus === "clienteCaliente"
+                    selectedStatus === "caliente"
                       ? "bg-orange-500 text-white"
                       : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
                   }`}
                 >
-                  Caliente ({statusCounts.clienteCaliente})
+                  Caliente ({leads.filter(l => l.status === "caliente").length})
                 </button>
                 <button
                   onClick={() => setSelectedStatus("cerrado")}
@@ -489,7 +494,7 @@ export default function Dashboard() {
                       : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
                   }`}
                 >
-                  Cerrado ({statusCounts.cerrado})
+                  Cerrado ({leads.filter(l => l.status === "cerrado").length})
                 </button>
                 <button
                   onClick={() => setSelectedStatus("perdido")}
@@ -499,7 +504,7 @@ export default function Dashboard() {
                       : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
                   }`}
                 >
-                  Perdido ({statusCounts.perdido})
+                  Perdido ({leads.filter(l => l.status === "perdido").length})
                 </button>
                 {activeTab === "listo" && (
                   <button
@@ -510,7 +515,7 @@ export default function Dashboard() {
                         : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
                     }`}
                   >
-                    Listo ({statusCounts.listo})
+                    Listo ({leads.filter(l => l.status === "listo").length})
                   </button>
                 )}
               </div>
@@ -593,14 +598,14 @@ export default function Dashboard() {
                       <div className={`px-2 py-1 rounded text-xs ${
                         lead.status === "nuevo" ? "bg-blue-500/20 text-blue-400" :
                         lead.status === "enConversacion" ? "bg-purple-500/20 text-purple-400" :
-                        lead.status === "caliente" ? "bg-orange-500/20 text-orange-400" :
-                        lead.status === "listo" ? "bg-green-500/20 text-green-400" :
+                        lead.status === "clienteCaliente" ? "bg-orange-500/20 text-orange-400" :
+                        lead.status === "cerrado" ? "bg-green-500/20 text-green-400" :
                         "bg-gray-500/20 text-gray-400"
                       }`}>
                         {lead.status === "nuevo" ? "Nuevo" :
                          lead.status === "enConversacion" ? "En chat" :
-                         lead.status === "caliente" ? "Caliente" :
-                         lead.status === "listo" ? "Listo" :
+                         lead.status === "clienteCaliente" ? "Caliente" :
+                         lead.status === "cerrado" ? "Cerrado" :
                          lead.status}
                       </div>
                     </div>
