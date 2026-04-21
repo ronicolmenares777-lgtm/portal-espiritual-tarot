@@ -33,7 +33,10 @@ import { AnimatePresence } from "framer-motion";
 
 type Tab = "chats" | "leads";
 
-export default function AdminDashboard() {
+export default function Dashboard() {
+  // Proteger ruta - redirige a login si no está autenticado
+  useRequireAuth("/Suafazon");
+  
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"chats" | "leads" | "listo">("chats");
   const [searchTerm, setSearchTerm] = useState("");
@@ -238,31 +241,6 @@ export default function AdminDashboard() {
       localStorage.setItem("adminStats", JSON.stringify(resetStats));
     }
   };
-
-  useEffect(() => {
-    const isAuthenticated = localStorage.getItem("adminAuth");
-    if (!isAuthenticated) {
-      router.push("/Suafazon");
-    }
-  }, [router]);
-
-  useEffect(() => {
-    const storedLeads = localStorage.getItem("leads");
-    if (storedLeads) {
-      try {
-        const parsedLeads = JSON.parse(storedLeads);
-        console.log("📊 Leads cargados desde localStorage:", parsedLeads);
-        console.log("📊 Total de leads:", parsedLeads.length);
-        setLeads(parsedLeads);
-      } catch (error) {
-        console.error("Error al cargar leads:", error);
-        setLeads([]);
-      }
-    } else {
-      console.log("⚠️ No hay leads en localStorage");
-      setLeads([]);
-    }
-  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("adminAuth");

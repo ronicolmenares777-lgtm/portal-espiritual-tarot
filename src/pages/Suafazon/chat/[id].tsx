@@ -25,7 +25,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function ChatView() {
+export default function ChatPage() {
+  // Proteger ruta - redirige a login si no está autenticado
+  useRequireAuth("/Suafazon");
+  
   const router = useRouter();
   const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);

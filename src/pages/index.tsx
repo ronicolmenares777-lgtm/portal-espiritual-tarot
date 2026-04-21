@@ -9,6 +9,7 @@ import { WarningMessage } from "@/components/WarningMessage";
 import { ChatMaestro } from "@/components/ChatMaestro";
 import { SEO } from "@/components/SEO";
 import { phoneValidation } from "@/lib/config";
+import { sanitizeText, validateName, validatePhone, validateProblem, rateLimiter, detectSuspiciousContent } from "@/lib/security";
 import type { TarotCard } from "@/lib/tarotCards";
 import type { Lead } from "@/types/admin";
 import { useState, useEffect } from "react";
@@ -63,6 +64,12 @@ export default function Home() {
     countryCode: "+52"
   });
   const [loginError, setLoginError] = useState("");
+  const [formErrors, setFormErrors] = useState({
+    name: "",
+    whatsapp: "",
+    problem: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Cambiar placeholder de nombre cada 3 segundos
   useEffect(() => {
@@ -135,15 +142,71 @@ export default function Home() {
     setLoginError("No se encontró ninguna consulta con estos datos");
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validatePhone(formData.whatsapp, formData.countryCode)) {
+    // Limpiar errores previos
+    setFormErrors({ name: "", whatsapp: "", problem: "" });
+    
+    // Rate limiting - máximo 3 envíos por minuto
+    if (!rateLimiter.isAllowed("form_submit", 3, 60000)) {
+      const remainingTime = rateLimiter.getRemainingTime("form_submit", 3, 60000);
+      alert(`⏳ Por favor espera ${remainingTime} segundos antes de intentar nuevamente.`);
       return;
     }
     
-    setCurrentScreen("loading");
-    setTimeout(() => setCurrentScreen("cards"), 3000);
+    setIsSubmitting(true);
+    
+    // Sanitizar inputs
+    const sanitizedName = sanitizeText(formData.name.trim());
+    const sanitizedProblem = sanitizeText(formData.problem.trim());
+    const sanitizedWhatsapp = formData.whatsapp.replace(/\D/g, "");
+    
+    // Validaciones
+    let hasErrors = false;
+    const errors = { name: "", whatsapp: "", problem: "" };
+    
+    // Validar nombre
+    if (!validateName(sanitizedName)) {
+      errors.name = "Nombre inválido. Solo letras y entre 2-100 caracteres.";
+      hasErrors = true;
+    }
+    
+    // Validar teléfono
+    if (!validatePhone(sanitizedWhatsapp, formData.countryCode)) {
+      errors.whatsapp = "Número de teléfono inválido para el país seleccionado.";
+      hasErrors = true;
+    }
+    
+    // Validar problema
+    if (!validateProblem(sanitizedProblem)) {
+      errors.problem = "Describe tu situación (mínimo 10 caracteres, máximo 1000).";
+      hasErrors = true;
+    }
+    
+    // Detectar contenido sospechoso
+    if (detectSuspiciousContent(sanitizedName) || detectSuspiciousContent(sanitizedProblem)) {
+      alert("❌ Se detectó contenido no permitido en el formulario.");
+      setIsSubmitting(false);
+      return;
+    }
+    
+    if (hasErrors) {
+      setFormErrors(errors);
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Actualizar formData con valores sanitizados
+    setFormData({
+      ...formData,
+      name: sanitizedName,
+      whatsapp: sanitizedWhatsapp,
+      problem: sanitizedProblem
+    });
+    
+    setIsSubmitting(false);
+    handleStart();
   };
 
   const handleCardSelected = (card: TarotCard, cardIndex: number) => {
@@ -262,7 +325,7 @@ export default function Home() {
 
               {/* Formulario mejorado */}
               <form 
-                onSubmit={handleFormSubmit}
+                onSubmit={handleSubmit}
                 className="relative backdrop-blur-md bg-card/40 border border-gold/20 rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300"
                 style={{
                   boxShadow: "0 0 60px hsl(var(--purple-border) / 0.2), inset 0 0 40px hsl(var(--card) / 0.5)",
@@ -281,23 +344,32 @@ export default function Home() {
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      setFormErrors({ ...formErrors, name: "" });
+                    }}
                     placeholder={nombrePlaceholder}
-                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
+                    className={`w-full bg-muted/50 border ${formErrors.name ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm`}
                   />
+                  {formErrors.name && (
+                    <p className="text-xs text-red-400 mt-1">{formErrors.name}</p>
+                  )}
                 </div>
 
                 {/* Campo WhatsApp */}
-                <div className="space-y-2 relative">
+                <div className="space-y-2">
                   <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
                     <Moon className="w-3 h-3" />
-                    Vínculo de Comunicación
+                    Canal de Conexión (WhatsApp)
                   </label>
                   <div className="flex gap-2">
-                    <select 
+                    <select
                       value={formData.countryCode}
-                      onChange={(e) => handleCountryChange(e.target.value)}
-                      className="bg-muted/50 border border-gold/20 rounded-lg px-3 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 backdrop-blur-sm"
+                      onChange={(e) => {
+                        setFormData({ ...formData, countryCode: e.target.value });
+                        setFormErrors({ ...formErrors, whatsapp: "" });
+                      }}
+                      className="px-3 bg-muted/50 border border-gold/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
                     >
                       <option value="+1">🇺🇸 +1</option>
                       <option value="+52">🇲🇽 +52</option>
@@ -306,28 +378,21 @@ export default function Home() {
                       <option value="+57">🇨🇴 +57</option>
                       <option value="+58">🇻🇪 +58</option>
                     </select>
-                    <div className="flex-1">
-                      <input
-                        type="tel"
-                        required
-                        value={formData.whatsapp}
-                        onChange={(e) => handlePhoneChange(e.target.value)}
-                        placeholder={phoneValidation[formData.countryCode]?.placeholder || "1234567890"}
-                        maxLength={phoneValidation[formData.countryCode]?.digits || 15}
-                        className={`w-full bg-muted/50 border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all backdrop-blur-sm ${
-                          phoneError 
-                            ? "border-red-500 focus:ring-red-500/50" 
-                            : "border-gold/20 focus:ring-gold/50 focus:border-gold/50"
-                        }`}
-                      />
-                      {phoneError && (
-                        <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
-                          <span className="w-1 h-1 bg-red-400 rounded-full" />
-                          {phoneError}
-                        </p>
-                      )}
-                    </div>
+                    <input
+                      type="tel"
+                      required
+                      value={formData.whatsapp}
+                      onChange={(e) => {
+                        setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") });
+                        setFormErrors({ ...formErrors, whatsapp: "" });
+                      }}
+                      placeholder="1234567890"
+                      className={`flex-1 bg-muted/50 border ${formErrors.whatsapp ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm`}
+                    />
                   </div>
+                  {formErrors.whatsapp && (
+                    <p className="text-xs text-red-400 mt-1">{formErrors.whatsapp}</p>
+                  )}
                 </div>
 
                 {/* Campo Problema - AHORA OBLIGATORIO */}
@@ -340,24 +405,28 @@ export default function Home() {
                     rows={4}
                     required
                     value={formData.problem}
-                    onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, problem: e.target.value });
+                      setFormErrors({ ...formErrors, problem: "" });
+                    }}
                     placeholder="Comparte tu intención con el cosmos..."
-                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none backdrop-blur-sm"
+                    className={`w-full bg-muted/50 border ${formErrors.problem ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none backdrop-blur-sm`}
                   />
+                  {formErrors.problem && (
+                    <p className="text-xs text-red-400 mt-1">{formErrors.problem}</p>
+                  )}
                 </div>
 
                 {/* Botón Submit mejorado */}
-                <button 
+                <motion.button
                   type="submit"
-                  className="relative w-full bg-gradient-to-r from-secondary via-purple-900 to-secondary hover:from-secondary/90 hover:via-purple-900/90 hover:to-secondary/90 text-gold border-2 border-gold/50 rounded-lg py-4 font-semibold tracking-[0.2em] uppercase transition-all duration-300 hover:border-gold hover:shadow-[0_0_30px_hsl(var(--gold)/0.3)] active:scale-[0.98] overflow-hidden group"
+                  disabled={isSubmitting}
+                  whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                  whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
+                  className={`w-full bg-gradient-to-r from-gold to-accent text-background py-4 rounded-lg font-medium tracking-wider hover:shadow-xl hover:shadow-gold/50 transition-all ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    <Sparkles className="w-4 h-4 group-hover:animate-pulse-glow" />
-                    Iniciar Ritual Espiritual
-                    <Sparkles className="w-4 h-4 group-hover:animate-pulse-glow" />
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-gold/0 via-gold/10 to-gold/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                </button>
+                  {isSubmitting ? 'VALIDANDO...' : 'COMENZAR LECTURA'}
+                </motion.button>
               </form>
 
               {/* Texto decorativo inferior */}
