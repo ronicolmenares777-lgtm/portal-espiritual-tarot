@@ -4,6 +4,7 @@ import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { mockLeads, mockQuickResponses } from "@/lib/mockData";
+import { useRequireAuth } from "@/middleware/auth";
 import type { Lead, QuickResponse } from "@/types/admin";
 import { motion, AnimatePresence } from "framer-motion";
 import {
