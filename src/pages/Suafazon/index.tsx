@@ -14,36 +14,33 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Verificar si ya está autenticado - evitar redirect loop
-  useEffect(() => {
-    const adminAuth = localStorage.getItem("adminAuth");
-    const currentPath = window.location.pathname;
-    
-    // Solo redirigir si está autenticado Y no está ya en el dashboard
-    if (adminAuth === "true" && currentPath === "/Suafazon") {
-      router.replace("/Suafazon/dashboard");
-    }
-  }, []);
+  // NO auto-redirect - el usuario debe hacer login primero
+  // useEffect eliminado
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validación simple (mock)
-    if (email === "admin@tarot.com" && password === "maestro2024") {
-      setIsLoading(true);
-      
-      // Simular autenticación
-      setTimeout(() => {
-        // Guardar sesión en localStorage
+    setIsLoading(true);
+
+    // Credenciales de admin (en producción esto sería una API)
+    const validEmail = "admin@tarot.com";
+    const validPassword = "maestro2024";
+
+    setTimeout(() => {
+      if (email === validEmail && password === validPassword) {
+        // Guardar sesión
         localStorage.setItem("adminAuth", "true");
-        localStorage.setItem("adminEmail", email);
+        localStorage.setItem("adminSession", JSON.stringify({
+          email,
+          loginTime: Date.now()
+        }));
         
-        // Redirigir al dashboard
+        // Redirigir al dashboard SOLO después de login exitoso
         router.push("/Suafazon/dashboard");
-      }, 1500);
-    } else {
-      alert("Credenciales incorrectas. Usa admin@tarot.com / maestro2024");
-    }
+      } else {
+        alert("❌ Credenciales incorrectas");
+        setIsLoading(false);
+      }
+    }, 1000);
   };
 
   return (
