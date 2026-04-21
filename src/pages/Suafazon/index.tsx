@@ -49,8 +49,8 @@ export default function AdminLogin() {
     passwordStrength < 70 ? "Media" : 
     "Fuerte";
   
-  // Asegurar que strengthWidth siempre sea un número válido
-  const strengthWidth = isNaN(passwordStrength) ? 0 : passwordStrength;
+  // Asegurar que strengthWidth siempre sea un número válido entre 0 y 100
+  const strengthWidth = !password || isNaN(passwordStrength) ? 0 : Math.min(100, Math.max(0, passwordStrength));
 
   // Verificar si ya está autenticado
   useEffect(() => {
