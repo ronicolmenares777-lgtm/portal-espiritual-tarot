@@ -3,9 +3,10 @@ import { useRouter } from "next/router";
 import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
-import { mockLeads, mockQuickResponses } from "@/lib/mockData";
-import { useRequireAuth } from "@/middleware/auth";
-import type { Lead, QuickResponse } from "@/types/admin";
+import { LeadService } from "@/services/leadService";
+import { MessageService } from "@/services/messageService";
+import { AuthService } from "@/services/authService";
+import type { Database } from "@/integrations/supabase/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -26,12 +27,26 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+type Lead = Database["public"]["Tables"]["leads"]["Row"];
+type Message = Database["public"]["Tables"]["messages"]["Row"];
+
 export default function ChatPage() {
-  // TEMPORAL: Comentado para debugging
-  // useRequireAuth("/Suafazon");
-  
   const router = useRouter();
+  
+  // Verificar autenticación
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isAuth = await AuthService.isAuthenticated();
+      if (!isAuth) {
+        console.log("⚠️ No hay sesión Supabase válida");
+        router.replace("/Suafazon");
+      }
+    };
+    checkAuth();
+  }, [router]);
+
   const [lead, setLead] = useState<Lead | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [messageInput, setMessageInput] = useState("");
   const [showQuickResponses, setShowQuickResponses] = useState(false);
@@ -75,70 +90,79 @@ export default function ChatPage() {
     return false;
   };
 
-  // Cargar lead y perfil
+  // Cargar lead desde Supabase
   useEffect(() => {
     if (!router.isReady) return;
 
     const { id } = router.query;
     console.log("🔍 Buscando lead con ID:", id);
     
-    if (!id) {
-      console.log("⚠️ No hay ID en la URL");
+    if (!id || typeof id !== "string") {
+      console.log("⚠️ No hay ID válido en la URL");
       setLoading(false);
       return;
     }
 
-    // Cargar lead desde localStorage
-    const storedLeads = localStorage.getItem("leads");
-    console.log("📦 Leads en localStorage:", storedLeads);
-    
-    if (storedLeads) {
-      try {
-        const leads: Lead[] = JSON.parse(storedLeads);
-        console.log("📊 Total de leads encontrados:", leads.length);
-        console.log("📊 IDs disponibles:", leads.map(l => l.id));
-        
-        const foundLead = leads.find((l) => l.id === id);
-        console.log("✅ Lead encontrado:", foundLead);
-        
-        if (foundLead) {
-          setLead(foundLead);
-        } else {
-          console.error("❌ No se encontró lead con ID:", id);
-        }
-      } catch (error) {
-        console.error("❌ Error parseando leads:", error);
+    const loadLead = async () => {
+      const { data: leadData, error: leadError } = await LeadService.getById(id);
+      
+      if (leadError || !leadData) {
+        console.error("❌ Error cargando lead:", leadError);
+        setLoading(false);
+        return;
       }
-    } else {
-      console.log("⚠️ No hay leads en localStorage");
-    }
-    
-    setLoading(false);
+
+      console.log("✅ Lead encontrado:", leadData);
+      setLead(leadData);
+
+      // Cargar mensajes del lead
+      const { data: messagesData, error: messagesError } = await MessageService.getByLeadId(id);
+      
+      if (messagesError) {
+        console.error("❌ Error cargando mensajes:", messagesError);
+      } else {
+        setMessages(messagesData);
+      }
+
+      setLoading(false);
+    };
+
+    loadLead();
+
+    // Suscribirse a nuevos mensajes en tiempo real
+    const subscription = MessageService.subscribeToMessages(id, (newMessage) => {
+      console.log("📩 Nuevo mensaje recibido:", newMessage);
+      setMessages(prev => [...prev, newMessage]);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [router.isReady, router.query]);
 
-  const handleSendMessage = (text: string) => {
+  const handleSendMessage = async (text: string) => {
     if (!text.trim() || !lead) return;
 
-    const newMessage = {
-      id: Date.now().toString(),
+    const { data: newMessage, error } = await MessageService.create({
+      lead_id: lead.id,
       text: text.trim(),
-      timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-      isFromMaestro: true,
-      isUser: false
-    };
+      is_from_maestro: true
+    });
 
-    const updatedMessages = [...(lead.messages || []), newMessage];
-    const updatedLead: Lead = { 
-      ...lead, 
-      messages: updatedMessages,
-      status: lead.status === "nuevo" ? "enConversacion" : lead.status
-    };
-    
-    setLead(updatedLead);
+    if (error) {
+      console.error("Error enviando mensaje:", error);
+      alert("Error al enviar mensaje");
+      return;
+    }
+
+    console.log("✅ Mensaje enviado:", newMessage);
     setMessageInput("");
-    
-    // Actualizar en localStorage
-    updateLeadInStorage(updatedLead);
+
+    // Actualizar estado del lead si es necesario
+    if (lead.status === "nuevo") {
+      await LeadService.updateStatus(lead.id, "enConversacion");
+      setLead({ ...lead, status: "enConversacion" });
+    }
   };
 
   const handleQuickResponse = (message: string) => {
@@ -146,25 +170,33 @@ export default function ChatPage() {
     setShowQuickResponses(false);
   };
 
-  const handleStatusChange = (newStatus: Lead["status"]) => {
+  const handleStatusChange = async (newStatus: Lead["status"]) => {
     if (!lead) return;
     
-    const updatedLead: Lead = { ...lead, status: newStatus };
-    setLead(updatedLead);
+    const { error } = await LeadService.updateStatus(lead.id, newStatus);
     
-    // Actualizar en localStorage
-    updateLeadInStorage(updatedLead);
+    if (error) {
+      console.error("Error actualizando estado:", error);
+      alert("Error al actualizar estado");
+      return;
+    }
+
+    setLead({ ...lead, status: newStatus });
+    console.log("✅ Estado actualizado a:", newStatus);
   };
 
   // Toggle favorito
-  const handleFavoriteToggle = () => {
+  const handleFavoriteToggle = async () => {
     if (!lead) return;
     
-    const updatedLead: Lead = { ...lead, isFavorite: !lead.isFavorite };
-    setLead(updatedLead);
+    const { error } = await LeadService.toggleFavorite(lead.id);
     
-    // Actualizar en localStorage
-    updateLeadInStorage(updatedLead);
+    if (error) {
+      console.error("Error actualizando favorito:", error);
+      return;
+    }
+
+    setLead({ ...lead, is_favorite: !lead.is_favorite });
   };
 
   // Marcar como listo
@@ -316,7 +348,7 @@ export default function ChatPage() {
       isUser: false
     };
 
-    const updatedMessages = [...(lead.messages || []), newMessage];
+    const updatedMessages = [...messages, newMessage];
     const updatedLead: Lead = { 
       ...lead, 
       messages: updatedMessages,
@@ -430,115 +462,59 @@ export default function ChatPage() {
             {/* Área de mensajes - siempre visible */}
             <div className="flex-1 flex flex-col min-w-0 bg-[hsl(260,35%,12%)]">
               {/* Mensajes */}
-              <div className="flex-1 overflow-y-auto p-2 md:p-6 space-y-2 md:space-y-3 bg-gradient-to-b from-[hsl(260,35%,10%)] to-[hsl(260,35%,12%)]">
-                {!lead ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <Sparkles className="w-10 h-10 md:w-12 md:h-12 text-gold mx-auto mb-3 md:mb-4 animate-pulse" />
-                      <p className="text-sm md:text-base text-muted-foreground px-4">Cargando conversación espiritual...</p>
-                    </div>
-                  </div>
-                ) : !lead.messages || lead.messages.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center space-y-3 md:space-y-4 max-w-sm mx-auto px-4">
-                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gold/10 flex items-center justify-center mx-auto border border-gold/20">
-                        <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-gold" />
-                      </div>
-                      <div>
-                        <h3 className="text-base md:text-lg font-serif text-gold mb-2">Conversación Espiritual</h3>
-                        <p className="text-xs md:text-sm text-muted-foreground">
-                          Aún no hay mensajes. Inicia la conexión espiritual enviando el primer mensaje.
-                        </p>
-                      </div>
-                    </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {messages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      Aún no hay mensajes. Inicia la conversación.
+                    </p>
                   </div>
                 ) : (
-                  lead.messages.map((msg, idx) => (
-                    <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                      className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}
+                  messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex ${message.is_from_maestro ? "justify-end" : "justify-start"}`}
                     >
-                      <div className={`flex gap-1.5 md:gap-2 max-w-[90%] md:max-w-[85%] lg:max-w-[70%] ${msg.isUser ? "flex-row-reverse" : "flex-row"}`}>
-                        {/* Avatar del remitente */}
-                        {!msg.isUser && (
-                          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-gold/30 to-accent/30 flex items-center justify-center border-2 border-gold/50 flex-shrink-0 shadow-lg shadow-gold/20">
-                            <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-gold" />
+                      <div
+                        className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                          message.is_from_maestro
+                            ? "bg-gold/20 text-foreground"
+                            : "bg-muted/50 text-foreground"
+                        }`}
+                      >
+                        {message.text && <p className="text-sm">{message.text}</p>}
+                        
+                        {message.media_url && (
+                          <div className="mt-2">
+                            {message.media_type === "image" && (
+                              <img
+                                src={message.media_url}
+                                alt="Imagen"
+                                className="max-w-full rounded-lg"
+                              />
+                            )}
+                            {message.media_type === "video" && (
+                              <video
+                                src={message.media_url}
+                                controls
+                                className="max-w-full rounded-lg"
+                              />
+                            )}
+                            {message.media_type === "audio" && (
+                              <audio src={message.media_url} controls className="w-full" />
+                            )}
                           </div>
                         )}
                         
-                        {/* Contenedor del mensaje */}
-                        <div
-                          className={`rounded-2xl overflow-hidden shadow-lg ${
-                            msg.isUser
-                              ? "bg-gradient-to-br from-gold/30 to-accent/30 border-2 border-gold/50 shadow-gold/20"
-                              : "bg-[hsl(260,40%,18%)] border-2 border-[hsl(260,30%,25%)] shadow-black/40"
-                          }`}
-                        >
-                          {/* Contenido multimedia */}
-                          {msg.type === "image" && msg.mediaUrl && (
-                            <div className="relative">
-                              <img
-                                src={msg.mediaUrl}
-                                alt="Imagen enviada"
-                                className="w-full max-w-[280px] md:max-w-sm object-cover"
-                              />
-                            </div>
-                          )}
-                          {msg.type === "video" && msg.mediaUrl && (
-                            <div className="relative">
-                              <video
-                                src={msg.mediaUrl}
-                                controls
-                                className="w-full max-w-[280px] md:max-w-sm"
-                              />
-                            </div>
-                          )}
-                          {msg.type === "audio" && msg.mediaUrl && (
-                            <div className="px-3 py-2 md:px-4 md:py-3">
-                              <div className="flex items-center gap-2 md:gap-3">
-                                <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gold/20 flex items-center justify-center border border-gold/30">
-                                  <Mic className="w-3 h-3 md:w-4 md:h-4 text-gold" />
-                                </div>
-                                <audio
-                                  src={msg.mediaUrl}
-                                  controls
-                                  className="flex-1"
-                                  style={{ maxWidth: "200px" }}
-                                />
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Contenido de texto */}
-                          {(!msg.type || msg.type === "text") && msg.text && (
-                            <div className="px-3 py-2 md:px-4 md:py-2.5">
-                              <p className={`text-xs md:text-sm leading-relaxed whitespace-pre-wrap break-words ${
-                                msg.isUser ? "text-foreground" : "text-foreground"
-                              }`}>
-                                {msg.text}
-                              </p>
-                            </div>
-                          )}
-                          
-                          {/* Timestamp */}
-                          <div className={`px-3 pb-1.5 md:px-4 md:pb-2 ${(!msg.type || msg.type === "text") && msg.text ? "" : "pt-1.5 md:pt-2"}`}>
-                            <span className={`text-[10px] md:text-xs ${msg.isUser ? "text-gold/70" : "text-muted-foreground"}`}>
-                              {msg.timestamp}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Avatar del usuario */}
-                        {msg.isUser && (
-                          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-blue-500/40 to-purple-500/40 flex items-center justify-center border-2 border-blue-500/60 flex-shrink-0 shadow-lg shadow-blue-500/20">
-                            <User className="w-3 h-3 md:w-4 md:h-4 text-blue-300" />
-                          </div>
-                        )}
+                        <span className="text-xs text-muted-foreground mt-1 block">
+                          {new Date(message.created_at || "").toLocaleTimeString("es-ES", {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          })}
+                        </span>
                       </div>
-                    </motion.div>
+                    </div>
                   ))
                 )}
               </div>
