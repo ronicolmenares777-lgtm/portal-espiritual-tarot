@@ -19,7 +19,7 @@ export const LeadService = {
     country_code: string;
     problem: string;
     status?: Lead["status"];
-    tarot_cards_selected?: string[];
+    selected_cards?: string[];
     precision_answers?: string[];
   }) {
     const { data, error } = await supabase
@@ -30,7 +30,7 @@ export const LeadService = {
         country_code: leadData.country_code,
         problem: leadData.problem,
         status: leadData.status || "nuevo",
-        tarot_cards_selected: leadData.tarot_cards_selected || [],
+        selected_cards: leadData.selected_cards || [],
         precision_answers: leadData.precision_answers || []
       })
       .select()

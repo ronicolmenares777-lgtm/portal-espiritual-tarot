@@ -130,7 +130,7 @@ export default function Home() {
       country_code: formData.countryCode,
       problem: formData.problem,
       status: "nuevo" as const,
-      tarot_cards_selected: selectedCards.map(c => c.name),
+      selected_cards: selectedCards.map(c => c.name),
       precision_answers: answers
     };
 
@@ -395,12 +395,12 @@ export default function Home() {
             />
           )}
 
-          {currentScreen === "questions" && (
+          {currentScreen === "questions" && selectedCard && (
             <QuestionScreen
-              question="¿Esa persona cambió contigo?"
-              options={["Sí", "No", "Mucho"]}
-              onAnswer={(answer) => {
-                setAnswers([answer]);
+              card={selectedCard}
+              onAnswersComplete={(userAnswers) => {
+                console.log("📝 Respuestas completadas:", userAnswers);
+                setAnswers(userAnswers);
                 setCurrentScreen("warning");
               }}
             />
