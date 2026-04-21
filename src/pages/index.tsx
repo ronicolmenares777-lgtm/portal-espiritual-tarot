@@ -40,7 +40,10 @@ const nombreEjemplos = [
 ];
 
 export default function Home() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>("form");
+  // Estado para controlar el flujo de pantallas
+  const [currentScreen, setCurrentScreen] = useState<
+    "form" | "loading" | "cards" | "suspense" | "reveal" | "questions" | "warning" | "chat"
+  >("form");
   const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
   const [selectedCardIndex, setSelectedCardIndex] = useState<number>(0);
   const [formData, setFormData] = useState({
@@ -72,6 +75,37 @@ export default function Home() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Timer para avanzar de loading a cards
+  useEffect(() => {
+    if (currentScreen === "loading") {
+      console.log("⏳ En pantalla de carga, timer iniciado...");
+      const timer = setTimeout(() => {
+        console.log("✅ Timer completado, avanzando a selección de cartas");
+        setCurrentScreen("cards");
+      }, 5000); // 5 segundos
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentScreen]);
+
+  // Timer para avanzar de suspense a reveal
+  useEffect(() => {
+    if (currentScreen === "suspense") {
+      console.log("⏳ En suspense, timer iniciado...");
+      const timer = setTimeout(() => {
+        console.log("✅ Timer completado, avanzando a revelación");
+        setCurrentScreen("reveal");
+      }, 3000); // 3 segundos
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentScreen]);
+
+  // Log de cambios de pantalla para debugging
+  useEffect(() => {
+    console.log("🔄 Pantalla actual:", currentScreen);
+  }, [currentScreen]);
+
   // Cambiar placeholder de nombre cada 3 segundos
   useEffect(() => {
     const interval = setInterval(() => {
@@ -81,10 +115,6 @@ export default function Home() {
     
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    console.log("🔄 Estado actual:", currentStep);
-  }, [currentStep]);
 
   const validatePhone = (phone: string, countryCode: string): boolean => {
     const validation = phoneValidation[countryCode];
