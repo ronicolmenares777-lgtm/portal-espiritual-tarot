@@ -23,7 +23,7 @@ import {
   Save,
   Sparkles,
   ImageIcon,
-  Facebook
+  MessageCircle
 } from "lucide-react";
 import Link from "next/link";
 
@@ -213,15 +213,18 @@ export default function ChatPage() {
   };
 
   // Guardar notas
-  const handleSaveNotes = () => {
+  const handleSaveNotes = async () => {
     if (!lead) return;
     
-    const updatedLead = { ...lead, notes: lead.notes };
+    const { error } = await LeadService.updateNotes(lead.id, lead.notes || "");
     
-    // Actualizar en localStorage
-    if (updateLeadInStorage(updatedLead)) {
-      alert("✅ Notas guardadas correctamente");
+    if (error) {
+      console.error("Error guardando notas:", error);
+      alert("Error al guardar notas");
+      return;
     }
+
+    alert("✅ Notas guardadas correctamente");
   };
 
   // Guardar perfil
@@ -335,31 +338,31 @@ export default function ChatPage() {
     }
   };
 
-  const handleSendMedia = () => {
+  const handleSendMedia = async () => {
     if (!mediaPreview || !lead) return;
 
-    const newMessage = {
-      id: Date.now().toString(),
+    const { data: newMessage, error } = await MessageService.create({
+      lead_id: lead.id,
       text: "",
-      mediaUrl: mediaPreview.url,
-      type: mediaPreview.type,
-      timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-      isFromMaestro: true,
-      isUser: false
-    };
+      media_url: mediaPreview.url,
+      media_type: mediaPreview.type,
+      is_from_maestro: true
+    });
 
-    const updatedMessages = [...messages, newMessage];
-    const updatedLead: Lead = { 
-      ...lead, 
-      messages: updatedMessages,
-      status: lead.status === "nuevo" ? "enConversacion" : lead.status
-    };
-    
-    setLead(updatedLead);
+    if (error) {
+      console.error("Error enviando media:", error);
+      alert("Error al enviar archivo");
+      return;
+    }
+
+    console.log("✅ Media enviado:", newMessage);
     setMediaPreview(null);
-    
-    // Actualizar en localStorage
-    updateLeadInStorage(updatedLead);
+
+    // Actualizar estado del lead si es necesario
+    if (lead.status === "nuevo") {
+      await LeadService.updateStatus(lead.id, "enConversacion");
+      setLead({ ...lead, status: "enConversacion" });
+    }
   };
 
   // Cancelar preview
@@ -728,7 +731,7 @@ export default function ChatPage() {
 
                   <h2 className="text-xl font-serif text-gold">{lead.name}</h2>
                   <p className="text-xs text-muted-foreground">
-                    Desde hace {lead.createdAt}
+                    Desde hace {new Date(lead.created_at).toLocaleDateString()}
                   </p>
                 </div>
 

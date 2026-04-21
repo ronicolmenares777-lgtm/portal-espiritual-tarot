@@ -167,20 +167,79 @@ export const LeadService = {
   },
 
   /**
-   * Toggle favorito
+   * Actualizar el estado de un lead
    */
-  async toggleFavorite(id: string, isFavorite: boolean): Promise<{ success: boolean; error: any }> {
-    const { error } = await supabase
+  async updateStatus(id: string, status: Lead["status"]) {
+    const { data, error } = await supabase
       .from("leads")
-      .update({ is_favorite: isFavorite })
-      .eq("id", id);
+      .update({ 
+        status,
+        last_interaction_at: new Date().toISOString()
+      })
+      .eq("id", id)
+      .select()
+      .single();
 
     if (error) {
-      console.error("Error toggle favorito:", error);
-      return { success: false, error };
+      console.error("Error actualizando estado del lead:", error);
+      return { data: null, error };
     }
 
-    return { success: true, error: null };
+    console.log("✅ Estado del lead actualizado");
+    return { data, error: null };
+  },
+
+  /**
+   * Toggle favorito de un lead
+   */
+  async toggleFavorite(id: string) {
+    // Primero obtener el estado actual
+    const { data: currentLead, error: getError } = await supabase
+      .from("leads")
+      .select("is_favorite")
+      .eq("id", id)
+      .single();
+
+    if (getError) {
+      console.error("Error obteniendo lead:", getError);
+      return { data: null, error: getError };
+    }
+
+    // Actualizar con el valor opuesto
+    const { data, error } = await supabase
+      .from("leads")
+      .update({ is_favorite: !currentLead.is_favorite })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error actualizando favorito:", error);
+      return { data: null, error };
+    }
+
+    console.log("✅ Favorito actualizado");
+    return { data, error: null };
+  },
+
+  /**
+   * Actualizar notas de un lead
+   */
+  async updateNotes(id: string, notes: string) {
+    const { data, error } = await supabase
+      .from("leads")
+      .update({ notes })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error actualizando notas:", error);
+      return { data: null, error };
+    }
+
+    console.log("✅ Notas actualizadas");
+    return { data, error: null };
   },
 
   /**
