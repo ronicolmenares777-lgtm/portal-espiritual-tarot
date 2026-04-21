@@ -1,10 +1,26 @@
 "use client";
 
+import { useEffect } from "react";
+
 interface LoadingScreenProps {
-  onComplete?: () => void;
+  onComplete: () => void;
 }
 
 export function LoadingScreen({ onComplete }: LoadingScreenProps) {
+  // Auto-avanzar después de 5 segundos
+  useEffect(() => {
+    console.log("⏳ LoadingScreen montado, iniciando timer de 5 segundos...");
+    const timer = setTimeout(() => {
+      console.log("✅ Timer de LoadingScreen completado, llamando onComplete");
+      onComplete();
+    }, 5000);
+
+    return () => {
+      console.log("🧹 LoadingScreen desmontado, limpiando timer");
+      clearTimeout(timer);
+    };
+  }, [onComplete]);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-in fade-in duration-700">
       <div className="max-w-md w-full space-y-12 relative z-10">
@@ -35,7 +51,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
             style={{ animationDuration: "2s", animationDelay: "0.6s" }}
           />
           
-          {/* Símbolo central - Luna creciente */}
+          {/* Símbolo central */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative w-20 h-20">
               <div className="absolute inset-0 border-4 border-gold rounded-full opacity-60 animate-pulse-glow" />
@@ -55,19 +71,19 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
           {/* Barra de progreso */}
           <div className="w-full max-w-xs mx-auto h-1 bg-muted rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gold rounded-full animate-pulse"
-              style={{
-                animation: "progress 3s ease-out forwards",
-              }}
+              className="h-full bg-gold rounded-full animate-progress"
             />
           </div>
         </div>
       </div>
 
       <style jsx>{`
-        @keyframes progress {
+        @keyframes animate-progress {
           from { width: 0%; }
           to { width: 100%; }
+        }
+        .animate-progress {
+          animation: animate-progress 5s ease-out forwards;
         }
       `}</style>
     </div>
