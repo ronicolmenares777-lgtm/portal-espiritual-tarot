@@ -14,44 +14,6 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Calcular fuerza de la contraseña
-  const calculatePasswordStrength = (password: string) => {
-    if (!password) return 0;
-    
-    let strength = 0;
-    
-    // Longitud
-    if (password.length >= 8) strength += 25;
-    if (password.length >= 12) strength += 25;
-    
-    // Mayúsculas
-    if (/[A-Z]/.test(password)) strength += 15;
-    
-    // Minúsculas
-    if (/[a-z]/.test(password)) strength += 15;
-    
-    // Números
-    if (/[0-9]/.test(password)) strength += 10;
-    
-    // Caracteres especiales
-    if (/[^A-Za-z0-9]/.test(password)) strength += 10;
-    
-    return Math.min(100, Math.max(0, strength));
-  };
-
-  const passwordStrength = calculatePasswordStrength(password);
-  const strengthColor = 
-    passwordStrength < 40 ? "#ef4444" : 
-    passwordStrength < 70 ? "#f59e0b" : 
-    "#10b981";
-  const strengthText = 
-    passwordStrength < 40 ? "Débil" : 
-    passwordStrength < 70 ? "Media" : 
-    "Fuerte";
-  
-  // Asegurar que strengthWidth siempre sea un número válido entre 0 y 100
-  const strengthWidth = !password || isNaN(passwordStrength) ? 0 : Math.min(100, Math.max(0, passwordStrength));
-
   // Verificar si ya está autenticado
   useEffect(() => {
     const isAuth = localStorage.getItem("adminAuth");

@@ -74,33 +74,6 @@ export class AuthManager {
   }
 }
 
-// Hook para proteger rutas admin
-export function useRequireAuth(redirectTo = "/Suafazon") {
-  const router = useRouter();
-  
-  useEffect(() => {
-    if (!AuthManager.isAuthenticated()) {
-      router.replace(redirectTo);
-    } else {
-      // Renovar sesión en cada visita
-      AuthManager.renewSession();
-    }
-  }, [router, redirectTo]);
-  
-  return AuthManager.getSession();
-}
-
-// Hook para verificar autenticación sin redirigir
-export function useAuth() {
-  const session = AuthManager.getSession();
-  
-  return {
-    isAuthenticated: session !== null,
-    session,
-    logout: () => AuthManager.clearSession()
-  };
-}
-
 /**
  * Hook para proteger rutas que requieren autenticación
  * Redirige a la página de login si no hay sesión activa
@@ -127,4 +100,15 @@ export function useRequireAuth(loginPath: string = "/Suafazon") {
   }, [router.pathname, loginPath]);
 
   return isChecking;
+}
+
+// Hook para verificar autenticación sin redirigir
+export function useAuth() {
+  const session = AuthManager.getSession();
+  
+  return {
+    isAuthenticated: session !== null,
+    session,
+    logout: () => AuthManager.clearSession()
+  };
 }
