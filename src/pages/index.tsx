@@ -37,49 +37,24 @@ const nombreEjemplos = [
 ];
 
 export default function Home() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>("form");
-  const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
-  const [selectedCardIndex, setSelectedCardIndex] = useState<number>(0);
+  const [currentScreen, setCurrentScreen] = useState<
+    "form" | "loading" | "cards" | "suspense" | "reveal" | "questions" | "warning" | "chat"
+  >("form");
+  
   const [formData, setFormData] = useState({
     name: "",
-    countryCode: "+1",
     whatsapp: "",
+    countryCode: "+52",
     problem: "",
   });
-  const [nombrePlaceholder, setNombrePlaceholder] = useState(nombreEjemplos[0]);
-  const [answers, setAnswers] = useState({
-    question1: "",
-    question2: "",
-  });
+  
   const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [loginData, setLoginData] = useState({
-    name: "",
-    whatsapp: "",
-    countryCode: "+52"
-  });
-  const [loginError, setLoginError] = useState("");
-  const [formErrors, setFormErrors] = useState({
-    name: "",
-    whatsapp: "",
-    problem: ""
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [answers, setAnswers] = useState<string[]>([]);
 
-  // Log de cambios de pantalla para debugging
+  // Log solo para debugging (no causa re-renders)
   useEffect(() => {
     console.log("🔄 Pantalla actual:", currentScreen);
   }, [currentScreen]);
-
-  // Cambiar placeholder de nombre cada 3 segundos
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * nombreEjemplos.length);
-      setNombrePlaceholder(nombreEjemplos[randomIndex]);
-    }, 3000);
-    
-    return () => clearInterval(interval);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -454,6 +429,15 @@ export default function Home() {
           {renderScreen()}
         </div>
       </div>
+
+      {currentScreen === "loading" && (
+        <LoadingScreen 
+          onComplete={() => {
+            console.log("✅ LoadingScreen completado, avanzando a cards");
+            setCurrentScreen("cards");
+          }}
+        />
+      )}
 
       {showLoginModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
