@@ -10,6 +10,7 @@ import { ChatMaestro } from "@/components/ChatMaestro";
 import { SEO } from "@/components/SEO";
 import { phoneValidation } from "@/lib/config";
 import { sanitizeText, validateName, validatePhone, validateProblem, rateLimiter, detectSuspiciousContent } from "@/lib/security";
+import { LeadService } from "@/services/leadService";
 import type { TarotCard } from "@/lib/tarotCards";
 import type { Lead } from "@/types/admin";
 import { useState, useEffect } from "react";
@@ -236,6 +237,42 @@ export default function Home() {
   const handleWarningContinue = () => {
     setCurrentScreen("transition");
     setTimeout(() => setCurrentScreen("chat"), 2000);
+  };
+
+  const handleFinalSubmit = async () => {
+    setCurrentStep("chat");
+    
+    // Preparar datos del lead para Supabase
+    const leadData = {
+      name: formData.name,
+      whatsapp: formData.whatsapp,
+      country_code: formData.countryCode,
+      problem: formData.problem,
+      status: "nuevo" as const,
+      tarot_card_id: selectedCards[0]?.id || null,
+      tarot_cards_selected: selectedCards.map(c => c.id),
+      precision_answers: answers
+    };
+
+    try {
+      // Guardar en Supabase
+      const { data: newLead, error } = await LeadService.create(leadData);
+      
+      if (error) {
+        console.error("Error guardando lead:", error);
+        alert("Hubo un error al guardar tu información. Por favor intenta nuevamente.");
+        return;
+      }
+
+      console.log("✅ Lead guardado en Supabase:", newLead);
+      
+      // Opcional: guardar ID en localStorage para la sesión del chat del usuario
+      if (newLead) {
+        localStorage.setItem("currentLeadId", newLead.id);
+      }
+    } catch (error) {
+      console.error("Error inesperado:", error);
+    }
   };
 
   const renderScreen = () => {

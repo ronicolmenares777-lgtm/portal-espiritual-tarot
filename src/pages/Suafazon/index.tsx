@@ -4,8 +4,9 @@ import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { motion } from "framer-motion";
-import { Shield, User, Lock, Eye, EyeOff, Sparkles } from "lucide-react";
+import { Shield, User, Lock, Eye, EyeOff, Sparkles, Mail } from "lucide-react";
 import Link from "next/link";
+import { AuthService } from "@/services/authService";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -14,33 +15,42 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // NO auto-redirect - el usuario debe hacer login primero
-  // useEffect eliminado
+  // Verificar si ya está autenticado
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isAuth = await AuthService.isAuthenticated();
+      if (isAuth) {
+        router.replace("/Suafazon/dashboard");
+      }
+    };
+    checkAuth();
+  }, [router]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Credenciales de admin (en producción esto sería una API)
-    const validEmail = "admin@tarot.com";
-    const validPassword = "maestro2024";
+    try {
+      // Login con Supabase Auth
+      const { user, session, error } = await AuthService.signIn(email, password);
 
-    setTimeout(() => {
-      if (email === validEmail && password === validPassword) {
-        // Guardar sesión
-        localStorage.setItem("adminAuth", "true");
-        localStorage.setItem("adminSession", JSON.stringify({
-          email,
-          loginTime: Date.now()
-        }));
-        
-        // Redirigir al dashboard SOLO después de login exitoso
-        router.push("/Suafazon/dashboard");
-      } else {
+      if (error) {
         alert("❌ Credenciales incorrectas");
         setIsLoading(false);
+        return;
       }
-    }, 1000);
+
+      if (user && session) {
+        console.log("✅ Login exitoso con Supabase:", user.email);
+        
+        // Redirigir al dashboard
+        router.push("/Suafazon/dashboard");
+      }
+    } catch (error) {
+      console.error("Error en login:", error);
+      alert("❌ Error al iniciar sesión");
+      setIsLoading(false);
+    }
   };
 
   return (

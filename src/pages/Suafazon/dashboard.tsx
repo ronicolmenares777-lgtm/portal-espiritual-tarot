@@ -4,8 +4,10 @@ import { motion } from "framer-motion";
 import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
-import { mockLeads, mockStats } from "@/lib/mockData";
-import type { Lead } from "@/types/admin";
+import { LeadService } from "@/services/leadService";
+import { AuthService } from "@/services/authService";
+import { ProfileService } from "@/services/profileService";
+import type { Database } from "@/integrations/supabase/types";
 import {
   Users,
   MessageCircle,
@@ -31,23 +33,40 @@ import {
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 
+type Lead = Database["public"]["Tables"]["leads"]["Row"];
+
 export default function Dashboard() {
   const router = useRouter();
   
-  // Verificar autenticación sin redirect loop
+  // Verificar autenticación con Supabase
   useEffect(() => {
-    const adminAuth = localStorage.getItem("adminAuth");
-    if (!adminAuth || adminAuth !== "true") {
-      console.log("⚠️ No hay sesión admin válida");
-      router.replace("/Suafazon");
-    }
-  }, []);
-  
+    const checkAuth = async () => {
+      const isAuth = await AuthService.isAuthenticated();
+      if (!isAuth) {
+        console.log("⚠️ No hay sesión Supabase válida");
+        router.replace("/Suafazon");
+      }
+    };
+    checkAuth();
+  }, [router]);
+
   const [activeTab, setActiveTab] = useState<"chats" | "leads" | "listo">("chats");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");
-  const [leads, setLeads] = useState<Lead[]>(mockLeads);
-  const [stats, setStats] = useState(mockStats);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [stats, setStats] = useState({
+    totalAlmas: 0,
+    clickWA: 0,
+    atendidos: 0,
+    sinResponder: 0,
+    pipeline: {
+      nuevo: 0,
+      enConversacion: 0,
+      clienteCaliente: 0,
+      cerrado: 0,
+      perdido: 0
+    }
+  });
   const [showProfile, setShowProfile] = useState(false);
   const [newLeadsCount, setNewLeadsCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,33 +80,23 @@ export default function Dashboard() {
   // Proteger ruta - redirige a login si no está autenticado
   // useRequireAuth("/Suafazon");
   
-  // Filtrar leads según tab activo y filtros
+  // Filtrar leads según tab activo y búsqueda
   const filteredLeads = leads.filter((lead) => {
-    // Primero: filtro por búsqueda (si existe)
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      const matchName = lead.name.toLowerCase().includes(search);
-      const matchPhone = lead.whatsapp.includes(search);
-      const matchProblem = lead.problem.toLowerCase().includes(search);
-      if (!matchName && !matchPhone && !matchProblem) return false;
+    // Filtro por tab
+    if (activeTab === "leads" && lead.status !== "nuevo") return false;
+    if (activeTab === "chats" && !["enConversacion", "caliente"].includes(lead.status || "")) return false;
+    if (activeTab === "listo" && lead.status !== "listo") return false;
+
+    // Filtro por búsqueda
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        lead.name?.toLowerCase().includes(query) ||
+        lead.whatsapp?.includes(query)
+      );
     }
 
-    // Segundo: filtro por estado seleccionado (si no es "todos")
-    if (selectedStatus !== "todos") {
-      if (lead.status !== selectedStatus) return false;
-    }
-
-    // Tercero: filtro por tab activo
-    if (activeTab === "listo") {
-      // Tab LISTO: solo mostrar leads con status "listo"
-      return lead.status === "listo";
-    } else if (activeTab === "chats") {
-      // Tab CHATS: mostrar leads con mensajes
-      return lead.messages && lead.messages.length > 0;
-    } else {
-      // Tab LEADS: mostrar todos menos los de status "listo"
-      return lead.status !== "listo";
-    }
+    return true;
   });
 
   // Contar leads por estado
@@ -405,26 +414,27 @@ export default function Dashboard() {
                 />
               </div>
               
-              {/* Botón temporal para cargar leads de prueba */}
-              {leads.length === 0 && (
-                <button
-                  onClick={() => {
-                    fetch("/test-leads.json")
-                      .then(res => res.json())
-                      .then(testLeads => {
-                        localStorage.setItem("leads", JSON.stringify(testLeads));
-                        setLeads(testLeads);
-                        alert("Leads de prueba cargados correctamente");
-                      })
-                      .catch(err => {
-                        console.error("Error cargando leads de prueba:", err);
-                        alert("Error al cargar leads de prueba");
-                      });
-                  }}
-                  className="w-full mt-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/50 text-blue-400 hover:bg-blue-500/30 transition-all text-xs"
-                >
-                  📋 Cargar Leads de Prueba
-                </button>
+              {/* Mensaje si no hay leads */}
+              {filteredLeads.length === 0 && !loading && (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🔮</div>
+                  <p className="text-muted-foreground mb-2">
+                    {searchQuery ? "No se encontraron almas con ese criterio" : "Aún no hay almas en esta sección"}
+                  </p>
+                  {activeTab === "leads" && !searchQuery && (
+                    <p className="text-sm text-muted-foreground">
+                      Los nuevos leads aparecerán aquí automáticamente
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Indicador de carga */}
+              {loading && (
+                <div className="text-center py-12">
+                  <Sparkles className="w-12 h-12 text-gold mx-auto mb-4 animate-pulse" />
+                  <p className="text-muted-foreground">Cargando almas...</p>
+                </div>
               )}
             </div>
 
@@ -549,78 +559,49 @@ export default function Dashboard() {
                     }}
                     className="w-full text-left p-4 rounded-xl hover:bg-muted/40 transition-all group border border-gold/5 hover:border-gold/20 bg-card/20 hover:bg-card/40"
                   >
-                    {/* Header del chat */}
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {/* Avatar con inicial */}
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-accent/20 flex items-center justify-center border border-gold/30 flex-shrink-0">
-                          <span className="text-sm font-semibold text-gold">
-                            {lead.name.charAt(0).toUpperCase()}
+                    <div className="flex items-start gap-3">
+                      {/* Avatar */}
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold/30 to-accent/30 flex items-center justify-center flex-shrink-0">
+                        <User className="w-6 h-6 text-gold" />
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-medium text-foreground truncate flex items-center gap-2">
+                            {lead.name}
+                            {lead.is_favorite && <Star className="w-3 h-3 text-gold fill-gold" />}
+                          </h3>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(lead.created_at || "").toLocaleDateString()}
                           </span>
                         </div>
                         
-                        {/* Nombre y tiempo */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-gold transition-colors">
-                              {lead.name}
-                            </h4>
-                            {lead.isFavorite && (
-                              <Star className="w-3 h-3 fill-gold text-gold flex-shrink-0" />
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {getTimeAgo(lead.timestamp)}
-                          </p>
+                        <p className="text-sm text-muted-foreground truncate mb-2">
+                          {lead.problem || "Sin descripción"}
+                        </p>
+
+                        <div className="flex items-center gap-2 text-xs">
+                          <Phone className="w-3 h-3 text-accent" />
+                          <span className="text-muted-foreground">
+                            {lead.country_code} {lead.whatsapp}
+                          </span>
                         </div>
                       </div>
-                      
-                      {/* Badge de estado */}
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
-                          lead.status === "nuevo"
-                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                            : lead.status === "clienteCaliente"
-                            ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
-                            : lead.status === "cerrado"
-                            ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                            : lead.status === "perdido"
-                            ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                            : lead.status === "listo"
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                            : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                        }`}
-                      >
-                        {lead.status === "nuevo"
-                          ? "Nuevo"
-                          : lead.status === "clienteCaliente"
-                          ? "Caliente"
-                          : lead.status === "cerrado"
-                          ? "Cerrado"
-                          : lead.status === "perdido"
-                          ? "Perdido"
-                          : lead.status === "listo"
-                          ? "Listo"
-                          : "En Chat"}
-                      </span>
-                    </div>
 
-                    {/* Información del problema */}
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                        {lead.problem}
-                      </p>
-                      
-                      {/* Footer con metadata */}
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2 border-t border-gold/5">
-                        <div className="flex items-center gap-1">
-                          <Phone className="w-3 h-3" />
-                          <span>{lead.whatsapp}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" />
-                          <span>{lead.card}</span>
-                        </div>
+                      {/* Status badge */}
+                      <div className={`px-2 py-1 rounded text-xs ${
+                        lead.status === "nuevo" ? "bg-blue-500/20 text-blue-400" :
+                        lead.status === "enConversacion" ? "bg-purple-500/20 text-purple-400" :
+                        lead.status === "caliente" ? "bg-orange-500/20 text-orange-400" :
+                        lead.status === "listo" ? "bg-green-500/20 text-green-400" :
+                        "bg-gray-500/20 text-gray-400"
+                      }`}>
+                        {lead.status === "nuevo" ? "Nuevo" :
+                         lead.status === "enConversacion" ? "En chat" :
+                         lead.status === "caliente" ? "Caliente" :
+                         lead.status === "listo" ? "Listo" :
+                         lead.status}
                       </div>
                     </div>
                   </button>
@@ -656,10 +637,9 @@ export default function Dashboard() {
 
                   {/* Botón Cerrar Sesión */}
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (confirm("¿Cerrar sesión?")) {
-                        localStorage.removeItem("adminAuth");
-                        localStorage.removeItem("adminSession");
+                        await AuthService.signOut();
                         router.push("/Suafazon");
                       }
                     }}
