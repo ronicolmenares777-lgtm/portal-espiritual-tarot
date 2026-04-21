@@ -14,6 +14,44 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Calcular fuerza de la contraseña
+  const calculatePasswordStrength = (password: string) => {
+    if (!password) return 0;
+    
+    let strength = 0;
+    
+    // Longitud
+    if (password.length >= 8) strength += 25;
+    if (password.length >= 12) strength += 25;
+    
+    // Mayúsculas
+    if (/[A-Z]/.test(password)) strength += 15;
+    
+    // Minúsculas
+    if (/[a-z]/.test(password)) strength += 15;
+    
+    // Números
+    if (/[0-9]/.test(password)) strength += 10;
+    
+    // Caracteres especiales
+    if (/[^A-Za-z0-9]/.test(password)) strength += 10;
+    
+    return Math.min(100, Math.max(0, strength));
+  };
+
+  const passwordStrength = calculatePasswordStrength(password);
+  const strengthColor = 
+    passwordStrength < 40 ? "#ef4444" : 
+    passwordStrength < 70 ? "#f59e0b" : 
+    "#10b981";
+  const strengthText = 
+    passwordStrength < 40 ? "Débil" : 
+    passwordStrength < 70 ? "Media" : 
+    "Fuerte";
+  
+  // Asegurar que strengthWidth siempre sea un número válido
+  const strengthWidth = isNaN(passwordStrength) ? 0 : passwordStrength;
+
   // Verificar si ya está autenticado
   useEffect(() => {
     const isAuth = localStorage.getItem("adminAuth");
@@ -138,6 +176,29 @@ export default function AdminLogin() {
                   </button>
                 </div>
               </div>
+
+              {/* Barra de fuerza de contraseña */}
+              {password && (
+                <div className="space-y-1">
+                  <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: "0%" }}
+                      animate={{ width: `${strengthWidth}%` }}
+                      transition={{ duration: 0.3 }}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: strengthColor }}
+                    />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">
+                      Seguridad: <span style={{ color: strengthColor }}>{strengthText}</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {strengthWidth}%
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Botón de submit */}
               <button
