@@ -82,6 +82,10 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    console.log("🔄 Estado actual:", currentStep);
+  }, [currentStep]);
+
   const validatePhone = (phone: string, countryCode: string): boolean => {
     const validation = phoneValidation[countryCode];
     if (!validation) return true;
@@ -143,71 +147,43 @@ export default function Home() {
     setLoginError("No se encontró ninguna consulta con estos datos");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Limpiar errores previos
-    setFormErrors({ name: "", whatsapp: "", problem: "" });
-    
-    // Rate limiting - máximo 3 envíos por minuto
-    if (!rateLimiter.isAllowed("form_submit", 3, 60000)) {
-      const remainingTime = rateLimiter.getRemainingTime("form_submit", 3, 60000);
-      alert(`⏳ Por favor espera ${remainingTime} segundos antes de intentar nuevamente.`);
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    // Sanitizar inputs
-    const sanitizedName = sanitizeText(formData.name.trim());
-    const sanitizedProblem = sanitizeText(formData.problem.trim());
-    const sanitizedWhatsapp = formData.whatsapp.replace(/\D/g, "");
-    
+
     // Validaciones
-    let hasErrors = false;
-    const errors = { name: "", whatsapp: "", problem: "" };
-    
-    // Validar nombre
-    if (!validateName(sanitizedName)) {
-      errors.name = "Nombre inválido. Solo letras y entre 2-100 caracteres.";
-      hasErrors = true;
-    }
-    
-    // Validar teléfono
-    if (!validatePhone(sanitizedWhatsapp, formData.countryCode)) {
-      errors.whatsapp = "Número de teléfono inválido para el país seleccionado.";
-      hasErrors = true;
-    }
-    
-    // Validar problema
-    if (!validateProblem(sanitizedProblem)) {
-      errors.problem = "Describe tu situación (mínimo 10 caracteres, máximo 1000).";
-      hasErrors = true;
-    }
-    
-    // Detectar contenido sospechoso
-    if (detectSuspiciousContent(sanitizedName) || detectSuspiciousContent(sanitizedProblem)) {
-      alert("❌ Se detectó contenido no permitido en el formulario.");
-      setIsSubmitting(false);
+    if (!validateName(formData.name)) {
+      alert("⚠️ Por favor ingresa un nombre válido");
       return;
     }
-    
-    if (hasErrors) {
-      setFormErrors(errors);
-      setIsSubmitting(false);
+
+    if (!validatePhone(formData.whatsapp)) {
+      alert("⚠️ Por favor ingresa un número de teléfono válido");
       return;
     }
+
+    if (!validateProblem(formData.problem)) {
+      alert("⚠️ Por favor describe tu situación (mínimo 10 caracteres)");
+      return;
+    }
+
+    // Rate limiting
+    const rateLimitResult = rateLimiter.checkLimit();
+    if (!rateLimitResult.allowed) {
+      alert(`⚠️ Por favor espera ${Math.ceil(rateLimitResult.remainingTime! / 1000)} segundos antes de intentar nuevamente`);
+      return;
+    }
+
+    // Detección de contenido sospechoso
+    const isSuspicious = detectSuspiciousContent(formData.problem);
+    if (isSuspicious) {
+      alert("⚠️ Por favor describe tu situación de forma más específica");
+      return;
+    }
+
+    console.log("✅ Validaciones pasadas, avanzando a siguiente paso");
     
-    // Actualizar formData con valores sanitizados
-    setFormData({
-      ...formData,
-      name: sanitizedName,
-      whatsapp: sanitizedWhatsapp,
-      problem: sanitizedProblem
-    });
-    
-    setIsSubmitting(false);
-    handleStart();
+    // Avanzar a loading screen
+    setCurrentStep("loading");
   };
 
   const handleCardSelected = (card: TarotCard, cardIndex: number) => {
@@ -240,6 +216,7 @@ export default function Home() {
   };
 
   const handleFinalSubmit = async () => {
+    console.log("📝 Guardando lead en Supabase...");
     setCurrentStep("chat");
     
     // Preparar datos del lead para Supabase
@@ -255,23 +232,23 @@ export default function Home() {
     };
 
     try {
-      // Guardar en Supabase
+      // Guardar en Supabase (en background, no bloquea el flujo)
       const { data: newLead, error } = await LeadService.create(leadData);
       
       if (error) {
-        console.error("Error guardando lead:", error);
-        alert("Hubo un error al guardar tu información. Por favor intenta nuevamente.");
-        return;
-      }
-
-      console.log("✅ Lead guardado en Supabase:", newLead);
-      
-      // Opcional: guardar ID en localStorage para la sesión del chat del usuario
-      if (newLead) {
-        localStorage.setItem("currentLeadId", newLead.id);
+        console.error("⚠️ Error guardando lead (no crítico):", error);
+        // No mostramos alerta al usuario, solo log
+      } else {
+        console.log("✅ Lead guardado exitosamente:", newLead?.id);
+        
+        // Guardar ID en localStorage para referencia
+        if (newLead) {
+          localStorage.setItem("currentLeadId", newLead.id);
+        }
       }
     } catch (error) {
-      console.error("Error inesperado:", error);
+      console.error("⚠️ Error inesperado guardando lead:", error);
+      // No bloqueamos el flujo por error en BD
     }
   };
 
