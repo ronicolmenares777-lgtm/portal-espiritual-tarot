@@ -156,7 +156,7 @@ export default function Home() {
       return;
     }
 
-    if (!validatePhone(formData.whatsapp)) {
+    if (!validatePhone(formData.whatsapp, formData.countryCode)) {
       alert("⚠️ Por favor ingresa un número de teléfono válido");
       return;
     }
@@ -167,9 +167,8 @@ export default function Home() {
     }
 
     // Rate limiting
-    const rateLimitResult = rateLimiter.checkLimit();
-    if (!rateLimitResult.allowed) {
-      alert(`⚠️ Por favor espera ${Math.ceil(rateLimitResult.remainingTime! / 1000)} segundos antes de intentar nuevamente`);
+    if (!rateLimiter.isAllowed()) {
+      alert("⚠️ Por favor espera unos segundos antes de intentar nuevamente");
       return;
     }
 
@@ -183,7 +182,7 @@ export default function Home() {
     console.log("✅ Validaciones pasadas, avanzando a siguiente paso");
     
     // Avanzar a loading screen
-    setCurrentStep("loading");
+    setCurrentScreen("loading");
   };
 
   const handleCardSelected = (card: TarotCard, cardIndex: number) => {
