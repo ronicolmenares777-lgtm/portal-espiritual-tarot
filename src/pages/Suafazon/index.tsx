@@ -152,55 +152,22 @@ export default function AdminLogin() {
                 </div>
               </div>
 
-              {/* Password */}
+              {/* Campo de contraseña */}
               <div className="space-y-2">
-                <label className="text-xs text-gold/80 tracking-[0.2em] uppercase font-medium">
-                  Palabra de poder
+                <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
+                  <Sparkles className="w-3 h-3" />
+                  Palabra de Poder
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold/50" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full bg-black/50 border border-gold/20 rounded-xl pl-12 pr-12 py-3 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gold/50 hover:text-gold transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Tu clave sagrada..."
+                  className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+                />
               </div>
 
-              {/* Barra de fuerza de contraseña */}
-              {password && (
-                <div className="space-y-1">
-                  <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: "0%" }}
-                      animate={{ width: `${strengthWidth}%` }}
-                      transition={{ duration: 0.3 }}
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: strengthColor }}
-                    />
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">
-                      Seguridad: <span style={{ color: strengthColor }}>{strengthText}</span>
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {strengthWidth}%
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Botón de submit */}
+              {/* Botón de envío */}
               <button
                 type="submit"
                 disabled={isLoading}

@@ -3,7 +3,7 @@
  * Implementa protección de rutas y verificación de sesión
  */
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 export interface AuthSession {
@@ -99,4 +99,32 @@ export function useAuth() {
     session,
     logout: () => AuthManager.clearSession()
   };
+}
+
+/**
+ * Hook para proteger rutas que requieren autenticación
+ * Redirige a la página de login si no hay sesión activa
+ */
+export function useRequireAuth(loginPath: string = "/Suafazon") {
+  const router = useRouter();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    // No redirigir si ya estamos en la página de login
+    if (router.pathname === loginPath) {
+      setIsChecking(false);
+      return;
+    }
+
+    const session = AuthManager.getSession();
+    
+    if (!session) {
+      console.log("🔒 No hay sesión activa, redirigiendo a login...");
+      router.replace(loginPath);
+    } else {
+      setIsChecking(false);
+    }
+  }, [router.pathname, loginPath]);
+
+  return isChecking;
 }

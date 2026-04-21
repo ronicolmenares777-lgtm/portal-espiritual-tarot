@@ -35,8 +35,8 @@ import { AnimatePresence } from "framer-motion";
 type Tab = "chats" | "leads";
 
 export default function Dashboard() {
-  // Proteger ruta - redirige a login si no está autenticado
-  useRequireAuth("/Suafazon");
+  // TEMPORAL: Comentado para debugging
+  // useRequireAuth("/Suafazon");
   
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"chats" | "leads" | "listo">("chats");
@@ -54,6 +54,21 @@ export default function Dashboard() {
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
   });
 
+  // Verificar autenticación manualmente sin redirect automático
+  useEffect(() => {
+    const session = localStorage.getItem("adminSession");
+    if (!session) {
+      console.log("⚠️ No hay sesión admin - deberías estar en login");
+      // Solo redirigir si no estamos ya en la página de login
+      if (router.pathname !== "/Suafazon") {
+        router.push("/Suafazon");
+      }
+    }
+  }, [router]);
+
+  // Proteger ruta - redirige a login si no está autenticado
+  // useRequireAuth("/Suafazon");
+  
   // Filtrar leads según tab activo y filtros
   const filteredLeads = leads.filter((lead) => {
     // Primero: filtro por búsqueda (si existe)

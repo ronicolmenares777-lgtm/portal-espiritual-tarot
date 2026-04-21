@@ -27,8 +27,8 @@ import {
 import Link from "next/link";
 
 export default function ChatPage() {
-  // Proteger ruta - redirige a login si no está autenticado
-  useRequireAuth("/Suafazon");
+  // TEMPORAL: Comentado para debugging
+  // useRequireAuth("/Suafazon");
   
   const router = useRouter();
   const [lead, setLead] = useState<Lead | null>(null);
