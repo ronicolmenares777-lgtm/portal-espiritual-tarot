@@ -166,9 +166,11 @@ export default function Home() {
       return;
     }
 
-    // Rate limiting
-    if (!rateLimiter.isAllowed()) {
-      alert("⚠️ Por favor espera unos segundos antes de intentar nuevamente");
+    // Rate limiting (3 intentos por minuto)
+    const clientKey = `form_${formData.whatsapp}`;
+    if (!rateLimiter.isAllowed(clientKey, 3, 60000)) {
+      const remainingTime = rateLimiter.getRemainingTime(clientKey, 3, 60000);
+      alert(`⚠️ Por favor espera ${remainingTime} segundos antes de intentar nuevamente`);
       return;
     }
 
