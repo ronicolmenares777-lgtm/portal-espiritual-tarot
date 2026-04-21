@@ -5,7 +5,6 @@ import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { mockLeads, mockStats } from "@/lib/mockData";
-import { useRequireAuth } from "@/middleware/auth";
 import type { Lead } from "@/types/admin";
 import {
   Users,
@@ -32,13 +31,18 @@ import {
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 
-type Tab = "chats" | "leads";
-
 export default function Dashboard() {
-  // TEMPORAL: Comentado para debugging
-  // useRequireAuth("/Suafazon");
-  
   const router = useRouter();
+  
+  // Verificar autenticación sin redirect loop
+  useEffect(() => {
+    const adminAuth = localStorage.getItem("adminAuth");
+    if (!adminAuth || adminAuth !== "true") {
+      console.log("⚠️ No hay sesión admin válida");
+      router.replace("/Suafazon");
+    }
+  }, []);
+  
   const [activeTab, setActiveTab] = useState<"chats" | "leads" | "listo">("chats");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");
@@ -53,18 +57,6 @@ export default function Dashboard() {
     email: "admin@tarot.com",
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces"
   });
-
-  // Verificar autenticación manualmente sin redirect automático
-  useEffect(() => {
-    const session = localStorage.getItem("adminSession");
-    if (!session) {
-      console.log("⚠️ No hay sesión admin - deberías estar en login");
-      // Solo redirigir si no estamos ya en la página de login
-      if (router.pathname !== "/Suafazon") {
-        router.push("/Suafazon");
-      }
-    }
-  }, [router]);
 
   // Proteger ruta - redirige a login si no está autenticado
   // useRequireAuth("/Suafazon");

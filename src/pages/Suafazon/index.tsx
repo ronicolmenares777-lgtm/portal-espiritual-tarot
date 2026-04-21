@@ -14,13 +14,16 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Verificar si ya está autenticado
+  // Verificar si ya está autenticado - evitar redirect loop
   useEffect(() => {
-    const isAuth = localStorage.getItem("adminAuth");
-    if (isAuth === "true") {
-      router.push("/Suafazon/dashboard");
+    const adminAuth = localStorage.getItem("adminAuth");
+    const currentPath = window.location.pathname;
+    
+    // Solo redirigir si está autenticado Y no está ya en el dashboard
+    if (adminAuth === "true" && currentPath === "/Suafazon") {
+      router.replace("/Suafazon/dashboard");
     }
-  }, [router]);
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
