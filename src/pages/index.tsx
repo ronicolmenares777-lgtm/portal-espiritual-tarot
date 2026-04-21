@@ -123,24 +123,27 @@ export default function Home() {
     console.log("📝 Guardando lead en Supabase...");
     setCurrentScreen("chat");
     
+    // Preparar datos del lead para Supabase
     const leadData = {
       name: formData.name,
       whatsapp: formData.whatsapp,
       country_code: formData.countryCode,
       problem: formData.problem,
       status: "nuevo" as const,
-      tarot_card_id: selectedCards[0]?.id || null,
-      tarot_cards_selected: selectedCards.map(c => c.id),
+      tarot_cards_selected: selectedCards.map(c => c.name),
       precision_answers: answers
     };
 
     try {
+      // Guardar en Supabase (en background, no bloquea el flujo)
       const { data: newLead, error } = await LeadService.create(leadData);
       
       if (error) {
-        console.error("⚠️ Error guardando lead (no crítico):", error);
+        console.error("⚠️ Error guardando lead:", error);
       } else {
         console.log("✅ Lead guardado exitosamente:", newLead?.id);
+        
+        // Guardar ID en localStorage para referencia
         if (newLead) {
           localStorage.setItem("currentLeadId", newLead.id);
         }

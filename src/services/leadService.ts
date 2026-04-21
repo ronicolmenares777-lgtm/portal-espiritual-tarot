@@ -11,12 +11,28 @@ type LeadUpdate = Database["public"]["Tables"]["leads"]["Update"];
 
 export const LeadService = {
   /**
-   * Crear un nuevo lead (desde formulario público)
+   * Crear un nuevo lead
    */
-  async create(data: LeadInsert): Promise<{ data: Lead | null; error: any }> {
-    const { data: lead, error } = await supabase
+  async create(leadData: {
+    name: string;
+    whatsapp: string;
+    country_code: string;
+    problem: string;
+    status?: Lead["status"];
+    tarot_cards_selected?: string[];
+    precision_answers?: string[];
+  }) {
+    const { data, error } = await supabase
       .from("leads")
-      .insert([data])
+      .insert({
+        name: leadData.name,
+        whatsapp: leadData.whatsapp,
+        country_code: leadData.country_code,
+        problem: leadData.problem,
+        status: leadData.status || "nuevo",
+        tarot_cards_selected: leadData.tarot_cards_selected || [],
+        precision_answers: leadData.precision_answers || []
+      })
       .select()
       .single();
 
@@ -25,8 +41,8 @@ export const LeadService = {
       return { data: null, error };
     }
 
-    console.log("✅ Lead creado:", lead.id);
-    return { data: lead, error: null };
+    console.log("✅ Lead creado exitosamente");
+    return { data, error: null };
   },
 
   /**
