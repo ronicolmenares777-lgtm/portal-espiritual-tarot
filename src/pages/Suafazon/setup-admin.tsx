@@ -34,14 +34,15 @@ export default function SetupAdmin() {
     try {
       console.log("🔄 Creando usuario admin...");
 
-      // Paso 1: Crear usuario en Supabase Auth
+      // Paso 1: Crear usuario en Supabase Auth con auto-confirmación
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             full_name: formData.fullName
-          }
+          },
+          emailRedirectTo: undefined // Deshabilitar redirect de confirmación
         }
       });
 
