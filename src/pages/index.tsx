@@ -69,6 +69,22 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  // Timer para avanzar de suspense a reveal (SOLO UNA VEZ)
+  useEffect(() => {
+    if (currentScreen === "suspense") {
+      console.log("⏳ En suspense, timer iniciado...");
+      const timer = setTimeout(() => {
+        console.log("✅ Timer completado, avanzando a revelación");
+        setCurrentScreen("reveal");
+      }, 3000); // 3 segundos
+
+      return () => {
+        console.log("🧹 Limpiando timer de suspense");
+        clearTimeout(timer);
+      };
+    }
+  }, [currentScreen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -378,8 +394,14 @@ export default function Home() {
           )}
 
           {currentScreen === "cards" && (
-            <CardSelection 
-              onCardSelected={handleCardSelected}
+            <CardSelection
+              onCardsSelected={(cards) => {
+                console.log("🎴 Cartas seleccionadas:", cards);
+                setSelectedCards(cards);
+                setSelectedCard(cards[0]);
+                console.log("➡️ Avanzando inmediatamente a suspense");
+                setCurrentScreen("suspense");
+              }}
             />
           )}
 
