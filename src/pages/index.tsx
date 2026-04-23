@@ -395,10 +395,11 @@ export default function Home() {
 
           {currentScreen === "cards" && (
             <CardSelection
-              onCardsSelected={(cards) => {
-                console.log("🎴 Cartas seleccionadas:", cards);
-                setSelectedCards(cards);
-                setSelectedCard(cards[0]);
+              onCardSelected={(card, cardIndex) => {
+                console.log("🎴 Carta seleccionada:", card);
+                setSelectedCard(card);
+                setSelectedCardIndex(cardIndex);
+                setSelectedCards([card]);
                 console.log("➡️ Avanzando inmediatamente a suspense");
                 setCurrentScreen("suspense");
               }}
@@ -406,7 +407,7 @@ export default function Home() {
           )}
 
           {currentScreen === "suspense" && (
-            <SuspenseScreen onReveal={() => setCurrentScreen("reveal")} />
+            <SuspenseScreen />
           )}
 
           {currentScreen === "reveal" && selectedCard && (
