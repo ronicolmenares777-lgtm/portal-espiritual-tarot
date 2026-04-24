@@ -697,8 +697,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Lista de leads */}
-            <div className="space-y-4">
+            {/* Lista de leads - CON SCROLL */}
+            <div className="max-h-[calc(100vh-400px)] overflow-y-auto pr-2 space-y-4">
               {loading ? (
                 <div className="text-center py-12">
                   <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -707,8 +707,8 @@ export default function Dashboard() {
               ) : activeTab === "papelera" ? (
                 /* Mostrar papelera */
                 deletedLeads.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">No hay leads en la papelera</p>
+                  <div className="text-center py-12 bg-card/30 border border-border rounded-xl">
+                    <p className="text-muted-foreground">🗑️ No hay leads en la papelera</p>
                   </div>
                 ) : (
                   deletedLeads.map((lead) => (
@@ -716,7 +716,7 @@ export default function Dashboard() {
                       key={lead.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-card/50 border border-border rounded-xl p-6 hover:shadow-lg transition-all"
+                      className="bg-card/50 border border-red-500/30 rounded-xl p-6 hover:shadow-lg transition-all"
                     >
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex-1">
@@ -728,7 +728,11 @@ export default function Dashboard() {
                             {lead.problem}
                           </p>
                           <p className="text-xs text-red-400 mt-2">
-                            Eliminado: {new Date(lead.deleted_at!).toLocaleDateString("es-MX")}
+                            🗑️ Eliminado: {new Date(lead.deleted_at!).toLocaleDateString("es-MX", {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric"
+                            })}
                           </p>
                         </div>
 
@@ -751,7 +755,7 @@ export default function Dashboard() {
                   ))
                 )
               ) : filteredLeads.length === 0 ? (
-                <div className="text-center py-12">
+                <div className="text-center py-12 bg-card/30 border border-border rounded-xl">
                   <p className="text-muted-foreground">No hay leads disponibles</p>
                 </div>
               ) : (

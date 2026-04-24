@@ -14,6 +14,7 @@ import type { TarotCard } from "@/lib/tarotCards";
 import { useState, useEffect } from "react";
 import { Sparkles, Moon, Star, Facebook } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const nombreEjemplos = [
   "María González",
@@ -55,6 +56,7 @@ export default function Home() {
     problem: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     console.log("🔄 Pantalla actual:", currentScreen);
@@ -181,42 +183,72 @@ export default function Home() {
 
     try {
       setLoginError("");
+      console.log("🔍 Buscando lead con:", {
+        name: loginData.name.trim(),
+        whatsapp: loginData.whatsapp.trim()
+      });
       
       // Buscar en Supabase con nombre y teléfono
-      const fullPhone = loginData.countryCode + loginData.whatsapp;
-      
       const { data: leads, error } = await LeadService.getAll();
       
       if (error) {
-        console.error("Error buscando lead:", error);
+        console.error("❌ Error buscando lead:", error);
         setLoginError("Error al buscar consulta");
         return;
       }
       
       if (!leads || leads.length === 0) {
+        console.log("❌ No hay leads en la base de datos");
         setLoginError("No se encontró ninguna consulta con estos datos");
         return;
       }
+
+      console.log("📊 Total de leads encontrados:", leads.length);
       
       // Buscar lead que coincida con nombre y teléfono
-      const user = leads.find((lead: any) => 
-        lead.name.toLowerCase().trim() === loginData.name.toLowerCase().trim() && 
-        lead.whatsapp === loginData.whatsapp
-      );
+      const user = leads.find((lead: any) => {
+        const nameMatch = lead.name?.toLowerCase().trim() === loginData.name.toLowerCase().trim();
+        const phoneMatch = lead.whatsapp?.trim() === loginData.whatsapp.trim();
+        console.log(`🔍 Comparando con lead ${lead.name}:`, {
+          nameMatch,
+          phoneMatch,
+          leadName: lead.name,
+          leadPhone: lead.whatsapp,
+          inputName: loginData.name,
+          inputPhone: loginData.whatsapp
+        });
+        return nameMatch && phoneMatch;
+      });
 
       if (user) {
-        // Guardar en localStorage para la sesión
-        localStorage.setItem("userAuth", JSON.stringify(user));
+        console.log("✅ Lead encontrado:", user);
+        
+        // Guardar en localStorage
+        localStorage.setItem("userAuth", JSON.stringify({
+          id: user.id,
+          name: user.name,
+          whatsapp: user.whatsapp,
+          countryCode: user.country_code || loginData.countryCode,
+          problem: user.problem,
+          selectedCard: user.selected_cards?.[0] || null
+        }));
         localStorage.setItem("currentLeadId", user.id);
         
-        // Redirigir a la página de chat de usuario
-        window.location.href = "/chat-usuario";
+        console.log("💾 Datos guardados en localStorage");
+        
+        // Cerrar modal
+        setShowLoginModal(false);
+        
+        // Redirigir a chat de usuario
+        console.log("🔄 Redirigiendo a /chat-usuario");
+        router.push("/chat-usuario");
         return;
       }
 
-      setLoginError("No se encontró ninguna consulta con estos datos");
+      console.log("❌ No se encontró lead con esos datos");
+      setLoginError("No se encontró ninguna consulta con estos datos. Verifica tu nombre y número de WhatsApp.");
     } catch (error) {
-      console.error("Error en handleLogin:", error);
+      console.error("❌ Error en handleLogin:", error);
       setLoginError("Error al buscar consulta. Intenta de nuevo.");
     }
   };
