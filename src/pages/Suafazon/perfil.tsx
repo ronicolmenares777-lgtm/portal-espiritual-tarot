@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
+import { ProfileService } from "@/services/profileService";
+import { AuthService } from "@/services/authService";
 import {
   ArrowLeft,
   User,
@@ -14,11 +16,10 @@ import {
   Palette,
   LogOut,
   Sparkles,
-  Moon,
-  Sun,
   Shield,
   Edit2,
-  Camera
+  Camera,
+  Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -44,13 +45,14 @@ export default function PerfilMaestro() {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"personal" | "security" | "preferences">("personal");
   
   const [profileData, setProfileData] = useState<ProfileData>({
-    name: "Maestro Espiritual",
-    email: "admin@tarot.com",
-    phone: "+52 1234567890",
-    bio: "Guía espiritual dedicada a iluminar caminos a través del tarot místico",
+    name: "",
+    email: "",
+    phone: "",
+    bio: "",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro",
     notifications: {
       email: true,
@@ -70,34 +72,83 @@ export default function PerfilMaestro() {
     confirm: ""
   });
 
-  // Cargar datos del perfil
+  // Verificar autenticación y cargar perfil
   useEffect(() => {
-    const savedProfile = localStorage.getItem("maestroProfile");
-    if (savedProfile) {
-      setProfileData(JSON.parse(savedProfile));
-    }
-  }, []);
+    const loadProfile = async () => {
+      setIsLoading(true);
+      
+      // Verificar sesión
+      const { session } = await AuthService.getSession();
+      if (!session) {
+        router.replace("/Suafazon");
+        return;
+      }
 
-  // Verificar autenticación
-  useEffect(() => {
-    const adminAuth = localStorage.getItem("adminAuth");
-    if (!adminAuth || adminAuth !== "true") {
-      router.replace("/Suafazon");
-    }
-  }, []);
+      // Cargar perfil desde Supabase
+      const { data, error } = await ProfileService.getCurrent();
+      
+      if (error) {
+        console.error("Error cargando perfil:", error);
+        alert("Error al cargar el perfil");
+        setIsLoading(false);
+        return;
+      }
 
-  const handleSaveProfile = () => {
+      if (data) {
+        setProfileData({
+          name: data.full_name || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          bio: data.bio || "",
+          avatar: data.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro",
+          notifications: {
+            email: true,
+            push: true,
+            newLeads: true
+          },
+          preferences: {
+            theme: "dark",
+            language: "es",
+            autoResponse: false
+          }
+        });
+      }
+
+      setIsLoading(false);
+    };
+
+    loadProfile();
+  }, [router]);
+
+  const handleSaveProfile = async () => {
     setIsSaving(true);
     
-    setTimeout(() => {
-      localStorage.setItem("maestroProfile", JSON.stringify(profileData));
+    try {
+      const { data, error } = await ProfileService.update({
+        full_name: profileData.name,
+        phone: profileData.phone,
+        bio: profileData.bio,
+        avatar_url: profileData.avatar
+      });
+
+      if (error) {
+        console.error("Error guardando perfil:", error);
+        alert("❌ Error al guardar el perfil");
+        setIsSaving(false);
+        return;
+      }
+
       setIsSaving(false);
       setIsEditing(false);
       alert("✅ Perfil actualizado correctamente");
-    }, 1000);
+    } catch (err) {
+      console.error("Error:", err);
+      alert("❌ Error al guardar el perfil");
+      setIsSaving(false);
+    }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (passwordData.new !== passwordData.confirm) {
       alert("❌ Las contraseñas no coinciden");
       return;
@@ -108,18 +159,41 @@ export default function PerfilMaestro() {
       return;
     }
 
-    // En producción, validar current password y actualizar en backend
-    alert("✅ Contraseña actualizada correctamente");
-    setPasswordData({ current: "", new: "", confirm: "" });
+    try {
+      const { error } = await AuthService.updatePassword(passwordData.new);
+      
+      if (error) {
+        alert("❌ Error al actualizar contraseña");
+        return;
+      }
+
+      alert("✅ Contraseña actualizada correctamente");
+      setPasswordData({ current: "", new: "", confirm: "" });
+    } catch (err) {
+      alert("❌ Error al actualizar contraseña");
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm("¿Cerrar sesión?")) {
-      localStorage.removeItem("adminAuth");
-      localStorage.removeItem("adminSession");
+      await AuthService.logout();
       router.push("/Suafazon");
     }
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <CustomCursor />
+        <FloatingParticles />
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-gold animate-spin mx-auto mb-4" />
+          <p className="text-gold">Cargando perfil...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">

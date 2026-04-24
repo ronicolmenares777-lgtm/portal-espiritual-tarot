@@ -91,7 +91,7 @@ export const AuthService = {
   },
 
   /**
-   * Cambiar contraseña
+   * Actualizar contraseña del usuario autenticado
    */
   async updatePassword(newPassword: string) {
     const { data, error } = await supabase.auth.updateUser({
@@ -99,12 +99,12 @@ export const AuthService = {
     });
 
     if (error) {
-      console.error("Error cambiando contraseña:", error);
-      return { user: null, error };
+      console.error("Error actualizando contraseña:", error);
+      return { error };
     }
 
     console.log("✅ Contraseña actualizada");
-    return { user: data.user, error: null };
+    return { data, error: null };
   },
 
   /**
