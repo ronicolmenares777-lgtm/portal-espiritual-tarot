@@ -34,6 +34,7 @@ import {
   Phone
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 type Lead = Database["public"]["Tables"]["leads"]["Row"];
 

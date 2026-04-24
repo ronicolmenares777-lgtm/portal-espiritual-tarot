@@ -1,140 +1,76 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import { ChatMaestro } from "@/components/ChatMaestro";
 import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
-import { ArrowLeft, Send, Sparkles, Clock, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
-import { MessageService } from "@/services/messageService";
-import { ProfileService } from "@/services/profileService";
-import type { Database } from "@/integrations/supabase/types";
-
-type Message = Database["public"]["Tables"]["messages"]["Row"];
+import { Sparkles } from "lucide-react";
 
 export default function ChatUsuario() {
   const router = useRouter();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [isSending, setIsSending] = useState(false);
+  const [userAuth, setUserAuth] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
-  const [currentLeadId, setCurrentLeadId] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    const loadData = async () => {
-      const leadId = localStorage.getItem("currentLeadId");
-      if (!leadId) {
-        console.error("No hay leadId");
-        setIsLoading(false);
-        return;
-      }
-
-      setCurrentLeadId(leadId);
-      setIsLoading(true);
-
-      // Cargar mensajes
-      const messagesData = await MessageService.getByLeadId(leadId);
-      setMessages(messagesData);
-
-      // Cargar perfil del maestro
-      const { data: profiles } = await ProfileService.getAll();
-      if (profiles && profiles.length > 0) {
-        const maestro = profiles[0];
-        if (maestro.avatar_url) {
-          setMaestroAvatar(maestro.avatar_url);
-        }
-      }
-
-      setIsLoading(false);
-
-      // Suscribirse a cambios
-      const subscription = MessageService.subscribeToMessages(leadId, (newMsg) => {
-        setMessages((prev) => {
-          const exists = prev.some((m) => m.id === newMsg.id);
-          if (exists) return prev;
-          return [...prev, newMsg];
-        });
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
-    };
-
-    loadData();
-  }, []);
-
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !currentLeadId) return;
-
-    const messageText = newMessage.trim();
-    setNewMessage("");
-    setIsSending(true);
+    // Obtener datos del usuario desde localStorage
+    const auth = localStorage.getItem("userAuth");
+    
+    if (!auth) {
+      console.log("⚠️ No hay sesión de usuario, redirigiendo...");
+      router.replace("/");
+      return;
+    }
 
     try {
-      const createdMessage = await MessageService.create({
-        lead_id: currentLeadId,
-        text: messageText,
-        is_from_maestro: false,
-      });
-
-      if (createdMessage) {
-        setMessages((prev) => [...prev, createdMessage]);
-      }
-
-      setIsSending(false);
+      const userData = JSON.parse(auth);
+      console.log("✅ Usuario autenticado:", userData);
+      setUserAuth(userData);
+      setIsLoading(false);
     } catch (error) {
-      console.error("Error enviando mensaje:", error);
-      setNewMessage(messageText);
-      setIsSending(false);
+      console.error("Error parseando userAuth:", error);
+      router.replace("/");
     }
-  };
+  }, [router]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <SEO title="Chat - Portal Espiritual" />
+      <>
+        <SEO title="Cargando..." />
         <CustomCursor />
         <FloatingParticles />
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-gold animate-spin mx-auto mb-4" />
-          <p className="text-gold">Conectando con el maestro...</p>
+        
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center">
+            <Sparkles className="w-12 h-12 text-gold mx-auto mb-4 animate-pulse" />
+            <p className="text-foreground/80">Cargando tu consulta...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
-  if (!currentLeadId) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
-        <SEO title="Chat - Portal Espiritual" />
-        <CustomCursor />
-        <FloatingParticles />
-        <div className="text-center max-w-md">
-          <Sparkles className="w-16 h-16 text-gold mx-auto mb-4" />
-          <h2 className="text-2xl font-serif text-gold mb-2">
-            Sesión no encontrada
-          </h2>
-          <p className="text-foreground/60 mb-6">
-            Por favor, completa primero la lectura de tarot para acceder al chat.
-          </p>
-          <button
-            onClick={() => router.push("/")}
-            className="px-6 py-3 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all"
-          >
-            Iniciar lectura
-          </button>
-        </div>
-      </div>
-    );
+  if (!userAuth) {
+    return null;
   }
+
+  return (
+    <>
+      <SEO 
+        title="Tu Consulta Espiritual"
+        description="Continúa tu conversación con el maestro espiritual"
+      />
+      <CustomCursor />
+      <FloatingParticles />
+
+      <div className="min-h-screen bg-background">
+        <ChatMaestro
+          userName={userAuth.name}
+          userPhone={userAuth.country_code + userAuth.whatsapp}
+          userProblem={userAuth.problem}
+          userCard={userAuth.selected_cards?.[0] || ""}
+          onBack={() => router.push("/")}
+        />
+      </div>
+    </>
+  );
 }
