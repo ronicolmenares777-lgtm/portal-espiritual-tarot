@@ -301,9 +301,12 @@ export default function Home() {
                       type="text"
                       required
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData(prev => ({ ...prev, name: value }));
+                      }}
                       placeholder={nombrePlaceholder}
-                      className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
+                      className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 backdrop-blur-sm"
                     />
                   </div>
 
@@ -315,8 +318,11 @@ export default function Home() {
                     <div className="flex gap-2">
                       <select
                         value={formData.countryCode}
-                        onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
-                        className="px-3 bg-muted/50 border border-gold/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setFormData(prev => ({ ...prev, countryCode: value }));
+                        }}
+                        className="px-3 bg-muted/50 border border-gold/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 backdrop-blur-sm"
                       >
                         <option value="+1">🇺🇸 +1</option>
                         <option value="+52">🇲🇽 +52</option>
@@ -329,9 +335,12 @@ export default function Home() {
                         type="tel"
                         required
                         value={formData.whatsapp}
-                        onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") })}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "");
+                          setFormData(prev => ({ ...prev, whatsapp: value }));
+                        }}
                         placeholder="1234567890"
-                        className="flex-1 bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
+                        className="flex-1 bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 backdrop-blur-sm"
                       />
                     </div>
                   </div>
@@ -345,9 +354,12 @@ export default function Home() {
                       rows={4}
                       required
                       value={formData.problem}
-                      onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData(prev => ({ ...prev, problem: value }));
+                      }}
                       placeholder="Comparte tu intención con el cosmos..."
-                      className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none backdrop-blur-sm"
+                      className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 resize-none backdrop-blur-sm"
                     />
                   </div>
 

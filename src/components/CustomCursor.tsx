@@ -48,19 +48,21 @@ export function CustomCursor() {
   return (
     <>
       <div
-        className="fixed w-2 h-2 rounded-full bg-gold pointer-events-none z-50 mix-blend-screen transition-transform duration-100"
+        className="fixed w-2 h-2 rounded-full bg-gold pointer-events-none z-50 mix-blend-screen"
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
           transform: 'translate(-50%, -50%)',
+          transition: 'none',
         }}
       />
       <div
-        className="fixed w-8 h-8 rounded-full border border-gold/50 pointer-events-none z-50 transition-all duration-300"
+        className="fixed w-8 h-8 rounded-full border border-gold/50 pointer-events-none z-50"
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
           transform: 'translate(-50%, -50%)',
+          transition: 'none',
         }}
       />
     </>

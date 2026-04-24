@@ -102,6 +102,7 @@ export const MessageService = {
 
   /**
    * Suscribirse a nuevos mensajes en tiempo real
+   * ORDEN CORRECTO: crear canal → .on() → .subscribe()
    */
   subscribeToMessages(leadId: string, callback: (message: Message) => void) {
     const subscription = supabase
