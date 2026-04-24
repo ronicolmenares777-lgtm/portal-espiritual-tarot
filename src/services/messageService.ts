@@ -12,7 +12,7 @@ export const MessageService = {
   /**
    * Obtener mensajes de un lead
    */
-  async getByLeadId(leadId: string): Promise<{ data: Message[]; error: any }> {
+  async getByLeadId(leadId: string): Promise<Message[]> {
     const { data, error } = await supabase
       .from("messages")
       .select("*")
@@ -21,16 +21,16 @@ export const MessageService = {
 
     if (error) {
       console.error("Error obteniendo mensajes:", error);
-      return { data: [], error };
+      return [];
     }
 
-    return { data: data || [], error: null };
+    return data || [];
   },
 
   /**
    * Crear un nuevo mensaje
    */
-  async create(message: MessageInsert): Promise<{ data: Message | null; error: any }> {
+  async create(message: MessageInsert): Promise<Message | null> {
     const { data, error } = await supabase
       .from("messages")
       .insert([message])
@@ -39,17 +39,17 @@ export const MessageService = {
 
     if (error) {
       console.error("Error creando mensaje:", error);
-      return { data: null, error };
+      throw error;
     }
 
-    console.log("✅ Mensaje creado");
-    return { data, error: null };
+    console.log("✅ Mensaje creado:", data.id);
+    return data;
   },
 
   /**
    * Marcar mensajes como leídos
    */
-  async markAsRead(leadId: string): Promise<{ success: boolean; error: any }> {
+  async markAsRead(leadId: string): Promise<void> {
     const { error } = await supabase
       .from("messages")
       .update({ read_at: new Date().toISOString() })
@@ -58,70 +58,39 @@ export const MessageService = {
 
     if (error) {
       console.error("Error marcando mensajes como leídos:", error);
-      return { success: false, error };
+      throw error;
     }
 
-    return { success: true, error: null };
-  },
-
-  /**
-   * Obtener conteo de mensajes no leídos por lead
-   */
-  async getUnreadCount(leadId: string): Promise<number> {
-    const { count, error } = await supabase
-      .from("messages")
-      .select("*", { count: "exact", head: true })
-      .eq("lead_id", leadId)
-      .is("read_at", null)
-      .eq("is_from_maestro", false);
-
-    if (error) {
-      console.error("Error contando mensajes no leídos:", error);
-      return 0;
-    }
-
-    return count || 0;
-  },
-
-  /**
-   * Eliminar un mensaje
-   */
-  async delete(id: string): Promise<{ success: boolean; error: any }> {
-    const { error } = await supabase
-      .from("messages")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      console.error("Error eliminando mensaje:", error);
-      return { success: false, error };
-    }
-
-    return { success: true, error: null };
+    console.log("✅ Mensajes marcados como leídos");
   },
 
   /**
    * Suscribirse a nuevos mensajes en tiempo real
-   * ORDEN CORRECTO: crear canal → .on() → .subscribe()
+   * ORDEN CRÍTICO: .channel() → .on() → .subscribe()
    */
-  subscribeToMessages(leadId: string, callback: (message: Message) => void) {
-    const subscription = supabase
-      .channel(`messages:lead_id=eq.${leadId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `lead_id=eq.${leadId}`
-        },
-        (payload) => {
-          console.log("📨 Nuevo mensaje en tiempo real:", payload.new);
-          callback(payload.new as Message);
-        }
-      )
-      .subscribe();
+  subscribeToMessages(leadId: string, onNewMessage: (message: Message) => void) {
+    console.log("🔔 Iniciando suscripción realtime para lead:", leadId);
 
-    return subscription;
+    const channel = supabase.channel(`messages:${leadId}`);
+    
+    channel.on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `lead_id=eq.${leadId}`,
+      },
+      (payload) => {
+        console.log("📨 Nuevo mensaje via realtime:", payload.new);
+        onNewMessage(payload.new as Message);
+      }
+    );
+
+    channel.subscribe((status) => {
+      console.log("📡 Estado de suscripción:", status);
+    });
+
+    return channel;
   }
 };

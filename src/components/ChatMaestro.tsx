@@ -35,6 +35,8 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
 
   // Cargar datos y suscribirse a Supabase
   useEffect(() => {
+    let subscription: any = null;
+
     const loadData = async () => {
       console.log("🔄 ChatMaestro: Iniciando...");
       
@@ -80,25 +82,18 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         setLeadId(currentLeadId);
 
         // Cargar mensajes existentes
-        const { data: messagesData } = await MessageService.getByLeadId(currentLeadId);
-        if (messagesData) {
-          console.log("✅ Mensajes cargados:", messagesData.length);
-          setMessages(messagesData);
-        }
+        const messagesData = await MessageService.getByLeadId(currentLeadId);
+        console.log("✅ Mensajes cargados:", messagesData.length);
+        setMessages(messagesData);
 
         // Suscribirse a cambios en tiempo real
-        const subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
+        subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
           setMessages((prev) => {
             const exists = prev.some((m) => m.id === newMsg.id);
             if (exists) return prev;
             return [...prev, newMsg];
           });
         });
-
-        // Cleanup
-        return () => {
-          subscription.unsubscribe();
-        };
       }
 
       // Cargar avatar del maestro
@@ -114,6 +109,14 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
     };
 
     loadData();
+
+    // Cleanup: cancelar suscripción al desmontar
+    return () => {
+      if (subscription) {
+        console.log("🔌 Cancelando suscripción realtime...");
+        subscription.unsubscribe();
+      }
+    };
   }, [userName, userPhone, userProblem, userCard]);
 
   // Enviar mensaje a Supabase

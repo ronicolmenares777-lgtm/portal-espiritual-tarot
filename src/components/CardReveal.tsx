@@ -20,10 +20,10 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
       setIsFlipped(true);
     }, 800);
 
-    // Completar después de mostrar la carta
+    // Completar después de mostrar la carta - Aumentado a 5 segundos
     const completeTimer = setTimeout(() => {
       onComplete();
-    }, 3000); // Reducido de 5000ms a 3000ms (3 segundos)
+    }, 5000); // Cambiado de 3000ms a 5000ms
 
     return () => {
       clearTimeout(flipTimer);

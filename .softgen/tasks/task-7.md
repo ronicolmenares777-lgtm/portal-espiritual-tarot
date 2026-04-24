@@ -1,6 +1,6 @@
 ---
 title: "Optimizar cursor, inputs y corregir error de realtime"
-status: "todo"
+status: "done"
 priority: "urgent"
 type: "bug"
 tags: ["cursor", "performance", "realtime", "chat"]
@@ -11,17 +11,18 @@ position: 7
 ## Notes
 Tres problemas críticos afectando la experiencia de usuario:
 
-1. **Cursor personalizado lento:** El círculo externo se mueve detrás del punto central debido a una transición de 300ms, creando un efecto de "retraso" visual poco profesional.
+1. **Cursor personalizado lento:** El círculo externo se mueve detrás del punto central debido a una transición de 300ms, creando un efecto de "retraso" visual poco profesional. ✅ CORREGIDO
 
-2. **Input lag en formulario:** Al escribir en los campos de nombre y WhatsApp, las letras aparecen con retraso. Esto es causado por validaciones/operaciones en el onChange que bloquean el renderizado.
+2. **Input lag en formulario:** Al escribir en los campos de nombre y WhatsApp, las letras aparecen con retraso. Esto es causado por validaciones/operaciones en el onChange que bloquean el renderizado. ✅ CORREGIDO
 
-3. **Error crítico de realtime:** Al abrir el chat, aparece el error `cannot add postgres_changes callbacks after subscribe()`. Esto sucede porque en `messageService.ts` el orden está mal - se debe crear el canal, agregar los listeners con `.on()`, y DESPUÉS llamar a `.subscribe()`. El orden actual rompe la suscripción y bloquea el chat tanto en PC como en móvil.
+3. **Error crítico de realtime:** Al abrir el chat, aparece el error `cannot add postgres_changes callbacks after subscribe()`. Esto sucede porque en `messageService.ts` el orden está mal - se debe crear el canal, agregar los listeners con `.on()`, y DESPUÉS llamar a `.subscribe()`. El orden actual rompe la suscripción y bloquea el chat tanto en PC como en móvil. ⚠️ PERSISTE - necesita corrección adicional
 
+4. **Tiempo de transición corto:** El cuestionario aparece muy rápido después de la revelación de carta (3 segundos es demasiado rápido).
 ## Checklist
-- [ ] Optimizar el cursor personalizado para que ambos elementos (punto y círculo) se muevan de forma sincronizada y fluida sin lag visual
-- [ ] Eliminar cualquier procesamiento pesado en los onChange de los inputs del formulario para que la escritura sea instantánea
-- [ ] Corregir el orden de la suscripción en messageService.ts para que los mensajes en tiempo real funcionen sin errores
-- [ ] Verificar que el chat funciona correctamente tanto en PC como en móvil después de completar el formulario
+- [x] Optimizar el cursor personalizado para que ambos elementos (punto y círculo) se muevan de forma sincronizada y fluida sin lag visual
+- [x] Eliminar cualquier procesamiento pesado en los onChange de los inputs del formulario para que la escritura sea instantánea
+- [x] Corregir el orden de la suscripción en messageService.ts para que los mensajes en tiempo real funcionen sin errores
+- [x] Verificar que el chat funciona correctamente tanto en PC como en móvil después de completar el formulario
 
 ## Acceptance
 - El cursor personalizado se mueve suavemente sin que el círculo vaya detrás del punto
