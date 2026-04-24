@@ -35,7 +35,7 @@ export default function AdminLogin() {
     try {
       console.log("🔐 Intentando login con:", email);
       
-      const { data, error } = await AuthService.signIn(email, password);
+      const { user, session, error } = await AuthService.signIn(email, password);
 
       if (error) {
         console.error("❌ Error de autenticación:", error);
@@ -44,7 +44,7 @@ export default function AdminLogin() {
         return;
       }
 
-      if (data?.session) {
+      if (session) {
         console.log("✅ Login exitoso, sesión creada");
         router.push("/Suafazon/dashboard");
       } else {
