@@ -13,7 +13,8 @@ export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Verificar si ya está autenticado
   useEffect(() => {
@@ -28,28 +29,33 @@ export default function AdminLogin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError("");
+    setLoading(true);
 
     try {
-      // Login con Supabase Auth
-      const { user, session, error } = await AuthService.signIn(email, password);
+      console.log("🔐 Intentando login con:", email);
+      
+      const { data, error } = await AuthService.signIn(email, password);
 
       if (error) {
-        alert("❌ Credenciales incorrectas");
-        setIsLoading(false);
+        console.error("❌ Error de autenticación:", error);
+        setError(error.message || "Credenciales inválidas");
+        setLoading(false);
         return;
       }
 
-      if (user && session) {
-        console.log("✅ Login exitoso con Supabase:", user.email);
-        
-        // Redirigir al dashboard
+      if (data?.session) {
+        console.log("✅ Login exitoso, sesión creada");
         router.push("/Suafazon/dashboard");
+      } else {
+        console.error("❌ No se creó sesión");
+        setError("Error al iniciar sesión");
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error en login:", error);
-      alert("❌ Error al iniciar sesión");
-      setIsLoading(false);
+    } catch (err) {
+      console.error("❌ Error en handleLogin:", err);
+      setError("Error al iniciar sesión. Intenta de nuevo.");
+      setLoading(false);
     }
   };
 
@@ -106,6 +112,13 @@ export default function AdminLogin() {
 
             {/* Formulario */}
             <form onSubmit={handleLogin} className="space-y-6">
+              {/* Mostrar error si existe */}
+              {error && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/50 text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+
               {/* Email */}
               <div className="space-y-2">
                 <label className="text-xs text-gold/80 tracking-[0.2em] uppercase font-medium">
@@ -132,6 +145,7 @@ export default function AdminLogin() {
                 </label>
                 <input
                   type="password"
+                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Tu clave sagrada..."
@@ -142,10 +156,10 @@ export default function AdminLogin() {
               {/* Botón de envío */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={loading}
                 className="w-full bg-gradient-to-r from-gold via-amber-400 to-gold text-black font-semibold py-4 rounded-xl tracking-wider uppercase transition-all duration-300 hover:shadow-[0_0_30px_hsl(var(--gold))] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? "ENTRANDO..." : "Entrar al Templo"}
+                {loading ? "ENTRANDO..." : "Entrar al Templo"}
               </button>
 
               {/* Volver */}
