@@ -72,6 +72,22 @@ export default function ChatPage() {
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Agregar atributo al body para cursor normal
+  useEffect(() => {
+    document.body.setAttribute("data-admin-page", "true");
+    return () => {
+      document.body.removeAttribute("data-admin-page");
+    };
+  }, []);
+
   // Referencias
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -114,10 +130,14 @@ export default function ChatPage() {
         const messagesData = await MessageService.getByLeadId(id);
         setMessages(messagesData);
 
-        // Cargar perfil del maestro
+        // Cargar perfil del maestro y su avatar
         const { data: profiles } = await ProfileService.getAll();
         if (profiles && profiles.length > 0) {
           setMaestroProfile(profiles[0]);
+          // Usar el avatar del perfil si existe
+          if (profiles[0].avatar_url) {
+            setMaestroAvatar(profiles[0].avatar_url);
+          }
         }
       } catch (error) {
         console.error("Error cargando datos:", error);

@@ -19,18 +19,20 @@ interface ChatMaestroProps {
 }
 
 export function ChatMaestro({ userName, userPhone, userProblem, userCard }: ChatMaestroProps) {
-  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
-  const [leadId, setLeadId] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [maestroAvatar, setMaestroAvatar] = useState<string>("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll
-  useEffect(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages]);
 
   // Cargar datos y suscribirse a Supabase
@@ -86,7 +88,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         console.log("✅ Mensajes cargados:", messagesData.length);
         setMessages(messagesData);
 
-        // Suscribirse a cambios en tiempo real - CORREGIDO
+        // Suscribirse a cambios en tiempo real
         console.log("🔔 Configurando suscripción realtime para lead:", currentLeadId);
         subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
           console.log("📨 Nuevo mensaje recibido en ChatMaestro:", newMsg);
@@ -102,14 +104,16 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         });
         
         console.log("✅ Suscripción realtime configurada");
-      }
 
-      // Cargar avatar del maestro
-      const { data: profiles } = await ProfileService.getAll();
-      if (profiles && profiles.length > 0) {
-        const maestro = profiles[0];
-        if (maestro.avatar_url) {
-          setMaestroAvatar(maestro.avatar_url);
+        // Cargar avatar del maestro desde el perfil
+        const { data: profiles } = await ProfileService.getAll();
+        if (profiles && profiles.length > 0) {
+          const maestro = profiles[0];
+          console.log("👤 Perfil del maestro:", maestro);
+          if (maestro.avatar_url) {
+            console.log("✅ Avatar del maestro cargado:", maestro.avatar_url);
+            setMaestroAvatar(maestro.avatar_url);
+          }
         }
       }
 

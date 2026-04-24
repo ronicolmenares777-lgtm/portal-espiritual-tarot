@@ -107,3 +107,28 @@
     }
   }
 }
+
+/* Ocultar cursor SOLO en páginas públicas (no en /Suafazon) */
+body:not([data-admin-page]) {
+  cursor: none;
+}
+
+/* Cursor normal visible en páginas de admin */
+body[data-admin-page] {
+  cursor: default;
+}
+
+/* Cursor pointer normal en elementos interactivos de admin */
+body[data-admin-page] button,
+body[data-admin-page] a,
+body[data-admin-page] input,
+body[data-admin-page] textarea,
+body[data-admin-page] select,
+body[data-admin-page] [role="button"] {
+  cursor: pointer;
+}
+
+body[data-admin-page] input,
+body[data-admin-page] textarea {
+  cursor: text;
+}

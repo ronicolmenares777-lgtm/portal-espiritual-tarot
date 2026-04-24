@@ -40,7 +40,15 @@ type Lead = Database["public"]["Tables"]["leads"]["Row"];
 export default function Dashboard() {
   const router = useRouter();
   
-  // Verificar autenticación con Supabase
+  // Agregar atributo al body para cursor normal
+  useEffect(() => {
+    document.body.setAttribute("data-admin-page", "true");
+    return () => {
+      document.body.removeAttribute("data-admin-page");
+    };
+  }, []);
+
+  // Verificar autenticación
   useEffect(() => {
     const checkAuth = async () => {
       const isAuth = await AuthService.isAuthenticated();
