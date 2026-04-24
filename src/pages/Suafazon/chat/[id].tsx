@@ -97,79 +97,74 @@ export default function ChatPage() {
 
   // Cargar lead desde Supabase
   useEffect(() => {
-    if (!router.isReady) return;
+    const loadData = async () => {
+      if (!id || typeof id !== "string") return;
 
-    const { id } = router.query;
-    console.log("🔍 Buscando lead con ID:", id);
-    
-    if (!id || typeof id !== "string") {
-      console.log("⚠️ No hay ID válido en la URL");
-      setIsLoading(false);
-      return;
-    }
+      setIsLoading(true);
+      try {
+        // Cargar datos del lead
+        const leadData = await LeadService.getById(id);
+        if (leadData) {
+          setLead(leadData);
+        }
 
-    const loadLead = async () => {
-      const { data: leadData } = await LeadService.getById(id);
-      if (leadData) {
-        setLead(leadData);
-      }
-
-      // Cargar mensajes
-      const { data: messagesData } = await MessageService.getByLeadId(id);
-      if (messagesData) {
+        // Cargar mensajes
+        const messagesData = await MessageService.getByLeadId(id);
         setMessages(messagesData);
-      }
 
-      // Cargar avatar del maestro autenticado
-      const { data: profile } = await ProfileService.getCurrent();
-      if (profile?.avatar_url) {
-        setMaestroAvatar(profile.avatar_url);
+        // Cargar perfil del maestro
+        const profiles = await ProfileService.getAll();
+        if (profiles && profiles.length > 0) {
+          setMaestroProfile(profiles[0]);
+        }
+      } catch (error) {
+        console.error("Error cargando datos:", error);
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     };
 
-    loadLead();
+    loadData();
+  }, [id]);
 
-    // Suscribirse a nuevos mensajes en tiempo real
-    const subscription = MessageService.subscribeToMessages(id, (newMessage) => {
-      console.log("📩 Nuevo mensaje recibido:", newMessage);
-      setMessages(prev => [...prev, newMessage]);
-    });
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !id || typeof id !== "string") return;
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [router.isReady, router.query]);
+    const messageText = newMessage.trim();
+    setNewMessage("");
 
-  const handleSendMessage = async (text: string) => {
-    if (!text.trim() || !lead) return;
+    try {
+      const createdMessage = await MessageService.create({
+        lead_id: id,
+        text: messageText,
+        is_from_maestro: true,
+      });
 
-    const { data: newMessage, error } = await MessageService.create({
-      lead_id: lead.id,
-      text: text.trim(),
-      is_from_maestro: true
-    });
-
-    if (error) {
+      if (createdMessage) {
+        setMessages((prev) => [...prev, createdMessage]);
+      }
+    } catch (error) {
       console.error("Error enviando mensaje:", error);
-      alert("Error al enviar mensaje");
-      return;
-    }
-
-    console.log("✅ Mensaje enviado:", newMessage);
-    setMessageInput("");
-
-    // Actualizar estado del lead si es necesario
-    if (lead.status === "nuevo") {
-      await LeadService.updateStatus(lead.id, "enConversacion");
-      setLead({ ...lead, status: "enConversacion" });
+      setNewMessage(messageText);
     }
   };
 
-  const handleQuickResponse = (message: string) => {
-    handleSendMessage(message);
-    setShowQuickResponses(false);
+  const handleQuickResponse = async (text: string) => {
+    if (!id || typeof id !== "string") return;
+
+    try {
+      const createdMessage = await MessageService.create({
+        lead_id: id,
+        text,
+        is_from_maestro: true,
+      });
+
+      if (createdMessage) {
+        setMessages((prev) => [...prev, createdMessage]);
+      }
+    } catch (error) {
+      console.error("Error enviando respuesta rápida:", error);
+    }
   };
 
   const handleStatusChange = async (newStatus: Lead["status"]) => {
