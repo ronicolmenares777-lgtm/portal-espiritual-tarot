@@ -3,14 +3,13 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
 
-type Message = Database["public"]["Tables"]["messages"]["Row"];
-type MessageInsert = Database["public"]["Tables"]["messages"]["Insert"];
+export type Message = Tables<"messages">;
 
 export const MessageService = {
   /**
-   * Obtener mensajes de un lead
+   * Obtener todos los mensajes de un lead
    */
   async getByLeadId(leadId: string): Promise<Message[]> {
     const { data, error } = await supabase
@@ -21,7 +20,7 @@ export const MessageService = {
 
     if (error) {
       console.error("Error obteniendo mensajes:", error);
-      return [];
+      throw error;
     }
 
     return data || [];
@@ -30,7 +29,13 @@ export const MessageService = {
   /**
    * Crear un nuevo mensaje
    */
-  async create(message: MessageInsert): Promise<Message | null> {
+  async create(message: {
+    lead_id: string;
+    text: string;
+    is_from_maestro: boolean;
+    media_url?: string;
+    media_type?: string;
+  }): Promise<Message> {
     const { data, error } = await supabase
       .from("messages")
       .insert([message])
@@ -42,7 +47,6 @@ export const MessageService = {
       throw error;
     }
 
-    console.log("✅ Mensaje creado:", data.id);
     return data;
   },
 
@@ -52,9 +56,10 @@ export const MessageService = {
   async markAsRead(leadId: string): Promise<void> {
     const { error } = await supabase
       .from("messages")
-      .update({ read_at: new Date().toISOString() })
+      .update({ is_read: true })
       .eq("lead_id", leadId)
-      .is("read_at", null);
+      .eq("is_from_maestro", false)
+      .eq("is_read", false);
 
     if (error) {
       console.error("Error marcando mensajes como leídos:", error);
@@ -65,14 +70,19 @@ export const MessageService = {
   },
 
   /**
-   * Suscribirse a nuevos mensajes en tiempo real
-   * ORDEN CRÍTICO: .channel() → .on() → .subscribe()
+   * Suscribirse a mensajes en tiempo real
+   * ORDEN CORRECTO: channel() -> on() -> subscribe()
    */
-  subscribeToMessages(leadId: string, onNewMessage: (message: Message) => void) {
-    console.log("🔔 Iniciando suscripción realtime para lead:", leadId);
+  subscribeToMessages(
+    leadId: string,
+    callback: (message: Message) => void
+  ) {
+    console.log("🔔 Configurando suscripción realtime para lead:", leadId);
 
+    // PASO 1: Crear el canal
     const channel = supabase.channel(`messages:${leadId}`);
-    
+
+    // PASO 2: Agregar listener ANTES de subscribe
     channel.on(
       "postgres_changes",
       {
@@ -82,15 +92,16 @@ export const MessageService = {
         filter: `lead_id=eq.${leadId}`,
       },
       (payload) => {
-        console.log("📨 Nuevo mensaje via realtime:", payload.new);
-        onNewMessage(payload.new as Message);
+        console.log("📨 Nuevo mensaje recibido:", payload);
+        callback(payload.new as Message);
       }
     );
 
+    // PASO 3: Suscribirse AL FINAL
     channel.subscribe((status) => {
       console.log("📡 Estado de suscripción:", status);
     });
 
     return channel;
-  }
+  },
 };

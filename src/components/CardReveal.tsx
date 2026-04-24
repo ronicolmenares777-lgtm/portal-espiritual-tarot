@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import type { TarotCard } from "@/lib/tarotCards";
 
 interface CardRevealProps {
@@ -20,10 +20,10 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
       setIsFlipped(true);
     }, 800);
 
-    // Completar después de mostrar la carta - Aumentado a 5 segundos
+    // Completar después de mostrar la carta - 4 segundos
     const completeTimer = setTimeout(() => {
       onComplete();
-    }, 5000); // Cambiado de 3000ms a 5000ms
+    }, 4000); // 4 segundos para mejor ritmo
 
     return () => {
       clearTimeout(flipTimer);
@@ -41,24 +41,24 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 relative overflow-hidden">
       {/* Título */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="text-center space-y-4 mb-12"
+        className="text-center space-y-2 sm:space-y-4 mb-8 sm:mb-12"
       >
-        <h1 className="font-serif text-4xl md:text-6xl text-gold tracking-wider">
+        <h1 className="font-serif text-3xl sm:text-4xl md:text-6xl text-gold tracking-wider">
           REVELA TU DESTINO
         </h1>
-        <p className="text-gold/70 text-sm tracking-[0.3em] uppercase">
+        <p className="text-gold/70 text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em] uppercase">
           El cosmos ha hablado a través de tu intención sagrada
         </p>
       </motion.div>
 
-      {/* Contenedor de cartas */}
-      <div className="flex gap-6 md:gap-8 items-center justify-center mb-12">
+      {/* Contenedor de cartas - Responsive mejorado */}
+      <div className="flex gap-4 sm:gap-6 md:gap-8 items-center justify-center mb-8 sm:mb-12">
         {[0, 1, 2].map((index) => (
           <motion.div
             key={index}
@@ -80,7 +80,7 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
             }}
           >
             <motion.div
-              className="relative w-40 h-60 md:w-48 md:h-72"
+              className="relative w-28 h-40 sm:w-40 sm:h-60 md:w-48 md:h-72"
               style={{
                 transformStyle: "preserve-3d",
               }}
@@ -99,11 +99,11 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
                   backfaceVisibility: "hidden",
                 }}
               >
-                <div className="w-full h-full bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 rounded-2xl border-2 border-gold/30 flex items-center justify-center relative overflow-hidden shadow-2xl">
+                <div className="w-full h-full bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 rounded-xl sm:rounded-2xl border border-gold/30 sm:border-2 flex items-center justify-center relative overflow-hidden shadow-2xl">
                   {/* Patrón de fondo místico */}
                   <div className="absolute inset-0 opacity-20">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                      <svg width="120" height="120" viewBox="0 0 120 120">
+                      <svg width="80" height="80" viewBox="0 0 120 120" className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24">
                         <circle cx="60" cy="60" r="50" fill="none" stroke="hsl(var(--gold))" strokeWidth="2"/>
                         <circle cx="60" cy="60" r="40" fill="none" stroke="hsl(var(--gold))" strokeWidth="1.5"/>
                         <path d="M60 10 L60 110 M10 60 L110 60" stroke="hsl(var(--gold))" strokeWidth="1"/>
@@ -113,7 +113,7 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
                   </div>
                   
                   {/* Pentagrama central */}
-                  <svg width="80" height="80" viewBox="0 0 100 100" className="relative z-10">
+                  <svg width="60" height="60" viewBox="0 0 100 100" className="relative z-10 w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20">
                     <path
                       d="M50 10 L61 40 L92 40 L67 58 L78 88 L50 70 L22 88 L33 58 L8 40 L39 40 Z"
                       fill="none"
@@ -138,7 +138,7 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6, duration: 0.5 }}
-                    className="w-full h-full bg-white rounded-2xl overflow-hidden relative shadow-2xl"
+                    className="w-full h-full bg-white rounded-xl sm:rounded-2xl overflow-hidden relative shadow-2xl"
                   >
                     {/* Imagen real del tarot */}
                     {!imageError ? (
@@ -150,11 +150,11 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
                         onLoad={handleImageLoad}
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 p-4">
-                        <div className="text-center space-y-2">
-                          <div className="text-6xl">🌟</div>
-                          <p className="font-serif text-amber-900 text-lg">{card.name}</p>
-                          <p className="text-amber-700 text-sm">{card.number}</p>
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 p-3 sm:p-4">
+                        <div className="text-center space-y-1 sm:space-y-2">
+                          <div className="text-4xl sm:text-5xl md:text-6xl">🌟</div>
+                          <p className="font-serif text-amber-900 text-sm sm:text-base md:text-lg">{card.name}</p>
+                          <p className="text-amber-700 text-xs sm:text-sm">{card.number}</p>
                         </div>
                       </div>
                     )}
@@ -177,7 +177,7 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
                     />
 
                     {/* Borde brillante */}
-                    <div className="absolute inset-0 rounded-2xl border-2 border-gold/50 pointer-events-none shadow-[0_0_30px_rgba(218,165,32,0.5)]" />
+                    <div className="absolute inset-0 rounded-xl sm:rounded-2xl border border-gold/50 sm:border-2 pointer-events-none shadow-[0_0_20px_rgba(218,165,32,0.4)] sm:shadow-[0_0_30px_rgba(218,165,32,0.5)]" />
                   </motion.div>
                 )}
               </div>
@@ -189,30 +189,30 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 0.5, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.5 }}
-                className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-32 h-8 bg-gold/20 rounded-full blur-xl"
+                className="absolute -bottom-2 sm:-bottom-4 left-1/2 -translate-x-1/2 w-24 h-6 sm:w-32 sm:h-8 bg-gold/20 rounded-full blur-xl"
               />
             )}
           </motion.div>
         ))}
       </div>
 
-      {/* Mensaje de la carta */}
+      {/* Mensaje de la carta - Responsive mejorado */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: isFlipped ? 1 : 0, y: isFlipped ? 0 : 30 }}
         transition={{ delay: 1.5, duration: 0.8 }}
-        className="max-w-2xl text-center space-y-6"
+        className="max-w-2xl text-center space-y-3 sm:space-y-6 px-4"
       >
-        <div className="space-y-2">
-          <h2 className="font-serif text-3xl text-gold">
+        <div className="space-y-1 sm:space-y-2">
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl text-gold">
             {card.name}
           </h2>
-          <p className="text-gold/60 text-sm tracking-[0.2em]">
+          <p className="text-gold/60 text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em]">
             {card.number}
           </p>
         </div>
         
-        <p className="text-foreground/90 text-lg leading-relaxed">
+        <p className="text-foreground/90 text-sm sm:text-base md:text-lg leading-relaxed">
           {card.loveMessage}
         </p>
 
@@ -220,7 +220,7 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2.5, duration: 1 }}
-          className="text-gold/70 text-sm italic flex items-center justify-center gap-2"
+          className="text-gold/70 text-xs sm:text-sm italic flex items-center justify-center gap-2"
         >
           ✨ Los astros confirman: El amor verdadero regresará ✨
         </motion.p>
@@ -262,8 +262,8 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
             key={i}
             className="absolute w-1 h-1 bg-gold/40 rounded-full"
             initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
+              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
+              y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
               opacity: 0,
             }}
             animate={{
@@ -284,7 +284,7 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 3, duration: 1 }}
-        className="absolute bottom-12 text-gold/50 text-xs tracking-[0.3em] uppercase"
+        className="absolute bottom-8 sm:bottom-12 text-gold/50 text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.3em] uppercase"
       >
         Interpretando las fuerzas cósmicas...
       </motion.p>
