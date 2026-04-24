@@ -23,6 +23,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
   const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
   const [leadId, setLeadId] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -34,67 +35,60 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
   // Cargar datos y suscribirse a Supabase
   useEffect(() => {
     const loadData = async () => {
-      console.log("🔄 ChatMaestro: Cargando datos iniciales...");
+      console.log("🔄 ChatMaestro: Iniciando...");
       
-      // Obtener lead ID del localStorage
-      const currentLeadId = localStorage.getItem("currentLeadId");
-      console.log("🆔 Lead ID del localStorage:", currentLeadId);
+      // Esperar a que el leadId esté disponible (máximo 3 segundos)
+      let attempts = 0;
+      let currentLeadId = null;
       
-      if (currentLeadId) {
-        setLeadId(currentLeadId);
-        console.log("✅ Lead ID establecido:", currentLeadId);
-
-        // Cargar mensajes existentes
-        console.log("📥 Cargando mensajes existentes...");
-        const { data: messagesData, error: messagesError } = await MessageService.getByLeadId(currentLeadId);
+      while (!currentLeadId && attempts < 6) {
+        currentLeadId = localStorage.getItem("currentLeadId");
+        if (currentLeadId) break;
         
-        if (messagesError) {
-          console.error("❌ Error cargando mensajes:", messagesError);
-        } else {
-          console.log("✅ Mensajes cargados:", messagesData?.length || 0);
-          if (messagesData) {
-            setMessages(messagesData);
-          }
-        }
+        console.log(`⏳ Intento ${attempts + 1}/6 - Esperando leadId...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+      
+      if (!currentLeadId) {
+        console.error("❌ No se pudo obtener leadId después de 6 intentos");
+        setIsReady(true); // Mostrar chat de todos modos
+        return;
+      }
+      
+      console.log("✅ Lead ID obtenido:", currentLeadId);
+      setLeadId(currentLeadId);
 
-        // Suscribirse a nuevos mensajes en tiempo real
-        console.log("🔔 Suscribiéndose a mensajes en tiempo real...");
-        const subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
-          console.log("📨 Nuevo mensaje recibido:", newMsg);
-          setMessages((prev) => {
-            const exists = prev.some((m) => m.id === newMsg.id);
-            if (exists) {
-              console.log("⚠️ Mensaje duplicado, ignorando");
-              return prev;
-            }
-            console.log("➕ Añadiendo nuevo mensaje");
-            return [...prev, newMsg];
-          });
-        });
-
-        // Cleanup
-        return () => {
-          console.log("🧹 Limpiando suscripción");
-          subscription.unsubscribe();
-        };
+      // Cargar mensajes existentes
+      const { data: messagesData } = await MessageService.getByLeadId(currentLeadId);
+      if (messagesData) {
+        console.log("✅ Mensajes cargados:", messagesData.length);
+        setMessages(messagesData);
       }
 
-      // Cargar avatar del maestro (siempre)
-      console.log("👤 Cargando avatar del maestro...");
-      const { data: profiles, error: profileError } = await ProfileService.getAll();
-      
-      if (profileError) {
-        console.error("❌ Error cargando perfil:", profileError);
-      } else if (profiles && profiles.length > 0) {
+      // Cargar avatar del maestro
+      const { data: profiles } = await ProfileService.getAll();
+      if (profiles && profiles.length > 0) {
         const maestro = profiles[0];
-        console.log("✅ Perfil del maestro cargado:", maestro.email);
         if (maestro.avatar_url) {
-          console.log("🖼️ Avatar URL:", maestro.avatar_url);
           setMaestroAvatar(maestro.avatar_url);
         }
       }
 
-      console.log("✅ ChatMaestro: Inicialización completa");
+      setIsReady(true);
+
+      // Suscribirse a cambios en tiempo real
+      const subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
+        setMessages((prev) => {
+          const exists = prev.some((m) => m.id === newMsg.id);
+          if (exists) return prev;
+          return [...prev, newMsg];
+        });
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
     };
 
     loadData();
@@ -102,67 +96,27 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
 
   // Enviar mensaje a Supabase
   const handleSendMessage = async () => {
-    console.log("📤 handleSendMessage llamado");
-    console.log("📝 Mensaje:", message);
-    console.log("🆔 Lead ID actual:", leadId);
-    
-    if (!message.trim()) {
-      console.warn("⚠️ Mensaje vacío");
-      return;
-    }
-    
-    // Reintentar obtener leadId del localStorage si no está disponible
-    let currentLeadId = leadId;
-    if (!currentLeadId) {
-      console.log("🔄 Reintentando obtener leadId del localStorage...");
-      currentLeadId = localStorage.getItem("currentLeadId");
-      if (currentLeadId) {
-        console.log("✅ Lead ID encontrado en reintento:", currentLeadId);
-        setLeadId(currentLeadId);
-      }
-    }
-    
-    if (!currentLeadId) {
-      console.error("❌ No hay leadId disponible - esperando...");
-      // NO mostrar alert - solo esperar y reintentar
-      setTimeout(() => {
-        const retryLeadId = localStorage.getItem("currentLeadId");
-        if (retryLeadId) {
-          console.log("✅ Lead ID obtenido en segundo reintento");
-          setLeadId(retryLeadId);
-          // Reintentar enviar el mensaje
-          handleSendMessage();
-        }
-      }, 1000);
-      return;
-    }
+    if (!message.trim() || !leadId || isSending) return;
 
     setIsSending(true);
 
     try {
-      console.log("🔄 Creando mensaje en Supabase...");
       const { data, error } = await MessageService.create({
-        lead_id: currentLeadId,
+        lead_id: leadId,
         text: message.trim(),
         is_from_maestro: false
       });
 
       if (error) {
-        console.error("❌ Error de Supabase:", error);
+        console.error("❌ Error:", error);
         setIsSending(false);
         return;
       }
 
-      console.log("✅ Mensaje creado:", data);
-
       if (data) {
         setMessages((prev) => {
           const exists = prev.some((m) => m.id === data.id);
-          if (exists) {
-            console.log("⚠️ Mensaje ya existe, no se duplica");
-            return prev;
-          }
-          console.log("➕ Añadiendo mensaje a la lista");
+          if (exists) return prev;
           return [...prev, data];
         });
       }
@@ -170,10 +124,21 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
       setMessage("");
       setIsSending(false);
     } catch (err) {
-      console.error("❌ Error inesperado:", err);
+      console.error("❌ Error:", err);
       setIsSending(false);
     }
   };
+
+  if (!isReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gold">Conectando con el maestro...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -255,22 +220,20 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  console.log("⌨️ Enter presionado, enviando mensaje...");
                   handleSendMessage();
                 }
               }}
               placeholder="Escribe un mensaje..."
-              disabled={isSending}
+              disabled={isSending || !leadId}
               className="flex-1 bg-muted/50 border border-border rounded-full px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all disabled:opacity-50"
             />
             
             <button 
               onClick={(e) => {
                 e.preventDefault();
-                console.log("🖱️ Botón clicked, enviando mensaje...");
                 handleSendMessage();
               }}
-              disabled={isSending || !message.trim()}
+              disabled={isSending || !message.trim() || !leadId}
               className="p-2 hover:bg-gold/10 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-5 h-5 text-gold" />

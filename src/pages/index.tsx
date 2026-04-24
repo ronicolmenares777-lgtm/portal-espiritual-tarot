@@ -64,7 +64,7 @@ export default function Home() {
     const interval = setInterval(() => {
       const randomIndex = Math.floor(Math.random() * nombreEjemplos.length);
       setNombrePlaceholder(nombreEjemplos[randomIndex]);
-    }, 3000);
+    }, 5000); // Cambiar cada 5 segundos en lugar de 3 (menos frecuente)
     
     return () => clearInterval(interval);
   }, []);
@@ -138,9 +138,6 @@ export default function Home() {
   const handleFinalSubmit = async () => {
     console.log("📝 Guardando lead en Supabase...");
     
-    // PRIMERO: Cambiar a la pantalla de chat (no bloquear el flujo)
-    setCurrentScreen("chat");
-    
     // Preparar datos del lead para Supabase
     const leadData = {
       name: formData.name,
@@ -153,17 +150,15 @@ export default function Home() {
     };
 
     try {
-      // Guardar en Supabase (en background, no bloquea el flujo)
+      // Guardar en Supabase PRIMERO
       const { data: newLead, error } = await LeadService.create(leadData);
       
       if (error) {
         console.error("⚠️ Error guardando lead:", error);
-        // NO mostrar alert que bloquee la UI
-        console.warn("⚠️ Lead no guardado, pero el chat sigue funcionando");
       } else {
         console.log("✅ Lead guardado exitosamente:", newLead?.id);
         
-        // Guardar ID en localStorage para referencia
+        // Guardar ID en localStorage
         if (newLead) {
           localStorage.setItem("currentLeadId", newLead.id);
           console.log("💾 Lead ID guardado en localStorage:", newLead.id);
@@ -171,8 +166,12 @@ export default function Home() {
       }
     } catch (error) {
       console.error("⚠️ Error inesperado guardando lead:", error);
-      console.warn("⚠️ Lead no guardado, pero el chat sigue funcionando");
     }
+    
+    // DESPUÉS cambiar a chat (esperar 500ms para asegurar que localStorage se actualizó)
+    setTimeout(() => {
+      setCurrentScreen("chat");
+    }, 500);
   };
 
   const handleLogin = () => {
@@ -303,16 +302,10 @@ export default function Home() {
                       type="text"
                       required
                       value={formData.name}
-                      onChange={(e) => {
-                        setFormData({ ...formData, name: e.target.value });
-                        setFormErrors({ ...formErrors, name: "" });
-                      }}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder={nombrePlaceholder}
-                      className={`w-full bg-muted/50 border ${formErrors.name ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm`}
+                      className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
                     />
-                    {formErrors.name && (
-                      <p className="text-xs text-red-400 mt-1">{formErrors.name}</p>
-                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -323,10 +316,7 @@ export default function Home() {
                     <div className="flex gap-2">
                       <select
                         value={formData.countryCode}
-                        onChange={(e) => {
-                          setFormData({ ...formData, countryCode: e.target.value });
-                          setFormErrors({ ...formErrors, whatsapp: "" });
-                        }}
+                        onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
                         className="px-3 bg-muted/50 border border-gold/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
                       >
                         <option value="+1">🇺🇸 +1</option>
@@ -340,17 +330,11 @@ export default function Home() {
                         type="tel"
                         required
                         value={formData.whatsapp}
-                        onChange={(e) => {
-                          setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") });
-                          setFormErrors({ ...formErrors, whatsapp: "" });
-                        }}
+                        onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") })}
                         placeholder="1234567890"
-                        className={`flex-1 bg-muted/50 border ${formErrors.whatsapp ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm`}
+                        className="flex-1 bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all backdrop-blur-sm"
                       />
                     </div>
-                    {formErrors.whatsapp && (
-                      <p className="text-xs text-red-400 mt-1">{formErrors.whatsapp}</p>
-                    )}
                   </div>
 
                   <div className="space-y-2 relative">
@@ -362,16 +346,10 @@ export default function Home() {
                       rows={4}
                       required
                       value={formData.problem}
-                      onChange={(e) => {
-                        setFormData({ ...formData, problem: e.target.value });
-                        setFormErrors({ ...formErrors, problem: "" });
-                      }}
+                      onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
                       placeholder="Comparte tu intención con el cosmos..."
-                      className={`w-full bg-muted/50 border ${formErrors.problem ? 'border-red-500' : 'border-gold/20'} rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none backdrop-blur-sm`}
+                      className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none backdrop-blur-sm"
                     />
-                    {formErrors.problem && (
-                      <p className="text-xs text-red-400 mt-1">{formErrors.problem}</p>
-                    )}
                   </div>
 
                   <motion.button
