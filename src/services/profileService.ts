@@ -80,5 +80,66 @@ export const ProfileService = {
 
     console.log("✅ Perfil creado");
     return { data, error: null };
+  },
+
+  /**
+   * Subir avatar del usuario actual
+   */
+  async uploadAvatar(file: File) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    if (!userId) {
+      return { data: null, error: { message: "No hay sesión activa" } };
+    }
+
+    // Validar tipo de archivo
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      return { data: null, error: { message: "Tipo de archivo no válido. Use JPG, PNG, WebP o GIF" } };
+    }
+
+    // Validar tamaño (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      return { data: null, error: { message: "El archivo es muy grande. Máximo 2MB" } };
+    }
+
+    // Generar nombre único
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}/avatar-${Date.now()}.${fileExt}`;
+
+    // Subir archivo
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error("Error subiendo avatar:", uploadError);
+      return { data: null, error: uploadError };
+    }
+
+    // Obtener URL pública
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName);
+
+    // Actualizar perfil con nueva URL
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .update({ avatar_url: urlData.publicUrl })
+      .eq("id", userId)
+      .select()
+      .single();
+
+    if (profileError) {
+      console.error("Error actualizando perfil:", profileError);
+      return { data: null, error: profileError };
+    }
+
+    console.log("✅ Avatar subido:", urlData.publicUrl);
+    return { data: { url: urlData.publicUrl, profile: profileData }, error: null };
   }
 };

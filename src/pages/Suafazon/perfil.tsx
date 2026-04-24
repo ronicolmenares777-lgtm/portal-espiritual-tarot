@@ -46,6 +46,7 @@ export default function PerfilMaestro() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [activeTab, setActiveTab] = useState<"personal" | "security" | "preferences">("personal");
   
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -174,6 +175,34 @@ export default function PerfilMaestro() {
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingAvatar(true);
+
+    try {
+      const { data, error } = await ProfileService.uploadAvatar(file);
+
+      if (error) {
+        alert(`❌ Error: ${error.message}`);
+        setIsUploadingAvatar(false);
+        return;
+      }
+
+      if (data?.url) {
+        setProfileData({ ...profileData, avatar: data.url });
+        alert("✅ Foto de perfil actualizada correctamente");
+      }
+
+      setIsUploadingAvatar(false);
+    } catch (err) {
+      console.error("Error subiendo avatar:", err);
+      alert("❌ Error al subir la foto");
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const handleLogout = async () => {
     if (confirm("¿Cerrar sesión?")) {
       await AuthService.signOut();
@@ -235,30 +264,51 @@ export default function PerfilMaestro() {
           <div className="flex items-center gap-6 mb-8">
             <div className="relative">
               <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gold/30 bg-muted">
-                <img 
-                  src={profileData.avatar} 
-                  alt="Avatar"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro";
-                  }}
-                />
+                {isUploadingAvatar ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 text-gold animate-spin" />
+                  </div>
+                ) : (
+                  <img 
+                    src={profileData.avatar} 
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro";
+                    }}
+                  />
+                )}
               </div>
-              {isEditing && (
-                <button
-                  onClick={() => {
-                    const seed = prompt("Ingresa una palabra para generar tu avatar único:", "maestro");
-                    if (seed) {
-                      setProfileData({
-                        ...profileData,
-                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`
-                      });
-                    }
-                  }}
-                  className="absolute -bottom-2 -right-2 bg-gold text-background p-2 rounded-full hover:bg-gold/80 transition-colors"
-                >
-                  <Camera className="w-4 h-4" />
-                </button>
+              {isEditing && !isUploadingAvatar && (
+                <div className="absolute -bottom-2 -right-2 flex gap-1">
+                  <label
+                    className="bg-gold text-background p-2 rounded-full hover:bg-gold/80 transition-colors cursor-pointer"
+                    title="Subir foto"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  <button
+                    onClick={() => {
+                      const seed = prompt("Ingresa una palabra para generar avatar:", "maestro");
+                      if (seed) {
+                        setProfileData({
+                          ...profileData,
+                          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`
+                        });
+                      }
+                    }}
+                    className="bg-gold/70 text-background p-2 rounded-full hover:bg-gold/60 transition-colors"
+                    title="Generar avatar"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </button>
+                </div>
               )}
             </div>
             <div className="flex-1">
@@ -266,16 +316,13 @@ export default function PerfilMaestro() {
               <p className="text-foreground/60">{profileData.email}</p>
               {isEditing && (
                 <div className="mt-3">
-                  <label className="text-sm text-foreground/60 mb-1 block">URL de Avatar (opcional)</label>
-                  <input
-                    type="url"
-                    value={profileData.avatar}
-                    onChange={(e) => setProfileData({ ...profileData, avatar: e.target.value })}
-                    placeholder="https://ejemplo.com/foto.jpg"
-                    className="w-full bg-muted border border-gold/20 rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50"
-                  />
-                  <p className="text-xs text-foreground/40 mt-1">
-                    O click en el botón de cámara para generar un avatar único
+                  <p className="text-xs text-foreground/60">
+                    <Camera className="w-3 h-3 inline mr-1" />
+                    Click en cámara para subir foto (JPG, PNG, max 2MB)
+                  </p>
+                  <p className="text-xs text-foreground/60">
+                    <Sparkles className="w-3 h-3 inline mr-1" />
+                    O genera un avatar único con tu palabra
                   </p>
                 </div>
               )}
