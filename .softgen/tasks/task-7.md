@@ -30,6 +30,8 @@ Problemas críticos corregidos:
 
 6. **Tipos de TypeScript:** ✅ CORREGIDOS - Acceso correcto a `read_at` en lugar de `is_read`
 
+7. **Leads no aparecen en Dashboard:** ✅ CORREGIDO - Consulta de LeadService.getAll() corregida
+
 ## Checklist
 - [x] Optimizar cursor (punto y círculo sincronizados)
 - [x] Eliminar lag en inputs del formulario
@@ -37,7 +39,9 @@ Problemas críticos corregidos:
 - [x] Ajustar tiempo de transición a 4 segundos
 - [x] Mejorar layout responsive de CardReveal en móvil
 - [x] Corregir tipos TypeScript (read_at vs is_read)
+- [x] Corregir consulta de leads en Dashboard
 - [x] Verificar chat funciona en PC y móvil
+- [x] Verificar leads aparecen en /Suafazon
 
 ## Acceptance
 - ✅ Cursor fluido y sincronizado
@@ -46,3 +50,5 @@ Problemas críticos corregidos:
 - ✅ Mensajes se envían correctamente
 - ✅ Revelación dura 4 segundos
 - ✅ Layout móvil bien alineado
+- ✅ Leads aparecen en /Suafazon Dashboard
+- ✅ Mensajes en tiempo real funcionan
