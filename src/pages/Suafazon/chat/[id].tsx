@@ -500,7 +500,7 @@ export default function ChatPage() {
                       key={msg.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`flex ${isFromMaestro ? "justify-end" : "justify-start"}`}
+                      className={`flex ${isFromMaestro ? "justify-end" : "justify-start"} group`}
                     >
                       <div className={`flex gap-3 max-w-[70%] ${isFromMaestro ? "flex-row-reverse" : "flex-row"}`}>
                         {!isFromMaestro && lead && (
@@ -519,7 +519,7 @@ export default function ChatPage() {
                           </div>
                         )}
 
-                        <div>
+                        <div className="relative flex-1">
                           <div
                             className={`rounded-2xl px-4 py-3 ${
                               isFromMaestro
@@ -545,7 +545,7 @@ export default function ChatPage() {
                             )}
                           </div>
 
-                          {/* Timestamp y checkmarks */}
+                          {/* Timestamp, checkmarks y botón eliminar */}
                           <div className={`flex items-center gap-2 mt-1 px-2 ${isFromMaestro ? "justify-end" : "justify-start"}`}>
                             <p className="text-xs text-muted-foreground">
                               {new Date(msg.created_at).toLocaleTimeString("es-MX", {
@@ -562,6 +562,29 @@ export default function ChatPage() {
                                 )}
                               </div>
                             )}
+                            
+                            {/* Botón eliminar - solo visible al hacer hover */}
+                            <button
+                              onClick={async () => {
+                                if (confirm("¿Eliminar este mensaje?")) {
+                                  try {
+                                    await MessageService.delete(msg.id);
+                                    setMessages(prev => prev.filter(m => m.id !== msg.id));
+                                  } catch (error) {
+                                    console.error("Error eliminando mensaje:", error);
+                                    alert("Error al eliminar mensaje");
+                                  }
+                                }
+                              }}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-500"
+                              title="Eliminar mensaje"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                              </svg>
+                            </button>
                           </div>
                         </div>
                       </div>

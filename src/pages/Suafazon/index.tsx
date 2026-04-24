@@ -15,6 +15,8 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [resetPasswordMode, setResetPasswordMode] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   // Verificar si ya está autenticado
   useEffect(() => {
@@ -55,6 +57,28 @@ export default function AdminLogin() {
     } catch (err) {
       console.error("❌ Error en handleLogin:", err);
       setError("Error al iniciar sesión. Intenta de nuevo.");
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const { error } = await AuthService.resetPassword(email);
+
+      if (error) {
+        setError(error.message || "Error al enviar email de recuperación");
+        setLoading(false);
+        return;
+      }
+
+      setResetSuccess(true);
+      setLoading(false);
+    } catch (err) {
+      setError("Error al enviar email de recuperación");
       setLoading(false);
     }
   };
@@ -111,11 +135,18 @@ export default function AdminLogin() {
             </div>
 
             {/* Formulario */}
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={resetPasswordMode ? handleResetPassword : handleLogin} className="space-y-6">
               {/* Mostrar error si existe */}
               {error && (
                 <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/50 text-red-400 text-sm">
                   {error}
+                </div>
+              )}
+
+              {/* Mostrar éxito de reset */}
+              {resetSuccess && (
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/50 text-green-400 text-sm">
+                  Email de recuperación enviado. Revisa tu correo.
                 </div>
               )}
 
@@ -131,27 +162,42 @@ export default function AdminLogin() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@tarot.com"
+                    placeholder="tubrujo@gmail.com"
                     className="w-full bg-black/50 border border-gold/20 rounded-xl pl-12 pr-4 py-3 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
                   />
                 </div>
+                <p className="text-xs text-muted-foreground/60">
+                  Email registrado: tubrujo@gmail.com
+                </p>
               </div>
 
-              {/* Campo de contraseña */}
-              <div className="space-y-2">
-                <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
-                  <Sparkles className="w-3 h-3" />
-                  Palabra de Poder
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Tu clave sagrada..."
-                  className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
-                />
-              </div>
+              {/* Campo de contraseña - solo si no está en modo reset */}
+              {!resetPasswordMode && (
+                <div className="space-y-2">
+                  <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
+                    <Sparkles className="w-3 h-3" />
+                    Palabra de Poder
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold/50" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Tu clave sagrada..."
+                      className="w-full bg-muted/50 border border-gold/20 rounded-lg pl-12 pr-12 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Botón de envío */}
               <button
@@ -159,7 +205,20 @@ export default function AdminLogin() {
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-gold via-amber-400 to-gold text-black font-semibold py-4 rounded-xl tracking-wider uppercase transition-all duration-300 hover:shadow-[0_0_30px_hsl(var(--gold))] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "ENTRANDO..." : "Entrar al Templo"}
+                {loading ? "PROCESANDO..." : resetPasswordMode ? "Enviar Email" : "Entrar al Templo"}
+              </button>
+
+              {/* Toggle reset password */}
+              <button
+                type="button"
+                onClick={() => {
+                  setResetPasswordMode(!resetPasswordMode);
+                  setError("");
+                  setResetSuccess(false);
+                }}
+                className="block w-full text-center text-muted-foreground/60 text-sm hover:text-gold transition-colors"
+              >
+                {resetPasswordMode ? "← Volver al login" : "¿Olvidaste tu contraseña?"}
               </button>
 
               {/* Volver */}
