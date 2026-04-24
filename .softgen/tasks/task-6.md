@@ -1,6 +1,6 @@
 ---
 title: "Fix mobile chat connection and hydration errors"
-status: "todo"
+status: "done"
 priority: "urgent"
 type: "bug"
 tags: ["chat", "mobile", "hydration", "performance"]
@@ -12,9 +12,9 @@ position: 6
 The mobile flow crashes and returns to the home screen because of a React Hydration Mismatch caused by `Math.random()` in `FloatingParticles.tsx`. This breaks the component tree and blocks the transition to the chat. Additionally, if the localStorage `currentLeadId` gets lost due to the crash, the chat cannot send messages and fails silently.
 
 ## Checklist
-- [ ] Fix the background particles animation so it resolves the background crashing issues on mobile devices.
-- [ ] Add an emergency connection recovery system to the chat so users can always send messages to the maestro, even if their initial form data was lost due to a connection drop.
-- [ ] Ensure the final chat screen always loads smoothly without throwing errors or forcefully returning users to the start page.
+- [x] Fix the background particles animation so it resolves the background crashing issues on mobile devices.
+- [x] Add an emergency connection recovery system to the chat so users can always send messages to the maestro, even if their initial form data was lost due to a connection drop.
+- [x] Ensure the final chat screen always loads smoothly without throwing errors or forcefully returning users to the start page.
 
 ## Acceptance
 - The mobile site no longer shows red Hydration Mismatch errors in the console.
