@@ -86,14 +86,22 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         console.log("✅ Mensajes cargados:", messagesData.length);
         setMessages(messagesData);
 
-        // Suscribirse a cambios en tiempo real
+        // Suscribirse a cambios en tiempo real - CORREGIDO
+        console.log("🔔 Configurando suscripción realtime para lead:", currentLeadId);
         subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
+          console.log("📨 Nuevo mensaje recibido en ChatMaestro:", newMsg);
           setMessages((prev) => {
             const exists = prev.some((m) => m.id === newMsg.id);
-            if (exists) return prev;
+            if (exists) {
+              console.log("⚠️ Mensaje duplicado ignorado");
+              return prev;
+            }
+            console.log("✅ Mensaje agregado a la lista");
             return [...prev, newMsg];
           });
         });
+        
+        console.log("✅ Suscripción realtime configurada");
       }
 
       // Cargar avatar del maestro

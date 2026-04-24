@@ -405,11 +405,13 @@ export default function ChatPage() {
 
   return (
     <>
-      <SEO 
-        title={`Chat con ${lead?.name || "Lead"}`}
-        description="Gestión de conversación espiritual"
+      <SEO
+        title="Chat - Portal Espiritual Admin"
+        description="Conversación con cliente"
       />
-      <CustomCursor />
+
+      {/* Cursor personalizado DESHABILITADO en admin */}
+      {/* <CustomCursor /> */}
       <FloatingParticles />
 
       <div className="min-h-screen bg-background flex flex-col">

@@ -372,13 +372,15 @@ export default function Dashboard() {
   return (
     <>
       <SEO 
-        title="Portal Maestro - Dashboard"
-        description="Panel de administración del Portal Espiritual"
+        title="Dashboard - Portal Espiritual Admin"
+        description="Panel de administración para gestionar leads y consultas espirituales"
       />
-      <CustomCursor />
-      <FloatingParticles />
       
-      <div className="flex h-screen bg-background overflow-hidden">
+      {/* Cursor personalizado DESHABILITADO en admin */}
+      {/* <CustomCursor /> */}
+      <FloatingParticles />
+
+      <div className="min-h-screen bg-background text-foreground">
         {/* Layout principal */}
         <div className="flex h-[calc(100vh-57px)] md:h-[calc(100vh-65px)] overflow-hidden">
           {/* Overlay para móvil */}
