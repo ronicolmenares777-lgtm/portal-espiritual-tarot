@@ -56,10 +56,10 @@ export const MessageService = {
   async markAsRead(leadId: string): Promise<void> {
     const { error } = await supabase
       .from("messages")
-      .update({ is_read: true })
+      .update({ read_at: new Date().toISOString() })
       .eq("lead_id", leadId)
       .eq("is_from_maestro", false)
-      .eq("is_read", false);
+      .is("read_at", null);
 
     if (error) {
       console.error("Error marcando mensajes como leídos:", error);
