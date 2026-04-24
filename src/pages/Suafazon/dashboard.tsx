@@ -5,8 +5,10 @@ import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { LeadService } from "@/services/leadService";
+import { MessageService } from "@/services/messageService";
 import { AuthService } from "@/services/authService";
 import { ProfileService } from "@/services/profileService";
+import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import {
   Users,
@@ -320,7 +322,7 @@ export default function Dashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        setIsLoading(true);
+        setLoading(true);
 
         // Obtener todos los leads
         const { data: allLeads, error: leadsError } = await LeadService.getAll();
@@ -334,37 +336,12 @@ export default function Dashboard() {
 
         if (allLeads) {
           setLeads(allLeads);
-
-          // Cargar mensajes para cada lead
-          const messagesPromises = allLeads.map(async (lead) => {
-            const messages = await MessageService.getByLeadId(lead.id);
-            return { leadId: lead.id, count: messages.length };
-          });
-
-          const messagesData = await Promise.all(messagesPromises);
-          const messagesMap: { [key: string]: number } = {};
-          messagesData.forEach(({ leadId, count }) => {
-            messagesMap[leadId] = count;
-          });
-
-          setMessagesCount(messagesMap);
         }
 
-        // Cargar perfil
-        const { data: profiles, error: profileError } = await ProfileService.getAll();
-        
-        if (profileError) {
-          console.error("Error cargando perfil:", profileError);
-        }
-
-        if (profiles && profiles.length > 0) {
-          setProfile(profiles[0]);
-        }
-
-        setIsLoading(false);
+        setLoading(false);
       } catch (err) {
         console.error("Error en loadData:", err);
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
