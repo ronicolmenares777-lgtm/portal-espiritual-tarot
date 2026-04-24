@@ -40,29 +40,46 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
       const currentLeadId = localStorage.getItem("currentLeadId");
       console.log("🆔 Lead ID del localStorage:", currentLeadId);
       
-      if (!currentLeadId) {
-        console.error("❌ No se encontró currentLeadId en localStorage");
-        alert("Error: No se pudo identificar tu consulta. Por favor vuelve a iniciar el flujo.");
-        return;
-      }
+      if (currentLeadId) {
+        setLeadId(currentLeadId);
+        console.log("✅ Lead ID establecido:", currentLeadId);
 
-      setLeadId(currentLeadId);
-      console.log("✅ Lead ID establecido:", currentLeadId);
-
-      // Cargar mensajes existentes
-      console.log("📥 Cargando mensajes existentes...");
-      const { data: messagesData, error: messagesError } = await MessageService.getByLeadId(currentLeadId);
-      
-      if (messagesError) {
-        console.error("❌ Error cargando mensajes:", messagesError);
-      } else {
-        console.log("✅ Mensajes cargados:", messagesData?.length || 0);
-        if (messagesData) {
-          setMessages(messagesData);
+        // Cargar mensajes existentes
+        console.log("📥 Cargando mensajes existentes...");
+        const { data: messagesData, error: messagesError } = await MessageService.getByLeadId(currentLeadId);
+        
+        if (messagesError) {
+          console.error("❌ Error cargando mensajes:", messagesError);
+        } else {
+          console.log("✅ Mensajes cargados:", messagesData?.length || 0);
+          if (messagesData) {
+            setMessages(messagesData);
+          }
         }
+
+        // Suscribirse a nuevos mensajes en tiempo real
+        console.log("🔔 Suscribiéndose a mensajes en tiempo real...");
+        const subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
+          console.log("📨 Nuevo mensaje recibido:", newMsg);
+          setMessages((prev) => {
+            const exists = prev.some((m) => m.id === newMsg.id);
+            if (exists) {
+              console.log("⚠️ Mensaje duplicado, ignorando");
+              return prev;
+            }
+            console.log("➕ Añadiendo nuevo mensaje");
+            return [...prev, newMsg];
+          });
+        });
+
+        // Cleanup
+        return () => {
+          console.log("🧹 Limpiando suscripción");
+          subscription.unsubscribe();
+        };
       }
 
-      // Cargar avatar del maestro
+      // Cargar avatar del maestro (siempre)
       console.log("👤 Cargando avatar del maestro...");
       const { data: profiles, error: profileError } = await ProfileService.getAll();
       
@@ -77,27 +94,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
         }
       }
 
-      // Suscribirse a nuevos mensajes en tiempo real
-      console.log("🔔 Suscribiéndose a mensajes en tiempo real...");
-      const subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
-        console.log("📨 Nuevo mensaje recibido:", newMsg);
-        setMessages((prev) => {
-          const exists = prev.some((m) => m.id === newMsg.id);
-          if (exists) {
-            console.log("⚠️ Mensaje duplicado, ignorando");
-            return prev;
-          }
-          console.log("➕ Añadiendo nuevo mensaje");
-          return [...prev, newMsg];
-        });
-      });
-
       console.log("✅ ChatMaestro: Inicialización completa");
-
-      return () => {
-        console.log("🧹 Limpiando suscripción");
-        subscription.unsubscribe();
-      };
     };
 
     loadData();
@@ -107,16 +104,36 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
   const handleSendMessage = async () => {
     console.log("📤 handleSendMessage llamado");
     console.log("📝 Mensaje:", message);
-    console.log("🆔 Lead ID:", leadId);
+    console.log("🆔 Lead ID actual:", leadId);
     
     if (!message.trim()) {
       console.warn("⚠️ Mensaje vacío");
       return;
     }
     
-    if (!leadId) {
-      console.error("❌ No hay leadId - no se puede enviar mensaje");
-      alert("Error: No se pudo identificar la conversación. Por favor recarga la página.");
+    // Reintentar obtener leadId del localStorage si no está disponible
+    let currentLeadId = leadId;
+    if (!currentLeadId) {
+      console.log("🔄 Reintentando obtener leadId del localStorage...");
+      currentLeadId = localStorage.getItem("currentLeadId");
+      if (currentLeadId) {
+        console.log("✅ Lead ID encontrado en reintento:", currentLeadId);
+        setLeadId(currentLeadId);
+      }
+    }
+    
+    if (!currentLeadId) {
+      console.error("❌ No hay leadId disponible - esperando...");
+      // NO mostrar alert - solo esperar y reintentar
+      setTimeout(() => {
+        const retryLeadId = localStorage.getItem("currentLeadId");
+        if (retryLeadId) {
+          console.log("✅ Lead ID obtenido en segundo reintento");
+          setLeadId(retryLeadId);
+          // Reintentar enviar el mensaje
+          handleSendMessage();
+        }
+      }, 1000);
       return;
     }
 
@@ -125,14 +142,13 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
     try {
       console.log("🔄 Creando mensaje en Supabase...");
       const { data, error } = await MessageService.create({
-        lead_id: leadId,
+        lead_id: currentLeadId,
         text: message.trim(),
         is_from_maestro: false
       });
 
       if (error) {
         console.error("❌ Error de Supabase:", error);
-        alert(`Error al enviar mensaje: ${error.message}`);
         setIsSending(false);
         return;
       }
@@ -155,7 +171,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
       setIsSending(false);
     } catch (err) {
       console.error("❌ Error inesperado:", err);
-      alert("Error inesperado al enviar mensaje");
       setIsSending(false);
     }
   };

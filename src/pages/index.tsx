@@ -137,6 +137,8 @@ export default function Home() {
 
   const handleFinalSubmit = async () => {
     console.log("📝 Guardando lead en Supabase...");
+    
+    // PRIMERO: Cambiar a la pantalla de chat (no bloquear el flujo)
     setCurrentScreen("chat");
     
     // Preparar datos del lead para Supabase
@@ -156,7 +158,8 @@ export default function Home() {
       
       if (error) {
         console.error("⚠️ Error guardando lead:", error);
-        alert("⚠️ Hubo un problema al guardar tu consulta. Por favor intenta nuevamente.");
+        // NO mostrar alert que bloquee la UI
+        console.warn("⚠️ Lead no guardado, pero el chat sigue funcionando");
       } else {
         console.log("✅ Lead guardado exitosamente:", newLead?.id);
         
@@ -168,7 +171,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error("⚠️ Error inesperado guardando lead:", error);
-      alert("⚠️ Hubo un problema al guardar tu consulta. Por favor intenta nuevamente.");
+      console.warn("⚠️ Lead no guardado, pero el chat sigue funcionando");
     }
   };
 
