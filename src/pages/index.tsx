@@ -150,28 +150,27 @@ export default function Home() {
     };
 
     try {
-      // Guardar en Supabase PRIMERO
+      // Guardar en Supabase PRIMERO (await para esperar)
       const { data: newLead, error } = await LeadService.create(leadData);
       
       if (error) {
         console.error("⚠️ Error guardando lead:", error);
-      } else {
-        console.log("✅ Lead guardado exitosamente:", newLead?.id);
-        
-        // Guardar ID en localStorage
-        if (newLead) {
-          localStorage.setItem("currentLeadId", newLead.id);
-          console.log("💾 Lead ID guardado en localStorage:", newLead.id);
-        }
+        // Continuar de todos modos - el chat creará uno de emergencia
+      } else if (newLead) {
+        console.log("✅ Lead guardado exitosamente:", newLead.id);
+        localStorage.setItem("currentLeadId", newLead.id);
+        console.log("💾 Lead ID guardado en localStorage:", newLead.id);
       }
     } catch (error) {
       console.error("⚠️ Error inesperado guardando lead:", error);
+      // Continuar de todos modos - el chat creará uno de emergencia
     }
     
-    // DESPUÉS cambiar a chat (esperar 500ms para asegurar que localStorage se actualizó)
-    setTimeout(() => {
-      setCurrentScreen("chat");
-    }, 500);
+    // Pequeño delay para asegurar que localStorage se actualice
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // DESPUÉS cambiar a chat
+    setCurrentScreen("chat");
   };
 
   const handleLogin = () => {

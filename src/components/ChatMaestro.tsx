@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Send } from "lucide-react";
 import { MessageService } from "@/services/messageService";
 import { ProfileService } from "@/services/profileService";
+import { LeadService } from "@/services/leadService";
 import type { Database } from "@/integrations/supabase/types";
 import { motion } from "framer-motion";
 
@@ -17,7 +18,7 @@ interface ChatMaestroProps {
   onBack?: () => void;
 }
 
-export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack }: ChatMaestroProps) {
+export function ChatMaestro({ userName, userPhone, userProblem, userCard }: ChatMaestroProps) {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
@@ -37,7 +38,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
     const loadData = async () => {
       console.log("🔄 ChatMaestro: Iniciando...");
       
-      // Esperar a que el leadId esté disponible (máximo 3 segundos)
+      // Intentar obtener leadId del localStorage (máximo 6 intentos = 3 segundos)
       let attempts = 0;
       let currentLeadId = null;
       
@@ -50,20 +51,54 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
         attempts++;
       }
       
+      // Si después de 3 segundos no hay leadId, crear uno de emergencia
       if (!currentLeadId) {
-        console.error("❌ No se pudo obtener leadId después de 6 intentos");
-        setIsReady(true); // Mostrar chat de todos modos
-        return;
+        console.warn("⚠️ No se encontró leadId - Creando lead de emergencia...");
+        try {
+          const { data: emergencyLead } = await LeadService.create({
+            name: userName || "Usuario",
+            whatsapp: userPhone || "0000000000",
+            country_code: "+52",
+            problem: userProblem || "Consulta desde chat",
+            status: "nuevo",
+            selected_cards: userCard ? [userCard] : [],
+            precision_answers: []
+          });
+          
+          if (emergencyLead) {
+            currentLeadId = emergencyLead.id;
+            localStorage.setItem("currentLeadId", emergencyLead.id);
+            console.log("✅ Lead de emergencia creado:", currentLeadId);
+          }
+        } catch (err) {
+          console.error("❌ Error creando lead de emergencia:", err);
+        }
       }
       
-      console.log("✅ Lead ID obtenido:", currentLeadId);
-      setLeadId(currentLeadId);
+      if (currentLeadId) {
+        console.log("✅ Lead ID obtenido:", currentLeadId);
+        setLeadId(currentLeadId);
 
-      // Cargar mensajes existentes
-      const { data: messagesData } = await MessageService.getByLeadId(currentLeadId);
-      if (messagesData) {
-        console.log("✅ Mensajes cargados:", messagesData.length);
-        setMessages(messagesData);
+        // Cargar mensajes existentes
+        const { data: messagesData } = await MessageService.getByLeadId(currentLeadId);
+        if (messagesData) {
+          console.log("✅ Mensajes cargados:", messagesData.length);
+          setMessages(messagesData);
+        }
+
+        // Suscribirse a cambios en tiempo real
+        const subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
+          setMessages((prev) => {
+            const exists = prev.some((m) => m.id === newMsg.id);
+            if (exists) return prev;
+            return [...prev, newMsg];
+          });
+        });
+
+        // Cleanup
+        return () => {
+          subscription.unsubscribe();
+        };
       }
 
       // Cargar avatar del maestro
@@ -76,27 +111,20 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
       }
 
       setIsReady(true);
-
-      // Suscribirse a cambios en tiempo real
-      const subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
-        setMessages((prev) => {
-          const exists = prev.some((m) => m.id === newMsg.id);
-          if (exists) return prev;
-          return [...prev, newMsg];
-        });
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
     };
 
     loadData();
-  }, []);
+  }, [userName, userPhone, userProblem, userCard]);
 
   // Enviar mensaje a Supabase
   const handleSendMessage = async () => {
-    if (!message.trim() || !leadId || isSending) return;
+    if (!message.trim() || isSending) return;
+
+    // Validar leadId
+    if (!leadId) {
+      console.error("❌ No hay leadId disponible");
+      return;
+    }
 
     setIsSending(true);
 
