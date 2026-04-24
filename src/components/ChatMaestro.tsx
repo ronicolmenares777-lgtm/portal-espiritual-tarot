@@ -4,6 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Mic, Paperclip, X, Image as ImageIcon } from "lucide-react";
 import { chatConfig } from "@/lib/config";
 import type { Lead } from "@/types/admin";
+import { MessageService } from "@/services/messageService";
+import { ProfileService } from "@/services/profileService";
+import type { Database } from "@/integrations/supabase/types";
+import { motion } from "framer-motion";
 
 interface Message {
   texto: string;
@@ -25,6 +29,7 @@ export function ChatMaestro({ userName, userPhone = "", userProblem = "", userCa
   const [messages, setMessages] = useState<Message[]>(chatConfig.maestro.mensajes);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -134,6 +139,43 @@ export function ChatMaestro({ userName, userPhone = "", userProblem = "", userCa
     }
   };
 
+  const handleSendMessage = async () => {
+    if (!message.trim() || !userPhone) return;
+
+    try {
+      const existingLeads = localStorage.getItem("leads");
+      if (existingLeads) {
+        const leads: Lead[] = JSON.parse(existingLeads);
+        const leadIndex = leads.findIndex(lead => lead.whatsapp === userPhone);
+        
+        if (leadIndex !== -1) {
+          const { data, error } = await MessageService.create({
+            lead_id: leads[leadIndex].id,
+            text: message,
+            is_from_maestro: false
+          });
+
+          if (error) {
+            console.error("Error enviando mensaje:", error);
+            alert("Error al enviar mensaje");
+            return;
+          }
+
+          if (data) {
+            setMessages((prev) => [...prev, data]);
+          }
+        }
+      }
+
+      setMessage("");
+      setSelectedImage(null);
+      setPreviewImage(null);
+    } catch (err) {
+      console.error("Error inesperado:", err);
+      alert("Error al enviar mensaje");
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-2xl h-[90vh] flex flex-col bg-black/60 backdrop-blur-md rounded-3xl overflow-hidden border border-gold/20 shadow-2xl">
@@ -143,7 +185,7 @@ export function ChatMaestro({ userName, userPhone = "", userProblem = "", userCa
             {/* Avatar */}
             <div className="relative">
               <img
-                src={chatConfig.maestro.avatar}
+                src={maestroAvatar}
                 alt={chatConfig.maestro.nombre}
                 className="w-12 h-12 rounded-full object-cover border-2 border-gold"
               />
@@ -160,27 +202,43 @@ export function ChatMaestro({ userName, userPhone = "", userProblem = "", userCa
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}
-              style={{ animationDelay: `${index * 100}ms` }}
+          {messages.map((msg) => (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex gap-3 ${
+                !msg.is_from_maestro ? "flex-row-reverse" : ""
+              }`}
             >
-              <div className={`max-w-[80%] ${msg.isUser ? 'bg-gold/20 border-gold/30' : 'bg-purple-900/50 border-purple-700/30'} rounded-2xl p-3 border backdrop-blur-sm`}>
-                {msg.imageUrl && (
+              {msg.is_from_maestro && (
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30 flex-shrink-0">
                   <img 
-                    src={msg.imageUrl} 
-                    alt="Imagen enviada" 
-                    className="rounded-lg mb-2 max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => setPreviewImage(msg.imageUrl || null)}
+                    src={maestroAvatar} 
+                    alt="Maestro"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro";
+                    }}
                   />
-                )}
-                {msg.texto !== "(imagen)" && (
-                  <p className="text-sm text-foreground leading-relaxed">{msg.texto}</p>
-                )}
-                <p className="text-xs text-muted-foreground mt-1 text-right">{msg.timestamp}</p>
+                </div>
+              )}
+              <div
+                className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                  msg.is_from_maestro
+                    ? "bg-gold/20 text-foreground"
+                    : "bg-muted/50 text-foreground"
+                }`}
+              >
+                {msg.text && <p className="text-sm">{msg.text}</p>}
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {new Date(msg.created_at).toLocaleTimeString("es-MX", {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })}
+                </p>
               </div>
-            </div>
+            </motion.div>
           ))}
           <div ref={messagesEndRef} />
         </div>
