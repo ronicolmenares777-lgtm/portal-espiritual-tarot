@@ -12,21 +12,39 @@ export const ProfileService = {
   /**
    * Obtener perfil del usuario autenticado
    */
-  async getCurrent(): Promise<{ data: Profile | null; error: any }> {
-    const { data: { user } } = await supabase.auth.getUser();
+  async getCurrent() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
 
-    if (!user) {
-      return { data: null, error: { message: "No authenticated user" } };
+    if (!userId) {
+      return { data: null, error: { message: "No hay sesión activa" } };
     }
 
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
 
     if (error) {
       console.error("Error obteniendo perfil:", error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  },
+
+  /**
+   * Obtener todos los perfiles (para ver avatar del maestro en chat público)
+   */
+  async getAll() {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error obteniendo perfiles:", error);
       return { data: null, error };
     }
 

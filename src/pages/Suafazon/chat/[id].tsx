@@ -47,7 +47,10 @@ export default function ChatPage() {
 
   const [lead, setLead] = useState<Lead | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [newMessage, setNewMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
   const [messageInput, setMessageInput] = useState("");
   const [showQuickResponses, setShowQuickResponses] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -64,6 +67,7 @@ export default function ChatPage() {
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro",
     headerText: ""
   });
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Referencias
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -99,32 +103,29 @@ export default function ChatPage() {
     
     if (!id || typeof id !== "string") {
       console.log("⚠️ No hay ID válido en la URL");
-      setLoading(false);
+      setIsLoading(false);
       return;
     }
 
     const loadLead = async () => {
-      const { data: leadData, error: leadError } = await LeadService.getById(id);
-      
-      if (leadError || !leadData) {
-        console.error("❌ Error cargando lead:", leadError);
-        setLoading(false);
-        return;
+      const { data: leadData } = await LeadService.getById(id);
+      if (leadData) {
+        setLead(leadData);
       }
 
-      console.log("✅ Lead encontrado:", leadData);
-      setLead(leadData);
-
-      // Cargar mensajes del lead
-      const { data: messagesData, error: messagesError } = await MessageService.getByLeadId(id);
-      
-      if (messagesError) {
-        console.error("❌ Error cargando mensajes:", messagesError);
-      } else {
+      // Cargar mensajes
+      const { data: messagesData } = await MessageService.getByLead(id);
+      if (messagesData) {
         setMessages(messagesData);
       }
 
-      setLoading(false);
+      // Cargar avatar del maestro autenticado
+      const { data: profile } = await ProfileService.getCurrent();
+      if (profile?.avatar_url) {
+        setMaestroAvatar(profile.avatar_url);
+      }
+
+      setIsLoading(false);
     };
 
     loadLead();
@@ -370,7 +371,7 @@ export default function ChatPage() {
     setMediaPreview(null);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -474,50 +475,66 @@ export default function ChatPage() {
                     </p>
                   </div>
                 ) : (
-                  messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.is_from_maestro ? "justify-end" : "justify-start"}`}
+                  messages.map((msg) => (
+                    <motion.div
+                      key={msg.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex gap-3 ${
+                        msg.sender === "user" ? "flex-row-reverse" : ""
+                      }`}
                     >
+                      {msg.sender === "maestro" && (
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30 flex-shrink-0">
+                          <img 
+                            src={maestroAvatar} 
+                            alt="Maestro"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro";
+                            }}
+                          />
+                        </div>
+                      )}
                       <div
                         className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                          message.is_from_maestro
+                          msg.sender === "maestro"
                             ? "bg-gold/20 text-foreground"
                             : "bg-muted/50 text-foreground"
                         }`}
                       >
-                        {message.text && <p className="text-sm">{message.text}</p>}
+                        {msg.text && <p className="text-sm">{msg.text}</p>}
                         
-                        {message.media_url && (
+                        {msg.media_url && (
                           <div className="mt-2">
-                            {message.media_type === "image" && (
+                            {msg.media_type === "image" && (
                               <img
-                                src={message.media_url}
+                                src={msg.media_url}
                                 alt="Imagen"
                                 className="max-w-full rounded-lg"
                               />
                             )}
-                            {message.media_type === "video" && (
+                            {msg.media_type === "video" && (
                               <video
-                                src={message.media_url}
+                                src={msg.media_url}
                                 controls
                                 className="max-w-full rounded-lg"
                               />
                             )}
-                            {message.media_type === "audio" && (
-                              <audio src={message.media_url} controls className="w-full" />
+                            {msg.media_type === "audio" && (
+                              <audio src={msg.media_url} controls className="w-full" />
                             )}
                           </div>
                         )}
                         
                         <span className="text-xs text-muted-foreground mt-1 block">
-                          {new Date(message.created_at || "").toLocaleTimeString("es-ES", {
+                          {new Date(msg.created_at || "").toLocaleTimeString("es-ES", {
                             hour: "2-digit",
                             minute: "2-digit"
                           })}
                         </span>
                       </div>
-                    </div>
+                    </motion.div>
                   ))
                 )}
               </div>
