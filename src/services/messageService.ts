@@ -115,4 +115,38 @@ export const MessageService = {
 
     console.log("✅ Mensajes marcados como leídos");
   },
+
+  /**
+   * Eliminar un mensaje
+   */
+  async delete(messageId: string): Promise<void> {
+    const { error } = await supabase
+      .from("messages")
+      .delete()
+      .eq("id", messageId);
+
+    if (error) {
+      console.error("Error eliminando mensaje:", error);
+      throw error;
+    }
+
+    console.log("✅ Mensaje eliminado:", messageId);
+  },
+
+  /**
+   * Eliminar todos los mensajes de un lead
+   */
+  async deleteByLeadId(leadId: string): Promise<void> {
+    const { error } = await supabase
+      .from("messages")
+      .delete()
+      .eq("lead_id", leadId);
+
+    if (error) {
+      console.error("Error eliminando mensajes del lead:", error);
+      throw error;
+    }
+
+    console.log("✅ Mensajes del lead eliminados:", leadId);
+  },
 };

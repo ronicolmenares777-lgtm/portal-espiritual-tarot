@@ -96,30 +96,40 @@ export default function Dashboard() {
   const filteredLeads = leads.filter((lead) => {
     // Filtro por tab
     if (activeTab === "leads" && lead.status !== "nuevo") return false;
-    if (activeTab === "chats" && !["enConversacion", "caliente"].includes(lead.status || "")) return false;
+    if (activeTab === "chats") {
+      const isInChat = ["enConversacion", "caliente", "clienteCaliente"].includes(lead.status || "");
+      if (!isInChat) return false;
+    }
     if (activeTab === "listo" && lead.status !== "listo") return false;
 
     // Filtro por estado seleccionado
-    if (selectedStatus !== "todos" && lead.status !== selectedStatus) return false;
+    if (selectedStatus !== "todos") {
+      if (selectedStatus === "clienteCaliente" && lead.status === "caliente") {
+        // Tratar "caliente" y "clienteCaliente" como el mismo estado
+        return true;
+      }
+      if (lead.status !== selectedStatus) return false;
+    }
 
     // Filtro por búsqueda
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
         lead.name?.toLowerCase().includes(query) ||
-        lead.whatsapp?.includes(query)
+        lead.whatsapp?.includes(query) ||
+        lead.problem?.toLowerCase().includes(query)
       );
     }
 
     return true;
   });
 
-  // Contar leads por estado
+  // Contar leads por estado - CORREGIDO
   const statusCounts = {
-    todos: leads.filter(l => activeTab === "chats" ? l.status !== "listo" : activeTab === "listo" ? l.status === "listo" : true).length,
+    todos: leads.length,
     nuevo: leads.filter(l => l.status === "nuevo").length,
     enConversacion: leads.filter(l => l.status === "enConversacion").length,
-    clienteCaliente: leads.filter(l => l.status === "clienteCaliente").length,
+    clienteCaliente: leads.filter(l => l.status === "caliente" || l.status === "clienteCaliente").length,
     cerrado: leads.filter(l => l.status === "cerrado").length,
     perdido: leads.filter(l => l.status === "perdido").length,
     listo: leads.filter(l => l.status === "listo").length,
