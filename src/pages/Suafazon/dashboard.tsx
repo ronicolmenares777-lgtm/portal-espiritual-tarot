@@ -60,7 +60,7 @@ export default function Dashboard() {
     checkAuth();
   }, [router]);
 
-  const [activeTab, setActiveTab] = useState<"chats" | "leads" | "listo">("chats");
+  const [activeTab, setActiveTab] = useState<"chats" | "leads" | "listo" | "papelera">("chats");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");
@@ -89,7 +89,7 @@ export default function Dashboard() {
     headerText: "CANAL SAGRADO"
   });
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
-  const [deletedLeads, setDeletedLeads] = useState<Lead[]>([]);
+  const [deletedLeads, setDeletedLeads] = useState<any[]>([]);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
 
   // Funciones de selección
