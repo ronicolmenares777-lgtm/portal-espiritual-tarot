@@ -6,6 +6,7 @@ import { FloatingParticles } from "@/components/FloatingParticles";
 import { LeadService } from "@/services/leadService";
 import { MessageService } from "@/services/messageService";
 import { AuthService } from "@/services/authService";
+import { ProfileService } from "@/services/profileService";
 import type { Database } from "@/integrations/supabase/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -114,7 +115,7 @@ export default function ChatPage() {
       }
 
       // Cargar mensajes
-      const { data: messagesData } = await MessageService.getByLead(id);
+      const { data: messagesData } = await MessageService.getByLeadId(id);
       if (messagesData) {
         setMessages(messagesData);
       }
@@ -481,10 +482,10 @@ export default function ChatPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className={`flex gap-3 ${
-                        msg.sender === "user" ? "flex-row-reverse" : ""
+                        !msg.is_from_maestro ? "flex-row-reverse" : ""
                       }`}
                     >
-                      {msg.sender === "maestro" && (
+                      {msg.is_from_maestro && (
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30 flex-shrink-0">
                           <img 
                             src={maestroAvatar} 
@@ -498,7 +499,7 @@ export default function ChatPage() {
                       )}
                       <div
                         className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                          msg.sender === "maestro"
+                          msg.is_from_maestro
                             ? "bg-gold/20 text-foreground"
                             : "bg-muted/50 text-foreground"
                         }`}

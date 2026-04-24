@@ -7,7 +7,9 @@ import { ArrowLeft, Send, Sparkles, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { MessageService } from "@/services/messageService";
 import { ProfileService } from "@/services/profileService";
-import type { Message } from "@/types/admin";
+import type { Database } from "@/integrations/supabase/types";
+
+type Message = Database["public"]["Tables"]["messages"]["Row"];
 
 export default function ChatUsuario() {
   const router = useRouter();
@@ -36,7 +38,7 @@ export default function ChatUsuario() {
       setIsLoading(true);
 
       // Cargar mensajes
-      const { data: messagesData } = await MessageService.getByLead(leadId);
+      const { data: messagesData } = await MessageService.getByLeadId(leadId);
       if (messagesData) {
         setMessages(messagesData);
       }
@@ -56,7 +58,7 @@ export default function ChatUsuario() {
     loadData();
 
     // Suscribirse a cambios en tiempo real
-    const subscription = MessageService.subscribeToLead(leadId, (newMsg) => {
+    const subscription = MessageService.subscribeToMessages(leadId, (newMsg) => {
       setMessages((prev) => {
         const exists = prev.some((m) => m.id === newMsg.id);
         if (exists) return prev;
