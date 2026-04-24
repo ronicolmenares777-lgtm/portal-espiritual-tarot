@@ -173,29 +173,52 @@ export default function Home() {
     setCurrentScreen("chat");
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!loginData.name.trim() || !loginData.whatsapp.trim()) {
       setLoginError("Por favor, completa todos los campos");
       return;
     }
 
-    const storedLeads = localStorage.getItem("leads");
-    if (storedLeads) {
-      const leads = JSON.parse(storedLeads);
+    try {
+      setLoginError("");
+      
+      // Buscar en Supabase con nombre y teléfono
       const fullPhone = loginData.countryCode + loginData.whatsapp;
+      
+      const { data: leads, error } = await LeadService.getAll();
+      
+      if (error) {
+        console.error("Error buscando lead:", error);
+        setLoginError("Error al buscar consulta");
+        return;
+      }
+      
+      if (!leads || leads.length === 0) {
+        setLoginError("No se encontró ninguna consulta con estos datos");
+        return;
+      }
+      
+      // Buscar lead que coincida con nombre y teléfono
       const user = leads.find((lead: any) => 
-        lead.name.toLowerCase() === loginData.name.toLowerCase() && 
-        lead.whatsapp === fullPhone
+        lead.name.toLowerCase().trim() === loginData.name.toLowerCase().trim() && 
+        lead.whatsapp === loginData.whatsapp
       );
 
       if (user) {
+        // Guardar en localStorage para la sesión
         localStorage.setItem("userAuth", JSON.stringify(user));
+        localStorage.setItem("currentLeadId", user.id);
+        
+        // Redirigir a la página de chat de usuario
         window.location.href = "/chat-usuario";
         return;
       }
-    }
 
-    setLoginError("No se encontró ninguna consulta con estos datos");
+      setLoginError("No se encontró ninguna consulta con estos datos");
+    } catch (error) {
+      console.error("Error en handleLogin:", error);
+      setLoginError("Error al buscar consulta. Intenta de nuevo.");
+    }
   };
 
   return (
