@@ -17,11 +17,12 @@ interface ChatMaestroProps {
   onBack?: () => void;
 }
 
-export function ChatMaestro({ userName, userProblem = "", userCard = "" }: ChatMaestroProps) {
+export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack }: ChatMaestroProps) {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
   const [leadId, setLeadId] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -119,6 +120,8 @@ export function ChatMaestro({ userName, userProblem = "", userCard = "" }: ChatM
       return;
     }
 
+    setIsSending(true);
+
     try {
       console.log("🔄 Creando mensaje en Supabase...");
       const { data, error } = await MessageService.create({
@@ -130,6 +133,7 @@ export function ChatMaestro({ userName, userProblem = "", userCard = "" }: ChatM
       if (error) {
         console.error("❌ Error de Supabase:", error);
         alert(`Error al enviar mensaje: ${error.message}`);
+        setIsSending(false);
         return;
       }
 
@@ -148,9 +152,11 @@ export function ChatMaestro({ userName, userProblem = "", userCard = "" }: ChatM
       }
 
       setMessage("");
+      setIsSending(false);
     } catch (err) {
       console.error("❌ Error inesperado:", err);
       alert("Error inesperado al enviar mensaje");
+      setIsSending(false);
     }
   };
 
