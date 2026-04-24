@@ -231,22 +231,56 @@ export default function PerfilMaestro() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="relative inline-block mb-4">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-gold/20 to-accent/20 border-2 border-gold/50 overflow-hidden">
-              <img
-                src={profileData.avatar}
-                alt={profileData.name}
-                className="w-full h-full object-cover"
-              />
+          {/* Avatar Section */}
+          <div className="flex items-center gap-6 mb-8">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gold/30 bg-muted">
+                <img 
+                  src={profileData.avatar} 
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro";
+                  }}
+                />
+              </div>
+              {isEditing && (
+                <button
+                  onClick={() => {
+                    const seed = prompt("Ingresa una palabra para generar tu avatar único:", "maestro");
+                    if (seed) {
+                      setProfileData({
+                        ...profileData,
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`
+                      });
+                    }
+                  }}
+                  className="absolute -bottom-2 -right-2 bg-gold text-background p-2 rounded-full hover:bg-gold/80 transition-colors"
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
+              )}
             </div>
-            {isEditing && (
-              <button className="absolute bottom-0 right-0 p-2 rounded-full bg-gold text-background hover:bg-accent transition-colors">
-                <Camera className="w-4 h-4" />
-              </button>
-            )}
+            <div className="flex-1">
+              <h2 className="text-2xl font-serif text-gold mb-1">{profileData.name || "Maestro Espiritual"}</h2>
+              <p className="text-foreground/60">{profileData.email}</p>
+              {isEditing && (
+                <div className="mt-3">
+                  <label className="text-sm text-foreground/60 mb-1 block">URL de Avatar (opcional)</label>
+                  <input
+                    type="url"
+                    value={profileData.avatar}
+                    onChange={(e) => setProfileData({ ...profileData, avatar: e.target.value })}
+                    placeholder="https://ejemplo.com/foto.jpg"
+                    className="w-full bg-muted border border-gold/20 rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50"
+                  />
+                  <p className="text-xs text-foreground/40 mt-1">
+                    O click en el botón de cámara para generar un avatar único
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-          <h1 className="text-3xl font-serif text-gold mb-2">{profileData.name}</h1>
-          <p className="text-sm text-muted-foreground">{profileData.email}</p>
         </motion.div>
 
         {/* Tabs */}
