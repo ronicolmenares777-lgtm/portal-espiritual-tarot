@@ -183,14 +183,13 @@ export default function Home() {
 
     try {
       setLoginError("");
-      console.log("🔍 Iniciando búsqueda de lead...");
-      console.log("Datos ingresados:", {
-        name: loginData.name.trim(),
-        whatsapp: loginData.whatsapp.trim(),
-        countryCode: loginData.countryCode
-      });
+      console.log("🔍 ===== INICIO DE BÚSQUEDA DE LEAD =====");
+      console.log("📝 Datos ingresados por el usuario:");
+      console.log("   - Nombre:", loginData.name.trim());
+      console.log("   - WhatsApp:", loginData.whatsapp.trim());
+      console.log("   - Código país:", loginData.countryCode);
       
-      // IMPORTANTE: Buscar en Supabase, NO en localStorage
+      // Buscar en Supabase
       const { data: leads, error } = await LeadService.getAll();
       
       if (error) {
@@ -199,55 +198,73 @@ export default function Home() {
         return;
       }
       
-      console.log("✅ Leads obtenidos de Supabase:", leads?.length || 0);
+      console.log("📊 Leads obtenidos de Supabase:", leads?.length || 0);
       
       if (!leads || leads.length === 0) {
-        console.log("❌ No hay leads en la base de datos");
-        setLoginError("No se encontró ninguna consulta con estos datos");
+        console.log("❌ La base de datos está vacía");
+        setLoginError("No se encontró ninguna consulta. ¿Ya completaste el formulario?");
         return;
       }
 
-      // Buscar lead que coincida EXACTAMENTE
+      // Mostrar todos los leads para debugging
+      console.log("📋 Leads en la BD:");
+      leads.forEach((lead: any, index: number) => {
+        console.log(`   ${index + 1}. Nombre: "${lead.name}" | WhatsApp: "${lead.whatsapp}"`);
+      });
+
+      // Buscar lead que coincida
+      console.log("🔎 Buscando coincidencia...");
       const user = leads.find((lead: any) => {
-        const nameMatch = lead.name?.toLowerCase().trim() === loginData.name.toLowerCase().trim();
-        const phoneMatch = lead.whatsapp?.trim() === loginData.whatsapp.trim();
+        const leadName = lead.name?.toLowerCase().trim() || "";
+        const leadPhone = lead.whatsapp?.trim() || "";
+        const inputName = loginData.name.toLowerCase().trim();
+        const inputPhone = loginData.whatsapp.trim();
         
-        console.log("Comparando con:", {
-          leadName: lead.name,
-          leadPhone: lead.whatsapp,
-          nameMatch,
-          phoneMatch
-        });
+        const nameMatch = leadName === inputName;
+        const phoneMatch = leadPhone === inputPhone;
+        
+        if (leadName.includes(inputName.substring(0, 5))) {
+          console.log(`   🔍 Posible coincidencia: "${lead.name}" (${lead.whatsapp})`);
+          console.log(`      - Nombre match: ${nameMatch} | Phone match: ${phoneMatch}`);
+        }
         
         return nameMatch && phoneMatch;
       });
 
       if (user) {
-        console.log("✅ ¡Lead encontrado!", user);
+        console.log("✅ ¡LEAD ENCONTRADO!");
+        console.log("   - ID:", user.id);
+        console.log("   - Nombre:", user.name);
+        console.log("   - WhatsApp:", user.whatsapp);
         
         // Guardar en localStorage
-        localStorage.setItem("userAuth", JSON.stringify({
+        const authData = {
           id: user.id,
           name: user.name,
           whatsapp: user.whatsapp,
           countryCode: user.country_code || loginData.countryCode,
           problem: user.problem,
           selectedCard: user.selected_cards?.[0] || null
-        }));
+        };
+        
+        localStorage.setItem("userAuth", JSON.stringify(authData));
         localStorage.setItem("currentLeadId", user.id);
         
         console.log("💾 Datos guardados en localStorage");
+        console.log("🔄 Redirigiendo a /chat-usuario");
         
         // Cerrar modal
         setShowLoginModal(false);
         
         // Redirigir
-        console.log("🔄 Redirigiendo a /chat-usuario");
         router.push("/chat-usuario");
       } else {
-        console.log("❌ No se encontró coincidencia");
-        setLoginError("No se encontró ninguna consulta con estos datos. Verifica tu nombre y WhatsApp.");
+        console.log("❌ NO SE ENCONTRÓ COINCIDENCIA");
+        console.log("💡 Verifica que el nombre y WhatsApp sean EXACTAMENTE iguales a los del formulario");
+        setLoginError("No se encontró ninguna consulta con estos datos. Verifica que sean exactos.");
       }
+      
+      console.log("===== FIN DE BÚSQUEDA =====");
     } catch (error) {
       console.error("❌ Error inesperado:", error);
       setLoginError("Error al buscar consulta. Intenta de nuevo.");

@@ -750,18 +750,20 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Lista de leads - CON SCROLL */}
-            <div className="max-h-[calc(100vh-400px)] overflow-y-auto pr-2 space-y-4">
+            {/* Lista de leads mejorada */}
+            <div className="max-h-[calc(100vh-450px)] overflow-y-auto pr-2 space-y-4">
               {loading ? (
-                <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                  <p className="mt-4 text-muted-foreground">Cargando...</p>
+                <div className="text-center py-16 bg-card/30 border border-border rounded-2xl">
+                  <div className="inline-block animate-spin rounded-full h-14 w-14 border-b-3 border-primary"></div>
+                  <p className="mt-6 text-muted-foreground font-medium">Cargando leads...</p>
                 </div>
               ) : activeTab === "papelera" ? (
-                /* Mostrar papelera */
+                /* Papelera mejorada */
                 deletedLeads.length === 0 ? (
-                  <div className="text-center py-12 bg-card/30 border border-border rounded-xl">
-                    <p className="text-muted-foreground">🗑️ No hay leads en la papelera</p>
+                  <div className="text-center py-16 bg-card/30 border border-red-500/20 rounded-2xl">
+                    <div className="text-6xl mb-4">🗑️</div>
+                    <p className="text-muted-foreground font-medium">No hay leads en la papelera</p>
+                    <p className="text-xs text-muted-foreground/60 mt-2">Los leads eliminados aparecerán aquí</p>
                   </div>
                 ) : (
                   deletedLeads.map((lead) => (
@@ -769,38 +771,50 @@ export default function Dashboard() {
                       key={lead.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-card/50 border border-red-500/30 rounded-xl p-6 hover:shadow-lg transition-all"
+                      className="bg-card/50 border-2 border-red-500/30 rounded-2xl p-6 hover:shadow-xl hover:shadow-red-500/10 transition-all hover:border-red-500/50"
                     >
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-lg text-foreground">{lead.name}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {lead.country_code} {lead.whatsapp}
-                          </p>
-                          <p className="text-sm text-muted-foreground/80 mt-2 line-clamp-2">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 font-bold text-lg border-2 border-red-500/30">
+                              {lead.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-lg text-foreground">{lead.name}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {lead.country_code} {lead.whatsapp}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground/80 line-clamp-2 bg-secondary/20 rounded-xl p-4 border border-border">
                             {lead.problem}
                           </p>
-                          <p className="text-xs text-red-400 mt-2">
-                            🗑️ Eliminado: {new Date(lead.deleted_at!).toLocaleDateString("es-MX", {
+                          <div className="mt-3 flex items-center gap-2 text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/30">
+                            <span>🗑️</span>
+                            <span>Eliminado: {new Date(lead.deleted_at!).toLocaleDateString("es-MX", {
                               day: "2-digit",
                               month: "long",
-                              year: "numeric"
-                            })}
-                          </p>
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit"
+                            })}</span>
+                          </div>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2">
                           <button
                             onClick={() => restoreFromTrash(lead.id)}
-                            className="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-lg transition-colors text-sm font-medium"
+                            className="px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all hover:scale-105 text-sm font-semibold border border-primary/30 shadow-md flex items-center gap-2"
                           >
-                            ↩️ Restaurar
+                            <span>↩️</span>
+                            <span>Restaurar</span>
                           </button>
                           <button
                             onClick={() => deletePermanently(lead.id)}
-                            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm font-medium"
+                            className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 text-sm font-semibold border border-red-500/30 shadow-md flex items-center gap-2"
                           >
-                            🗑️ Eliminar
+                            <span>🗑️</span>
+                            <span>Eliminar</span>
                           </button>
                         </div>
                       </div>
@@ -808,8 +822,10 @@ export default function Dashboard() {
                   ))
                 )
               ) : filteredLeads.length === 0 ? (
-                <div className="text-center py-12 bg-card/30 border border-border rounded-xl">
-                  <p className="text-muted-foreground">No hay leads disponibles</p>
+                <div className="text-center py-16 bg-card/30 border border-border rounded-2xl">
+                  <div className="text-6xl mb-4">📭</div>
+                  <p className="text-muted-foreground font-medium">No hay leads disponibles</p>
+                  <p className="text-xs text-muted-foreground/60 mt-2">Los nuevos leads aparecerán aquí</p>
                 </div>
               ) : (
                 filteredLeads.map((lead) => (
@@ -817,49 +833,58 @@ export default function Dashboard() {
                     key={lead.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`bg-card/50 border rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer ${
-                      selectedLeads.has(lead.id) ? "border-primary shadow-lg shadow-primary/20" : "border-border"
+                    className={`bg-card/50 border-2 rounded-2xl p-6 hover:shadow-xl transition-all cursor-pointer ${
+                      selectedLeads.has(lead.id) 
+                        ? "border-primary shadow-xl shadow-primary/30 scale-[1.02]" 
+                        : "border-border hover:border-primary/50"
                     }`}
                   >
                     <div className="flex items-start gap-4">
-                      {/* Checkbox de selección */}
-                      <input
-                        type="checkbox"
-                        checked={selectedLeads.has(lead.id)}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          toggleSelectLead(lead.id);
-                        }}
-                        className="mt-1 w-5 h-5 rounded border-2 border-primary/50 bg-transparent checked:bg-primary checked:border-primary cursor-pointer"
-                      />
+                      {/* Checkbox mejorado */}
+                      <div className="pt-1">
+                        <input
+                          type="checkbox"
+                          checked={selectedLeads.has(lead.id)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleSelectLead(lead.id);
+                          }}
+                          className="w-6 h-6 rounded-lg border-2 border-primary/50 bg-transparent checked:bg-primary checked:border-primary cursor-pointer transition-all"
+                        />
+                      </div>
 
-                      {/* Contenido del lead */}
+                      {/* Contenido del lead mejorado */}
                       <div
                         className="flex-1"
                         onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
                       >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-semibold text-lg text-foreground">{lead.name}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {lead.country_code} {lead.whatsapp}
-                            </p>
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg border-2 border-primary/30">
+                              {lead.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-lg text-foreground">{lead.name}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {lead.country_code} {lead.whatsapp}
+                              </p>
+                            </div>
                           </div>
 
                           <div className="flex flex-col items-end gap-2">
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              className={`px-4 py-1.5 rounded-xl text-xs font-bold border-2 ${
                                 lead.status === "nuevo"
-                                  ? "bg-blue-500/20 text-blue-400"
+                                  ? "bg-blue-500/10 text-blue-400 border-blue-500/40"
                                   : lead.status === "enConversacion"
-                                  ? "bg-yellow-500/20 text-yellow-400"
+                                  ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/40"
                                   : lead.status === "caliente" || lead.status === "clienteCaliente"
-                                  ? "bg-orange-500/20 text-orange-400"
+                                  ? "bg-orange-500/10 text-orange-400 border-orange-500/40"
                                   : lead.status === "listo"
-                                  ? "bg-green-500/20 text-green-400"
+                                  ? "bg-green-500/10 text-green-400 border-green-500/40"
                                   : lead.status === "cerrado"
-                                  ? "bg-purple-500/20 text-purple-400"
-                                  : "bg-gray-500/20 text-gray-400"
+                                  ? "bg-purple-500/10 text-purple-400 border-purple-500/40"
+                                  : "bg-gray-500/10 text-gray-400 border-gray-500/40"
                               }`}
                             >
                               {lead.status === "enConversacion"
@@ -869,13 +894,13 @@ export default function Dashboard() {
                                 : lead.status || "Sin estado"}
                             </span>
 
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground bg-secondary/30 px-3 py-1 rounded-lg">
                               {new Date(lead.created_at).toLocaleDateString("es-MX")}
                             </span>
                           </div>
                         </div>
 
-                        <p className="text-sm text-muted-foreground/80 mt-3 line-clamp-2">
+                        <p className="text-sm text-muted-foreground/80 line-clamp-2 bg-secondary/20 rounded-xl p-4 border border-border">
                           {lead.problem}
                         </p>
 
@@ -884,7 +909,7 @@ export default function Dashboard() {
                             {lead.selected_cards.map((card: any, idx: number) => (
                               <span
                                 key={idx}
-                                className="text-xs bg-primary/10 text-primary px-2 py-1 rounded"
+                                className="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-semibold border border-primary/30"
                               >
                                 {String(card)}
                               </span>
@@ -901,313 +926,308 @@ export default function Dashboard() {
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="p-6 border-b border-gold/10">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h1 className="text-2xl font-serif text-gold mb-1 flex items-center gap-2">
-                    <Sparkles className="w-6 h-6" />
-                    Portal Maestro
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    Gestión de almas y conexiones espirituales
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  {/* Botón Perfil */}
-                  <button
-                    onClick={() => router.push("/Suafazon/perfil")}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gold/20 border border-gold/50 text-gold hover:bg-gold/30 transition-all"
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="hidden md:inline">Perfil</span>
-                  </button>
-
-                  {/* Botón Cerrar Sesión */}
-                  <button
-                    onClick={async () => {
-                      if (confirm("¿Cerrar sesión?")) {
-                        await AuthService.signOut();
-                        router.push("/Suafazon");
-                      }
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30 transition-all"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span className="hidden md:inline">Salir</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Área de contenido principal */}
-            <div className="flex-1 overflow-hidden flex flex-col bg-background">
-              {/* Título y métricas */}
-              <div className="p-4 md:p-8 overflow-y-auto">
-                <div className="max-w-6xl mx-auto">
-                  {/* Título */}
-                  <div className="text-center mb-8 md:mb-12">
-                    <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif text-gold tracking-[0.2em] md:tracking-[0.3em] mb-2">
-                      VISIÓN DEL DESTINO
+            {/* Header mejorado */}
+            <div className="flex-1 p-6 overflow-y-auto">
+              {/* Header mejorado */}
+              <div className="bg-gradient-to-r from-background via-secondary/20 to-background border border-gold/20 rounded-2xl p-6 mb-8 shadow-lg shadow-black/50">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl font-serif font-bold bg-gradient-to-r from-gold via-amber-400 to-gold bg-clip-text text-transparent tracking-wider mb-2">
+                      Portal Maestro
                     </h1>
-                    <p className="text-xs md:text-sm text-gold/60 tracking-[0.2em] md:tracking-[0.3em]">
-                      RESUMEN ESTADÍSTICO DE ALMAS Y CONEXIONES
+                    <p className="text-muted-foreground/80 text-sm">
+                      Gestión de almas y conexiones espirituales
                     </p>
                   </div>
 
-                  {/* Métricas */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-12">
-                    {/* Total Almas */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                      style={{
-                        boxShadow: "0 0 20px hsl(220 90% 56% / 0.1)",
-                      }}
+                  <div className="flex gap-3">
+                    <Link
+                      href="/Suafazon/perfil"
+                      className="px-5 py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-border shadow-md"
                     >
-                      <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-400 mx-auto mb-2 md:mb-3" />
-                      <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                        {stats.totalAlmas}
-                      </p>
-                      <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                        Total Almas
-                      </p>
-                    </motion.div>
+                      <User className="w-4 h-4" />
+                      <span className="text-sm font-medium">Perfil</span>
+                    </Link>
 
-                    {/* Click WA */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                      style={{
-                        boxShadow: "0 0 20px hsl(142 76% 36% / 0.1)",
-                      }}
+                    <button
+                      onClick={handleLogout}
+                      className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-red-500/30 shadow-md"
                     >
-                      <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-green-400 mx-auto mb-2 md:mb-3" />
-                      <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                        {stats.clickWA}
-                      </p>
-                      <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                        Click WA
-                      </p>
-                    </motion.div>
-
-                    {/* Atendidos */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                      style={{
-                        boxShadow: "0 0 20px hsl(var(--gold) / 0.1)",
-                      }}
-                    >
-                      <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-gold mx-auto mb-2 md:mb-3" />
-                      <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                        {stats.atendidos}
-                      </p>
-                      <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                        Atendidos
-                      </p>
-                    </motion.div>
-
-                    {/* Sin Responder */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                      style={{
-                        boxShadow: "0 0 20px hsl(0 84% 60% / 0.1)",
-                      }}
-                    >
-                      <AlertCircle className="w-6 h-6 md:w-8 md:h-8 text-red-400 mx-auto mb-2 md:mb-3" />
-                      <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                        {stats.sinResponder}
-                      </p>
-                      <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                        Sin Responder
-                      </p>
-                    </motion.div>
+                      <LogOut className="w-4 h-4" />
+                      <span className="text-sm font-medium">Salir</span>
+                    </button>
                   </div>
+                </div>
+              </div>
 
-                  {/* Pipeline */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="bg-card/30 rounded-xl p-4 md:p-8 border border-gold/20"
-                  >
-                    <div className="flex items-center justify-between mb-4 md:mb-6">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-gold" />
-                        <h2 className="text-base md:text-lg font-medium text-gold tracking-wider uppercase">
-                          Estado del Pipeline
-                        </h2>
-                      </div>
-                      <span className="text-xs md:text-sm text-muted-foreground">
-                        24 horas
-                      </span>
+              {/* Área de contenido principal */}
+              <div className="flex-1 overflow-hidden flex flex-col bg-background">
+                {/* Título y métricas */}
+                <div className="p-4 md:p-8 overflow-y-auto">
+                  <div className="max-w-6xl mx-auto">
+                    {/* Título */}
+                    <div className="text-center mb-8 md:mb-12">
+                      <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif text-gold tracking-[0.2em] md:tracking-[0.3em] mb-2">
+                        VISIÓN DEL DESTINO
+                      </h1>
+                      <p className="text-xs md:text-sm text-gold/60 tracking-[0.2em] md:tracking-[0.3em]">
+                        RESUMEN ESTADÍSTICO DE ALMAS Y CONEXIONES
+                      </p>
                     </div>
 
-                    <div className="space-y-3 md:space-y-4">
-                      {pipelineData.map((item, index) => (
-                        <motion.div
-                          key={item.label}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="space-y-2"
-                        >
-                          <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-2">
-                              <Circle className={`w-3 h-3 ${item.color.replace("bg-", "text-")}`} fill="currentColor" />
-                              <span className="text-muted-foreground tracking-wider">{item.label}</span>
+                    {/* Métricas */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-12">
+                      {/* Total Almas */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                        style={{
+                          boxShadow: "0 0 20px hsl(220 90% 56% / 0.1)",
+                        }}
+                      >
+                        <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-400 mx-auto mb-2 md:mb-3" />
+                        <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                          {stats.totalAlmas}
+                        </p>
+                        <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                          Total Almas
+                        </p>
+                      </motion.div>
+
+                      {/* Click WA */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                        style={{
+                          boxShadow: "0 0 20px hsl(142 76% 36% / 0.1)",
+                        }}
+                      >
+                        <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-green-400 mx-auto mb-2 md:mb-3" />
+                        <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                          {stats.clickWA}
+                        </p>
+                        <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                          Click WA
+                        </p>
+                      </motion.div>
+
+                      {/* Atendidos */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                        style={{
+                          boxShadow: "0 0 20px hsl(var(--gold) / 0.1)",
+                        }}
+                      >
+                        <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-gold mx-auto mb-2 md:mb-3" />
+                        <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                          {stats.atendidos}
+                        </p>
+                        <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                          Atendidos
+                        </p>
+                      </motion.div>
+
+                      {/* Sin Responder */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                        style={{
+                          boxShadow: "0 0 20px hsl(0 84% 60% / 0.1)",
+                        }}
+                      >
+                        <AlertCircle className="w-6 h-6 md:w-8 md:h-8 text-red-400 mx-auto mb-2 md:mb-3" />
+                        <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                          {stats.sinResponder}
+                        </p>
+                        <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                          Sin Responder
+                        </p>
+                      </motion.div>
+                    </div>
+
+                    {/* Pipeline */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="bg-card/30 rounded-xl p-4 md:p-8 border border-gold/20"
+                    >
+                      <div className="flex items-center justify-between mb-4 md:mb-6">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-gold" />
+                          <h2 className="text-base md:text-lg font-medium text-gold tracking-wider uppercase">
+                            Estado del Pipeline
+                          </h2>
+                        </div>
+                        <span className="text-xs md:text-sm text-muted-foreground">
+                          24 horas
+                        </span>
+                      </div>
+
+                      <div className="space-y-3 md:space-y-4">
+                        {pipelineData.map((item, index) => (
+                          <motion.div
+                            key={item.label}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="space-y-2"
+                          >
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <Circle className={`w-3 h-3 ${item.color.replace("bg-", "text-")}`} fill="currentColor" />
+                                <span className="text-muted-foreground tracking-wider">{item.label}</span>
+                              </div>
+                              <span className="font-medium text-foreground">{item.count}</span>
                             </div>
-                            <span className="font-medium text-foreground">{item.count}</span>
-                          </div>
-                          <div className="h-3 bg-muted/20 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${(item.count / item.max) * 100}%` }}
-                              transition={{ duration: 1, delay: index * 0.1 + 0.2 }}
-                              className={`h-full ${item.color} rounded-full relative`}
-                              style={{
-                                boxShadow: `0 0 20px ${item.color.includes("blue") ? "rgba(59, 130, 246, 0.5)" : 
+                            <div className="h-3 bg-muted/20 rounded-full overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(item.count / item.max) * 100}%` }}
+                                transition={{ duration: 1, delay: index * 0.1 + 0.2 }}
+                                className={`h-full ${item.color} rounded-full relative`}
+                                style={{
+                                  boxShadow: `0 0 20px ${item.color.includes("blue") ? "rgba(59, 130, 246, 0.5)" : 
                                                                  item.color.includes("yellow") ? "rgba(234, 179, 8, 0.5)" :
                                                                  item.color.includes("orange") ? "rgba(249, 115, 22, 0.5)" :
                                                                  item.color.includes("green") ? "rgba(34, 197, 94, 0.5)" :
                                                                  "rgba(239, 68, 68, 0.5)"}`
-                              }}
-                            />
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
+                                }}
+                              />
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
 
-                    {/* Nuevo */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-blue-400" />
-                          Nuevo
-                        </span>
-                        <span className="text-base md:text-xl font-bold text-foreground">
-                          {stats.pipeline.nuevo}
-                        </span>
+                      {/* Nuevo */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-blue-400" />
+                            Nuevo
+                          </span>
+                          <span className="text-base md:text-xl font-bold text-foreground">
+                            {stats.pipeline.nuevo}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(stats.pipeline.nuevo / stats.totalAlmas) * 100}%` }}
+                            transition={{ duration: 1, delay: 0.5 }}
+                            className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
+                            style={{
+                              boxShadow: "0 0 10px hsl(220 90% 56% / 0.5)",
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(stats.pipeline.nuevo / stats.totalAlmas) * 100}%` }}
-                          transition={{ duration: 1, delay: 0.5 }}
-                          className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
-                          style={{
-                            boxShadow: "0 0 10px hsl(220 90% 56% / 0.5)",
-                          }}
-                        />
-                      </div>
-                    </div>
 
-                    {/* En Conversación */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-purple-400" />
-                          En Conversación
-                        </span>
-                        <span className="text-base md:text-xl font-bold text-foreground">
-                          {stats.pipeline.enConversacion}
-                        </span>
+                      {/* En Conversación */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-purple-400" />
+                            En Conversación
+                          </span>
+                          <span className="text-base md:text-xl font-bold text-foreground">
+                            {stats.pipeline.enConversacion}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(stats.pipeline.enConversacion / stats.totalAlmas) * 100}%` }}
+                            transition={{ duration: 1, delay: 0.6 }}
+                            className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full"
+                            style={{
+                              boxShadow: "0 0 10px hsl(270 91% 65% / 0.5)",
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(stats.pipeline.enConversacion / stats.totalAlmas) * 100}%` }}
-                          transition={{ duration: 1, delay: 0.6 }}
-                          className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full"
-                          style={{
-                            boxShadow: "0 0 10px hsl(270 91% 65% / 0.5)",
-                          }}
-                        />
-                      </div>
-                    </div>
 
-                    {/* Cliente Caliente */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-orange-400" />
-                          Cliente Caliente
-                        </span>
-                        <span className="text-base md:text-xl font-bold text-foreground">
-                          {stats.pipeline.clienteCaliente}
-                        </span>
+                      {/* Cliente Caliente */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-orange-400" />
+                            Cliente Caliente
+                          </span>
+                          <span className="text-base md:text-xl font-bold text-foreground">
+                            {stats.pipeline.clienteCaliente}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(stats.pipeline.clienteCaliente / stats.totalAlmas) * 100}%` }}
+                            transition={{ duration: 1, delay: 0.7 }}
+                            className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full"
+                            style={{
+                              boxShadow: "0 0 10px hsl(25 95% 53% / 0.5)",
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(stats.pipeline.clienteCaliente / stats.totalAlmas) * 100}%` }}
-                          transition={{ duration: 1, delay: 0.7 }}
-                          className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full"
-                          style={{
-                            boxShadow: "0 0 10px hsl(25 95% 53% / 0.5)",
-                          }}
-                        />
-                      </div>
-                    </div>
 
-                    {/* Cerrado */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-green-400" />
-                          Cerrado
-                        </span>
-                        <span className="text-base md:text-xl font-bold text-foreground">
-                          {stats.pipeline.cerrado}
-                        </span>
+                      {/* Cerrado */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-400" />
+                            Cerrado
+                          </span>
+                          <span className="text-base md:text-xl font-bold text-foreground">
+                            {stats.pipeline.cerrado}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(stats.pipeline.cerrado / stats.totalAlmas) * 100}%` }}
+                            transition={{ duration: 1, delay: 0.8 }}
+                            className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
+                            style={{
+                              boxShadow: "0 0 10px hsl(142 76% 36% / 0.5)",
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(stats.pipeline.cerrado / stats.totalAlmas) * 100}%` }}
-                          transition={{ duration: 1, delay: 0.8 }}
-                          className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
-                          style={{
-                            boxShadow: "0 0 10px hsl(142 76% 36% / 0.5)",
-                          }}
-                        />
-                      </div>
-                    </div>
 
-                    {/* Perdido */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-gray-400" />
-                          Perdido
-                        </span>
-                        <span className="text-base md:text-xl font-bold text-foreground">
-                          {stats.pipeline.perdido}
-                        </span>
+                      {/* Perdido */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-gray-400" />
+                            Perdido
+                          </span>
+                          <span className="text-base md:text-xl font-bold text-foreground">
+                            {stats.pipeline.perdido}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(stats.pipeline.perdido / stats.totalAlmas) * 100}%` }}
+                            transition={{ duration: 1, delay: 0.9 }}
+                            className="h-full bg-gradient-to-r from-gray-500 to-gray-400 rounded-full"
+                            style={{
+                              boxShadow: "0 0 10px hsl(0 0% 50% / 0.5)",
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(stats.pipeline.perdido / stats.totalAlmas) * 100}%` }}
-                          transition={{ duration: 1, delay: 0.9 }}
-                          className="h-full bg-gradient-to-r from-gray-500 to-gray-400 rounded-full"
-                          style={{
-                            boxShadow: "0 0 10px hsl(0 0% 50% / 0.5)",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
+                    </motion.div>
+                  </div>
                 </div>
               </div>
             </div>
