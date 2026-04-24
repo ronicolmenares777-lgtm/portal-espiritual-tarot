@@ -1,20 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Mic, Paperclip, X, Image as ImageIcon } from "lucide-react";
-import { chatConfig } from "@/lib/config";
-import type { Lead } from "@/types/admin";
+import { Send } from "lucide-react";
 import { MessageService } from "@/services/messageService";
 import { ProfileService } from "@/services/profileService";
 import type { Database } from "@/integrations/supabase/types";
 import { motion } from "framer-motion";
 
-interface Message {
-  texto: string;
-  timestamp: string;
-  isUser?: boolean;
-  imageUrl?: string;
-}
+type Message = Database["public"]["Tables"]["messages"]["Row"];
 
 interface ChatMaestroProps {
   userName: string;
@@ -24,155 +17,91 @@ interface ChatMaestroProps {
   onBack?: () => void;
 }
 
-export function ChatMaestro({ userName, userPhone = "", userProblem = "", userCard = "", onBack }: ChatMaestroProps) {
+export function ChatMaestro({ userName, userProblem = "", userCard = "" }: ChatMaestroProps) {
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<Message[]>(chatConfig.maestro.mensajes);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
+  const [leadId, setLeadId] = useState<string | null>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Guardar lead en localStorage cuando se monta el componente
-  useEffect(() => {
-    if (userName && userPhone) {
-      const existingLeads = localStorage.getItem("leads");
-      const leads: Lead[] = existingLeads ? JSON.parse(existingLeads) : [];
-      
-      // Verificar si el lead ya existe
-      const existingLead = leads.find(lead => lead.whatsapp === userPhone);
-      
-      if (!existingLead) {
-        // Crear nuevo lead
-        const newLead: Lead = {
-          id: Date.now().toString(),
-          name: userName,
-          whatsapp: userPhone,
-          problem: userProblem,
-          card: userCard,
-          status: "nuevo",
-          timestamp: "hace 1 hora",
-          createdAt: new Date().toISOString(),
-          messages: messages.map(msg => ({
-            id: Date.now().toString() + Math.random(),
-            text: msg.texto,
-            timestamp: msg.timestamp,
-            isFromMaestro: !msg.isUser,
-            isUser: msg.isUser
-          }))
-        };
-        
-        leads.push(newLead);
-        localStorage.setItem("leads", JSON.stringify(leads));
-        
-        // Guardar autenticación del usuario
-        localStorage.setItem("userAuth", JSON.stringify(newLead));
-      }
-    }
-  }, [userName, userPhone, userProblem, userCard]);
-
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {
-    if (!message.trim() && !selectedImage) return;
-    
-    const newMessage: Message = {
-      texto: message || "(imagen)",
-      timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-      isUser: true,
-      imageUrl: selectedImage || undefined
+  // Cargar datos y suscribirse a Supabase
+  useEffect(() => {
+    let subscription: any = null;
+
+    const loadData = async () => {
+      // 1. Obtener lead ID de la sesión actual
+      const currentLeadId = localStorage.getItem("currentLeadId");
+      if (!currentLeadId) return;
+      
+      setLeadId(currentLeadId);
+      
+      // 2. Cargar mensajes previos de Supabase
+      const { data: messagesData } = await MessageService.getByLeadId(currentLeadId);
+      
+      if (messagesData && messagesData.length > 0) {
+        setMessages(messagesData);
+      } else {
+        // Si no hay mensajes, crear el mensaje de bienvenida en Supabase
+        const welcomeText = `Hola ${userName}, he analizado tu situación sobre "${userProblem}" y lo que nos revela la carta ${userCard}. El universo tiene un mensaje importante para ti. ¿Estás listo para escucharlo?`;
+        
+        const { data: newMsg } = await MessageService.create({
+          lead_id: currentLeadId,
+          text: welcomeText,
+          is_from_maestro: true
+        });
+        
+        if (newMsg) setMessages([newMsg]);
+      }
+
+      // 3. Suscribirse a nuevos mensajes en tiempo real
+      subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
+      });
     };
 
-    setMessages([...messages, newMessage]);
-    setMessage("");
-    setSelectedImage(null);
-    setPreviewImage(null);
+    loadData();
 
-    // Actualizar el lead en localStorage con el nuevo mensaje
-    if (userPhone) {
-      const existingLeads = localStorage.getItem("leads");
-      if (existingLeads) {
-        const leads: Lead[] = JSON.parse(existingLeads);
-        const leadIndex = leads.findIndex(lead => lead.whatsapp === userPhone);
-        
-        if (leadIndex !== -1) {
-          leads[leadIndex].messages = [
-            ...(leads[leadIndex].messages || []),
-            {
-              id: Date.now().toString(),
-              text: message,
-              timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-              isFromMaestro: false,
-              isUser: true
-            }
-          ];
-          leads[leadIndex].status = "enConversacion";
-          localStorage.setItem("leads", JSON.stringify(leads));
-          
-          // Actualizar también userAuth
-          localStorage.setItem("userAuth", JSON.stringify(leads[leadIndex]));
-        }
+    // 4. Cargar avatar real del maestro
+    ProfileService.getAll().then(({ data: profiles }) => {
+      if (profiles && profiles.length > 0 && profiles[0].avatar_url) {
+        setMaestroAvatar(profiles[0].avatar_url);
       }
-    }
-  };
+    });
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setSelectedImage(result);
-        setPreviewImage(result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+    return () => {
+      if (subscription) subscription.unsubscribe();
+    };
+  }, [userName, userProblem, userCard]);
 
-  const handleRemoveImage = () => {
-    setSelectedImage(null);
-    setPreviewImage(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (!message.trim() || !userPhone) return;
+  // Enviar mensaje a Supabase
+  const handleSend = async () => {
+    if (!message.trim() || !leadId) return;
+    
+    const textToSend = message;
+    setMessage(""); // Limpiar input rápido para mejor UX
 
     try {
-      const existingLeads = localStorage.getItem("leads");
-      if (existingLeads) {
-        const leads: Lead[] = JSON.parse(existingLeads);
-        const leadIndex = leads.findIndex(lead => lead.whatsapp === userPhone);
-        
-        if (leadIndex !== -1) {
-          const { data, error } = await MessageService.create({
-            lead_id: leads[leadIndex].id,
-            text: message,
-            is_from_maestro: false
-          });
+      const { error } = await MessageService.create({
+        lead_id: leadId,
+        text: textToSend,
+        is_from_maestro: false
+      });
 
-          if (error) {
-            console.error("Error enviando mensaje:", error);
-            alert("Error al enviar mensaje");
-            return;
-          }
-
-          if (data) {
-            setMessages((prev) => [...prev, data]);
-          }
-        }
+      if (error) {
+        console.error("Error enviando mensaje:", error);
+        alert("Error al enviar el mensaje. Intenta de nuevo.");
       }
-
-      setMessage("");
-      setSelectedImage(null);
-      setPreviewImage(null);
     } catch (err) {
       console.error("Error inesperado:", err);
-      alert("Error al enviar mensaje");
     }
   };
 
@@ -186,15 +115,18 @@ export function ChatMaestro({ userName, userPhone = "", userProblem = "", userCa
             <div className="relative">
               <img
                 src={maestroAvatar}
-                alt={chatConfig.maestro.nombre}
+                alt="Maestro"
                 className="w-12 h-12 rounded-full object-cover border-2 border-gold"
+                onError={(e) => {
+                  e.currentTarget.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro";
+                }}
               />
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-purple-900" />
             </div>
             
             {/* Info */}
             <div className="flex-1">
-              <h3 className="text-gold font-semibold tracking-wide">{chatConfig.maestro.nombre}</h3>
+              <h3 className="text-gold font-semibold tracking-wide">Maestro Espiritual</h3>
               <p className="text-xs text-green-400 tracking-wider">EN LÍNEA</p>
             </div>
           </div>
@@ -243,44 +175,9 @@ export function ChatMaestro({ userName, userPhone = "", userProblem = "", userCa
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Preview de imagen seleccionada */}
-        {previewImage && (
-          <div className="px-4 pb-2">
-            <div className="relative inline-block">
-              <img 
-                src={previewImage} 
-                alt="Preview" 
-                className="h-20 rounded-lg border-2 border-gold/30"
-              />
-              <button
-                onClick={handleRemoveImage}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-              >
-                <X className="w-4 h-4 text-white" />
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Input */}
         <div className="bg-gradient-to-r from-purple-900/60 to-purple-800/60 backdrop-blur-sm p-4 border-t border-gold/20">
           <div className="flex items-center gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageSelect}
-              className="hidden"
-            />
-            
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2 hover:bg-gold/10 rounded-full transition-colors"
-              title="Adjuntar imagen"
-            >
-              <ImageIcon className="w-5 h-5 text-gold/70" />
-            </button>
-            
             <input
               type="text"
               value={message}
@@ -296,35 +193,9 @@ export function ChatMaestro({ userName, userPhone = "", userProblem = "", userCa
             >
               <Send className="w-5 h-5 text-gold" />
             </button>
-            
-            <button className="p-2 hover:bg-gold/10 rounded-full transition-colors">
-              <Mic className="w-5 h-5 text-gold/70" />
-            </button>
           </div>
         </div>
       </div>
-
-      {/* Modal de preview de imagen */}
-      {previewImage && previewImage !== selectedImage && (
-        <div 
-          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div className="relative max-w-4xl max-h-[90vh]">
-            <img 
-              src={previewImage} 
-              alt="Preview completo" 
-              className="max-w-full max-h-[90vh] rounded-lg"
-            />
-            <button
-              onClick={() => setPreviewImage(null)}
-              className="absolute top-4 right-4 w-10 h-10 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-            >
-              <X className="w-6 h-6 text-white" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
