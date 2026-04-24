@@ -19,6 +19,7 @@ export type Database = {
         Row: {
           country_code: string | null
           created_at: string | null
+          deleted_at: string | null
           id: string
           is_favorite: boolean | null
           last_interaction_at: string | null
@@ -38,6 +39,7 @@ export type Database = {
         Insert: {
           country_code?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
           is_favorite?: boolean | null
           last_interaction_at?: string | null
@@ -57,6 +59,7 @@ export type Database = {
         Update: {
           country_code?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
           is_favorite?: boolean | null
           last_interaction_at?: string | null

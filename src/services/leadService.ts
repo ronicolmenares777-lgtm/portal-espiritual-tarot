@@ -46,20 +46,88 @@ export const LeadService = {
   },
 
   /**
-   * Obtener todos los leads (solo autenticados)
+   * Obtener todos los leads
    */
-  async getAll(): Promise<{ data: Lead[]; error: any }> {
+  async getAll(): Promise<{ data: Lead[] | null; error: any }> {
     const { data, error } = await supabase
       .from("leads")
       .select("*")
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error obteniendo leads:", error);
-      return { data: [], error };
+    return { data, error };
+  },
+
+  /**
+   * Obtener leads en papelera
+   */
+  async getDeleted(): Promise<{ data: Lead[] | null; error: any }> {
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false });
+
+    return { data, error };
+  },
+
+  /**
+   * Mover lead a papelera (soft delete)
+   */
+  async moveToTrash(id: string): Promise<{ error: any }> {
+    const { error } = await supabase
+      .from("leads")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
+
+    return { error };
+  },
+
+  /**
+   * Mover múltiples leads a papelera
+   */
+  async moveMultipleToTrash(ids: string[]): Promise<{ error: any }> {
+    const { error } = await supabase
+      .from("leads")
+      .update({ deleted_at: new Date().toISOString() })
+      .in("id", ids);
+
+    return { error };
+  },
+
+  /**
+   * Restaurar lead de papelera
+   */
+  async restoreFromTrash(id: string): Promise<{ error: any }> {
+    const { error } = await supabase
+      .from("leads")
+      .update({ deleted_at: null })
+      .eq("id", id);
+
+    return { error };
+  },
+
+  /**
+   * Eliminar permanentemente un lead
+   */
+  async deletePermanently(id: string): Promise<{ error: any }> {
+    // Primero eliminar los mensajes asociados
+    const { error: messagesError } = await supabase
+      .from("messages")
+      .delete()
+      .eq("lead_id", id);
+
+    if (messagesError) {
+      return { error: messagesError };
     }
 
-    return { data: data || [], error: null };
+    // Luego eliminar el lead
+    const { error } = await supabase
+      .from("leads")
+      .delete()
+      .eq("id", id);
+
+    return { error };
   },
 
   /**
@@ -98,24 +166,6 @@ export const LeadService = {
 
     console.log("✅ Lead actualizado:", id);
     return { data, error: null };
-  },
-
-  /**
-   * Eliminar un lead
-   */
-  async delete(id: string): Promise<{ success: boolean; error: any }> {
-    const { error } = await supabase
-      .from("leads")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      console.error("Error eliminando lead:", error);
-      return { success: false, error };
-    }
-
-    console.log("✅ Lead eliminado:", id);
-    return { success: true, error: null };
   },
 
   /**

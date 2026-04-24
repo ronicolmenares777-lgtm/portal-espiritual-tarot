@@ -162,16 +162,9 @@ export default function AdminLogin() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tubrujo@gmail.com"
+                    placeholder="admin@email.com"
                     className="w-full bg-black/50 border border-gold/20 rounded-xl pl-12 pr-4 py-3 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
                   />
-                </div>
-                <div className="bg-gold/10 border border-gold/30 rounded-lg p-3 space-y-1">
-                  <p className="text-xs text-gold font-medium">📧 Email registrado:</p>
-                  <p className="text-xs text-foreground">tubrujo@gmail.com</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    ⚠️ Si olvidaste la contraseña, haz click en "¿Olvidaste tu contraseña?" abajo
-                  </p>
                 </div>
               </div>
 

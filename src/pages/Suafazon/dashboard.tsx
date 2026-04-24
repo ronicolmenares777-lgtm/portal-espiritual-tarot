@@ -88,6 +88,102 @@ export default function Dashboard() {
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces",
     headerText: "CANAL SAGRADO"
   });
+  const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
+  const [deletedLeads, setDeletedLeads] = useState<Lead[]>([]);
+  const [showDeletedModal, setShowDeletedModal] = useState(false);
+
+  // Funciones de selección
+  const toggleSelectLead = (leadId: string) => {
+    const newSelected = new Set(selectedLeads);
+    if (newSelected.has(leadId)) {
+      newSelected.delete(leadId);
+    } else {
+      newSelected.add(leadId);
+    }
+    setSelectedLeads(newSelected);
+  };
+
+  const selectAll = () => {
+    const allIds = filteredLeads.map(l => l.id);
+    setSelectedLeads(new Set(allIds));
+  };
+
+  const deselectAll = () => {
+    setSelectedLeads(new Set());
+  };
+
+  // Mover a papelera
+  const moveSelectedToTrash = async () => {
+    if (selectedLeads.size === 0) {
+      alert("No hay leads seleccionados");
+      return;
+    }
+
+    if (!confirm(`¿Mover ${selectedLeads.size} lead(s) a la papelera?`)) {
+      return;
+    }
+
+    try {
+      const ids = Array.from(selectedLeads);
+      const { error } = await LeadService.moveMultipleToTrash(ids);
+
+      if (error) throw error;
+
+      // Recargar datos
+      const { data: allLeads } = await LeadService.getAll();
+      const { data: trashedLeads } = await LeadService.getDeleted();
+      
+      if (allLeads) setLeads(allLeads);
+      if (trashedLeads) setDeletedLeads(trashedLeads);
+      
+      setSelectedLeads(new Set());
+      alert(`${ids.length} lead(s) movido(s) a papelera`);
+    } catch (error) {
+      console.error("Error moviendo a papelera:", error);
+      alert("Error al mover a papelera");
+    }
+  };
+
+  // Restaurar de papelera
+  const restoreFromTrash = async (leadId: string) => {
+    try {
+      const { error } = await LeadService.restoreFromTrash(leadId);
+      if (error) throw error;
+
+      // Recargar datos
+      const { data: allLeads } = await LeadService.getAll();
+      const { data: trashedLeads } = await LeadService.getDeleted();
+      
+      if (allLeads) setLeads(allLeads);
+      if (trashedLeads) setDeletedLeads(trashedLeads);
+
+      alert("Lead restaurado");
+    } catch (error) {
+      console.error("Error restaurando:", error);
+      alert("Error al restaurar");
+    }
+  };
+
+  // Eliminar permanentemente
+  const deletePermanently = async (leadId: string) => {
+    if (!confirm("⚠️ ¿Eliminar PERMANENTEMENTE? Esta acción no se puede deshacer.")) {
+      return;
+    }
+
+    try {
+      const { error } = await LeadService.deletePermanently(leadId);
+      if (error) throw error;
+
+      // Recargar datos
+      const { data: trashedLeads } = await LeadService.getDeleted();
+      if (trashedLeads) setDeletedLeads(trashedLeads);
+
+      alert("Lead eliminado permanentemente");
+    } catch (error) {
+      console.error("Error eliminando:", error);
+      alert("Error al eliminar");
+    }
+  };
 
   // Proteger ruta - redirige a login si no está autenticado
   // useRequireAuth("/Suafazon");
@@ -342,7 +438,7 @@ export default function Dashboard() {
       try {
         setLoading(true);
 
-        // Obtener todos los leads
+        // Obtener todos los leads activos
         const { data: allLeads, error: leadsError } = await LeadService.getAll();
         
         if (leadsError) {
@@ -354,6 +450,12 @@ export default function Dashboard() {
 
         if (allLeads) {
           setLeads(allLeads);
+        }
+
+        // Obtener leads eliminados para papelera
+        const { data: trashedLeads } = await LeadService.getDeleted();
+        if (trashedLeads) {
+          setDeletedLeads(trashedLeads);
         }
 
         setLoading(false);
@@ -595,94 +697,145 @@ export default function Dashboard() {
             </div>
 
             {/* Lista de leads */}
-            <div className="flex-1 overflow-y-auto px-4 space-y-1">
-              {filteredLeads.length === 0 ? (
+            <div className="space-y-4">
+              {loading ? (
                 <div className="text-center py-12">
-                  <div className="text-5xl mb-4">🔍</div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    No se encontraron resultados
-                  </p>
-                  <div className="text-xs text-muted-foreground/60 mb-4 space-y-1">
-                    <p>Total de leads en sistema: {leads.length}</p>
-                    <p>Tab actual: <span className="text-gold">{activeTab}</span></p>
-                    <p>Filtro de estado: <span className="text-gold">{selectedStatus}</span></p>
-                    {searchTerm && <p>Búsqueda: <span className="text-gold">"{searchTerm}"</span></p>}
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  <p className="mt-4 text-muted-foreground">Cargando...</p>
+                </div>
+              ) : activeTab === "papelera" ? (
+                /* Mostrar papelera */
+                deletedLeads.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No hay leads en la papelera</p>
                   </div>
-                  {(searchTerm || selectedStatus !== "todos") && (
-                    <button
-                      onClick={() => {
-                        setSearchTerm("");
-                        setSelectedStatus("todos");
-                      }}
-                      className="mt-3 px-4 py-2 rounded-lg bg-gold/20 border border-gold/50 text-gold hover:bg-gold/30 transition-all text-xs"
+                ) : (
+                  deletedLeads.map((lead) => (
+                    <motion.div
+                      key={lead.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-card/50 border border-border rounded-xl p-6 hover:shadow-lg transition-all"
                     >
-                      Limpiar todos los filtros
-                    </button>
-                  )}
-                  {leads.length === 0 && (
-                    <p className="mt-4 text-xs text-muted-foreground">
-                      No hay leads registrados aún. Los usuarios deben completar el formulario inicial.
-                    </p>
-                  )}
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg text-foreground">{lead.name}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {lead.country_code} {lead.whatsapp}
+                          </p>
+                          <p className="text-sm text-muted-foreground/80 mt-2 line-clamp-2">
+                            {lead.problem}
+                          </p>
+                          <p className="text-xs text-red-400 mt-2">
+                            Eliminado: {new Date(lead.deleted_at!).toLocaleDateString("es-MX")}
+                          </p>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => restoreFromTrash(lead.id)}
+                            className="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-lg transition-colors text-sm font-medium"
+                          >
+                            ↩️ Restaurar
+                          </button>
+                          <button
+                            onClick={() => deletePermanently(lead.id)}
+                            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm font-medium"
+                          >
+                            🗑️ Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))
+                )
+              ) : filteredLeads.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">No hay leads disponibles</p>
                 </div>
               ) : (
                 filteredLeads.map((lead) => (
-                  <button
+                  <motion.div
                     key={lead.id}
-                    onClick={() => {
-                      console.log("🔗 Navegando al chat con ID:", lead.id);
-                      console.log("🔗 Lead completo:", lead);
-                      router.push(`/Suafazon/chat/${lead.id}`);
-                      setSidebarOpen(false);
-                    }}
-                    className="w-full text-left p-4 rounded-xl hover:bg-muted/40 transition-all group border border-gold/5 hover:border-gold/20 bg-card/20 hover:bg-card/40"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`bg-card/50 border rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer ${
+                      selectedLeads.has(lead.id) ? "border-primary shadow-lg shadow-primary/20" : "border-border"
+                    }`}
                   >
-                    <div className="flex items-start gap-3">
-                      {/* Avatar */}
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold/30 to-accent/30 flex items-center justify-center flex-shrink-0">
-                        <User className="w-6 h-6 text-gold" />
-                      </div>
+                    <div className="flex items-start gap-4">
+                      {/* Checkbox de selección */}
+                      <input
+                        type="checkbox"
+                        checked={selectedLeads.has(lead.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleSelectLead(lead.id);
+                        }}
+                        className="mt-1 w-5 h-5 rounded border-2 border-primary/50 bg-transparent checked:bg-primary checked:border-primary cursor-pointer"
+                      />
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-medium text-foreground truncate flex items-center gap-2">
-                            {lead.name}
-                            {lead.is_favorite && <Star className="w-3 h-3 text-gold fill-gold" />}
-                          </h3>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(lead.created_at || "").toLocaleDateString()}
-                          </span>
+                      {/* Contenido del lead */}
+                      <div
+                        className="flex-1"
+                        onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-semibold text-lg text-foreground">{lead.name}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {lead.country_code} {lead.whatsapp}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-2">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                lead.status === "nuevo"
+                                  ? "bg-blue-500/20 text-blue-400"
+                                  : lead.status === "enConversacion"
+                                  ? "bg-yellow-500/20 text-yellow-400"
+                                  : lead.status === "caliente" || lead.status === "clienteCaliente"
+                                  ? "bg-orange-500/20 text-orange-400"
+                                  : lead.status === "listo"
+                                  ? "bg-green-500/20 text-green-400"
+                                  : lead.status === "cerrado"
+                                  ? "bg-purple-500/20 text-purple-400"
+                                  : "bg-gray-500/20 text-gray-400"
+                              }`}
+                            >
+                              {lead.status === "enConversacion"
+                                ? "En Conversación"
+                                : lead.status === "clienteCaliente"
+                                ? "Cliente Caliente"
+                                : lead.status || "Sin estado"}
+                            </span>
+
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(lead.created_at).toLocaleDateString("es-MX")}
+                            </span>
+                          </div>
                         </div>
-                        
-                        <p className="text-sm text-muted-foreground truncate mb-2">
-                          {lead.problem || "Sin descripción"}
+
+                        <p className="text-sm text-muted-foreground/80 mt-3 line-clamp-2">
+                          {lead.problem}
                         </p>
 
-                        <div className="flex items-center gap-2 text-xs">
-                          <Phone className="w-3 h-3 text-accent" />
-                          <span className="text-muted-foreground">
-                            {lead.country_code} {lead.whatsapp}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Status badge */}
-                      <div className={`px-2 py-1 rounded text-xs ${
-                        lead.status === "nuevo" ? "bg-blue-500/20 text-blue-400" :
-                        lead.status === "enConversacion" ? "bg-purple-500/20 text-purple-400" :
-                        lead.status === "clienteCaliente" ? "bg-orange-500/20 text-orange-400" :
-                        lead.status === "cerrado" ? "bg-green-500/20 text-green-400" :
-                        "bg-gray-500/20 text-gray-400"
-                      }`}>
-                        {lead.status === "nuevo" ? "Nuevo" :
-                         lead.status === "enConversacion" ? "En chat" :
-                         lead.status === "clienteCaliente" ? "Caliente" :
-                         lead.status === "cerrado" ? "Cerrado" :
-                         lead.status}
+                        {lead.selected_cards && lead.selected_cards.length > 0 && (
+                          <div className="flex gap-2 mt-3">
+                            {lead.selected_cards.map((card, idx) => (
+                              <span
+                                key={idx}
+                                className="text-xs bg-primary/10 text-primary px-2 py-1 rounded"
+                              >
+                                {card}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </button>
+                  </motion.div>
                 ))
               )}
             </div>
