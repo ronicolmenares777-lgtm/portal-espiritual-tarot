@@ -821,14 +821,14 @@ export default function Dashboard() {
                           {lead.problem}
                         </p>
 
-                        {lead.selected_cards && lead.selected_cards.length > 0 && (
+                        {Array.isArray(lead.selected_cards) && lead.selected_cards.length > 0 && (
                           <div className="flex gap-2 mt-3">
-                            {lead.selected_cards.map((card, idx) => (
+                            {lead.selected_cards.map((card: any, idx: number) => (
                               <span
                                 key={idx}
                                 className="text-xs bg-primary/10 text-primary px-2 py-1 rounded"
                               >
-                                {card}
+                                {String(card)}
                               </span>
                             ))}
                           </div>
