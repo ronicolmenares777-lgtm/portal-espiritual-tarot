@@ -32,76 +32,125 @@ export function ChatMaestro({ userName, userProblem = "", userCard = "" }: ChatM
 
   // Cargar datos y suscribirse a Supabase
   useEffect(() => {
-    let subscription: any = null;
-
     const loadData = async () => {
-      // 1. Obtener lead ID de la sesión actual
+      console.log("🔄 ChatMaestro: Cargando datos iniciales...");
+      
+      // Obtener lead ID del localStorage
       const currentLeadId = localStorage.getItem("currentLeadId");
-      if (!currentLeadId) return;
+      console.log("🆔 Lead ID del localStorage:", currentLeadId);
       
-      setLeadId(currentLeadId);
-      
-      // 2. Cargar mensajes previos de Supabase
-      const { data: messagesData } = await MessageService.getByLeadId(currentLeadId);
-      
-      if (messagesData && messagesData.length > 0) {
-        setMessages(messagesData);
-      } else {
-        // Si no hay mensajes, crear el mensaje de bienvenida en Supabase
-        const welcomeText = `Hola ${userName}, he analizado tu situación sobre "${userProblem}" y lo que nos revela la carta ${userCard}. El universo tiene un mensaje importante para ti. ¿Estás listo para escucharlo?`;
-        
-        const { data: newMsg } = await MessageService.create({
-          lead_id: currentLeadId,
-          text: welcomeText,
-          is_from_maestro: true
-        });
-        
-        if (newMsg) setMessages([newMsg]);
+      if (!currentLeadId) {
+        console.error("❌ No se encontró currentLeadId en localStorage");
+        alert("Error: No se pudo identificar tu consulta. Por favor vuelve a iniciar el flujo.");
+        return;
       }
 
-      // 3. Suscribirse a nuevos mensajes en tiempo real
-      subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
+      setLeadId(currentLeadId);
+      console.log("✅ Lead ID establecido:", currentLeadId);
+
+      // Cargar mensajes existentes
+      console.log("📥 Cargando mensajes existentes...");
+      const { data: messagesData, error: messagesError } = await MessageService.getByLeadId(currentLeadId);
+      
+      if (messagesError) {
+        console.error("❌ Error cargando mensajes:", messagesError);
+      } else {
+        console.log("✅ Mensajes cargados:", messagesData?.length || 0);
+        if (messagesData) {
+          setMessages(messagesData);
+        }
+      }
+
+      // Cargar avatar del maestro
+      console.log("👤 Cargando avatar del maestro...");
+      const { data: profiles, error: profileError } = await ProfileService.getAll();
+      
+      if (profileError) {
+        console.error("❌ Error cargando perfil:", profileError);
+      } else if (profiles && profiles.length > 0) {
+        const maestro = profiles[0];
+        console.log("✅ Perfil del maestro cargado:", maestro.email);
+        if (maestro.avatar_url) {
+          console.log("🖼️ Avatar URL:", maestro.avatar_url);
+          setMaestroAvatar(maestro.avatar_url);
+        }
+      }
+
+      // Suscribirse a nuevos mensajes en tiempo real
+      console.log("🔔 Suscribiéndose a mensajes en tiempo real...");
+      const subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
+        console.log("📨 Nuevo mensaje recibido:", newMsg);
         setMessages((prev) => {
-          if (prev.some((m) => m.id === newMsg.id)) return prev;
+          const exists = prev.some((m) => m.id === newMsg.id);
+          if (exists) {
+            console.log("⚠️ Mensaje duplicado, ignorando");
+            return prev;
+          }
+          console.log("➕ Añadiendo nuevo mensaje");
           return [...prev, newMsg];
         });
       });
+
+      console.log("✅ ChatMaestro: Inicialización completa");
+
+      return () => {
+        console.log("🧹 Limpiando suscripción");
+        subscription.unsubscribe();
+      };
     };
 
     loadData();
-
-    // 4. Cargar avatar real del maestro
-    ProfileService.getAll().then(({ data: profiles }) => {
-      if (profiles && profiles.length > 0 && profiles[0].avatar_url) {
-        setMaestroAvatar(profiles[0].avatar_url);
-      }
-    });
-
-    return () => {
-      if (subscription) subscription.unsubscribe();
-    };
-  }, [userName, userProblem, userCard]);
+  }, []);
 
   // Enviar mensaje a Supabase
-  const handleSend = async () => {
-    if (!message.trim() || !leadId) return;
+  const handleSendMessage = async () => {
+    console.log("📤 handleSendMessage llamado");
+    console.log("📝 Mensaje:", message);
+    console.log("🆔 Lead ID:", leadId);
     
-    const textToSend = message;
-    setMessage(""); // Limpiar input rápido para mejor UX
+    if (!message.trim()) {
+      console.warn("⚠️ Mensaje vacío");
+      return;
+    }
+    
+    if (!leadId) {
+      console.error("❌ No hay leadId - no se puede enviar mensaje");
+      alert("Error: No se pudo identificar la conversación. Por favor recarga la página.");
+      return;
+    }
 
     try {
-      const { error } = await MessageService.create({
+      console.log("🔄 Creando mensaje en Supabase...");
+      const { data, error } = await MessageService.create({
         lead_id: leadId,
-        text: textToSend,
+        text: message.trim(),
         is_from_maestro: false
       });
 
       if (error) {
-        console.error("Error enviando mensaje:", error);
-        alert("Error al enviar el mensaje. Intenta de nuevo.");
+        console.error("❌ Error de Supabase:", error);
+        alert(`Error al enviar mensaje: ${error.message}`);
+        return;
       }
+
+      console.log("✅ Mensaje creado:", data);
+
+      if (data) {
+        setMessages((prev) => {
+          const exists = prev.some((m) => m.id === data.id);
+          if (exists) {
+            console.log("⚠️ Mensaje ya existe, no se duplica");
+            return prev;
+          }
+          console.log("➕ Añadiendo mensaje a la lista");
+          return [...prev, data];
+        });
+      }
+
+      setMessage("");
     } catch (err) {
-      console.error("Error inesperado:", err);
+      console.error("❌ Error inesperado:", err);
+      alert("Error inesperado al enviar mensaje");
     }
   };
 
@@ -182,13 +231,13 @@ export function ChatMaestro({ userName, userProblem = "", userCard = "" }: ChatM
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Escribe un mensaje..."
               className="flex-1 bg-muted/50 border border-border rounded-full px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
             />
             
             <button 
-              onClick={handleSend}
+              onClick={handleSendMessage}
               className="p-2 hover:bg-gold/10 rounded-full transition-colors"
             >
               <Send className="w-5 h-5 text-gold" />

@@ -156,16 +156,19 @@ export default function Home() {
       
       if (error) {
         console.error("⚠️ Error guardando lead:", error);
+        alert("⚠️ Hubo un problema al guardar tu consulta. Por favor intenta nuevamente.");
       } else {
         console.log("✅ Lead guardado exitosamente:", newLead?.id);
         
         // Guardar ID en localStorage para referencia
         if (newLead) {
           localStorage.setItem("currentLeadId", newLead.id);
+          console.log("💾 Lead ID guardado en localStorage:", newLead.id);
         }
       }
     } catch (error) {
       console.error("⚠️ Error inesperado guardando lead:", error);
+      alert("⚠️ Hubo un problema al guardar tu consulta. Por favor intenta nuevamente.");
     }
   };
 
