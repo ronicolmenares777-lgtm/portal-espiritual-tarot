@@ -231,14 +231,26 @@ export function ChatMaestro({ userName, userProblem = "", userCard = "" }: ChatM
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  console.log("⌨️ Enter presionado, enviando mensaje...");
+                  handleSendMessage();
+                }
+              }}
               placeholder="Escribe un mensaje..."
-              className="flex-1 bg-muted/50 border border-border rounded-full px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
+              disabled={isSending}
+              className="flex-1 bg-muted/50 border border-border rounded-full px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all disabled:opacity-50"
             />
             
             <button 
-              onClick={handleSendMessage}
-              className="p-2 hover:bg-gold/10 rounded-full transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                console.log("🖱️ Botón clicked, enviando mensaje...");
+                handleSendMessage();
+              }}
+              disabled={isSending || !message.trim()}
+              className="p-2 hover:bg-gold/10 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-5 h-5 text-gold" />
             </button>
