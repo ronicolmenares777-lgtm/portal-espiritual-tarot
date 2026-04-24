@@ -73,7 +73,9 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
 
   useEffect(() => {
@@ -488,77 +490,85 @@ export default function ChatPage() {
             {/* Área de mensajes - siempre visible */}
             <div className="flex-1 flex flex-col min-w-0 bg-[hsl(260,35%,12%)]">
               {/* Mensajes */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.length === 0 ? (
-                  <div className="text-center py-12">
-                    <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                      Aún no hay mensajes. Inicia la conversación.
-                    </p>
-                  </div>
-                ) : (
-                  messages.map((msg) => (
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {messages.map((msg) => {
+                  const isFromMaestro = msg.is_from_maestro;
+                  const isRead = msg.read_at !== null;
+
+                  return (
                     <motion.div
                       key={msg.id}
-                      initial={{ opacity: 0, y: 10 }}
+                      initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`flex gap-3 ${
-                        !msg.is_from_maestro ? "flex-row-reverse" : ""
-                      }`}
+                      className={`flex ${isFromMaestro ? "justify-end" : "justify-start"}`}
                     >
-                      {msg.is_from_maestro && (
-                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gold/30 flex-shrink-0">
-                          <img 
-                            src={maestroAvatar} 
-                            alt="Maestro"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro";
-                            }}
-                          />
-                        </div>
-                      )}
-                      <div
-                        className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                          msg.is_from_maestro
-                            ? "bg-gold/20 text-foreground"
-                            : "bg-muted/50 text-foreground"
-                        }`}
-                      >
-                        {msg.text && <p className="text-sm">{msg.text}</p>}
-                        
-                        {msg.media_url && (
-                          <div className="mt-2">
-                            {msg.media_type === "image" && (
-                              <img
-                                src={msg.media_url}
-                                alt="Imagen"
-                                className="max-w-full rounded-lg"
-                              />
-                            )}
-                            {msg.media_type === "video" && (
-                              <video
-                                src={msg.media_url}
-                                controls
-                                className="max-w-full rounded-lg"
-                              />
-                            )}
-                            {msg.media_type === "audio" && (
-                              <audio src={msg.media_url} controls className="w-full" />
-                            )}
+                      <div className={`flex gap-3 max-w-[70%] ${isFromMaestro ? "flex-row-reverse" : "flex-row"}`}>
+                        {!isFromMaestro && lead && (
+                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-primary font-semibold">
+                            {lead.name.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        
-                        <span className="text-xs text-muted-foreground mt-1 block">
-                          {new Date(msg.created_at || "").toLocaleTimeString("es-ES", {
-                            hour: "2-digit",
-                            minute: "2-digit"
-                          })}
-                        </span>
+
+                        {isFromMaestro && (
+                          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-gold/30">
+                            <img
+                              src={maestroAvatar}
+                              alt="Maestro"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+
+                        <div>
+                          <div
+                            className={`rounded-2xl px-4 py-3 ${
+                              isFromMaestro
+                                ? "bg-primary/20 text-foreground"
+                                : "bg-secondary/50 text-foreground"
+                            }`}
+                          >
+                            {msg.media_url ? (
+                              <div className="space-y-2">
+                                {msg.media_type === "image" && (
+                                  <img src={msg.media_url} alt="Imagen" className="rounded-lg max-w-full h-auto" />
+                                )}
+                                {msg.media_type === "video" && (
+                                  <video src={msg.media_url} controls className="rounded-lg max-w-full h-auto" />
+                                )}
+                                {msg.media_type === "audio" && (
+                                  <audio src={msg.media_url} controls className="w-full" />
+                                )}
+                                {msg.text && <p className="whitespace-pre-wrap break-words">{msg.text}</p>}
+                              </div>
+                            ) : (
+                              <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                            )}
+                          </div>
+
+                          {/* Timestamp y checkmarks */}
+                          <div className={`flex items-center gap-2 mt-1 px-2 ${isFromMaestro ? "justify-end" : "justify-start"}`}>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(msg.created_at).toLocaleTimeString("es-MX", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                            {isFromMaestro && (
+                              <div className="flex items-center">
+                                {isRead ? (
+                                  <span className="text-primary text-xs">✓✓</span>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">✓</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </motion.div>
-                  ))
-                )}
+                  );
+                })}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* Input de mensaje */}
