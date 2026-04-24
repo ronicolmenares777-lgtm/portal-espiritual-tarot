@@ -176,7 +176,7 @@ export default function PerfilMaestro() {
 
   const handleLogout = async () => {
     if (confirm("¿Cerrar sesión?")) {
-      await AuthService.logout();
+      await AuthService.signOut();
       router.push("/Suafazon");
     }
   };
