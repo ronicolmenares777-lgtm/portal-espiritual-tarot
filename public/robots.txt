@@ -1,0 +1,50 @@
+# robots.txt - Portal Espiritual Tarot
+# Última actualización: 2026-04-24
+
+# Permitir todos los bots responsables
+User-agent: *
+
+# Permitir indexar páginas públicas
+Allow: /
+Allow: /chat-usuario
+
+# No indexar páginas de administración y autenticación
+Disallow: /Suafazon/
+Disallow: /Suafazon/dashboard
+Disallow: /Suafazon/chat/
+Disallow: /Suafazon/perfil
+Disallow: /api/
+
+# No indexar archivos del sistema
+Disallow: /*.json$
+Disallow: /*.xml$
+Disallow: /*_next/*
+Disallow: /static/
+
+# Permitir acceso a recursos necesarios
+Allow: /og-image.png
+Allow: /favicon.svg
+Allow: /tarot/*.jpg
+
+# Sitemap
+Sitemap: https://portal-espiritual.com/sitemap.xml
+
+# Configuración para bots específicos
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Configuración para bots de redes sociales (para vista previa de links)
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+# Rastreo responsable
+Crawl-delay: 1

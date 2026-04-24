@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -7,7 +8,6 @@ import { CardReveal } from "@/components/CardReveal";
 import { QuestionScreen } from "@/components/QuestionScreen";
 import { WarningMessage } from "@/components/WarningMessage";
 import { ChatMaestro } from "@/components/ChatMaestro";
-import { SEO } from "@/components/SEO";
 import { sanitizeText, validateName, validatePhone, validateProblem, rateLimiter, detectSuspiciousContent } from "@/lib/security";
 import { LeadService } from "@/services/leadService";
 import type { TarotCard } from "@/lib/tarotCards";
@@ -197,8 +197,10 @@ export default function Home() {
   return (
     <>
       <SEO 
-        title="Portal Espiritual - Tarot Místico"
-        description="Descubre tu destino a través del tarot. Una experiencia mística única que revelará tu camino espiritual."
+        title="Portal Espiritual - Lectura de Tarot Gratuita | Descubre Tu Destino"
+        description="Lectura de tarot online personalizada con maestros espirituales. Selecciona tus 3 cartas místicas y recibe guía espiritual sobre tu camino. Consulta gratuita disponible ahora."
+        keywords="tarot gratis, lectura de tarot online, consulta espiritual gratis, cartas del tarot, lectura mística, maestro espiritual, destino tarot, tarot personalizado, guía espiritual México"
+        url="/"
       />
       
       <CustomCursor />

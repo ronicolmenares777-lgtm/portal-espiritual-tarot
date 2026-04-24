@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D4AF37;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fondo circular púrpura oscuro -->
+  <circle cx="50" cy="50" r="48" fill="#1a0b2e" stroke="url(#goldGradient)" stroke-width="2"/>
+  
+  <!-- Estrella mística (símbolo del tarot) -->
+  <path d="M50 15 L57 35 L77 35 L62 47 L68 67 L50 54 L32 67 L38 47 L23 35 L43 35 Z" 
+        fill="url(#goldGradient)" 
+        stroke="#FFD700" 
+        stroke-width="1.5"/>
+  
+  <!-- Círculo central brillante -->
+  <circle cx="50" cy="50" r="8" fill="#FFD700" opacity="0.8"/>
+  
+  <!-- Detalles místicos (pequeños puntos) -->
+  <circle cx="50" cy="25" r="2" fill="#FFD700" opacity="0.6"/>
+  <circle cx="35" cy="40" r="1.5" fill="#FFD700" opacity="0.6"/>
+  <circle cx="65" cy="40" r="1.5" fill="#FFD700" opacity="0.6"/>
+  <circle cx="42" cy="62" r="1.5" fill="#FFD700" opacity="0.6"/>
+  <circle cx="58" cy="62" r="1.5" fill="#FFD700" opacity="0.6"/>
+</svg>
