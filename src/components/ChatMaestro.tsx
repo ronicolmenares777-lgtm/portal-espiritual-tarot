@@ -57,7 +57,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       if (!currentLeadId) {
         console.warn("⚠️ No se encontró leadId - Creando lead de emergencia...");
         try {
-          const emergencyLead = await LeadService.create({
+          const { data: emergencyLead, error } = await LeadService.create({
             name: userName || "Usuario",
             whatsapp: userPhone || "0000000000",
             country_code: "+52",
@@ -67,7 +67,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
             precision_answers: []
           });
           
-          if (emergencyLead) {
+          if (emergencyLead && !error) {
             currentLeadId = emergencyLead.id;
             localStorage.setItem("currentLeadId", emergencyLead.id);
             console.log("✅ Lead de emergencia creado:", currentLeadId);

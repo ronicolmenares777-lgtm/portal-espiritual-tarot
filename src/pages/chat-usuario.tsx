@@ -46,7 +46,7 @@ export default function ChatUsuario() {
       setMessages(messagesData);
 
       // Cargar perfil del maestro
-      const profiles = await ProfileService.getAll();
+      const { data: profiles } = await ProfileService.getAll();
       if (profiles && profiles.length > 0) {
         const maestro = profiles[0];
         if (maestro.avatar_url) {

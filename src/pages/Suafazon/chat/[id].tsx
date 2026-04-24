@@ -105,7 +105,7 @@ export default function ChatPage() {
       setIsLoading(true);
       try {
         // Cargar datos del lead
-        const leadData = await LeadService.getById(id);
+        const { data: leadData } = await LeadService.getById(id);
         if (leadData) {
           setLead(leadData);
         }
@@ -115,7 +115,7 @@ export default function ChatPage() {
         setMessages(messagesData);
 
         // Cargar perfil del maestro
-        const profiles = await ProfileService.getAll();
+        const { data: profiles } = await ProfileService.getAll();
         if (profiles && profiles.length > 0) {
           setMaestroProfile(profiles[0]);
         }
