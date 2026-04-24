@@ -47,7 +47,54 @@ export const MessageService = {
       throw error;
     }
 
+    if (!data) {
+      throw new Error("No se pudo crear el mensaje");
+    }
+
     return data;
+  },
+
+  /**
+   * Suscribirse a nuevos mensajes de un lead
+   * ORDEN CRÍTICO: channel → on → subscribe
+   */
+  subscribeToMessages(
+    leadId: string,
+    callback: (message: Message) => void
+  ): any {
+    console.log("🔔 Configurando suscripción realtime para lead:", leadId);
+
+    // Paso 1: Crear el canal con nombre único
+    const channelName = `messages:${leadId}:${Date.now()}`;
+    const channel = supabase.channel(channelName);
+
+    console.log("✅ Canal creado:", channelName);
+
+    // Paso 2: Agregar el listener ANTES de subscribe
+    channel.on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `lead_id=eq.${leadId}`,
+      },
+      (payload) => {
+        console.log("📨 Nuevo mensaje recibido:", payload.new);
+        callback(payload.new as Message);
+      }
+    );
+
+    console.log("✅ Listener agregado");
+
+    // Paso 3: Suscribirse AL FINAL (después de .on)
+    channel.subscribe((status) => {
+      console.log("📡 Estado de suscripción:", status);
+    });
+
+    console.log("✅ Suscripción activada");
+
+    return channel;
   },
 
   /**
@@ -67,41 +114,5 @@ export const MessageService = {
     }
 
     console.log("✅ Mensajes marcados como leídos");
-  },
-
-  /**
-   * Suscribirse a mensajes en tiempo real
-   * ORDEN CORRECTO: channel() -> on() -> subscribe()
-   */
-  subscribeToMessages(
-    leadId: string,
-    callback: (message: Message) => void
-  ) {
-    console.log("🔔 Configurando suscripción realtime para lead:", leadId);
-
-    // PASO 1: Crear el canal
-    const channel = supabase.channel(`messages:${leadId}`);
-
-    // PASO 2: Agregar listener ANTES de subscribe
-    channel.on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "messages",
-        filter: `lead_id=eq.${leadId}`,
-      },
-      (payload) => {
-        console.log("📨 Nuevo mensaje recibido:", payload);
-        callback(payload.new as Message);
-      }
-    );
-
-    // PASO 3: Suscribirse AL FINAL
-    channel.subscribe((status) => {
-      console.log("📡 Estado de suscripción:", status);
-    });
-
-    return channel;
   },
 };

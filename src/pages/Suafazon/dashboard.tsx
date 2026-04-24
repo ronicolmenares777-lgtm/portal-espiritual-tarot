@@ -316,6 +316,82 @@ export default function Dashboard() {
     { label: "PERDIDO", count: stats.pipeline.perdido, color: "bg-red-500", max: 35 },
   ];
 
+  // Cargar datos
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+
+        // Obtener todos los leads
+        const { data: allLeads, error: leadsError } = await LeadService.getAll();
+        
+        if (leadsError) {
+          console.error("Error cargando leads:", leadsError);
+          throw leadsError;
+        }
+
+        console.log("✅ Leads cargados:", allLeads?.length || 0);
+
+        if (allLeads) {
+          setLeads(allLeads);
+
+          // Cargar mensajes para cada lead
+          const messagesPromises = allLeads.map(async (lead) => {
+            const messages = await MessageService.getByLeadId(lead.id);
+            return { leadId: lead.id, count: messages.length };
+          });
+
+          const messagesData = await Promise.all(messagesPromises);
+          const messagesMap: { [key: string]: number } = {};
+          messagesData.forEach(({ leadId, count }) => {
+            messagesMap[leadId] = count;
+          });
+
+          setMessagesCount(messagesMap);
+        }
+
+        // Cargar perfil
+        const { data: profiles, error: profileError } = await ProfileService.getAll();
+        
+        if (profileError) {
+          console.error("Error cargando perfil:", profileError);
+        }
+
+        if (profiles && profiles.length > 0) {
+          setProfile(profiles[0]);
+        }
+
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Error en loadData:", err);
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+
+    // Suscribirse a cambios en leads
+    const leadsSubscription = supabase
+      .channel("leads-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "leads",
+        },
+        () => {
+          console.log("🔄 Cambio detectado en leads, recargando...");
+          loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      leadsSubscription.unsubscribe();
+    };
+  }, []);
+
   return (
     <>
       <SEO 
