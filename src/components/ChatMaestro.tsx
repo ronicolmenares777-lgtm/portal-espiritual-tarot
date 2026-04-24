@@ -132,23 +132,17 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
     setIsSending(true);
 
     try {
-      const { data, error } = await MessageService.create({
+      const createdMessage = await MessageService.create({
         lead_id: leadId,
         text: message.trim(),
         is_from_maestro: false
       });
 
-      if (error) {
-        console.error("❌ Error:", error);
-        setIsSending(false);
-        return;
-      }
-
-      if (data) {
+      if (createdMessage) {
         setMessages((prev) => {
-          const exists = prev.some((m) => m.id === data.id);
+          const exists = prev.some((m) => m.id === createdMessage.id);
           if (exists) return prev;
-          return [...prev, data];
+          return [...prev, createdMessage];
         });
       }
 

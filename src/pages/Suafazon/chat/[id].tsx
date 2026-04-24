@@ -33,6 +33,7 @@ type Message = Database["public"]["Tables"]["messages"]["Row"];
 
 export default function ChatPage() {
   const router = useRouter();
+  const { id } = router.query;
   
   // Verificar autenticación
   useEffect(() => {
@@ -52,6 +53,7 @@ export default function ChatPage() {
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
+  const [maestroProfile, setMaestroProfile] = useState<any>(null);
   const [messageInput, setMessageInput] = useState("");
   const [showQuickResponses, setShowQuickResponses] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -127,16 +129,16 @@ export default function ChatPage() {
     loadData();
   }, [id]);
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !id || typeof id !== "string") return;
+  const handleSendMessage = async (text?: string) => {
+    const messageText = text || messageInput;
+    if (!messageText.trim() || !id || typeof id !== "string") return;
 
-    const messageText = newMessage.trim();
-    setNewMessage("");
+    setMessageInput("");
 
     try {
       const createdMessage = await MessageService.create({
         lead_id: id,
-        text: messageText,
+        text: messageText.trim(),
         is_from_maestro: true,
       });
 
@@ -145,7 +147,7 @@ export default function ChatPage() {
       }
     } catch (error) {
       console.error("Error enviando mensaje:", error);
-      setNewMessage(messageText);
+      setMessageInput(messageText);
     }
   };
 
@@ -338,27 +340,29 @@ export default function ChatPage() {
   const handleSendMedia = async () => {
     if (!mediaPreview || !lead) return;
 
-    const { data: newMessage, error } = await MessageService.create({
-      lead_id: lead.id,
-      text: "",
-      media_url: mediaPreview.url,
-      media_type: mediaPreview.type,
-      is_from_maestro: true
-    });
+    try {
+      const createdMessage = await MessageService.create({
+        lead_id: lead.id,
+        text: "",
+        media_url: mediaPreview.url,
+        media_type: mediaPreview.type,
+        is_from_maestro: true
+      });
 
-    if (error) {
+      if (createdMessage) {
+        setMessages((prev) => [...prev, createdMessage]);
+      }
+
+      setMediaPreview(null);
+
+      // Actualizar estado del lead si es necesario
+      if (lead.status === "nuevo") {
+        await LeadService.updateStatus(lead.id, "enConversacion");
+        setLead({ ...lead, status: "enConversacion" });
+      }
+    } catch (error) {
       console.error("Error enviando media:", error);
       alert("Error al enviar archivo");
-      return;
-    }
-
-    console.log("✅ Media enviado:", newMessage);
-    setMediaPreview(null);
-
-    // Actualizar estado del lead si es necesario
-    if (lead.status === "nuevo") {
-      await LeadService.updateStatus(lead.id, "enConversacion");
-      setLead({ ...lead, status: "enConversacion" });
     }
   };
 

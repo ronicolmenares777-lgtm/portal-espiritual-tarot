@@ -18,7 +18,7 @@ export default function ChatUsuario() {
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
-  const [leadId, setLeadId] = useState<string | null>(null);
+  const [currentLeadId, setCurrentLeadId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -30,31 +30,23 @@ export default function ChatUsuario() {
   }, [messages]);
 
   useEffect(() => {
-    // Intentar obtener leadId de localStorage
-    const storedLeadId = localStorage.getItem("currentLeadId");
-    
-    if (storedLeadId) {
-      setLeadId(storedLeadId);
-    } else {
-      console.warn("No se encontró leadId en localStorage");
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!leadId) return;
-
     const loadData = async () => {
+      const leadId = localStorage.getItem("currentLeadId");
+      if (!leadId) {
+        console.error("No hay leadId");
+        setIsLoading(false);
+        return;
+      }
+
+      setCurrentLeadId(leadId);
       setIsLoading(true);
 
       // Cargar mensajes
-      const { data: messagesData } = await MessageService.getByLeadId(leadId);
-      if (messagesData) {
-        setMessages(messagesData);
-      }
+      const messagesData = await MessageService.getByLeadId(leadId);
+      setMessages(messagesData);
 
-      // Cargar avatar del maestro
-      const { data: profiles } = await ProfileService.getAll();
+      // Cargar perfil del maestro
+      const profiles = await ProfileService.getAll();
       if (profiles && profiles.length > 0) {
         const maestro = profiles[0];
         if (maestro.avatar_url) {
@@ -63,52 +55,46 @@ export default function ChatUsuario() {
       }
 
       setIsLoading(false);
+
+      // Suscribirse a cambios
+      const subscription = MessageService.subscribeToMessages(leadId, (newMsg) => {
+        setMessages((prev) => {
+          const exists = prev.some((m) => m.id === newMsg.id);
+          if (exists) return prev;
+          return [...prev, newMsg];
+        });
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
     };
 
     loadData();
-
-    // Suscribirse a cambios en tiempo real
-    const subscription = MessageService.subscribeToMessages(leadId, (newMsg) => {
-      setMessages((prev) => {
-        const exists = prev.some((m) => m.id === newMsg.id);
-        if (exists) return prev;
-        return [...prev, newMsg];
-      });
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [leadId]);
+  }, []);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !leadId) return;
+    if (!newMessage.trim() || !currentLeadId) return;
 
+    const messageText = newMessage.trim();
+    setNewMessage("");
     setIsSending(true);
 
     try {
-      const { data, error } = await MessageService.create({
-        lead_id: leadId,
-        text: newMessage,
-        is_from_maestro: false
+      const createdMessage = await MessageService.create({
+        lead_id: currentLeadId,
+        text: messageText,
+        is_from_maestro: false,
       });
 
-      if (error) {
-        console.error("Error enviando mensaje:", error);
-        alert("Error al enviar mensaje");
-        setIsSending(false);
-        return;
+      if (createdMessage) {
+        setMessages((prev) => [...prev, createdMessage]);
       }
 
-      if (data) {
-        setMessages((prev) => [...prev, data]);
-      }
-
-      setNewMessage("");
       setIsSending(false);
-    } catch (err) {
-      console.error("Error inesperado:", err);
-      alert("Error al enviar mensaje");
+    } catch (error) {
+      console.error("Error enviando mensaje:", error);
+      setNewMessage(messageText);
       setIsSending(false);
     }
   };
@@ -127,7 +113,7 @@ export default function ChatUsuario() {
     );
   }
 
-  if (!leadId) {
+  if (!currentLeadId) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
         <SEO title="Chat - Portal Espiritual" />
