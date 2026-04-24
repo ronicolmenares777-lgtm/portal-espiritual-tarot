@@ -580,7 +580,60 @@ export default function Dashboard() {
                   ({leads.filter(l => l.status === "listo").length})
                 </span>
               </button>
+              <button
+                onClick={() => {
+                  setActiveTab("papelera");
+                  setSelectedStatus("todos");
+                  deselectAll();
+                }}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                  activeTab === "papelera"
+                    ? "bg-red-500/20 text-red-400 border border-red-500/50"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <span className="text-xs uppercase tracking-wider">🗑️ Papelera</span>
+                <span className="ml-2 text-xs opacity-60">
+                  ({deletedLeads.length})
+                </span>
+              </button>
             </div>
+
+            {/* Barra de acciones - SOLO SI NO ES PAPELERA */}
+            {activeTab !== "papelera" && (
+              <div className="px-4 mb-4">
+                <div className="bg-card/30 border border-gold/20 rounded-lg p-4">
+                  <div className="flex gap-3 items-center flex-wrap">
+                    <button
+                      onClick={selectAll}
+                      className="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-lg transition-colors text-sm font-medium"
+                    >
+                      ✅ Seleccionar todo
+                    </button>
+                    <button
+                      onClick={deselectAll}
+                      className="px-4 py-2 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-lg transition-colors text-sm font-medium"
+                    >
+                      ❌ Deseleccionar
+                    </button>
+
+                    {selectedLeads.size > 0 && (
+                      <div className="flex gap-2 items-center ml-auto">
+                        <span className="text-sm text-foreground font-medium bg-primary/10 px-3 py-1 rounded-full">
+                          {selectedLeads.size} seleccionado(s)
+                        </span>
+                        <button
+                          onClick={moveSelectedToTrash}
+                          className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm font-bold flex items-center gap-2 border-2 border-red-500/50"
+                        >
+                          🗑️ Mover a papelera
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Search */}
             <div className="p-4">

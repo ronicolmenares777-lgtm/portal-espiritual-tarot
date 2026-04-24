@@ -183,19 +183,23 @@ export default function Home() {
 
     try {
       setLoginError("");
-      console.log("🔍 Buscando lead con:", {
+      console.log("🔍 Iniciando búsqueda de lead...");
+      console.log("Datos ingresados:", {
         name: loginData.name.trim(),
-        whatsapp: loginData.whatsapp.trim()
+        whatsapp: loginData.whatsapp.trim(),
+        countryCode: loginData.countryCode
       });
       
-      // Buscar en Supabase con nombre y teléfono
+      // IMPORTANTE: Buscar en Supabase, NO en localStorage
       const { data: leads, error } = await LeadService.getAll();
       
       if (error) {
-        console.error("❌ Error buscando lead:", error);
-        setLoginError("Error al buscar consulta");
+        console.error("❌ Error en Supabase:", error);
+        setLoginError("Error al buscar consulta en la base de datos");
         return;
       }
+      
+      console.log("✅ Leads obtenidos de Supabase:", leads?.length || 0);
       
       if (!leads || leads.length === 0) {
         console.log("❌ No hay leads en la base de datos");
@@ -203,25 +207,23 @@ export default function Home() {
         return;
       }
 
-      console.log("📊 Total de leads encontrados:", leads.length);
-      
-      // Buscar lead que coincida con nombre y teléfono
+      // Buscar lead que coincida EXACTAMENTE
       const user = leads.find((lead: any) => {
         const nameMatch = lead.name?.toLowerCase().trim() === loginData.name.toLowerCase().trim();
         const phoneMatch = lead.whatsapp?.trim() === loginData.whatsapp.trim();
-        console.log(`🔍 Comparando con lead ${lead.name}:`, {
-          nameMatch,
-          phoneMatch,
+        
+        console.log("Comparando con:", {
           leadName: lead.name,
           leadPhone: lead.whatsapp,
-          inputName: loginData.name,
-          inputPhone: loginData.whatsapp
+          nameMatch,
+          phoneMatch
         });
+        
         return nameMatch && phoneMatch;
       });
 
       if (user) {
-        console.log("✅ Lead encontrado:", user);
+        console.log("✅ ¡Lead encontrado!", user);
         
         // Guardar en localStorage
         localStorage.setItem("userAuth", JSON.stringify({
@@ -239,16 +241,15 @@ export default function Home() {
         // Cerrar modal
         setShowLoginModal(false);
         
-        // Redirigir a chat de usuario
+        // Redirigir
         console.log("🔄 Redirigiendo a /chat-usuario");
         router.push("/chat-usuario");
-        return;
+      } else {
+        console.log("❌ No se encontró coincidencia");
+        setLoginError("No se encontró ninguna consulta con estos datos. Verifica tu nombre y WhatsApp.");
       }
-
-      console.log("❌ No se encontró lead con esos datos");
-      setLoginError("No se encontró ninguna consulta con estos datos. Verifica tu nombre y número de WhatsApp.");
     } catch (error) {
-      console.error("❌ Error en handleLogin:", error);
+      console.error("❌ Error inesperado:", error);
       setLoginError("Error al buscar consulta. Intenta de nuevo.");
     }
   };
