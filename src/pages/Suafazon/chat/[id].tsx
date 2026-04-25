@@ -650,9 +650,9 @@ export default function ChatPage() {
           {/* Layout del chat */}
           <div className="flex h-[calc(100vh-57px)] md:h-[calc(100vh-65px)] overflow-hidden">
             {/* Área de mensajes - siempre visible */}
-            <div className="flex-1 flex flex-col min-w-0 bg-gradient-to-b from-[hsl(260,35%,12%)] to-[hsl(260,40%,10%)]">
+            <div className="flex-1 flex flex-col min-w-0 bg-gradient-to-b from-[hsl(260,35%,12%)] to-[hsl(260,40%,8%)]">
               {/* Mensajes */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4">
                 {messages.map((msg) => {
                   const isFromMaestro = msg.is_from_maestro;
                   const isRead = msg.read_at !== null;
@@ -683,10 +683,10 @@ export default function ChatPage() {
 
                         <div className="relative flex-1">
                           <div
-                            className={`rounded-2xl px-4 py-3 ${
+                            className={`rounded-3xl px-4 py-3 ${
                               isFromMaestro
-                                ? "bg-primary/20 text-foreground"
-                                : "bg-secondary/50 text-foreground"
+                                ? "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-background shadow-gold/40"
+                                : "bg-gradient-to-br from-card via-card/95 to-secondary/60 border-2 border-gold/30 text-foreground backdrop-blur-md"
                             }`}
                           >
                             {msg.media_url ? (
@@ -696,7 +696,7 @@ export default function ChatPage() {
                                     <img 
                                       src={msg.media_url} 
                                       alt="Imagen" 
-                                      className="rounded-2xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all duration-300 shadow-xl group-hover/img:shadow-2xl border border-gold/20" 
+                                      className="rounded-3xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all duration-300 shadow-xl group-hover/img:shadow-2xl border border-gold/20" 
                                       onClick={() => setViewingImage(msg.media_url!)} 
                                     />
                                     {/* Botón de descarga SOLO en admin */}
@@ -717,7 +717,7 @@ export default function ChatPage() {
                                     <video 
                                       src={msg.media_url} 
                                       controls 
-                                      className="rounded-2xl max-w-full h-auto shadow-xl border border-gold/20" 
+                                      className="rounded-3xl max-w-full h-auto shadow-xl border border-gold/20" 
                                     />
                                     {/* Botón de descarga SOLO en admin */}
                                     <a
@@ -799,7 +799,7 @@ export default function ChatPage() {
               </div>
 
               {/* Input de mensaje */}
-              <div className="border-t-2 border-gold/20 bg-gradient-to-b from-[hsl(260,35%,14%)] to-[hsl(260,40%,12%)] backdrop-blur-xl p-3 md:p-4 shadow-2xl">
+              <div className="border-t-2 border-gold/30 bg-gradient-to-t from-[hsl(260,35%,14%)] via-[hsl(260,38%,13%)] to-[hsl(260,40%,12%)] backdrop-blur-xl p-3 md:p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
                 {/* Preview de multimedia */}
                 <AnimatePresence>
                   {mediaPreview && (
@@ -807,7 +807,7 @@ export default function ChatPage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 20 }}
-                      className="mb-3 md:mb-4 p-3 md:p-4 bg-card/80 backdrop-blur-md rounded-2xl border-2 border-gold/30 shadow-xl"
+                      className="mb-3 md:mb-4 p-3 md:p-4 bg-card/80 backdrop-blur-md rounded-3xl border-2 border-gold/30 shadow-xl"
                     >
                       <div className="flex items-start justify-between gap-2 md:gap-4">
                         <div className="flex-1">
