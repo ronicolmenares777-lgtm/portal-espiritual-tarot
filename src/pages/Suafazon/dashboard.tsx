@@ -61,7 +61,7 @@ export default function Dashboard() {
     checkAuth();
   }, [router]);
 
-  const [activeTab, setActiveTab] = useState<"chats" | "leads" | "listo" | "papelera">("chats");
+  const [activeTab, setActiveTab] = useState<"leads" | "listo" | "papelera">("leads");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");
@@ -191,11 +191,8 @@ export default function Dashboard() {
   const handleSaveProfile = () => {
     setShowProfile(false);
   };
-
-  // Proteger ruta - redirige a login si no está autenticado
-  // useRequireAuth("/Suafazon");
   
-  // Filtrar leads según tab activo y filtro de estado
+  // Filtrar leads según tab activo y filtro de estado de consulta
   const filteredLeads = leads.filter((lead) => {
     // Filtrar por tab activo
     let tabMatch = false;
@@ -233,26 +230,6 @@ export default function Dashboard() {
     console.log("  - Deleted Leads:", deletedLeads.length);
     console.log("  - Selected Status:", selectedStatus);
   }, [activeTab, leads.length, filteredLeads.length, deletedLeads.length, selectedStatus]);
-
-  // Contadores para tabs
-  const statusCounts = {
-    nuevo: leads.filter(l => l.status === "nuevo").length,
-    enConversacion: leads.filter(l => l.status === "enConversacion").length,
-    clienteCaliente: leads.filter(l => ["caliente", "clienteCaliente"].includes(l.status || "")).length,
-    listo: leads.filter(l => l.status === "listo").length,
-  };
-
-  // Verificar autenticación
-  useEffect(() => {
-    const checkAuth = async () => {
-      const isAuth = await AuthService.isAuthenticated();
-      if (!isAuth) {
-        console.log("⚠️ No hay sesión Supabase válida");
-        router.replace("/Suafazon");
-      }
-    };
-    checkAuth();
-  }, [router]);
 
   // Cargar datos
   useEffect(() => {
@@ -300,7 +277,7 @@ export default function Dashboard() {
 
     loadData();
 
-    // Suscribirse a cambios en leads - MEJORADO
+    // Suscribirse a cambios en leads
     console.log("🔌 Configurando suscripción en tiempo real...");
     const leadsSubscription = supabase
       .channel("leads-dashboard-changes")
@@ -334,8 +311,6 @@ export default function Dashboard() {
         description="Panel de administración para gestionar leads y consultas espirituales"
       />
       
-      {/* Cursor personalizado DESHABILITADO en admin */}
-      {/* <CustomCursor /> */}
       <FloatingParticles />
 
       <div className="min-h-screen bg-background text-foreground">
@@ -494,17 +469,17 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* Filtros mejorados */}
-              <div className="p-4 lg:p-6 border-t border-gold/10 bg-gradient-to-r from-background to-secondary/5">
+              {/* Filtros por estado de consulta */}
+              <div className="pt-4 lg:pt-6 border-t border-gold/10 bg-gradient-to-r from-background to-secondary/5 rounded-xl p-4">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-xs font-bold tracking-wider uppercase text-gold/80 mb-3">
                     <Filter className="w-4 h-4" />
                     <span>Estado de Consulta</span>
                   </div>
 
-                  <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {[
-                      { id: "todos", label: "Todos", count: leads.length, color: "gold" },
+                      { id: "todos", label: "Todos", count: filteredLeads.length, color: "gold" },
                       { id: "pendiente", label: "Pendiente", count: leads.filter(l => l.consultation_status === "pendiente").length, color: "blue-500" },
                       { id: "en_proceso", label: "En Proceso", count: leads.filter(l => l.consultation_status === "en_proceso").length, color: "yellow-500" },
                       { id: "completado", label: "Completado", count: leads.filter(l => l.consultation_status === "completado").length, color: "green-500" },
@@ -516,9 +491,9 @@ export default function Dashboard() {
                           setSelectedStatus(status.id);
                           setSidebarOpen(false);
                         }}
-                        className={`px-3 lg:px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                        className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                           selectedStatus === status.id
-                            ? `bg-${status.color}/20 text-${status.color === "gold" ? "gold" : status.color.split("-")[0] + "-400"} border-2 border-${status.color}/40 shadow-lg shadow-${status.color}/20`
+                            ? "bg-gold/20 text-gold border-2 border-gold/40 shadow-lg shadow-gold/20"
                             : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-gold/30"
                         }`}
                       >
@@ -536,184 +511,344 @@ export default function Dashboard() {
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Header mejorado */}
-            <div className="flex-1 p-6 overflow-y-auto">
-              {/* Área principal mejorada */}
-              <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden relative">
-                {/* Botón hamburguesa móvil */}
-                <button
-                  onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-gold to-amber-500 shadow-[0_0_20px_rgba(250,214,54,0.4)] flex items-center justify-center text-background z-30 hover:scale-110 transition-transform border border-amber-300"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
+            {/* Área principal mejorada */}
+            <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden relative">
+              {/* Botón hamburguesa móvil */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-gold to-amber-500 shadow-[0_0_20px_rgba(250,214,54,0.4)] flex items-center justify-center text-background z-30 hover:scale-110 transition-transform border border-amber-300"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
 
-                {/* Header mejorado */}
-                <div className="bg-gradient-to-r from-background via-secondary/20 to-background border border-gold/20 rounded-2xl p-4 lg:p-6 mb-4 lg:mb-6 shadow-lg shadow-black/50 shrink-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <h1 className="text-2xl sm:text-3xl font-serif font-bold bg-gradient-to-r from-gold via-amber-400 to-gold bg-clip-text text-transparent tracking-wider mb-1 sm:mb-2">
-                        Portal Maestro
-                      </h1>
-                      <p className="text-muted-foreground/80 text-xs sm:text-sm">
-                        Gestión de almas y conexiones espirituales
-                      </p>
-                      {/* Debug info temporal */}
-                      <div className="mt-2 text-xs text-primary/70 font-mono">
-                        📊 {leads.length} leads cargados | Filtrados: {filteredLeads.length} | Tab: {activeTab}
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
-                      <Link
-                        href="/Suafazon/perfil"
-                        className="flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 border border-border shadow-md"
-                      >
-                        <User className="w-4 h-4" />
-                        <span className="text-xs sm:text-sm font-medium">Perfil</span>
-                      </Link>
-
-                      <button
-                        onClick={handleLogout}
-                        className="flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 border border-red-500/30 shadow-md"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span className="text-xs sm:text-sm font-medium">Salir</span>
-                      </button>
+              {/* Header mejorado */}
+              <div className="bg-gradient-to-r from-background via-secondary/20 to-background border border-gold/20 rounded-2xl p-4 lg:p-6 mb-4 lg:mb-6 shadow-lg shadow-black/50 shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-serif font-bold bg-gradient-to-r from-gold via-amber-400 to-gold bg-clip-text text-transparent tracking-wider mb-1 sm:mb-2">
+                      Portal Maestro
+                    </h1>
+                    <p className="text-muted-foreground/80 text-xs sm:text-sm">
+                      Gestión de almas y conexiones espirituales
+                    </p>
+                    <div className="mt-2 text-xs text-primary/70 font-mono">
+                      📊 {leads.length} leads cargados | Filtrados: {filteredLeads.length} | Tab: {activeTab}
                     </div>
                   </div>
-                </div>
 
-                {/* Área de contenido principal */}
-                <div className="flex-1 overflow-hidden flex flex-col bg-background">
+                  <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+                    <Link
+                      href="/Suafazon/perfil"
+                      className="flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 border border-border shadow-md"
+                    >
+                      <User className="w-4 h-4" />
+                      <span className="text-xs sm:text-sm font-medium">Perfil</span>
+                    </Link>
+
+                    <button
+                      onClick={handleLogout}
+                      className="flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 border border-red-500/30 shadow-md"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span className="text-xs sm:text-sm font-medium">Salir</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Lista de leads mejorada - AHORA MÁS GRANDE */}
-            <div className="flex-1 overflow-y-auto pr-2 space-y-3 lg:space-y-4 pb-20">
-              {loading ? (
-                <div className="text-center py-16 bg-card/30 border border-border rounded-2xl">
-                  <div className="inline-block animate-spin rounded-full h-14 w-14 border-b-3 border-primary"></div>
-                  <p className="mt-6 text-muted-foreground font-medium">Cargando leads...</p>
+              {/* Tabs de navegación en área principal */}
+              <div className="bg-card/40 border border-gold/10 rounded-2xl p-4 lg:p-6 mb-4 lg:mb-6 shadow-lg shadow-black/30 shrink-0">
+                <div className="grid grid-cols-3 gap-2 lg:gap-3 mb-4 lg:mb-6">
+                  <button
+                    onClick={() => {
+                      setActiveTab("leads");
+                      setSelectedStatus("todos");
+                      deselectAll();
+                    }}
+                    className={`w-full px-2 lg:px-6 py-3 rounded-xl font-medium transition-all text-xs lg:text-sm ${
+                      activeTab === "leads"
+                        ? "bg-blue-500/20 text-blue-400 border-2 border-blue-500/50 shadow-lg shadow-blue-500/20 scale-105 z-10"
+                        : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-blue-500/20"
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="font-semibold tracking-wider">📋 LEADS</span>
+                      <span className="opacity-70">
+                        ({leads.filter(l => l.status === "nuevo").length})
+                      </span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveTab("listo");
+                      setSelectedStatus("todos");
+                      deselectAll();
+                    }}
+                    className={`w-full px-2 lg:px-6 py-3 rounded-xl font-medium transition-all text-xs lg:text-sm ${
+                      activeTab === "listo"
+                        ? "bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/50 shadow-lg shadow-emerald-500/20 scale-105 z-10"
+                        : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-emerald-500/20"
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="font-semibold tracking-wider">✅ LISTO</span>
+                      <span className="opacity-70">
+                        ({leads.filter(l => l.status === "listo").length})
+                      </span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveTab("papelera");
+                      setSelectedStatus("todos");
+                      deselectAll();
+                    }}
+                    className={`w-full px-2 lg:px-6 py-3 rounded-xl font-medium transition-all text-xs lg:text-sm ${
+                      activeTab === "papelera"
+                        ? "bg-red-500/20 text-red-400 border-2 border-red-500/50 shadow-lg shadow-red-500/20 scale-105 z-10"
+                        : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-red-500/20"
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="font-semibold tracking-wider">🗑️ PAPELERA</span>
+                      <span className="opacity-70">
+                        ({deletedLeads.length})
+                      </span>
+                    </div>
+                  </button>
                 </div>
-              ) : activeTab === "papelera" ? (
-                /* Papelera */
-                deletedLeads.length === 0 ? (
-                  <div className="text-center py-16 bg-card/30 border border-red-500/20 rounded-2xl">
-                    <div className="text-6xl mb-4">🗑️</div>
-                    <p className="text-muted-foreground font-medium">No hay leads en la papelera</p>
-                    <p className="text-xs text-muted-foreground/60 mt-2">Los leads eliminados aparecerán aquí</p>
+
+                {/* Barra de acciones */}
+                {activeTab !== "papelera" && (
+                  <div className="border-t border-gold/10 pt-4 lg:pt-6">
+                    <div className="flex gap-2 lg:gap-3 items-center flex-wrap justify-between">
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <button
+                          onClick={selectAll}
+                          className="flex-1 sm:flex-none px-3 lg:px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-primary/30 shadow-md whitespace-nowrap"
+                        >
+                          ✅ Seleccionar todo
+                        </button>
+                        <button
+                          onClick={deselectAll}
+                          className="flex-1 sm:flex-none px-3 lg:px-5 py-2.5 bg-secondary/30 hover:bg-secondary/50 text-foreground rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-border shadow-md whitespace-nowrap"
+                        >
+                          ❌ Deseleccionar
+                        </button>
+                      </div>
+
+                      {selectedLeads.size > 0 && (
+                        <div className="flex gap-2 lg:gap-3 items-center w-full sm:w-auto mt-2 sm:mt-0">
+                          <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/40 rounded-xl px-3 py-2 shadow-md">
+                            <span className="text-xs lg:text-sm text-foreground font-bold whitespace-nowrap">
+                              {selectedLeads.size} seleccionado(s)
+                            </span>
+                          </div>
+                          <button
+                            onClick={moveSelectedToTrash}
+                            className="flex-1 sm:flex-none px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-bold flex items-center justify-center gap-2 border-2 border-red-500/40 shadow-lg shadow-red-500/20 whitespace-nowrap"
+                          >
+                            <span>🗑️</span>
+                            <span>Mover a papelera</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Lista de leads */}
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3 lg:space-y-4 pb-20">
+                {loading ? (
+                  <div className="text-center py-16 bg-card/30 border border-border rounded-2xl">
+                    <div className="inline-block animate-spin rounded-full h-14 w-14 border-b-3 border-primary"></div>
+                    <p className="mt-6 text-muted-foreground font-medium">Cargando leads...</p>
+                  </div>
+                ) : activeTab === "papelera" ? (
+                  deletedLeads.length === 0 ? (
+                    <div className="text-center py-16 bg-card/30 border border-red-500/20 rounded-2xl">
+                      <div className="text-6xl mb-4">🗑️</div>
+                      <p className="text-muted-foreground font-medium">No hay leads en la papelera</p>
+                      <p className="text-xs text-muted-foreground/60 mt-2">Los leads eliminados aparecerán aquí</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 lg:space-y-4">
+                      {deletedLeads.map((lead) => (
+                        <motion.div
+                          key={lead.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-card/50 border-2 border-red-500/30 rounded-2xl p-4 lg:p-6 hover:shadow-xl hover:shadow-red-500/10 transition-all hover:border-red-500/50"
+                        >
+                          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                            <div className="flex-1 w-full">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 font-bold text-lg border-2 border-red-500/30">
+                                  {lead.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                  <h3 className="font-bold text-base lg:text-lg text-foreground truncate">{lead.name}</h3>
+                                  <p className="text-xs lg:text-sm text-muted-foreground truncate">
+                                    {lead.country_code} {lead.whatsapp}
+                                  </p>
+                                </div>
+                              </div>
+                              <p className="text-xs lg:text-sm text-muted-foreground/80 line-clamp-2 bg-secondary/20 rounded-lg p-3 border border-border">
+                                {lead.problem}
+                              </p>
+                              <div className="mt-3 flex items-center gap-2 text-[10px] lg:text-xs text-red-400 bg-red-500/10 rounded-lg px-2 lg:px-3 py-1.5 lg:py-2 border border-red-500/30 w-fit">
+                                <span>🗑️</span>
+                                <span className="truncate">Eliminado: {new Date(lead.deleted_at!).toLocaleDateString("es-MX")}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex sm:flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                              <button
+                                onClick={() => restoreFromTrash(lead.id)}
+                                className="flex-1 sm:flex-none px-4 lg:px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-primary/30 shadow-md flex items-center justify-center gap-2"
+                              >
+                                <span>↩️</span>
+                                <span>Restaurar</span>
+                              </button>
+                              <button
+                                onClick={() => deletePermanently(lead.id)}
+                                className="flex-1 sm:flex-none px-4 lg:px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-red-500/30 shadow-md flex items-center justify-center gap-2"
+                              >
+                                <span>🗑️</span>
+                                <span>Eliminar</span>
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )
+                ) : filteredLeads.length === 0 ? (
+                  <div className="text-center py-16 bg-card/30 border border-border rounded-2xl">
+                    <div className="text-6xl mb-4">📭</div>
+                    <p className="text-muted-foreground font-medium text-lg mb-2">
+                      {activeTab === "leads" && "No hay leads nuevos"}
+                      {activeTab === "listo" && "No hay leads listos"}
+                    </p>
+                    <p className="text-xs text-muted-foreground/60 mt-2">
+                      Los nuevos leads aparecerán automáticamente aquí
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3 lg:space-y-4">
-                    {deletedLeads.map((lead) => (
+                    {filteredLeads.map((lead) => (
                       <motion.div
                         key={lead.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-card/50 border-2 border-red-500/30 rounded-2xl p-4 lg:p-6 hover:shadow-xl hover:shadow-red-500/10 transition-all hover:border-red-500/50"
+                        className={`bg-card/50 border-2 rounded-2xl p-4 lg:p-6 hover:shadow-xl transition-all ${
+                          selectedLeads.has(lead.id) 
+                            ? "border-primary shadow-xl shadow-primary/30" 
+                            : "border-border hover:border-primary/50"
+                        }`}
                       >
-                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                          <div className="flex-1 w-full">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 font-bold text-lg border-2 border-red-500/30">
-                                {lead.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div className="min-w-0">
-                                <h3 className="font-bold text-base lg:text-lg text-foreground truncate">{lead.name}</h3>
-                                <p className="text-xs lg:text-sm text-muted-foreground truncate">
-                                  {lead.country_code} {lead.whatsapp}
-                                </p>
-                              </div>
-                            </div>
-                            <p className="text-xs lg:text-sm text-muted-foreground/80 line-clamp-2 bg-secondary/20 rounded-lg p-3 border border-border">
-                              {lead.problem}
-                            </p>
-                            <div className="mt-3 flex items-center gap-2 text-[10px] lg:text-xs text-red-400 bg-red-500/10 rounded-lg px-2 lg:px-3 py-1.5 lg:py-2 border border-red-500/30 w-fit">
-                              <span>🗑️</span>
-                              <span className="truncate">Eliminado: {new Date(lead.deleted_at!).toLocaleDateString("es-MX")}</span>
-                            </div>
+                        <div className="flex items-start gap-3 lg:gap-4">
+                          <div className="pt-1 shrink-0">
+                            <input
+                              type="checkbox"
+                              checked={selectedLeads.has(lead.id)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                toggleSelectLead(lead.id);
+                              }}
+                              className="w-5 h-5 lg:w-6 lg:h-6 rounded-lg border-2 border-primary/50 bg-transparent checked:bg-primary checked:border-primary cursor-pointer transition-all"
+                            />
                           </div>
 
-                          <div className="flex sm:flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                            <button
-                              onClick={() => restoreFromTrash(lead.id)}
-                              className="flex-1 sm:flex-none px-4 lg:px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-primary/30 shadow-md flex items-center justify-center gap-2"
+                          <div className="flex-1 min-w-0">
+                            <div 
+                              className="flex items-start gap-3 mb-4 cursor-pointer"
+                              onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
                             >
-                              <span>↩️</span>
-                              <span>Restaurar</span>
-                            </button>
+                              <div className="w-14 h-14 lg:w-16 lg:h-16 shrink-0 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-xl lg:text-2xl border-2 border-primary/40 shadow-lg">
+                                {lead.name.charAt(0).toUpperCase()}
+                              </div>
+                              
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-lg lg:text-xl text-foreground mb-1">
+                                  {lead.name}
+                                </h3>
+                                <div className="flex flex-col gap-1">
+                                  <p className="text-sm lg:text-base text-muted-foreground flex items-center gap-2">
+                                    <span className="text-primary">📱</span>
+                                    <span className="font-mono">{lead.country_code} {lead.whatsapp}</span>
+                                  </p>
+                                  <p className="text-xs text-muted-foreground/70">
+                                    Registrado: {new Date(lead.created_at).toLocaleDateString("es-MX", {
+                                      day: "2-digit",
+                                      month: "long",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit"
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <span className="shrink-0 px-3 lg:px-4 py-1.5 lg:py-2 rounded-xl text-xs lg:text-sm font-bold border-2 whitespace-nowrap bg-blue-500/20 text-blue-400 border-blue-500/50">
+                                {lead.consultation_status === "pendiente" ? "Pendiente"
+                                  : lead.consultation_status === "en_proceso" ? "En Proceso"
+                                  : lead.consultation_status === "completado" ? "Completado"
+                                  : lead.consultation_status === "cancelado" ? "Cancelado"
+                                  : "Sin Estado"}
+                              </span>
+                            </div>
+
+                            <div className="bg-secondary/20 rounded-xl p-4 border border-border mb-3">
+                              <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-2 font-semibold">
+                                Consulta:
+                              </p>
+                              <p className="text-sm lg:text-base text-foreground leading-relaxed">
+                                {lead.problem}
+                              </p>
+                            </div>
+
+                            {Array.isArray(lead.selected_cards) && lead.selected_cards.length > 0 && (
+                              <div className="bg-primary/5 rounded-xl p-3 border border-primary/20 mb-3">
+                                <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-2 font-semibold">
+                                  Cartas:
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {lead.selected_cards.map((card, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="text-xs lg:text-sm bg-primary/20 text-primary px-3 py-1.5 rounded-lg font-bold border border-primary/40"
+                                    >
+                                      🎴 {String(card)}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                             <button
-                              onClick={() => deletePermanently(lead.id)}
-                              className="flex-1 sm:flex-none px-4 lg:px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-red-500/30 shadow-md flex items-center justify-center gap-2"
+                              onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                              className="w-full px-4 py-3 bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 text-primary rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border border-primary/40 shadow-md flex items-center justify-center gap-2"
                             >
-                              <span>🗑️</span>
-                              <span>Eliminar</span>
+                              <span>💬</span>
+                              <span>Ver Chat Completo</span>
                             </button>
                           </div>
                         </div>
                       </motion.div>
                     ))}
                   </div>
-                )
-              ) : filteredLeads.length === 0 ? (
-                <div className="text-center py-16 bg-card/30 border border-border rounded-2xl">
-                  <div className="text-6xl mb-4">📭</div>
-                  <p className="text-muted-foreground font-medium text-lg mb-2">
-                    {activeTab === "leads" && "No hay leads nuevos"}
-                    {activeTab === "chats" && "No hay chats activos"}
-                    {activeTab === "listo" && "No hay leads listos"}
-                  </p>
-                  <p className="text-xs text-muted-foreground/60 mt-2">
-                    Los nuevos leads aparecerán automáticamente aquí
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 lg:space-y-4">
-                  {filteredLeads.map((lead) => (
-                    <motion.div
-                      key={lead.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`bg-card/50 border-2 rounded-2xl p-4 lg:p-6 hover:shadow-xl transition-all ${
-                        selectedLeads.has(lead.id) 
-                          ? "border-primary shadow-xl shadow-primary/30" 
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3 lg:gap-4">
-                        {/* Checkbox */}
-                        <div className="pt-1 shrink-0">
-                          <input
-                            type="checkbox"
-                            checked={selectedLeads.has(lead.id)}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              toggleSelectLead(lead.id);
-                            }}
-                            className="w-5 h-5 lg:w-6 lg:h-6 rounded-lg border-2 border-primary/50 bg-transparent checked:bg-primary checked:border-primary cursor-pointer transition-all"
-                          />
-                        </div>
-
-                        {/* Contenido del lead */}
-                        <div className="flex-1 min-w-0">
-                          {/* Header */}
-                          <div 
-                            className="flex items-start gap-3 mb-4 cursor-pointer"
-                            onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                          >
-                            <div className="w-14 h-14 lg:w-16 lg:h-16 shrink-0 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-xl lg:text-2xl border-2 border-primary/40 shadow-lg">
-                              {lead.name.charAt(0).toUpperCase()}
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-lg lg:text-xl text-foreground mb-1">
-                                {lead.name}
-                              </h3>
-                              <div className="flex flex-col gap-1">
-                                <p className="text-sm lg:text-base text-muted-foreground flex items-center gap-2">
-                                  <span className="text-primary">📱</span>
-                                  <span className="fon
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
