@@ -535,7 +535,7 @@ export default function Dashboard() {
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center border border-gold/40">
-                    <BarChart className="w-6 h-6 text-gold" />
+                    <BarChart3 className="w-6 h-6 text-gold" />
                   </div>
                   <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-gold">
                     Resumen Estadístico
