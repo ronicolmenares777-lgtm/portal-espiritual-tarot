@@ -587,6 +587,10 @@ export default function Dashboard() {
                       <p className="text-muted-foreground/80 text-xs sm:text-sm">
                         Gestión de almas y conexiones espirituales
                       </p>
+                      {/* Debug info temporal */}
+                      <div className="mt-2 text-xs text-primary/70 font-mono">
+                        📊 {leads.length} leads cargados | Filtrados: {filteredLeads.length} | Tab: {activeTab}
+                      </div>
                     </div>
 
                     <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
