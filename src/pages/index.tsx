@@ -316,30 +316,10 @@ export default function Home() {
         </motion.button>
       </motion.div>
 
-      {/* Header Section - SOLO TÍTULO */}
-      <motion.div
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="relative z-10 text-center mb-6 lg:mb-8"
-      >
-        {/* Título principal */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight"
-        >
-          <span className="block bg-gradient-to-r from-gold via-amber-300 to-gold bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(250,214,54,0.3)]">
-            Portal Espiritual
-          </span>
-        </motion.h1>
-      </motion.div>
-
-      {/* Contenido principal - MÁS ARRIBA */}
-      <div className="container mx-auto px-4 py-4 lg:py-6 relative z-10">
+      {/* Contenido principal - SIN HEADER */}
+      <div className="container mx-auto px-4 py-2 lg:py-4 relative z-10">
         {currentScreen === "form" && (
-          <main className="min-h-screen flex items-center justify-center p-4 pt-4 relative overflow-hidden">
+          <main className="min-h-screen flex items-center justify-center p-4 pt-2 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background to-background" />
             
             <div className="absolute inset-0 overflow-hidden pointer-events-none">

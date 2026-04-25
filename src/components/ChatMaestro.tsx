@@ -190,48 +190,51 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
         console.log("✅ Mensajes cargados:", messagesData.length);
         setMessages(messagesData);
 
-        // Configurar suscripción en tiempo real
+        // Configurar suscripción en tiempo real - ORDEN CORRECTO
         console.log("🔔 Configurando suscripción realtime para lead:", currentLeadId);
         
-        subscription = supabase
-          .channel(`messages-${currentLeadId}`)
-          .on(
-            "postgres_changes",
-            {
-              event: "*",
-              schema: "public",
-              table: "messages",
-              filter: `lead_id=eq.${currentLeadId}`,
-            },
-            (payload) => {
-              console.log("🔔 Cambio detectado:", payload.eventType);
-              
-              if (payload.eventType === "INSERT") {
-                const newMessage = payload.new as Message;
-                console.log("📨 Nuevo mensaje recibido:", newMessage);
-                
-                setMessages((prev) => {
-                  if (prev.some(m => m.id === newMessage.id)) {
-                    console.log("⚠️ Mensaje duplicado, ignorando");
-                    return prev;
-                  }
-                  return [...prev, newMessage];
-                });
-              }
-            }
-          )
-          .subscribe((status) => {
-            console.log("📡 Estado de suscripción:", status);
+        // PRIMERO crear el canal y configurar TODOS los .on()
+        const channel = supabase.channel(`messages-${currentLeadId}`);
+        
+        // Agregar el callback ANTES de subscribe
+        channel.on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "messages",
+            filter: `lead_id=eq.${currentLeadId}`,
+          },
+          (payload) => {
+            console.log("🔔 Cambio detectado:", payload.eventType);
             
-            if (status === "SUBSCRIBED") {
-              console.log("✅ Suscripción realtime activa");
-            } else if (status === "CLOSED") {
-              console.error("❌ Suscripción cerrada, reconectando...");
-              setTimeout(() => {
-                if (subscription) subscription.subscribe();
-              }, 2000);
+            if (payload.eventType === "INSERT") {
+              const newMessage = payload.new as Message;
+              console.log("📨 Nuevo mensaje recibido:", newMessage);
+              
+              setMessages((prev) => {
+                if (prev.some(m => m.id === newMessage.id)) {
+                  console.log("⚠️ Mensaje duplicado, ignorando");
+                  return prev;
+                }
+                return [...prev, newMessage];
+              });
             }
-          });
+          }
+        );
+        
+        // DESPUÉS hacer subscribe
+        subscription = channel.subscribe((status) => {
+          console.log("📡 Estado de suscripción:", status);
+          
+          if (status === "SUBSCRIBED") {
+            console.log("✅ Suscripción realtime activa");
+          } else if (status === "CLOSED") {
+            console.error("❌ Suscripción cerrada");
+          } else if (status === "CHANNEL_ERROR") {
+            console.error("❌ Error en canal realtime");
+          }
+        });
         
         console.log("✅ Suscripción realtime configurada");
 
@@ -256,7 +259,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
     return () => {
       if (subscription) {
         console.log("🔌 Cancelando suscripción realtime...");
-        subscription.unsubscribe();
+        supabase.removeChannel(subscription);
       }
     };
   }, [userName, userPhone, userProblem, userCard]);
