@@ -67,19 +67,6 @@ export default function Dashboard() {
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalAlmas: 0,
-    clickWA: 0,
-    atendidos: 0,
-    sinResponder: 0,
-    pipeline: {
-      nuevo: 0,
-      enConversacion: 0,
-      clienteCaliente: 0,
-      cerrado: 0,
-      perdido: 0
-    }
-  });
   const [showProfile, setShowProfile] = useState(false);
   const [newLeadsCount, setNewLeadsCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -221,217 +208,25 @@ export default function Dashboard() {
     return true;
   });
 
-  // Contar leads por estado - CORREGIDO
+  // Contadores para tabs
   const statusCounts = {
-    todos: leads.length,
     nuevo: leads.filter(l => l.status === "nuevo").length,
     enConversacion: leads.filter(l => l.status === "enConversacion").length,
-    clienteCaliente: leads.filter(l => l.status === "caliente" || l.status === "clienteCaliente").length,
-    cerrado: leads.filter(l => l.status === "cerrado").length,
-    perdido: leads.filter(l => l.status === "perdido").length,
+    clienteCaliente: leads.filter(l => ["caliente", "clienteCaliente"].includes(l.status || "")).length,
     listo: leads.filter(l => l.status === "listo").length,
   };
 
-  // Cargar perfil y monitorear nuevos leads
+  // Verificar autenticación
   useEffect(() => {
-    const savedProfile = localStorage.getItem("maestroProfile");
-    if (savedProfile) {
-      setProfileData(JSON.parse(savedProfile));
-    }
-    
-    // Cargar stats desde localStorage
-    const savedStats = localStorage.getItem("adminStats");
-    if (savedStats) {
-      setStats(JSON.parse(savedStats));
-    }
-
-    // Monitorear nuevos leads cada 5 segundos
-    const checkNewLeads = () => {
-      const lastLeadCount = parseInt(localStorage.getItem("lastLeadCount") || "0");
-      const currentLeadCount = leads.filter(l => l.status === "nuevo").length;
-      
-      if (currentLeadCount > lastLeadCount) {
-        const newCount = currentLeadCount - lastLeadCount;
-        setNewLeadsCount(newCount);
-        
-        // Mostrar notificación del navegador si está permitido
-        if (Notification.permission === "granted") {
-          new Notification("Portal Maestro", {
-            body: `${newCount} nuevo${newCount > 1 ? 's' : ''} lead${newCount > 1 ? 's' : ''}`,
-            icon: "/favicon.ico"
-          });
-        }
-      }
-      
-      localStorage.setItem("lastLeadCount", currentLeadCount.toString());
-    };
-
-    const interval = setInterval(checkNewLeads, 5000);
-    
-    // Solicitar permiso para notificaciones
-    if (Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-
-    return () => clearInterval(interval);
-  }, [leads]);
-
-  // Sincronización en tiempo real - escuchar cambios en localStorage
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "leads" && e.newValue) {
-        console.log("🔄 Leads actualizados desde otra página");
-        try {
-          const updatedLeads = JSON.parse(e.newValue);
-          setLeads(updatedLeads);
-        } catch (error) {
-          console.error("Error al sincronizar leads:", error);
-        }
+    const checkAuth = async () => {
+      const isAuth = await AuthService.isAuthenticated();
+      if (!isAuth) {
+        console.log("⚠️ No hay sesión Supabase válida");
+        router.replace("/Suafazon");
       }
     };
-
-    // Escuchar cambios en localStorage desde otras pestañas/ventanas
-    window.addEventListener("storage", handleStorageChange);
-    
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
-
-  // Recargar leads al volver a la página (cuando el componente se vuelve visible)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        console.log("🔄 Página visible de nuevo - recargando leads");
-        const storedLeads = localStorage.getItem("leads");
-        if (storedLeads) {
-          try {
-            const parsedLeads = JSON.parse(storedLeads);
-            setLeads(parsedLeads);
-          } catch (error) {
-            console.error("Error al recargar leads:", error);
-          }
-        }
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
-
-  // Limpiar notificaciones al ver los leads
-  useEffect(() => {
-    if (activeTab === "chats") {
-      setNewLeadsCount(0);
-    }
-  }, [activeTab]);
-
-  // Guardar perfil en localStorage
-  const handleSaveProfile = () => {
-    localStorage.setItem("maestroProfile", JSON.stringify(profileData));
-    setShowProfile(false);
-  };
-
-  // Subir imagen del maestro
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validar tamaño (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        alert("La imagen debe ser menor a 2MB");
-        return;
-      }
-      
-      // Validar tipo
-      if (!file.type.startsWith("image/")) {
-        alert("Solo se permiten imágenes");
-        return;
-      }
-      
-      // Convertir a base64
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileData({ ...profileData, avatar: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Reiniciar solo las métricas numéricas (no eliminar chats)
-  const handleResetMetrics = () => {
-    if (confirm("¿Reiniciar contadores de métricas a cero? (Los chats se mantienen)")) {
-      const resetStats = {
-        totalAlmas: 0,
-        clickWA: 0,
-        atendidos: 0,
-        sinResponder: 0,
-        pipeline: {
-          nuevo: 0,
-          enConversacion: 0,
-          clienteCaliente: 0,
-          cerrado: 0,
-          perdido: 0
-        }
-      };
-      setStats(resetStats);
-      localStorage.setItem("adminStats", JSON.stringify(resetStats));
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("adminAuth");
-    router.push("/Suafazon");
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "nuevo":
-        return "bg-blue-500";
-      case "enConversacion":
-        return "bg-yellow-500";
-      case "clienteCaliente":
-        return "bg-orange-500";
-      case "cerrado":
-        return "bg-green-500";
-      case "perdido":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "nuevo":
-        return "NUEVO";
-      case "enConversacion":
-        return "CLIENTE";
-      case "clienteCaliente":
-        return "CLIENTE";
-      case "cerrado":
-        return "CERRADO";
-      case "perdido":
-        return "PERDIDO";
-      default:
-        return status;
-    }
-  };
-
-  const getTimeAgo = (timestamp: string) => {
-    const hours = parseInt(timestamp.replace(/\D/g, "")) || 1;
-    return `alrededor de ${hours} hora${hours > 1 ? "s" : ""}`;
-  };
-
-  const pipelineData = [
-    { label: "NUEVO", count: stats.pipeline.nuevo, color: "bg-blue-500", max: 35 },
-    { label: "EN CONVERSACIÓN", count: stats.pipeline.enConversacion, color: "bg-yellow-500", max: 35 },
-    { label: "CLIENTE CALIENTE", count: stats.pipeline.clienteCaliente, color: "bg-orange-500", max: 35 },
-    { label: "CERRADO", count: stats.pipeline.cerrado, color: "bg-green-500", max: 35 },
-    { label: "PERDIDO", count: stats.pipeline.perdido, color: "bg-red-500", max: 35 },
-  ];
+    checkAuth();
+  }, [router]);
 
   // Cargar datos
   useEffect(() => {
@@ -548,54 +343,43 @@ export default function Dashboard() {
               </Link>
             </div>
 
-            {/* Stats Card mejorado */}
-            <div className="p-6 border-b border-gold/10">
-              <Link
-                href="/Suafazon/dashboard"
-                className="block bg-gradient-to-br from-card/60 to-card/40 border border-gold/20 rounded-2xl p-6 hover:shadow-xl hover:shadow-gold/10 transition-all hover:scale-[1.02] hover:border-gold/40"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center border border-gold/40">
-                    <BarChart3 className="w-6 h-6 text-gold" />
-                  </div>
-                  <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-gold">
-                    Resumen Estadístico
-                  </h3>
-                </div>
-              </Link>
-            </div>
-
             {/* Navigation Tabs mejorados */}
-            <div className="p-6 space-y-3 flex-1 overflow-y-auto">
+            <div className="p-4 lg:p-6 space-y-2 lg:space-y-3 flex-1 overflow-y-auto">
               <div className="space-y-2">
                 <button
-                  onClick={() => setActiveTab("chats")}
-                  className={`w-full px-5 py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
+                  onClick={() => {
+                    setActiveTab("chats");
+                    setSidebarOpen(false);
+                  }}
+                  className={`w-full px-4 lg:px-5 py-3 lg:py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
                     activeTab === "chats"
                       ? "bg-gradient-to-r from-gold/20 to-gold/10 text-gold border-2 border-gold/40 shadow-lg shadow-gold/20"
                       : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-gold/30"
                   }`}
                 >
                   <span className="text-sm tracking-wider uppercase">Chats</span>
-                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                  <span className={`px-2.5 lg:px-3 py-1 rounded-lg text-xs font-bold ${
                     activeTab === "chats" 
                       ? "bg-gold/30 text-gold border border-gold/40" 
                       : "bg-muted/50 text-muted-foreground group-hover:bg-muted"
                   }`}>
-                    {leads.filter(l => ["enConversacion", "caliente"].includes(l.status || "")).length}
+                    {leads.filter(l => ["enConversacion", "caliente", "clienteCaliente"].includes(l.status || "")).length}
                   </span>
                 </button>
 
                 <button
-                  onClick={() => setActiveTab("leads")}
-                  className={`w-full px-5 py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
+                  onClick={() => {
+                    setActiveTab("leads");
+                    setSidebarOpen(false);
+                  }}
+                  className={`w-full px-4 lg:px-5 py-3 lg:py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
                     activeTab === "leads"
                       ? "bg-gradient-to-r from-blue-500/20 to-blue-500/10 text-blue-400 border-2 border-blue-500/40 shadow-lg shadow-blue-500/20"
                       : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-blue-500/30"
                   }`}
                 >
                   <span className="text-sm tracking-wider uppercase">Leads</span>
-                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                  <span className={`px-2.5 lg:px-3 py-1 rounded-lg text-xs font-bold ${
                     activeTab === "leads" 
                       ? "bg-blue-500/30 text-blue-400 border border-blue-500/40" 
                       : "bg-muted/50 text-muted-foreground group-hover:bg-muted"
@@ -605,15 +389,18 @@ export default function Dashboard() {
                 </button>
 
                 <button
-                  onClick={() => setActiveTab("listo")}
-                  className={`w-full px-5 py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
+                  onClick={() => {
+                    setActiveTab("listo");
+                    setSidebarOpen(false);
+                  }}
+                  className={`w-full px-4 lg:px-5 py-3 lg:py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
                     activeTab === "listo"
                       ? "bg-gradient-to-r from-emerald-500/20 to-emerald-500/10 text-emerald-400 border-2 border-emerald-500/40 shadow-lg shadow-emerald-500/20"
                       : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-emerald-500/30"
                   }`}
                 >
                   <span className="text-sm tracking-wider uppercase">Listo</span>
-                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                  <span className={`px-2.5 lg:px-3 py-1 rounded-lg text-xs font-bold ${
                     activeTab === "listo" 
                       ? "bg-emerald-500/30 text-emerald-400 border border-emerald-500/40" 
                       : "bg-muted/50 text-muted-foreground group-hover:bg-muted"
@@ -627,8 +414,9 @@ export default function Dashboard() {
                     setActiveTab("papelera");
                     setSelectedStatus("todos");
                     deselectAll();
+                    setSidebarOpen(false);
                   }}
-                  className={`w-full px-5 py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
+                  className={`w-full px-4 lg:px-5 py-3 lg:py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
                     activeTab === "papelera"
                       ? "bg-gradient-to-r from-red-500/20 to-red-500/10 text-red-400 border-2 border-red-500/40 shadow-lg shadow-red-500/20"
                       : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-red-500/30"
@@ -638,7 +426,7 @@ export default function Dashboard() {
                     <span>🗑️</span>
                     <span>Papelera</span>
                   </span>
-                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                  <span className={`px-2.5 lg:px-3 py-1 rounded-lg text-xs font-bold ${
                     activeTab === "papelera" 
                       ? "bg-red-500/30 text-red-400 border border-red-500/40" 
                       : "bg-muted/50 text-muted-foreground group-hover:bg-muted"
@@ -650,10 +438,10 @@ export default function Dashboard() {
 
               {/* Botones de acción mejorados */}
               {activeTab !== "papelera" && (
-                <div className="pt-4 border-t border-gold/10 space-y-3">
+                <div className="pt-3 lg:pt-4 border-t border-gold/10 space-y-2 lg:space-y-3">
                   <button
                     onClick={selectAll}
-                    className="w-full px-5 py-3 bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 text-primary rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border border-primary/30 shadow-md flex items-center justify-center gap-2"
+                    className="w-full px-4 lg:px-5 py-2.5 lg:py-3 bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 text-primary rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border border-primary/30 shadow-md flex items-center justify-center gap-2"
                   >
                     <span>✅</span>
                     <span>Seleccionar todo</span>
@@ -661,26 +449,25 @@ export default function Dashboard() {
                   
                   <button
                     onClick={deselectAll}
-                    className="w-full px-5 py-3 bg-card/60 hover:bg-card/80 text-foreground rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border border-border shadow-md flex items-center justify-center gap-2"
+                    className="w-full px-4 lg:px-5 py-2.5 lg:py-3 bg-card/60 hover:bg-card/80 text-foreground rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border border-border shadow-md flex items-center justify-center gap-2"
                   >
                     <span>❌</span>
                     <span>Deseleccionar</span>
                   </button>
 
                   {selectedLeads.size > 0 && (
-                    <div className="space-y-3 pt-3 border-t border-border">
-                      <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/40 rounded-xl px-4 py-3 text-center">
+                    <div className="space-y-2 lg:space-y-3 pt-2 lg:pt-3 border-t border-border">
+                      <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/40 rounded-xl px-3 lg:px-4 py-2.5 lg:py-3 text-center">
                         <span className="text-sm text-foreground font-bold">
                           {selectedLeads.size} seleccionado(s)
                         </span>
                       </div>
                       <button
                         onClick={moveSelectedToTrash}
-                        className="w-full px-5 py-3 bg-gradient-to-r from-red-500/20 to-red-500/10 hover:from-red-500/30 hover:to-red-500/20 text-red-400 rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border-2 border-red-500/40 shadow-lg shadow-red-500/20 flex items-center justify-center gap-2"
+                        className="w-full px-4 lg:px-5 py-2.5 lg:py-3 bg-gradient-to-r from-red-500/20 to-red-500/10 hover:from-red-500/30 hover:to-red-500/20 text-red-400 rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border-2 border-red-500/40 shadow-lg shadow-red-500/20 flex items-center justify-center gap-2"
                       >
                         <span>🗑️</span>
-                        <span className="hidden sm:inline">Mover a papelera</span>
-                        <span className="sm:hidden">Papelera</span>
+                        <span>Mover a papelera</span>
                       </button>
                     </div>
                   )}
@@ -688,14 +475,14 @@ export default function Dashboard() {
               )}
 
               {/* Filtros mejorados */}
-              <div className="p-6 border-t border-gold/10 bg-gradient-to-r from-background to-secondary/5">
+              <div className="p-4 lg:p-6 border-t border-gold/10 bg-gradient-to-r from-background to-secondary/5">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-xs font-bold tracking-wider uppercase text-gold/80 mb-3">
                     <Filter className="w-4 h-4" />
                     <span>Filtros</span>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-2">
                     {[
                       { id: "todos", label: "Todos", count: leads.length },
                       { id: "nuevo", label: "Nuevo", count: leads.filter(l => l.status === "nuevo").length },
@@ -706,15 +493,20 @@ export default function Dashboard() {
                     ].map(status => (
                       <button
                         key={status.id}
-                        onClick={() => setSelectedStatus(status.id)}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                        onClick={() => {
+                          setSelectedStatus(status.id);
+                          setSidebarOpen(false);
+                        }}
+                        className={`px-3 lg:px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                           selectedStatus === status.id
                             ? "bg-gold/20 text-gold border-2 border-gold/40 shadow-lg shadow-gold/20"
                             : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-gold/30"
                         }`}
                       >
-                        <span>{status.label}</span>
-                        <span className="ml-2 opacity-70">({status.count})</span>
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-xs">{status.label}</span>
+                          <span className="text-xs opacity-70">({status.count})</span>
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -1223,7 +1015,7 @@ export default function Dashboard() {
                           {getStatusLabel(lead.status)}
                         </span>
                         <span className="text-xs lg:text-sm text-muted-foreground">
-                          {getTimeAgo(lead.timestamp)}
+                          {getTimeAgo(lead.created_at)}
                         </span>
                       </div>
                     </div>
