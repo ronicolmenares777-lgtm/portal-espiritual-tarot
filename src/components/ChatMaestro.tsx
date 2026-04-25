@@ -120,7 +120,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           } catch (error) {
             console.error("Error en polling:", error);
           }
-        }, 1000); // Reducido a 1 segundo para respuesta instantánea
+        }, 1000);
 
         // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
         // 1. Limpiar cualquier canal existente con el mismo nombre
@@ -229,6 +229,14 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       }
     };
   }, [userName, userPhone, userProblem, userCard]);
+
+  // Auto-scroll cuando llegan mensajes nuevos
+  useEffect(() => {
+    if (messages.length > lastMessageCount) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      setLastMessageCount(messages.length);
+    }
+  }, [messages, lastMessageCount]);
 
   const handleSendMessage = async () => {
     if ((!newMessage.trim() && !selectedFile) || !leadId) return;
@@ -341,14 +349,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       fileInputRef.current.value = '';
     }
   };
-
-  // Auto-scroll cuando llegan mensajes nuevos
-  useEffect(() => {
-    if (messages.length > lastMessageCount) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      setLastMessageCount(messages.length);
-    }
-  }, [messages, lastMessageCount]);
 
   if (!isReady) {
     return (
