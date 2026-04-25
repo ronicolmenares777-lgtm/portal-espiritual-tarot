@@ -156,7 +156,7 @@ export default function ChatPage() {
         // Marcar como leídos los mensajes del usuario
         MessageService.markAsRead(leadId, true).catch(console.error);
 
-        // --- POLLING DE RESPALDO (cada 1 segundo para admin) ---
+        // --- POLLING DE RESPALDO (cada 3 segundos para admin) ---
         pollingIntervalRef.current = setInterval(async () => {
           try {
             const latestMessages = await MessageService.getByLeadId(leadId);
@@ -171,7 +171,7 @@ export default function ChatPage() {
           } catch (error) {
             console.error("Error en polling del admin:", error);
           }
-        }, 1000); // 1 segundo para respuesta rápida
+        }, 3000); // 3 segundos - balance entre tiempo real y estabilidad
 
         // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
         const channelName = `admin-messages-${leadId}`;
@@ -693,17 +693,45 @@ export default function ChatPage() {
                             {msg.media_url ? (
                               <div className="space-y-3">
                                 {msg.media_type === "image" && (
-                                  <div className="group/img">
+                                  <div className="group/img relative">
                                     <img 
                                       src={msg.media_url} 
                                       alt="Imagen" 
                                       className="rounded-2xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all duration-300 shadow-xl group-hover/img:shadow-2xl border border-gold/20" 
                                       onClick={() => setViewingImage(msg.media_url!)} 
                                     />
+                                    {/* Botón de descarga SOLO en admin */}
+                                    <a
+                                      href={msg.media_url}
+                                      download
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="absolute top-2 right-2 p-2 bg-black/60 hover:bg-black/80 rounded-xl opacity-0 group-hover/img:opacity-100 transition-all duration-300"
+                                      title="Descargar imagen"
+                                    >
+                                      <Download className="w-5 h-5 text-white" />
+                                    </a>
                                   </div>
                                 )}
                                 {msg.media_type === "video" && (
-                                  <video src={msg.media_url} controls className="rounded-2xl max-w-full h-auto shadow-xl border border-gold/20" />
+                                  <div className="relative group/video">
+                                    <video 
+                                      src={msg.media_url} 
+                                      controls 
+                                      className="rounded-2xl max-w-full h-auto shadow-xl border border-gold/20" 
+                                    />
+                                    {/* Botón de descarga SOLO en admin */}
+                                    <a
+                                      href={msg.media_url}
+                                      download
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="absolute top-2 right-2 p-2 bg-black/60 hover:bg-black/80 rounded-xl opacity-0 group-hover/video:opacity-100 transition-all duration-300"
+                                      title="Descargar video"
+                                    >
+                                      <Download className="w-5 h-5 text-white" />
+                                    </a>
+                                  </div>
                                 )}
                                 {msg.media_type === "audio" && (
                                   <div className="p-3 bg-background/20 rounded-xl">

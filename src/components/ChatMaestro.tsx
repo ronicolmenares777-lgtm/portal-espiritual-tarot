@@ -30,6 +30,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
   const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [showMediaMenu, setShowMediaMenu] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -121,7 +122,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           } catch (error) {
             console.error("Error en polling:", error);
           }
-        }, 1000);
+        }, 3000); // 3 segundos - balance entre tiempo real y estabilidad
 
         // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
         // 1. Limpiar cualquier canal existente con el mismo nombre
@@ -244,6 +245,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
 
     try {
       setIsUploading(true);
+      setUploadProgress(0);
       const messageText = newMessage.trim() || (selectedFile ? `Archivo: ${selectedFile.name}` : "");
       console.log("📤 Enviando mensaje del usuario:", messageText);
       
@@ -255,20 +257,35 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
 
       // Si hay archivo, subirlo a Supabase Storage
       if (selectedFile) {
-        console.log("📎 Subiendo archivo:", selectedFile.name);
+        console.log("📎 Subiendo archivo:", selectedFile.name, `(${(selectedFile.size / 1024 / 1024).toFixed(2)} MB)`);
+        
+        // Validar tamaño del archivo (máximo 50MB)
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        if (selectedFile.size > maxSize) {
+          alert("El archivo es demasiado grande. Máximo 50MB.");
+          return;
+        }
+
+        setUploadProgress(10);
         const fileExt = selectedFile.name.split('.').pop();
         const fileName = `${leadId}/${Date.now()}.${fileExt}`;
         const filePath = `messages/${fileName}`;
 
+        setUploadProgress(30);
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('chat-files')
-          .upload(filePath, selectedFile);
+          .upload(filePath, selectedFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) {
           console.error("❌ Error subiendo archivo:", uploadError);
+          alert(`Error al subir el archivo: ${uploadError.message}`);
           throw uploadError;
         }
 
+        setUploadProgress(70);
         console.log("✅ Archivo subido:", filePath);
 
         // Obtener URL pública del archivo
@@ -291,6 +308,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         }
       }
 
+      setUploadProgress(80);
       console.log("💾 Guardando mensaje en DB:", messageData);
       const createdMessage = await MessageService.create(messageData);
       
@@ -299,6 +317,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         throw new Error("No se pudo crear el mensaje");
       }
       
+      setUploadProgress(100);
       console.log("✅ Mensaje guardado en DB con ID:", createdMessage.id);
 
       // Añadir el mensaje a la lista local inmediatamente
@@ -315,11 +334,13 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       setNewMessage("");
       setSelectedFile(null);
       setFilePreview(null);
+      setUploadProgress(0);
       
       console.log("🎉 Proceso de envío completado exitosamente");
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Error enviando mensaje:", error);
-      alert("Error enviando el mensaje. Por favor intenta de nuevo.");
+      alert(`Error enviando el mensaje: ${error.message || 'Por favor intenta de nuevo.'}`);
+      setUploadProgress(0);
     } finally {
       setIsUploading(false);
     }
@@ -526,10 +547,23 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                   <p className="text-xs text-muted-foreground mt-1">
                     {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                   </p>
+                  {isUploading && uploadProgress > 0 && (
+                    <div className="mt-2">
+                      <div className="w-full bg-muted/30 rounded-full h-2 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${uploadProgress}%` }}
+                          className="h-full bg-gradient-to-r from-gold to-amber-500 rounded-full"
+                        />
+                      </div>
+                      <p className="text-xs text-gold mt-1">{uploadProgress}% subido</p>
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={removeFile}
-                  className="p-2 hover:bg-destructive/20 rounded-xl transition-all duration-300 hover:scale-110 group"
+                  disabled={isUploading}
+                  className="p-2 hover:bg-destructive/20 rounded-xl transition-all duration-300 hover:scale-110 group disabled:opacity-50"
                 >
                   <X className="w-5 h-5 md:w-6 md:h-6 text-destructive group-hover:rotate-90 transition-transform duration-300" />
                 </button>
