@@ -545,6 +545,17 @@ export default function ChatPage() {
     setMediaPreview(null);
   };
 
+  if (!leadId) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <div className="text-center space-y-4">
+          <Sparkles className="w-16 h-16 text-gold animate-pulse mx-auto" />
+          <p className="text-muted-foreground text-lg">Cargando conversación espiritual...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
