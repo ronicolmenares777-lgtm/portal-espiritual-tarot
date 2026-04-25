@@ -156,12 +156,11 @@ export default function ChatPage() {
         // Marcar como leídos los mensajes del usuario
         MessageService.markAsRead(leadId, true).catch(console.error);
 
-        // --- POLLING DE RESPALDO (cada 3 segundos para admin) ---
+        // --- POLLING DE RESPALDO (cada 1 segundo) ---
         pollingIntervalRef.current = setInterval(async () => {
           try {
             const latestMessages = await MessageService.getByLeadId(leadId);
             setMessages((prev) => {
-              // Solo actualizar si hay mensajes nuevos
               if (latestMessages.length > prev.length) {
                 console.log(`🔄 ADMIN Polling: ${latestMessages.length - prev.length} mensajes nuevos detectados`);
                 return latestMessages;
@@ -169,9 +168,9 @@ export default function ChatPage() {
               return prev;
             });
           } catch (error) {
-            console.error("Error en polling del admin:", error);
+            console.error("ADMIN Error en polling:", error);
           }
-        }, 3000); // 3 segundos - balance entre tiempo real y estabilidad
+        }, 2000); // 2 segundos - equilibrio entre tiempo real y carga
 
         // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
         const channelName = `admin-messages-${leadId}`;
@@ -909,15 +908,6 @@ export default function ChatPage() {
                       title="Enviar imagen"
                     >
                       <ImageIcon className="w-5 h-5 text-gold group-hover:text-amber-300 transition-colors" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => document.getElementById("audio-upload")?.click()}
-                      className="p-2.5 md:p-3 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-xl transition-all group border-2 border-gold/20 hover:border-gold/40 shadow-lg hover:shadow-gold/20"
-                      title="Enviar audio"
-                    >
-                      <Mic className="w-5 h-5 text-gold group-hover:text-amber-300 transition-colors" />
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.1 }}

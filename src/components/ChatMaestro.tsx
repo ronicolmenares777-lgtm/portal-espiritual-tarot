@@ -122,7 +122,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           } catch (error) {
             console.error("Error en polling:", error);
           }
-        }, 3000); // 3 segundos - balance entre tiempo real y estabilidad
+        }, 2000); // 2 segundos - equilibrio entre tiempo real y carga
 
         // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
         // 1. Limpiar cualquier canal existente con el mismo nombre
