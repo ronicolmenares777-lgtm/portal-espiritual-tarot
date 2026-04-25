@@ -504,17 +504,38 @@ export default function Dashboard() {
 
       <div className="min-h-screen bg-background text-foreground">
         {/* Layout principal */}
-        <div className="flex h-[calc(100vh-57px)] md:h-[calc(100vh-65px)] overflow-hidden">
-          {/* Overlay para móvil */}
+        <div className="flex h-screen overflow-hidden">
+          {/* Overlay móvil */}
           {sidebarOpen && (
-            <div
-              className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+            <div 
+              className="lg:hidden fixed inset-0 bg-black/50 z-40"
               onClick={() => setSidebarOpen(false)}
             />
           )}
 
-          {/* Sidebar mejorado */}
-          <div className="w-80 bg-gradient-to-b from-background via-secondary/10 to-background border-r border-gold/10 flex flex-col shadow-2xl">
+          {/* Sidebar mejorado - Responsive */}
+          <div className={`
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            lg:translate-x-0
+            fixed lg:relative
+            z-50
+            w-80 
+            bg-gradient-to-b from-background via-secondary/10 to-background 
+            border-r border-gold/10 
+            flex flex-col 
+            shadow-2xl 
+            overflow-y-auto
+            transition-transform duration-300
+            h-full
+          `}>
+            {/* Botón cerrar móvil */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden absolute top-4 right-4 w-8 h-8 rounded-lg bg-secondary/50 flex items-center justify-center text-foreground hover:bg-secondary"
+            >
+              ✕
+            </button>
+
             {/* Header del sidebar */}
             <div className="p-6 border-b border-gold/10 bg-gradient-to-r from-gold/5 to-transparent">
               <Link href="/Suafazon/dashboard" className="flex items-center gap-3 group">
@@ -658,7 +679,8 @@ export default function Dashboard() {
                         className="w-full px-5 py-3 bg-gradient-to-r from-red-500/20 to-red-500/10 hover:from-red-500/30 hover:to-red-500/20 text-red-400 rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border-2 border-red-500/40 shadow-lg shadow-red-500/20 flex items-center justify-center gap-2"
                       >
                         <span>🗑️</span>
-                        <span>Mover a papelera</span>
+                        <span className="hidden sm:inline">Mover a papelera</span>
+                        <span className="sm:hidden">Papelera</span>
                       </button>
                     </div>
                   )}
@@ -1006,6 +1028,247 @@ export default function Dashboard() {
                     </motion.div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs de navegación mejorados - AHORA EN EL ÁREA PRINCIPAL */}
+          <div className="bg-card/40 border border-gold/10 rounded-2xl p-4 lg:p-6 mb-4 lg:mb-6 shadow-lg shadow-black/30">
+            <div className="flex gap-2 lg:gap-3 flex-wrap mb-4 lg:mb-6">
+              <button
+                onClick={() => {
+                  setActiveTab("chats");
+                  setSelectedStatus("todos");
+                  deselectAll();
+                }}
+                className={`flex-1 min-w-[100px] lg:min-w-[120px] px-4 lg:px-6 py-3 lg:py-3.5 rounded-xl font-medium transition-all text-sm lg:text-base ${
+                  activeTab === "chats"
+                    ? "bg-gold/20 text-gold border-2 border-gold/50 shadow-lg shadow-gold/20 scale-105"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-gold/20"
+                }`}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-xs lg:text-sm font-semibold tracking-wider">💬 CHATS</span>
+                  <span className="text-xs opacity-70">
+                    ({leads.filter(l => ["enConversacion", "caliente", "clienteCaliente"].includes(l.status || "")).length})
+                  </span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab("leads");
+                  setSelectedStatus("todos");
+                  deselectAll();
+                }}
+                className={`flex-1 min-w-[100px] lg:min-w-[120px] px-4 lg:px-6 py-3 lg:py-3.5 rounded-xl font-medium transition-all text-sm lg:text-base ${
+                  activeTab === "leads"
+                    ? "bg-blue-500/20 text-blue-400 border-2 border-blue-500/50 shadow-lg shadow-blue-500/20 scale-105"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-blue-500/20"
+                }`}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-xs lg:text-sm font-semibold tracking-wider">📋 LEADS</span>
+                  <span className="text-xs opacity-70">
+                    ({leads.filter(l => l.status === "nuevo").length})
+                  </span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab("listo");
+                  setSelectedStatus("todos");
+                  deselectAll();
+                }}
+                className={`flex-1 min-w-[100px] lg:min-w-[120px] px-4 lg:px-6 py-3 lg:py-3.5 rounded-xl font-medium transition-all text-sm lg:text-base ${
+                  activeTab === "listo"
+                    ? "bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/50 shadow-lg shadow-emerald-500/20 scale-105"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-emerald-500/20"
+                }`}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-xs lg:text-sm font-semibold tracking-wider">✅ LISTO</span>
+                  <span className="text-xs opacity-70">
+                    ({leads.filter(l => l.status === "listo").length})
+                  </span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab("papelera");
+                  setSelectedStatus("todos");
+                  deselectAll();
+                }}
+                className={`flex-1 min-w-[100px] lg:min-w-[120px] px-4 lg:px-6 py-3 lg:py-3.5 rounded-xl font-medium transition-all text-sm lg:text-base ${
+                  activeTab === "papelera"
+                    ? "bg-red-500/20 text-red-400 border-2 border-red-500/50 shadow-lg shadow-red-500/20 scale-105"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-red-500/20"
+                }`}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-xs lg:text-sm font-semibold tracking-wider">🗑️ PAPELERA</span>
+                  <span className="text-xs opacity-70">
+                    ({deletedLeads.length})
+                  </span>
+                </div>
+              </button>
+            </div>
+
+            {/* Barra de acciones profesional */}
+            {activeTab !== "papelera" && (
+              <div className="border-t border-gold/10 pt-4 lg:pt-6">
+                <div className="flex gap-2 lg:gap-3 items-center flex-wrap">
+                  <button
+                    onClick={selectAll}
+                    className="px-4 lg:px-5 py-2 lg:py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-primary/30 shadow-md"
+                  >
+                    ✅ Seleccionar todo
+                  </button>
+                  <button
+                    onClick={deselectAll}
+                    className="px-4 lg:px-5 py-2 lg:py-2.5 bg-secondary/30 hover:bg-secondary/50 text-foreground rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-border shadow-md"
+                  >
+                    ❌ Deseleccionar
+                  </button>
+
+                  {selectedLeads.size > 0 && (
+                    <div className="flex gap-2 lg:gap-3 items-center ml-auto">
+                      <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/40 rounded-xl px-3 lg:px-4 py-1.5 lg:py-2 shadow-md">
+                        <span className="text-xs lg:text-sm text-foreground font-bold">
+                          {selectedLeads.size} seleccionado(s)
+                        </span>
+                      </div>
+                      <button
+                        onClick={moveSelectedToTrash}
+                        className="px-4 lg:px-6 py-2 lg:py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-bold flex items-center gap-2 border-2 border-red-500/40 shadow-lg shadow-red-500/20"
+                      >
+                        <span>🗑️</span>
+                        <span className="hidden sm:inline">Mover a papelera</span>
+                        <span className="sm:hidden">Papelera</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Lista de leads mejorada - ASEGURAR QUE ESTÉ AQUÍ */}
+          <div className="max-h-[calc(100vh-450px)] overflow-y-auto pr-2 space-y-3 lg:space-y-4">
+            {/* Lista de leads mejorada */}
+            <div className="bg-card/50 rounded-xl p-4 lg:p-6 border border-gold/10 shadow-lg shadow-black/30">
+              <div className="flex items-center justify-between mb-4 lg:mb-6">
+                <h3 className="text-lg lg:text-xl font-medium text-foreground tracking-wider">
+                  {activeTab === "chats" ? "Chats activos" : 
+                   activeTab === "leads" ? "Leads activos" : 
+                   activeTab === "listo" ? "Leads listos" : "Leads en papelera"}
+                </h3>
+                <span className="text-xs lg:text-sm text-muted-foreground">
+                  {filteredLeads.length} lead(s) encontrados
+                </span>
+              </div>
+
+              {/* Lista de leads mejorada */}
+              <div className="space-y-3 lg:space-y-4">
+                {filteredLeads.map((lead) => (
+                  <motion.div
+                    key={lead.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="bg-card/40 rounded-xl p-4 lg:p-6 border border-gold/10 hover:border-gold/20 hover:shadow-md hover:shadow-gold/10 transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div 
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/30"
+                            style={{
+                              boxShadow: "0 0 20px hsl(220 90% 56% / 0.1)",
+                            }}
+                          >
+                            <User className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
+                            <Sparkles className="w-2 h-2 text-primary" />
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-foreground text-sm lg:text-base">
+                            {lead.name}
+                          </h4>
+                          <p className="text-xs lg:text-sm text-muted-foreground">
+                            {lead.whatsapp}
+                          </p>
+                          <p className="text-xs lg:text-sm text-muted-foreground">
+                            {lead.problem}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs lg:text-sm font-bold ${
+                          lead.status === "nuevo" 
+                            ? "text-blue-400 bg-blue-500/10" 
+                            : lead.status === "enConversacion" 
+                            ? "text-yellow-400 bg-yellow-500/10" 
+                            : lead.status === "caliente" || lead.status === "clienteCaliente" 
+                            ? "text-orange-400 bg-orange-500/10" 
+                            : lead.status === "cerrado" 
+                            ? "text-green-400 bg-green-500/10" 
+                            : "text-red-400 bg-red-500/10"
+                        }`}>
+                          {getStatusLabel(lead.status)}
+                        </span>
+                        <span className="text-xs lg:text-sm text-muted-foreground">
+                          {getTimeAgo(lead.timestamp)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Acciones */}
+                    <div className="flex gap-2 lg:gap-3">
+                      {activeTab === "chats" && (
+                        <Link
+                          href={`/Suafazon/chat/${lead.id}`}
+                          className="px-4 lg:px-5 py-2 lg:py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-border shadow-md"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          <span className="text-xs lg:text-sm font-medium">Chat</span>
+                        </Link>
+                      )}
+                      {activeTab === "leads" && (
+                        <Link
+                          href={`/Suafazon/lead/${lead.id}`}
+                          className="px-4 lg:px-5 py-2 lg:py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-border shadow-md"
+                        >
+                          <Mail className="w-4 h-4" />
+                          <span className="text-xs lg:text-sm font-medium">Lead</span>
+                        </Link>
+                      )}
+                      {activeTab === "listo" && (
+                        <Link
+                          href={`/Suafazon/lead/${lead.id}`}
+                          className="px-4 lg:px-5 py-2 lg:py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-border shadow-md"
+                        >
+                          <Mail className="w-4 h-4" />
+                          <span className="text-xs lg:text-sm font-medium">Lead</span>
+                        </Link>
+                      )}
+                      {activeTab === "papelera" && (
+                        <button
+                          onClick={() => restoreFromTrash(lead.id)}
+                          className="px-4 lg:px-5 py-2 lg:py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-border shadow-md"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          <span className="text-xs lg:text-sm font-medium">Restaurar</span>
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </div>
           </div>

@@ -189,8 +189,8 @@ export default function Home() {
       console.log("   - WhatsApp:", loginData.whatsapp.trim());
       console.log("   - Código país:", loginData.countryCode);
       
-      // Buscar en Supabase
-      const { data: leads, error } = await LeadService.getAll();
+      // Buscar solo leads ACTIVOS (no eliminados)
+      const { data: leads, error } = await LeadService.getActive();
       
       if (error) {
         console.error("❌ Error en Supabase:", error);
