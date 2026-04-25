@@ -342,6 +342,14 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
     }
   };
 
+  // Auto-scroll cuando llegan mensajes nuevos
+  useEffect(() => {
+    if (messages.length > lastMessageCount) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      setLastMessageCount(messages.length);
+    }
+  }, [messages, lastMessageCount]);
+
   if (!isReady) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -352,14 +360,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       </div>
     );
   }
-
-  // Auto-scroll cuando llegan mensajes nuevos
-  useEffect(() => {
-    if (messages.length > lastMessageCount) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      setLastMessageCount(messages.length);
-    }
-  }, [messages, lastMessageCount]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
