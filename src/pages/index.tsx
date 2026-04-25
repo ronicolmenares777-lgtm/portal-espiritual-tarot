@@ -283,34 +283,68 @@ export default function Home() {
       <CustomCursor />
       <FloatingParticles />
 
-      {/* Header Section - MEJORADO */}
+      {/* Botones superiores - Facebook e Ingresar */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="fixed top-4 right-4 z-50 flex gap-3"
+      >
+        {/* Botón Facebook */}
+        <motion.a
+          href="https://www.facebook.com/profile.php?id=61571396936969"
+          target="_blank"
+          rel="noopener noreferrer"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="px-4 py-2 bg-blue-600/90 hover:bg-blue-600 backdrop-blur-sm text-white rounded-lg font-medium shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/50 transition-all flex items-center gap-2 text-sm"
+        >
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+          <span>Facebook</span>
+        </motion.a>
+
+        {/* Botón Ingresar */}
+        <motion.button
+          onClick={() => setShowLoginModal(true)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="px-4 py-2 bg-gold/90 hover:bg-gold backdrop-blur-sm text-background rounded-lg font-bold shadow-lg shadow-gold/30 hover:shadow-xl hover:shadow-gold/50 transition-all flex items-center gap-2 text-sm"
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>Ingresar</span>
+        </motion.button>
+      </motion.div>
+
+      {/* Header Section - AJUSTADO */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="relative z-10 text-center mb-16 lg:mb-20"
+        className="relative z-10 text-center mb-12 lg:mb-16"
       >
         {/* Logo/Icono místico */}
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ duration: 1, delay: 0.3, type: "spring" }}
-          className="inline-flex items-center justify-center mb-6 lg:mb-8"
+          className="inline-flex items-center justify-center mb-5 lg:mb-6"
         >
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-gold/30 to-accent/30 blur-xl rounded-full animate-pulse" />
-            <div className="relative w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-gradient-to-br from-gold/20 to-accent/20 border-2 border-gold/40 flex items-center justify-center shadow-2xl shadow-gold/20">
-              <Sparkles className="w-10 h-10 lg:w-12 lg:h-12 text-gold animate-pulse" />
+            <div className="relative w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-gradient-to-br from-gold/20 to-accent/20 border-2 border-gold/40 flex items-center justify-center shadow-2xl shadow-gold/20">
+              <Sparkles className="w-8 h-8 lg:w-10 lg:h-10 text-gold animate-pulse" />
             </div>
           </div>
         </motion.div>
 
-        {/* Título principal mejorado */}
+        {/* Título principal - TAMAÑO REDUCIDO */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-4 lg:mb-6 leading-tight"
+          className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 lg:mb-4 leading-tight"
         >
           <span className="block bg-gradient-to-r from-gold via-amber-300 to-gold bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(250,214,54,0.3)]">
             Portal Espiritual
@@ -321,7 +355,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.7 }}
-          className="text-lg sm:text-xl lg:text-2xl text-foreground/90 font-light tracking-wide max-w-2xl mx-auto px-4"
+          className="text-base sm:text-lg lg:text-xl text-foreground/90 font-light tracking-wide max-w-2xl mx-auto px-4"
         >
           Descubre las respuestas que el universo tiene preparadas para ti
         </motion.p>
@@ -331,7 +365,7 @@ export default function Home() {
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ duration: 1, delay: 0.9 }}
-          className="mx-auto mt-8 w-32 h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent opacity-60"
+          className="mx-auto mt-6 w-32 h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent opacity-60"
         />
       </motion.div>
 
@@ -376,7 +410,7 @@ export default function Home() {
                   </p>
                 </div>
 
-                {/* Formulario de entrada - MEJORADO */}
+                {/* Formulario de entrada - TAMAÑO AJUSTADO */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -386,26 +420,26 @@ export default function Home() {
                   {/* Resplandor de fondo */}
                   <div className="absolute -inset-1 bg-gradient-to-r from-gold/20 via-accent/20 to-gold/20 rounded-3xl blur-2xl opacity-60" />
                   
-                  <div className="relative bg-card/80 backdrop-blur-xl border-2 border-gold/30 rounded-3xl p-8 lg:p-12 shadow-2xl shadow-black/50">
+                  <div className="relative bg-card/80 backdrop-blur-xl border-2 border-gold/30 rounded-3xl p-6 lg:p-10 shadow-2xl shadow-black/50">
                     {/* Título del formulario */}
-                    <div className="text-center mb-8 lg:mb-10">
-                      <div className="inline-flex items-center gap-3 mb-4">
+                    <div className="text-center mb-6 lg:mb-8">
+                      <div className="inline-flex items-center gap-3 mb-3">
                         <div className="h-px w-12 bg-gradient-to-r from-transparent to-gold/50" />
-                        <Sparkles className="w-6 h-6 text-gold" />
+                        <Sparkles className="w-5 h-5 text-gold" />
                         <div className="h-px w-12 bg-gradient-to-l from-transparent to-gold/50" />
                       </div>
-                      <h2 className="text-2xl lg:text-3xl font-serif font-bold text-foreground mb-3">
+                      <h2 className="text-xl lg:text-2xl font-serif font-bold text-foreground mb-2">
                         Canal de Conexión
                       </h2>
-                      <p className="text-sm lg:text-base text-muted-foreground/80 max-w-md mx-auto">
+                      <p className="text-sm text-muted-foreground/80 max-w-md mx-auto">
                         Comparte tu información para que podamos guiarte en tu camino espiritual
                       </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-7">
+                    <form onSubmit={handleSubmit} className="space-y-5 lg:space-y-6">
                       {/* Nombre */}
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
+                        <label className="text-xs font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
                           <span className="text-gold">✦</span>
                           Tu Nombre
                         </label>
@@ -414,14 +448,14 @@ export default function Home() {
                           placeholder="Nombre completo"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 lg:px-5 py-3 lg:py-4 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all text-base lg:text-lg"
+                          className="w-full bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all text-base"
                           required
                         />
                       </div>
 
                       {/* WhatsApp */}
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
+                        <label className="text-xs font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
                           <span className="text-gold">✦</span>
                           WhatsApp
                         </label>
@@ -429,7 +463,7 @@ export default function Home() {
                           <select
                             value={formData.countryCode}
                             onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
-                            className="w-28 bg-secondary/30 border-2 border-gold/30 rounded-xl px-3 py-3 lg:py-4 text-foreground font-medium focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all appearance-none cursor-pointer text-base lg:text-lg"
+                            className="w-28 bg-secondary/30 border-2 border-gold/30 rounded-xl px-3 py-3 text-foreground font-medium focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all appearance-none cursor-pointer text-base"
                             style={{
                               backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FAD636'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                               backgroundRepeat: 'no-repeat',
@@ -451,7 +485,7 @@ export default function Home() {
                             placeholder="Tu número de WhatsApp"
                             value={formData.whatsapp}
                             onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") })}
-                            className="flex-1 bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 lg:px-5 py-3 lg:py-4 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all text-base lg:text-lg"
+                            className="flex-1 bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all text-base"
                             required
                           />
                         </div>
@@ -459,7 +493,7 @@ export default function Home() {
 
                       {/* Problema/Consulta */}
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
+                        <label className="text-xs font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
                           <span className="text-gold">✦</span>
                           ¿Qué te preocupa?
                         </label>
@@ -468,31 +502,31 @@ export default function Home() {
                           value={formData.problem}
                           onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
                           rows={4}
-                          className="w-full bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 lg:px-5 py-3 lg:py-4 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all resize-none text-base lg:text-lg"
+                          className="w-full bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all resize-none text-base"
                           required
                         />
                       </div>
 
-                      {/* Botón de envío mejorado */}
+                      {/* Botón de envío */}
                       <motion.button
                         type="submit"
                         disabled={!formData.name || !formData.whatsapp || !formData.problem}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full relative group overflow-hidden rounded-xl py-4 lg:py-5 font-bold text-lg lg:text-xl tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-gold/30 hover:shadow-2xl hover:shadow-gold/50"
+                        className="w-full relative group overflow-hidden rounded-xl py-3.5 font-bold text-lg tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-gold/30 hover:shadow-2xl hover:shadow-gold/50"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-gold via-accent to-gold transition-all group-hover:scale-105" />
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <span className="relative text-background flex items-center justify-center gap-3">
-                          <Sparkles className="w-6 h-6" />
+                          <Sparkles className="w-5 h-5" />
                           Iniciar Mi Lectura
-                          <Sparkles className="w-6 h-6" />
+                          <Sparkles className="w-5 h-5" />
                         </span>
                       </motion.button>
                     </form>
 
                     {/* Nota de privacidad */}
-                    <p className="text-center text-xs text-muted-foreground/60 mt-6 lg:mt-8">
+                    <p className="text-center text-xs text-muted-foreground/60 mt-5 lg:mt-6">
                       🔒 Tu información está protegida y solo será usada para tu lectura espiritual
                     </p>
                   </div>
