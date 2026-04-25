@@ -173,6 +173,25 @@ export default function Dashboard() {
     }
   };
 
+  // Logout handler
+  const handleLogout = async () => {
+    await AuthService.logout();
+    router.replace("/Suafazon");
+  };
+
+  // Profile functions
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setProfileData({ ...profileData, avatar: url });
+    }
+  };
+
+  const handleSaveProfile = () => {
+    setShowProfile(false);
+  };
+
   // Proteger ruta - redirige a login si no está autenticado
   // useRequireAuth("/Suafazon");
   
@@ -565,273 +584,180 @@ export default function Dashboard() {
 
                 {/* Área de contenido principal */}
                 <div className="flex-1 overflow-hidden flex flex-col bg-background">
-                  {/* Título y métricas */}
-                  <div className="p-4 md:p-8 overflow-y-auto">
-                    <div className="max-w-6xl mx-auto">
-                      {/* Título */}
-                      <div className="text-center mb-8 md:mb-12">
-                        <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif text-gold tracking-[0.2em] md:tracking-[0.3em] mb-2">
-                          VISIÓN DEL DESTINO
-                        </h1>
-                        <p className="text-xs md:text-sm text-gold/60 tracking-[0.2em] md:tracking-[0.3em]">
-                          RESUMEN ESTADÍSTICO DE ALMAS Y CONEXIONES
-                        </p>
+                  {/* Pipeline */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="bg-card/30 rounded-xl p-4 md:p-8 border border-gold/20"
+                  >
+                    <div className="flex items-center justify-between mb-4 md:mb-6">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-gold" />
+                        <h2 className="text-base md:text-lg font-medium text-gold tracking-wider uppercase">
+                          Estado del Pipeline
+                        </h2>
                       </div>
+                      <span className="text-xs md:text-sm text-muted-foreground">
+                        24 horas
+                      </span>
+                    </div>
 
-                      {/* Métricas */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-12">
-                        {/* Total Almas */}
+                    <div className="space-y-3 md:space-y-4">
+                      {pipelineData.map((item, index) => (
                         <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                          style={{
-                            boxShadow: "0 0 20px hsl(220 90% 56% / 0.1)",
-                          }}
+                          key={item.label}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="space-y-2"
                         >
-                          <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-400 mx-auto mb-2 md:mb-3" />
-                          <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                            {stats.totalAlmas}
-                          </p>
-                          <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                            Total Almas
-                          </p>
-                        </motion.div>
-
-                        {/* Click WA */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1 }}
-                          className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                          style={{
-                            boxShadow: "0 0 20px hsl(142 76% 36% / 0.1)",
-                          }}
-                        >
-                          <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-green-400 mx-auto mb-2 md:mb-3" />
-                          <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                            {stats.clickWA}
-                          </p>
-                          <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                            Click WA
-                          </p>
-                        </motion.div>
-
-                        {/* Atendidos */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2 }}
-                          className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                          style={{
-                            boxShadow: "0 0 20px hsl(var(--gold) / 0.1)",
-                          }}
-                        >
-                          <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-gold mx-auto mb-2 md:mb-3" />
-                          <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                            {stats.atendidos}
-                          </p>
-                          <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                            Atendidos
-                          </p>
-                        </motion.div>
-
-                        {/* Sin Responder */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3 }}
-                          className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                          style={{
-                            boxShadow: "0 0 20px hsl(0 84% 60% / 0.1)",
-                          }}
-                        >
-                          <AlertCircle className="w-6 h-6 md:w-8 md:h-8 text-red-400 mx-auto mb-2 md:mb-3" />
-                          <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                            {stats.sinResponder}
-                          </p>
-                          <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                            Sin Responder
-                          </p>
-                        </motion.div>
-                      </div>
-
-                      {/* Pipeline */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="bg-card/30 rounded-xl p-4 md:p-8 border border-gold/20"
-                      >
-                        <div className="flex items-center justify-between mb-4 md:mb-6">
-                          <div className="flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-gold" />
-                            <h2 className="text-base md:text-lg font-medium text-gold tracking-wider uppercase">
-                              Estado del Pipeline
-                            </h2>
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <Circle className={`w-3 h-3 ${item.color.replace("bg-", "text-")}`} fill="currentColor" />
+                              <span className="text-muted-foreground tracking-wider">{item.label}</span>
+                            </div>
+                            <span className="font-medium text-foreground">{item.count}</span>
                           </div>
-                          <span className="text-xs md:text-sm text-muted-foreground">
-                            24 horas
-                          </span>
-                        </div>
-
-                        <div className="space-y-3 md:space-y-4">
-                          {pipelineData.map((item, index) => (
+                          <div className="h-3 bg-muted/20 rounded-full overflow-hidden">
                             <motion.div
-                              key={item.label}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.1 }}
-                              className="space-y-2"
-                            >
-                              <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2">
-                                  <Circle className={`w-3 h-3 ${item.color.replace("bg-", "text-")}`} fill="currentColor" />
-                                  <span className="text-muted-foreground tracking-wider">{item.label}</span>
-                                </div>
-                                <span className="font-medium text-foreground">{item.count}</span>
-                              </div>
-                              <div className="h-3 bg-muted/20 rounded-full overflow-hidden">
-                                <motion.div
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${(item.count / item.max) * 100}%` }}
-                                  transition={{ duration: 1, delay: index * 0.1 + 0.2 }}
-                                  className={`h-full ${item.color} rounded-full relative`}
-                                  style={{
-                                    boxShadow: `0 0 20px ${item.color.includes("blue") ? "rgba(59, 130, 246, 0.5)" : 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(item.count / item.max) * 100}%` }}
+                              transition={{ duration: 1, delay: index * 0.1 + 0.2 }}
+                              className={`h-full ${item.color} rounded-full relative`}
+                              style={{
+                                boxShadow: `0 0 20px ${item.color.includes("blue") ? "rgba(59, 130, 246, 0.5)" : 
                                                                  item.color.includes("yellow") ? "rgba(234, 179, 8, 0.5)" :
                                                                  item.color.includes("orange") ? "rgba(249, 115, 22, 0.5)" :
                                                                  item.color.includes("green") ? "rgba(34, 197, 94, 0.5)" :
                                                                  "rgba(239, 68, 68, 0.5)"}`
                                   }}
-                                />
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-
-                        {/* Nuevo */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-blue-400" />
-                              Nuevo
-                            </span>
-                            <span className="text-base md:text-xl font-bold text-foreground">
-                              {stats.pipeline.nuevo}
-                            </span>
-                          </div>
-                          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${(stats.pipeline.nuevo / stats.totalAlmas) * 100}%` }}
-                              transition={{ duration: 1, delay: 0.5 }}
-                              className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
-                              style={{
-                                boxShadow: "0 0 10px hsl(220 90% 56% / 0.5)",
-                              }}
                             />
                           </div>
-                        </div>
-
-                        {/* En Conversación */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-purple-400" />
-                              En Conversación
-                            </span>
-                            <span className="text-base md:text-xl font-bold text-foreground">
-                              {stats.pipeline.enConversacion}
-                            </span>
-                          </div>
-                          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${(stats.pipeline.enConversacion / stats.totalAlmas) * 100}%` }}
-                              transition={{ duration: 1, delay: 0.6 }}
-                              className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full"
-                              style={{
-                                boxShadow: "0 0 10px hsl(270 91% 65% / 0.5)",
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Cliente Caliente */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-orange-400" />
-                              Cliente Caliente
-                            </span>
-                            <span className="text-base md:text-xl font-bold text-foreground">
-                              {stats.pipeline.clienteCaliente}
-                            </span>
-                          </div>
-                          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${(stats.pipeline.clienteCaliente / stats.totalAlmas) * 100}%` }}
-                              transition={{ duration: 1, delay: 0.7 }}
-                              className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full"
-                              style={{
-                                boxShadow: "0 0 10px hsl(25 95% 53% / 0.5)",
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Cerrado */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-green-400" />
-                              Cerrado
-                            </span>
-                            <span className="text-base md:text-xl font-bold text-foreground">
-                              {stats.pipeline.cerrado}
-                            </span>
-                          </div>
-                          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${(stats.pipeline.cerrado / stats.totalAlmas) * 100}%` }}
-                              transition={{ duration: 1, delay: 0.8 }}
-                              className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
-                              style={{
-                                boxShadow: "0 0 10px hsl(142 76% 36% / 0.5)",
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Perdido */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-gray-400" />
-                              Perdido
-                            </span>
-                            <span className="text-base md:text-xl font-bold text-foreground">
-                              {stats.pipeline.perdido}
-                            </span>
-                          </div>
-                          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${(stats.pipeline.perdido / stats.totalAlmas) * 100}%` }}
-                              transition={{ duration: 1, delay: 0.9 }}
-                              className="h-full bg-gradient-to-r from-gray-500 to-gray-400 rounded-full"
-                              style={{
-                                boxShadow: "0 0 10px hsl(0 0% 50% / 0.5)",
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </motion.div>
+                        </motion.div>
+                      ))}
                     </div>
-                  </div>
+
+                    {/* Nuevo */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-blue-400" />
+                          Nuevo
+                        </span>
+                        <span className="text-base md:text-xl font-bold text-foreground">
+                          {stats.pipeline.nuevo}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stats.pipeline.nuevo / stats.totalAlmas) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                          className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
+                          style={{
+                            boxShadow: "0 0 10px hsl(220 90% 56% / 0.5)",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* En Conversación */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-purple-400" />
+                          En Conversación
+                        </span>
+                        <span className="text-base md:text-xl font-bold text-foreground">
+                          {stats.pipeline.enConversacion}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stats.pipeline.enConversacion / stats.totalAlmas) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.6 }}
+                          className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full"
+                          style={{
+                            boxShadow: "0 0 10px hsl(270 91% 65% / 0.5)",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Cliente Caliente */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-orange-400" />
+                          Cliente Caliente
+                        </span>
+                        <span className="text-base md:text-xl font-bold text-foreground">
+                          {stats.pipeline.clienteCaliente}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stats.pipeline.clienteCaliente / stats.totalAlmas) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.7 }}
+                          className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full"
+                          style={{
+                            boxShadow: "0 0 10px hsl(25 95% 53% / 0.5)",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Cerrado */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-green-400" />
+                          Cerrado
+                        </span>
+                        <span className="text-base md:text-xl font-bold text-foreground">
+                          {stats.pipeline.cerrado}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stats.pipeline.cerrado / stats.totalAlmas) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.8 }}
+                          className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
+                          style={{
+                            boxShadow: "0 0 10px hsl(142 76% 36% / 0.5)",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Perdido */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-gray-400" />
+                          Perdido
+                        </span>
+                        <span className="text-base md:text-xl font-bold text-foreground">
+                          {stats.pipeline.perdido}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stats.pipeline.perdido / stats.totalAlmas) * 100}%` }}
+                          transition={{ duration: 1, delay: 0.9 }}
+                          className="h-full bg-gradient-to-r from-gray-500 to-gray-400 rounded-full"
+                          style={{
+                            boxShadow: "0 0 10px hsl(0 0% 50% / 0.5)",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
               </div>
             </div>
