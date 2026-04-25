@@ -7,6 +7,7 @@ import { LeadService } from "@/services/leadService";
 import { MessageService } from "@/services/messageService";
 import { AuthService } from "@/services/authService";
 import { ProfileService } from "@/services/profileService";
+import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -27,7 +28,7 @@ import {
   MessageCircle
 } from "lucide-react";
 import Link from "next/link";
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase/client";
 
 type Lead = Database["public"]["Tables"]["leads"]["Row"];
 type Message = Database["public"]["Tables"]["messages"]["Row"];
@@ -116,100 +117,94 @@ export default function ChatPage() {
     return false;
   };
 
-  // Cargar lead desde Supabase
+  // Cargar datos iniciales y configurar suscripción realtime
   useEffect(() => {
-    const loadData = async () => {
-      if (!id || typeof id !== "string") return;
+    if (!leadId) return;
 
-      setIsLoading(true);
+    let subscription: any = null;
+
+    const initializeChat = async () => {
+      console.log("🔄 Iniciando chat del administrador para lead:", leadId);
+
       try {
         // Cargar datos del lead
-        const { data: leadData } = await LeadService.getById(id);
-        if (leadData) {
-          setLead(leadData);
+        const { data: leadData, error: leadError } = await LeadService.getById(leadId);
+        if (leadError) throw leadError;
+        if (!leadData) {
+          console.error("❌ Lead no encontrado");
+          return;
         }
+        setLead(leadData);
+        console.log("✅ Lead cargado:", leadData);
 
-        // Cargar mensajes y suscribirse a cambios
-        const leadId = id;
-        if (!leadId) return;
-
-        const loadMessages = async () => {
-          try {
-            console.log("📨 [ChatMaestro] Cargando mensajes del lead:", leadId);
-            const fetchedMessages = await MessageService.getByLeadId(leadId);
-            console.log("✅ [ChatMaestro] Mensajes cargados:", fetchedMessages.length);
-            setMessages(fetchedMessages);
-          } catch (error) {
-            console.error("❌ [ChatMaestro] Error cargando mensajes:", error);
-          }
-        };
-
-        loadMessages();
+        // Cargar mensajes existentes
+        const messagesData = await MessageService.getByLeadId(leadId);
+        setMessages(messagesData);
+        console.log("✅ Mensajes cargados:", messagesData.length);
 
         // Configurar suscripción en tiempo real
-        useEffect(() => {
-          if (!leadId) return;
-
-          console.log("🔌 Configurando suscripción realtime para lead:", leadId);
-
-          const messagesSubscription = supabase
-            .channel(`admin-messages-${leadId}`)
-            .on(
-              "postgres_changes",
-              {
-                event: "*",
-                schema: "public",
-                table: "messages",
-                filter: `lead_id=eq.${leadId}`,
-              },
-              (payload) => {
-                console.log("🔔 Cambio detectado en mensajes:", payload.eventType);
-                
-                if (payload.eventType === "INSERT") {
-                  const newMessage = payload.new as Message;
-                  console.log("📨 Nuevo mensaje recibido:", newMessage);
-                  
-                  setMessages((prev) => {
-                    // Evitar duplicados
-                    if (prev.some(m => m.id === newMessage.id)) {
-                      console.log("⚠️ Mensaje duplicado, ignorando");
-                      return prev;
-                    }
-                    return [...prev, newMessage];
-                  });
-                }
-              }
-            )
-            .subscribe((status) => {
-              console.log("📡 Estado de suscripción realtime:", status);
+        console.log("🔌 Configurando suscripción realtime para admin");
+        
+        subscription = supabase
+          .channel(`admin-messages-${leadId}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "messages",
+              filter: `lead_id=eq.${leadId}`,
+            },
+            (payload) => {
+              console.log("🔔 Cambio detectado:", payload.eventType);
               
-              if (status === "SUBSCRIBED") {
-                console.log("✅ Suscripción realtime activa para admin");
-              } else if (status === "CLOSED") {
-                console.error("❌ Suscripción cerrada, intentando reconectar...");
-                setTimeout(() => {
-                  console.log("🔄 Intentando reconectar suscripción...");
-                  messagesSubscription.subscribe();
-                }, 2000);
-              } else if (status === "CHANNEL_ERROR") {
-                console.error("❌ Error en canal realtime");
+              if (payload.eventType === "INSERT") {
+                const newMessage = payload.new as Message;
+                console.log("📨 Nuevo mensaje recibido:", newMessage);
+                
+                setMessages((prev) => {
+                  if (prev.some(m => m.id === newMessage.id)) {
+                    console.log("⚠️ Mensaje duplicado, ignorando");
+                    return prev;
+                  }
+                  return [...prev, newMessage];
+                });
               }
-            });
+            }
+          )
+          .subscribe((status) => {
+            console.log("📡 Estado de suscripción realtime:", status);
+            
+            if (status === "SUBSCRIBED") {
+              console.log("✅ Suscripción realtime activa para admin");
+            } else if (status === "CLOSED") {
+              console.error("❌ Suscripción cerrada, reconectando...");
+              setTimeout(() => {
+                if (subscription) {
+                  console.log("🔄 Intentando reconectar...");
+                  subscription.subscribe();
+                }
+              }, 2000);
+            }
+          });
 
-          return () => {
-            console.log("🔌 Cerrando suscripción realtime del admin");
-            messagesSubscription.unsubscribe();
-          };
-        }, [leadId]);
       } catch (error) {
-        console.error("Error cargando datos:", error);
+        console.error("❌ Error inicializando chat:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadData();
-  }, [id]);
+    initializeChat();
+
+    // Cleanup
+    return () => {
+      if (subscription) {
+        console.log("🔌 Cerrando suscripción realtime del admin");
+        subscription.unsubscribe();
+      }
+    };
+  }, [leadId]);
 
   const handleSendMessage = async (text?: string) => {
     const messageText = text || messageInput;
