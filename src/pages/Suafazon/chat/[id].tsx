@@ -431,8 +431,8 @@ export default function ChatPage() {
     }
   };
 
-  // Manejar archivos adjuntos (imagen/video)
-  const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "video") => {
+  // Manejar archivos adjuntos (imagen/audio solamente)
+  const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "audio") => {
     const file = e.target.files?.[0];
     if (!file) return;
 
