@@ -3,7 +3,11 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
-export function SuspenseScreen() {
+interface SuspenseScreenProps {
+  onComplete?: () => void;
+}
+
+export function SuspenseScreen({ onComplete }: SuspenseScreenProps) {
   const hasExecuted = useRef(false);
 
   useEffect(() => {
@@ -14,10 +18,11 @@ export function SuspenseScreen() {
 
     const timer = setTimeout(() => {
       console.log("✅ Timer de SuspenseScreen completado");
+      if (onComplete) onComplete();
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [onComplete]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">

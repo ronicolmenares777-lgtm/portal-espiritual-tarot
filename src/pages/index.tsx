@@ -316,11 +316,63 @@ export default function Home() {
         </motion.button>
       </motion.div>
 
+      {/* Header Section - AJUSTADO */}
+      <motion.div
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative z-10 text-center mb-8 lg:mb-12"
+      >
+        {/* Logo/Icono místico */}
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 1, delay: 0.3, type: "spring" }}
+          className="inline-flex items-center justify-center mb-4 lg:mb-5"
+        >
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-gold/30 to-accent/30 blur-xl rounded-full animate-pulse" />
+            <div className="relative w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-gradient-to-br from-gold/20 to-accent/20 border-2 border-gold/40 flex items-center justify-center shadow-2xl shadow-gold/20">
+              <Sparkles className="w-8 h-8 lg:w-10 lg:h-10 text-gold animate-pulse" />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Título principal - TAMAÑO REDUCIDO */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-2 lg:mb-3 leading-tight"
+        >
+          <span className="block bg-gradient-to-r from-gold via-amber-300 to-gold bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(250,214,54,0.3)]">
+            Portal Espiritual
+          </span>
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.7 }}
+          className="text-base sm:text-lg lg:text-xl text-foreground/90 font-light tracking-wide max-w-2xl mx-auto px-4"
+        >
+          Descubre las respuestas que el universo tiene preparadas para ti
+        </motion.p>
+
+        {/* Línea decorativa */}
+        <motion.div
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 1, delay: 0.9 }}
+          className="mx-auto mt-4 w-32 h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent opacity-60"
+        />
+      </motion.div>
+
       {/* Contenido principal - PADDING REDUCIDO */}
       <div className="container mx-auto px-4 py-8 lg:py-12 relative z-10">
         {currentScreen === "form" && (
-          <main className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-background via-purple-950/20 to-background" />
+          <main className="min-h-screen flex items-center justify-center p-4 pt-12 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background to-background" />
             
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold/5 rounded-full blur-3xl animate-pulse-glow" style={{ animationDuration: "4s" }} />
@@ -328,15 +380,6 @@ export default function Home() {
             </div>
 
             <div className="max-w-md w-full space-y-8 relative z-10">
-              <div className="flex justify-center mb-4 animate-in fade-in duration-1000">
-                <div className="relative">
-                  <Star className="w-12 h-12 text-gold animate-pulse-glow" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-6 h-6 text-gold/60 animate-spin" style={{ animationDuration: "8s" }} />
-                  </div>
-                </div>
-              </div>
-
               <div className="text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                 <div className="space-y-2">
                   <h1 className="text-5xl md:text-6xl font-serif font-bold text-gold tracking-[0.15em] leading-tight">
