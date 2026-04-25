@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Sparkles } from "lucide-react";
+import { Send, Loader2, Sparkles, Paperclip, Image, Video, Mic, FileText, Download, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { MessageService } from "@/services/messageService";
@@ -23,8 +23,12 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
   const [newMessage, setNewMessage] = useState("");
   const [leadId, setLeadId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=Maestro");
+  const [maestroAvatar, setMaestroAvatar] = useState("/api/placeholder/40/40");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -176,23 +180,88 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
   }, [userName, userPhone, userProblem, userCard]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !leadId) return;
+    if ((!newMessage.trim() && !selectedFile) || !leadId) return;
 
     try {
+      setIsUploading(true);
       console.log("📤 Enviando mensaje del usuario:", newMessage);
       
-      const messageData = {
+      const messageData: any = {
         lead_id: leadId,
-        text: newMessage.trim(),
+        text: newMessage.trim() || (selectedFile ? `Archivo: ${selectedFile.name}` : ""),
         is_from_maestro: false,
       };
+
+      // Si hay archivo, subirlo a Supabase Storage
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${leadId}/${Date.now()}.${fileExt}`;
+        const filePath = `messages/${fileName}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('chat-files')
+          .upload(filePath, selectedFile);
+
+        if (uploadError) {
+          console.error("❌ Error subiendo archivo:", uploadError);
+          throw uploadError;
+        }
+
+        // Obtener URL pública del archivo
+        const { data: { publicUrl } } = supabase.storage
+          .from('chat-files')
+          .getPublicUrl(filePath);
+
+        // Detectar tipo de archivo
+        const fileType = selectedFile.type;
+        if (fileType.startsWith('image/')) {
+          messageData.image_url = publicUrl;
+        } else if (fileType.startsWith('video/')) {
+          messageData.video_url = publicUrl;
+        } else if (fileType.startsWith('audio/')) {
+          messageData.audio_url = publicUrl;
+        } else {
+          messageData.file_url = publicUrl;
+          messageData.file_name = selectedFile.name;
+        }
+      }
 
       const createdMessage = await MessageService.create(messageData);
       console.log("✅ Mensaje enviado:", createdMessage);
 
       setNewMessage("");
+      setSelectedFile(null);
+      setFilePreview(null);
     } catch (error) {
       console.error("❌ Error enviando mensaje:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+
+    // Crear preview para imágenes
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -262,7 +331,63 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                       <span className="text-xs font-semibold text-gold">Maestro Espiritual</span>
                     </div>
                   )}
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+
+                  {/* Imagen */}
+                  {message.image_url && (
+                    <div className="mb-2">
+                      <img
+                        src={message.image_url}
+                        alt="Imagen adjunta"
+                        className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition"
+                        onClick={() => window.open(message.image_url, '_blank')}
+                      />
+                    </div>
+                  )}
+
+                  {/* Video */}
+                  {message.video_url && (
+                    <div className="mb-2">
+                      <video
+                        src={message.video_url}
+                        controls
+                        className="rounded-lg max-w-full h-auto"
+                      />
+                    </div>
+                  )}
+
+                  {/* Audio */}
+                  {message.audio_url && (
+                    <div className="mb-2">
+                      <audio
+                        src={message.audio_url}
+                        controls
+                        className="w-full"
+                      />
+                    </div>
+                  )}
+
+                  {/* Archivo */}
+                  {message.file_url && !message.image_url && !message.video_url && !message.audio_url && (
+                    <a
+                      href={message.file_url}
+                      download={message.file_name}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex items-center gap-2 mb-2 p-2 rounded-lg ${
+                        message.is_from_maestro ? "bg-muted" : "bg-background/20"
+                      }`}
+                    >
+                      <FileText className="w-5 h-5" />
+                      <span className="text-sm font-medium">{message.file_name || "Archivo adjunto"}</span>
+                      <Download className="w-4 h-4 ml-auto" />
+                    </a>
+                  )}
+
+                  {/* Texto */}
+                  {message.text && (
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+                  )}
+
                   <p className={`text-xs mt-2 ${message.is_from_maestro ? "text-muted-foreground" : "text-background/70"}`}>
                     {new Date(message.created_at).toLocaleTimeString("es-ES", {
                       hour: "2-digit",
@@ -277,30 +402,144 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         </div>
       </div>
 
-      {/* Input de Mensaje */}
+      {/* Formulario de envío */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/95 to-transparent p-4 border-t-2 border-gold/20 backdrop-blur-md"
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t-2 border-gold/20 p-4 z-20"
       >
-        <div className="max-w-4xl mx-auto flex gap-3">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="Escribe tu mensaje..."
-            className="flex-1 bg-secondary/50 border-2 border-gold/30 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 transition-all"
-          />
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
-            className="bg-gradient-to-r from-gold to-amber-500 text-background p-3 rounded-xl shadow-lg hover:shadow-xl hover:shadow-gold/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Send className="w-6 h-6" />
-          </motion.button>
+        <div className="max-w-4xl mx-auto">
+          {/* Preview de archivo */}
+          {selectedFile && (
+            <div className="mb-3 p-3 bg-card rounded-lg border border-gold/20">
+              <div className="flex items-center gap-3">
+                {filePreview ? (
+                  <img src={filePreview} alt="Preview" className="w-16 h-16 object-cover rounded" />
+                ) : (
+                  <div className="w-16 h-16 bg-muted rounded flex items-center justify-center">
+                    <FileText className="w-8 h-8 text-gold" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                <button
+                  onClick={removeFile}
+                  className="p-2 hover:bg-destructive/10 rounded-lg transition"
+                >
+                  <X className="w-5 h-5 text-destructive" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-end gap-2">
+            {/* Botones multimedia */}
+            <div className="flex gap-1">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="p-3 bg-card hover:bg-gold/20 rounded-full border-2 border-gold/30 transition disabled:opacity-50"
+                title="Adjuntar archivo"
+              >
+                <Paperclip className="w-5 h-5 text-gold" />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = (e: any) => handleFileSelect(e);
+                  input.click();
+                }}
+                disabled={isUploading}
+                className="p-3 bg-card hover:bg-gold/20 rounded-full border-2 border-gold/30 transition disabled:opacity-50"
+                title="Enviar foto"
+              >
+                <Image className="w-5 h-5 text-gold" />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'video/*';
+                  input.onchange = (e: any) => handleFileSelect(e);
+                  input.click();
+                }}
+                disabled={isUploading}
+                className="p-3 bg-card hover:bg-gold/20 rounded-full border-2 border-gold/30 transition disabled:opacity-50"
+                title="Enviar video"
+              >
+                <Video className="w-5 h-5 text-gold" />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'audio/*';
+                  input.onchange = (e: any) => handleFileSelect(e);
+                  input.click();
+                }}
+                disabled={isUploading}
+                className="p-3 bg-card hover:bg-gold/20 rounded-full border-2 border-gold/30 transition disabled:opacity-50"
+                title="Enviar audio"
+              >
+                <Mic className="w-5 h-5 text-gold" />
+              </motion.button>
+            </div>
+
+            {/* Input de texto */}
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder={isUploading ? "Subiendo archivo..." : "Escribe tu mensaje..."}
+              disabled={isUploading}
+              className="flex-1 px-4 py-3 bg-card border-2 border-gold/30 rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:border-gold/60 transition disabled:opacity-50"
+            />
+
+            {/* Botón enviar */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleSendMessage}
+              disabled={(!newMessage.trim() && !selectedFile) || isUploading}
+              className="p-3 bg-gradient-to-br from-gold to-amber-500 hover:from-amber-500 hover:to-gold rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {isUploading ? (
+                <Loader2 className="w-6 h-6 text-background animate-spin" />
+              ) : (
+                <Send className="w-6 h-6 text-background" />
+              )}
+            </motion.button>
+          </div>
         </div>
       </motion.div>
     </div>
