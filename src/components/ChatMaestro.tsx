@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Paperclip, Mic } from "lucide-react";
+import { Send, Paperclip, Mic, X } from "lucide-react";
 import { MessageService } from "@/services/messageService";
 import { ProfileService } from "@/services/profileService";
 import { LeadService } from "@/services/leadService";
@@ -21,27 +21,120 @@ interface ChatMaestroProps {
   onBack?: () => void;
 }
 
-export function ChatMaestro({ userName, userPhone, userProblem, userCard }: ChatMaestroProps) {
+export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack }: ChatMaestroProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [message, setMessage] = useState("");
+  const [newMessage, setNewMessage] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [maestroAvatar, setMaestroAvatar] = useState<string>("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
-  const [mediaPreview, setMediaPreview] = useState<{ url: string; type: "image" | "video" | "audio"; file?: File } | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<{
+    type: "audio";
+    url: string;
+    blob?: Blob;
+  } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Iniciar grabación de audio
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        setMediaPreview({
+          type: "audio",
+          url: audioUrl,
+          blob: audioBlob
+        });
+
+        // Detener stream
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      alert("No se pudo acceder al micrófono");
+      console.error(error);
+    }
+  };
+
+  // Detener grabación
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  // Enviar audio
+  const handleSendAudio = async () => {
+    if (!mediaPreview || !mediaPreview.blob) return;
+
+    try {
+      // Subir audio a Supabase Storage
+      const fileName = `audio-${Date.now()}.webm`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("chat-media")
+        .upload(fileName, mediaPreview.blob, {
+          contentType: "audio/webm"
+        });
+
+      if (uploadError) {
+        console.error("Error subiendo audio:", uploadError);
+        alert("Error al subir el audio");
+        return;
+      }
+
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from("chat-media")
+        .getPublicUrl(fileName);
+
+      // Crear mensaje con el audio
+      const currentLeadId = localStorage.getItem("currentLeadId");
+      if (!currentLeadId) {
+        alert("Error: No se encontró el ID del lead");
+        return;
+      }
+
+      await MessageService.create({
+        lead_id: currentLeadId,
+        text: "",
+        media_url: publicUrl,
+        media_type: "audio",
+        is_from_maestro: false
+      });
+
+      setMediaPreview(null);
+    } catch (error) {
+      console.error("Error enviando audio:", error);
+      alert("Error al enviar el audio");
+    }
+  };
 
   // Cargar datos y suscribirse a Supabase
   useEffect(() => {
@@ -141,7 +234,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
 
   // Enviar mensaje a Supabase
   const handleSendMessage = async () => {
-    if (!message.trim() || isSending) return;
+    if (!newMessage.trim() || isSending) return;
 
     // Validar leadId
     if (!leadId) {
@@ -154,7 +247,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
     try {
       const createdMessage = await MessageService.create({
         lead_id: leadId,
-        text: message.trim(),
+        text: newMessage.trim(),
         is_from_maestro: false
       });
 
@@ -166,7 +259,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         });
       }
 
-      setMessage("");
+      setNewMessage("");
       setIsSending(false);
       scrollToBottom();
     } catch (err) {
@@ -415,46 +508,83 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         )}
 
         {/* Input de mensaje */}
-        <div className="border-t border-border p-4 sm:p-6 bg-card/50">
+        <div className="border-t border-gold/20 bg-card/50 p-4 shadow-2xl">
+          {/* Preview de audio */}
+          {mediaPreview && (
+            <div className="mb-4 p-4 bg-primary/10 rounded-xl border border-primary/30">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40">
+                    <Mic className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Audio grabado</p>
+                    <audio src={mediaPreview.url} controls className="mt-2" />
+                  </div>
+                </div>
+                <button
+                  onClick={() => setMediaPreview(null)}
+                  className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-muted-foreground hover:text-red-400" />
+                </button>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => setMediaPreview(null)}
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSendAudio}
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all"
+                >
+                  Enviar Audio
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-3 items-end">
-            {/* Botón de adjuntar archivo */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*,audio/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
+            {/* Botón de grabar audio */}
             <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-3 bg-secondary/50 hover:bg-secondary/70 text-gold rounded-full transition-colors flex-shrink-0"
-              title="Adjuntar archivo"
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`p-3 rounded-lg transition-all ${
+                isRecording 
+                  ? "bg-red-500/30 border-2 border-red-500/60 animate-pulse" 
+                  : "bg-muted/50 hover:bg-muted border border-border hover:border-gold/40"
+              }`}
+              title={isRecording ? "Detener grabación" : "Grabar audio"}
             >
-              <Paperclip className="w-5 h-5" />
+              <Mic className={`w-5 h-5 ${isRecording ? "text-red-400" : "text-muted-foreground"}`} />
             </button>
 
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Escribe tu mensaje..."
-              className="flex-1 bg-secondary/30 border border-border rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none min-h-[52px] max-h-32"
-              rows={1}
-              disabled={isSending}
-            />
+            <div className="flex-1">
+              <textarea
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                placeholder="Escribe tu mensaje..."
+                rows={1}
+                className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none"
+                style={{ minHeight: "48px", maxHeight: "120px" }}
+              />
+            </div>
 
             <button
               onClick={handleSendMessage}
-              disabled={isSending || !message.trim()}
-              className="p-3 bg-primary hover:bg-primary/80 text-background rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+              disabled={!newMessage.trim()}
+              className="p-3 bg-gradient-to-r from-gold to-accent text-background rounded-lg hover:shadow-lg hover:shadow-gold/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
             >
               <Send className="w-5 h-5" />
             </button>
           </div>
-
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            Presiona Enter para enviar • Shift+Enter para nueva línea
-          </p>
         </div>
       </div>
     </div>
