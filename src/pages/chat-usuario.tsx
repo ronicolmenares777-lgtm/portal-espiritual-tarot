@@ -96,7 +96,6 @@ export default function ChatUsuario() {
           userPhone={userAuth.country_code + userAuth.whatsapp}
           userProblem={userAuth.problem}
           userCard={userAuth.selected_cards?.[0] || ""}
-          onBack={() => router.push("/")}
         />
       </div>
     </>

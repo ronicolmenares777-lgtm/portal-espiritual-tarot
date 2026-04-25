@@ -525,13 +525,12 @@ export default function Home() {
           <WarningMessage onContinue={handleFinalSubmit} />
         )}
 
-        {currentScreen === "chat" && selectedCard && (
+        {currentScreen === "chat" && (
           <ChatMaestro
             userName={formData.name}
-            userPhone={formData.countryCode + formData.whatsapp}
+            userPhone={formData.whatsapp}
             userProblem={formData.problem}
-            userCard={selectedCard.name}
-            onBack={() => setCurrentScreen("warning")}
+            userCard={selectedCard?.name}
           />
         )}
       </div>
