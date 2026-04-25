@@ -30,8 +30,9 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
   const [leadId, setLeadId] = useState<string | null>(null);
   const [maestroAvatar, setMaestroAvatar] = useState<string>("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
   const [mediaPreview, setMediaPreview] = useState<{
-    type: "audio";
+    type: "audio" | "image" | "video";
     url: string;
+    file?: File;
     blob?: Blob;
   } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -425,7 +426,37 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
                       {msg.media_url ? (
                         <div className="space-y-2">
                           {msg.media_type === "image" && (
-                            <img src={msg.media_url} alt="Imagen" className="rounded-lg max-w-full h-auto" />
+                            <div className="relative group">
+                              <img 
+                                src={msg.media_url} 
+                                alt="Imagen" 
+                                className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity" 
+                                onClick={() => window.open(msg.media_url, '_blank')}
+                              />
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                <a
+                                  href={msg.media_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="bg-black/70 hover:bg-black/90 text-white p-2 rounded-lg backdrop-blur-sm transition-all"
+                                  title="Abrir en nueva ventana"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                  </svg>
+                                </a>
+                                <a
+                                  href={msg.media_url}
+                                  download
+                                  className="bg-black/70 hover:bg-black/90 text-white p-2 rounded-lg backdrop-blur-sm transition-all"
+                                  title="Descargar imagen"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                  </svg>
+                                </a>
+                              </div>
+                            </div>
                           )}
                           {msg.media_type === "video" && (
                             <video src={msg.media_url} controls className="rounded-lg max-w-full h-auto" />
@@ -466,60 +497,31 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Preview de archivo multimedia */}
-        {mediaPreview && (
-          <div className="border-t border-border p-4">
-            <div className="flex items-center justify-between bg-secondary/30 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                {mediaPreview.type === "image" && (
-                  <img src={mediaPreview.url} alt="Preview" className="w-16 h-16 rounded object-cover" />
-                )}
-                {mediaPreview.type === "video" && (
-                  <video src={mediaPreview.url} className="w-16 h-16 rounded object-cover" />
-                )}
-                {mediaPreview.type === "audio" && (
-                  <div className="w-16 h-16 bg-primary/20 rounded flex items-center justify-center">
-                    <Mic className="w-8 h-8 text-primary" />
-                  </div>
-                )}
-                <p className="text-sm text-foreground/80">
-                  {mediaPreview.type === "image" && "Imagen seleccionada"}
-                  {mediaPreview.type === "video" && "Video seleccionado"}
-                  {mediaPreview.type === "audio" && "Audio seleccionado"}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setMediaPreview(null)}
-                  className="px-4 py-2 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-lg transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSendMedia}
-                  disabled={isUploading}
-                  className="px-4 py-2 bg-primary hover:bg-primary/80 text-background rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {isUploading ? "Enviando..." : "Enviar"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Input de mensaje */}
-        <div className="border-t border-gold/20 bg-card/50 p-4 shadow-2xl">
-          {/* Preview de audio */}
+        {/* Input de mensaje y Previews unificados */}
+        <div className="border-t border-gold/20 bg-card/50 p-4 shadow-2xl relative">
+          {/* Preview Multimedia Unificado */}
           {mediaPreview && (
-            <div className="mb-4 p-4 bg-primary/10 rounded-xl border border-primary/30">
+            <div className="mb-4 p-4 bg-primary/10 rounded-xl border border-primary/30 shadow-lg">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40">
-                    <Mic className="w-6 h-6 text-primary" />
-                  </div>
+                  {mediaPreview.type === "image" && (
+                    <img src={mediaPreview.url} alt="Preview" className="w-12 h-12 rounded object-cover border border-primary/20" />
+                  )}
+                  {mediaPreview.type === "video" && (
+                    <video src={mediaPreview.url} className="w-12 h-12 rounded object-cover border border-primary/20" />
+                  )}
+                  {mediaPreview.type === "audio" && (
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40">
+                      <Mic className="w-6 h-6 text-primary" />
+                    </div>
+                  )}
                   <div>
-                    <p className="text-sm font-medium text-foreground">Audio grabado</p>
-                    <audio src={mediaPreview.url} controls className="mt-2" />
+                    <p className="text-sm font-medium text-foreground">
+                      {mediaPreview.type === "image" && "Imagen lista para enviar"}
+                      {mediaPreview.type === "video" && "Video listo para enviar"}
+                      {mediaPreview.type === "audio" && "Audio grabado"}
+                    </p>
+                    {mediaPreview.type === "audio" && <audio src={mediaPreview.url} controls className="mt-2 h-8" />}
                   </div>
                 </div>
                 <button
@@ -537,30 +539,51 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
                   Cancelar
                 </button>
                 <button
-                  onClick={handleSendAudio}
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all"
+                  onClick={mediaPreview.type === "audio" && mediaPreview.blob ? handleSendAudio : handleSendMedia}
+                  disabled={isUploading}
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all disabled:opacity-50"
                 >
-                  Enviar Audio
+                  {isUploading ? "Enviando..." : "Enviar Archivo"}
                 </button>
               </div>
             </div>
           )}
 
-          <div className="flex gap-3 items-end">
-            {/* Botón de grabar audio */}
-            <button
-              onClick={isRecording ? stopRecording : startRecording}
-              className={`p-3 rounded-lg transition-all ${
-                isRecording 
-                  ? "bg-red-500/30 border-2 border-red-500/60 animate-pulse" 
-                  : "bg-muted/50 hover:bg-muted border border-border hover:border-gold/40"
-              }`}
-              title={isRecording ? "Detener grabación" : "Grabar audio"}
-            >
-              <Mic className={`w-5 h-5 ${isRecording ? "text-red-400" : "text-muted-foreground"}`} />
-            </button>
+          <div className="flex gap-2 sm:gap-3 items-end">
+            {/* Input oculto para adjuntos */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              className="hidden"
+              accept="image/*,video/*,audio/*"
+            />
 
-            <div className="flex-1">
+            <div className="flex gap-1 sm:gap-2">
+              {/* Botón adjuntar imagen/video */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 sm:p-3 bg-muted/50 hover:bg-muted border border-border hover:border-gold/40 rounded-lg transition-all"
+                title="Adjuntar archivo"
+              >
+                <Paperclip className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+              </button>
+
+              {/* Botón de grabar audio */}
+              <button
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`p-2 sm:p-3 rounded-lg transition-all ${
+                  isRecording 
+                    ? "bg-red-500/30 border-2 border-red-500/60 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
+                    : "bg-muted/50 hover:bg-muted border border-border hover:border-gold/40"
+                }`}
+                title={isRecording ? "Detener grabación" : "Grabar audio"}
+              >
+                <Mic className={`w-4 h-4 sm:w-5 sm:h-5 ${isRecording ? "text-red-400" : "text-muted-foreground"}`} />
+              </button>
+            </div>
+
+            <div className="flex-1 relative">
               <textarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
@@ -572,17 +595,17 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
                 }}
                 placeholder="Escribe tu mensaje..."
                 rows={1}
-                className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none"
-                style={{ minHeight: "48px", maxHeight: "120px" }}
+                className="w-full bg-muted/50 border border-gold/20 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none"
+                style={{ minHeight: "44px", maxHeight: "120px" }}
               />
             </div>
 
             <button
               onClick={handleSendMessage}
-              disabled={!newMessage.trim()}
-              className="p-3 bg-gradient-to-r from-gold to-accent text-background rounded-lg hover:shadow-lg hover:shadow-gold/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
+              disabled={!newMessage.trim() || isSending}
+              className="p-2 sm:p-3 bg-gradient-to-r from-gold to-accent text-background rounded-lg hover:shadow-lg hover:shadow-gold/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none shrink-0"
             >
-              <Send className="w-5 h-5" />
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
