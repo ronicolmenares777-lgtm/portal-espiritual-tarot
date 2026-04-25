@@ -316,34 +316,19 @@ export default function Home() {
         </motion.button>
       </motion.div>
 
-      {/* Header Section - AJUSTADO */}
+      {/* Header Section - SIN LOGO */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="relative z-10 text-center mb-8 lg:mb-12"
+        className="relative z-10 text-center mb-8 lg:mb-10"
       >
-        {/* Logo/Icono místico */}
-        <motion.div
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ duration: 1, delay: 0.3, type: "spring" }}
-          className="inline-flex items-center justify-center mb-4 lg:mb-5"
-        >
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-gold/30 to-accent/30 blur-xl rounded-full animate-pulse" />
-            <div className="relative w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-gradient-to-br from-gold/20 to-accent/20 border-2 border-gold/40 flex items-center justify-center shadow-2xl shadow-gold/20">
-              <Sparkles className="w-8 h-8 lg:w-10 lg:h-10 text-gold animate-pulse" />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Título principal - TAMAÑO REDUCIDO */}
+        {/* Título principal */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-2 lg:mb-3 leading-tight"
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 lg:mb-4 leading-tight"
         >
           <span className="block bg-gradient-to-r from-gold via-amber-300 to-gold bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(250,214,54,0.3)]">
             Portal Espiritual
@@ -353,7 +338,7 @@ export default function Home() {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.7 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
           className="text-base sm:text-lg lg:text-xl text-foreground/90 font-light tracking-wide max-w-2xl mx-auto px-4"
         >
           Descubre las respuestas que el universo tiene preparadas para ti
@@ -363,15 +348,15 @@ export default function Home() {
         <motion.div
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
-          transition={{ duration: 1, delay: 0.9 }}
-          className="mx-auto mt-4 w-32 h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent opacity-60"
+          transition={{ duration: 1, delay: 0.7 }}
+          className="mx-auto mt-5 w-32 h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent opacity-60"
         />
       </motion.div>
 
-      {/* Contenido principal - PADDING REDUCIDO */}
-      <div className="container mx-auto px-4 py-8 lg:py-12 relative z-10">
+      {/* Contenido principal - MÁS ARRIBA */}
+      <div className="container mx-auto px-4 py-6 lg:py-8 relative z-10">
         {currentScreen === "form" && (
-          <main className="min-h-screen flex items-center justify-center p-4 pt-12 relative overflow-hidden">
+          <main className="min-h-screen flex items-center justify-center p-4 pt-8 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background to-background" />
             
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
