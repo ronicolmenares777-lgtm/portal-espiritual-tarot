@@ -190,20 +190,48 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard, onBack
         console.log("✅ Mensajes cargados:", messagesData.length);
         setMessages(messagesData);
 
-        // Suscribirse a cambios en tiempo real
+        // Configurar suscripción en tiempo real
         console.log("🔔 Configurando suscripción realtime para lead:", currentLeadId);
-        subscription = MessageService.subscribeToMessages(currentLeadId, (newMsg) => {
-          console.log("📨 Nuevo mensaje recibido en ChatMaestro:", newMsg);
-          setMessages((prev) => {
-            const exists = prev.some((m) => m.id === newMsg.id);
-            if (exists) {
-              console.log("⚠️ Mensaje duplicado ignorado");
-              return prev;
+        
+        subscription = supabase
+          .channel(`messages-${currentLeadId}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "messages",
+              filter: `lead_id=eq.${currentLeadId}`,
+            },
+            (payload) => {
+              console.log("🔔 Cambio detectado:", payload.eventType);
+              
+              if (payload.eventType === "INSERT") {
+                const newMessage = payload.new as Message;
+                console.log("📨 Nuevo mensaje recibido:", newMessage);
+                
+                setMessages((prev) => {
+                  if (prev.some(m => m.id === newMessage.id)) {
+                    console.log("⚠️ Mensaje duplicado, ignorando");
+                    return prev;
+                  }
+                  return [...prev, newMessage];
+                });
+              }
             }
-            console.log("✅ Mensaje agregado a la lista");
-            return [...prev, newMsg];
+          )
+          .subscribe((status) => {
+            console.log("📡 Estado de suscripción:", status);
+            
+            if (status === "SUBSCRIBED") {
+              console.log("✅ Suscripción realtime activa");
+            } else if (status === "CLOSED") {
+              console.error("❌ Suscripción cerrada, reconectando...");
+              setTimeout(() => {
+                if (subscription) subscription.subscribe();
+              }, 2000);
+            }
           });
-        });
         
         console.log("✅ Suscripción realtime configurada");
 
