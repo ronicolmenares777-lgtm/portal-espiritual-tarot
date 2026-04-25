@@ -313,6 +313,18 @@ export default function ChatPage() {
     }
   };
 
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!confirm("¿Estás seguro de eliminar este mensaje?")) return;
+    try {
+      const { error } = await supabase.from("messages").delete().eq("id", messageId);
+      if (error) throw error;
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+    } catch (error) {
+      console.error("Error eliminando mensaje:", error);
+      alert("Error al eliminar el mensaje");
+    }
+  };
+
   const handleQuickResponse = async (text: string) => {
     if (!id || typeof id !== "string") return;
 
@@ -668,20 +680,24 @@ export default function ChatPage() {
                             }`}
                           >
                             {msg.media_url ? (
-                              <div className="space-y-2">
+                              <div className="space-y-3">
                                 {msg.media_type === "image" && (
-                                  <img 
-                                    src={msg.media_url} 
-                                    alt="Imagen" 
-                                    className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition" 
-                                    onClick={() => setViewingImage(msg.media_url!)} 
-                                  />
+                                  <div className="group/img">
+                                    <img 
+                                      src={msg.media_url} 
+                                      alt="Imagen" 
+                                      className="rounded-2xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all duration-300 shadow-xl group-hover/img:shadow-2xl border border-gold/20" 
+                                      onClick={() => setViewingImage(msg.media_url!)} 
+                                    />
+                                  </div>
                                 )}
                                 {msg.media_type === "video" && (
-                                  <video src={msg.media_url} controls className="rounded-lg max-w-full h-auto" />
+                                  <video src={msg.media_url} controls className="rounded-2xl max-w-full h-auto shadow-xl border border-gold/20" />
                                 )}
                                 {msg.media_type === "audio" && (
-                                  <audio src={msg.media_url} controls className="w-full" />
+                                  <div className="p-3 bg-background/20 rounded-xl">
+                                    <audio src={msg.media_url} controls className="w-full" />
+                                  </div>
                                 )}
                                 {msg.media_type === "file" && (
                                   <a
@@ -689,23 +705,29 @@ export default function ChatPage() {
                                     download
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-2 p-2 rounded-lg bg-muted hover:bg-muted/80 transition"
+                                    className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
+                                      isFromMaestro ? "bg-background/20 hover:bg-background/30" : "bg-muted/50 hover:bg-muted/70"
+                                    }`}
                                   >
-                                    <FileText className="w-5 h-5" />
-                                    <span className="text-sm font-medium">Descargar archivo</span>
-                                    <Download className="w-4 h-4 ml-auto" />
+                                    <FileText className="w-6 h-6 flex-shrink-0" />
+                                    <span className="text-sm font-medium flex-1">Archivo adjunto</span>
+                                    <Download className="w-5 h-5 ml-auto animate-bounce" />
                                   </a>
                                 )}
-                                {msg.text && <p className="whitespace-pre-wrap break-words">{msg.text}</p>}
                               </div>
-                            ) : (
-                              <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                            ) : null}
+
+                            {/* Texto del mensaje */}
+                            {msg.text && (
+                              <p className={`text-[15px] leading-relaxed whitespace-pre-wrap font-medium ${msg.media_url ? "mt-3" : ""}`}>
+                                {msg.text}
+                              </p>
                             )}
                           </div>
 
                           {/* Timestamp, checkmarks y botón eliminar */}
-                          <div className={`flex items-center gap-2 mt-1 px-2 ${isFromMaestro ? "justify-end" : "justify-start"}`}>
-                            <p className="text-[10px] text-muted-foreground">
+                          <div className={`flex items-center gap-3 mt-3 px-1 ${isFromMaestro ? "justify-end" : "justify-start"}`}>
+                            <p className="text-xs font-medium tracking-wide text-muted-foreground/70">
                               {new Date(msg.created_at).toLocaleTimeString("es-MX", {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -714,34 +736,20 @@ export default function ChatPage() {
                             {isFromMaestro && (
                               <div className="flex items-center">
                                 {isRead ? (
-                                  <span className="text-blue-500 text-[12px] font-bold tracking-tighter leading-none">✓✓</span>
+                                  <span className="text-blue-400 text-sm font-bold tracking-tighter leading-none transition-all duration-300 scale-110">✓✓</span>
                                 ) : (
-                                  <span className="text-muted-foreground text-[12px] font-bold tracking-tighter leading-none">✓</span>
+                                  <span className="text-background/60 text-sm font-bold tracking-tighter leading-none">✓</span>
                                 )}
                               </div>
                             )}
                             
                             {/* Botón eliminar - solo visible al hacer hover */}
                             <button
-                              onClick={async () => {
-                                if (confirm("¿Eliminar este mensaje?")) {
-                                  try {
-                                    await MessageService.delete(msg.id);
-                                    setMessages(prev => prev.filter(m => m.id !== msg.id));
-                                  } catch (error) {
-                                    console.error("Error eliminando mensaje:", error);
-                                    alert("Error al eliminar mensaje");
-                                  }
-                                }
-                              }}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-500"
+                              onClick={() => handleDeleteMessage(msg.id)}
+                              className="opacity-0 group-hover:opacity-100 ml-auto p-2 hover:bg-destructive/20 rounded-xl transition-all duration-300 hover:scale-110"
                               title="Eliminar mensaje"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 6h18"></path>
-                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                              </svg>
+                              <X className="w-4 h-4 text-destructive" />
                             </button>
                           </div>
                         </div>
@@ -851,33 +859,33 @@ export default function ChatPage() {
                   id="video-upload"
                 />
 
-                <div className="flex items-end gap-1.5 md:gap-2.5">
+                <div className="flex items-end gap-2 md:gap-3">
                   {/* Botones de adjuntar */}
-                  <div className="flex gap-0.5 md:gap-1.5">
+                  <div className="flex gap-1 md:gap-2 flex-shrink-0">
                     <button
                       onClick={() => document.getElementById("image-upload")?.click()}
-                      className="p-1.5 md:p-2.5 hover:bg-gold/20 rounded-lg transition-all group border-2 border-transparent hover:border-gold/40 shadow-sm"
+                      className="p-2.5 md:p-3 bg-card hover:bg-gold/20 rounded-xl transition-all group border-2 border-gold/20 hover:border-gold/40 shadow-sm"
                       title="Enviar imagen"
                     >
-                      <ImageIcon className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
+                      <ImageIcon className="w-5 h-5 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
                     </button>
                     <button
                       onClick={() => document.getElementById("video-upload")?.click()}
-                      className="p-1.5 md:p-2.5 hover:bg-gold/20 rounded-lg transition-all group border-2 border-transparent hover:border-gold/40 shadow-sm"
+                      className="hidden sm:block p-2.5 md:p-3 bg-card hover:bg-gold/20 rounded-xl transition-all group border-2 border-gold/20 hover:border-gold/40 shadow-sm"
                       title="Enviar video"
                     >
-                      <Paperclip className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
+                      <Paperclip className="w-5 h-5 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
                     </button>
                     <button
                       onClick={isRecording ? stopRecording : startRecording}
-                      className={`p-1.5 md:p-2.5 rounded-lg transition-all group border-2 shadow-sm ${
+                      className={`p-2.5 md:p-3 rounded-xl transition-all group border-2 shadow-sm ${
                         isRecording 
                           ? "bg-red-500/30 border-red-500/60 shadow-red-500/20" 
-                          : "border-transparent hover:border-gold/40 hover:bg-gold/20"
+                          : "bg-card border-gold/20 hover:border-gold/40 hover:bg-gold/20"
                       }`}
                       title={isRecording ? "Detener grabación" : "Grabar audio"}
                     >
-                      <Mic className={`w-4 h-4 md:w-5 md:h-5 transition-colors ${
+                      <Mic className={`w-5 h-5 md:w-5 md:h-5 transition-colors ${
                         isRecording 
                           ? "text-red-400 animate-pulse" 
                           : "text-muted-foreground group-hover:text-gold"
@@ -886,7 +894,7 @@ export default function ChatPage() {
                   </div>
 
                   {/* Input de texto */}
-                  <div className="flex-1 relative">
+                  <div className="flex-1 min-w-0">
                     <textarea
                       value={messageInput}
                       onChange={(e) => setMessageInput(e.target.value)}
@@ -898,18 +906,18 @@ export default function ChatPage() {
                       }}
                       placeholder="Escribe un mensaje..."
                       rows={1}
-                      className="w-full bg-[hsl(260,40%,18%)] border-2 border-gold/20 rounded-xl px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40 transition-all resize-none shadow-md"
-                      style={{ minHeight: "36px", maxHeight: "100px" }}
+                      className="w-full bg-[hsl(260,40%,18%)] border-2 border-gold/20 rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-sm md:text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40 transition-all resize-none shadow-md"
+                      style={{ minHeight: "48px", maxHeight: "120px" }}
                     />
                   </div>
 
                   {/* Botón enviar */}
                   <button
                     onClick={() => handleSendMessage(messageInput)}
-                    disabled={!messageInput.trim()}
-                    className="p-2 md:p-3 bg-gradient-to-r from-gold to-accent text-background rounded-xl hover:shadow-xl hover:shadow-gold/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none border-2 border-gold/50 disabled:border-gold/20"
+                    disabled={!messageInput.trim() || isSending}
+                    className="p-3 md:p-3.5 bg-gradient-to-r from-gold to-accent text-background rounded-xl md:rounded-2xl hover:shadow-xl hover:shadow-gold/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed border-2 border-gold/50 flex-shrink-0"
                   >
-                    <Send className="w-4 h-4 md:w-5 md:h-5" />
+                    <Send className="w-5 h-5 md:w-5 md:h-5" />
                   </button>
                 </div>
               </div>
@@ -1183,19 +1191,26 @@ export default function ChatPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm"
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-8"
             onClick={() => setViewingImage(null)}
           >
-            <button 
+            <motion.button 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
               onClick={() => setViewingImage(null)}
-              className="absolute top-4 right-4 p-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition"
+              className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition-all duration-300 hover:scale-110 backdrop-blur-md shadow-2xl group z-10"
             >
-              <X className="w-6 h-6" />
-            </button>
-            <img 
+              <X className="w-7 h-7 group-hover:rotate-90 transition-transform duration-300" />
+            </motion.button>
+            <motion.img 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
               src={viewingImage} 
               alt="Vista ampliada" 
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              className="max-w-[90%] max-h-[90%] object-contain rounded-3xl shadow-2xl border-2 border-gold/30"
               onClick={(e) => e.stopPropagation()}
             />
           </motion.div>

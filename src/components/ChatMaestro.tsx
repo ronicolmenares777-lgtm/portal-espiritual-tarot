@@ -367,27 +367,31 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-secondary via-card to-secondary border-b-2 border-gold/30 p-4 shadow-lg sticky top-0 z-50 backdrop-blur-md"
+        className="bg-gradient-to-r from-secondary/95 via-card/95 to-secondary/95 backdrop-blur-xl border-b border-gold/20 p-6 shadow-2xl sticky top-0 z-50"
       >
         <div className="max-w-4xl mx-auto flex items-center gap-4">
-          <div className="relative">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gold/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500" />
             <img
               src={maestroAvatar}
               alt="Maestro Espiritual"
-              className="w-12 h-12 rounded-full ring-2 ring-gold/50"
+              className="relative w-14 h-14 rounded-full ring-2 ring-gold/50 shadow-lg group-hover:ring-gold transition-all duration-300"
             />
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+            <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-background shadow-lg animate-pulse" />
           </div>
           <div className="flex-1">
-            <h2 className="font-serif text-xl font-bold text-gold">Maestro Espiritual</h2>
-            <p className="text-xs text-muted-foreground">En línea</p>
+            <h2 className="font-serif text-2xl font-bold text-gold drop-shadow-lg">Maestro Espiritual</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <p className="text-sm text-muted-foreground font-medium">En línea • Responde en segundos</p>
+            </div>
           </div>
-          <Sparkles className="w-6 h-6 text-gold animate-pulse" />
+          <Sparkles className="w-7 h-7 text-gold animate-pulse drop-shadow-lg" />
         </div>
       </motion.div>
 
       {/* Área de Mensajes */}
-      <div className="flex-1 overflow-y-auto p-4 pb-24">
+      <div className="flex-1 overflow-y-auto p-3 md:p-4 pb-32 md:pb-40">
         <div className="max-w-4xl mx-auto space-y-4">
           <AnimatePresence>
             {messages.map((message, index) => (
@@ -400,30 +404,30 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                 className={`flex ${message.is_from_maestro ? "justify-start" : "justify-end"}`}
               >
                 <div
-                  className={`max-w-[75%] rounded-2xl p-4 shadow-lg ${
+                  className={`max-w-[80%] rounded-3xl p-5 shadow-2xl transition-all duration-300 hover:scale-[1.02] ${
                     message.is_from_maestro
-                      ? "bg-card border-2 border-gold/20 text-foreground"
-                      : "bg-gradient-to-br from-gold to-amber-500 text-background"
+                      ? "bg-gradient-to-br from-card via-card/95 to-secondary/50 border border-gold/30 text-foreground backdrop-blur-sm"
+                      : "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-background shadow-gold/50"
                   }`}
                 >
                   {message.is_from_maestro && (
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-3 mb-3 pb-3 border-b border-gold/20">
                       <img
                         src={maestroAvatar}
                         alt="Maestro"
-                        className="w-6 h-6 rounded-full ring-1 ring-gold/50"
+                        className="w-8 h-8 rounded-full ring-2 ring-gold/40 shadow-md"
                       />
-                      <span className="text-xs font-semibold text-gold">Maestro Espiritual</span>
+                      <span className="text-sm font-semibold text-gold tracking-wide">Maestro Espiritual</span>
                     </div>
                   )}
 
                   {/* Imagen */}
                   {message.media_type === 'image' && message.media_url && (
-                    <div className="mb-2">
+                    <div className="mb-3 group">
                       <img
                         src={message.media_url}
                         alt="Imagen adjunta"
-                        className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition"
+                        className="rounded-2xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all duration-300 shadow-xl group-hover:shadow-2xl border border-gold/20"
                         onClick={() => setViewingImage(message.media_url!)}
                       />
                     </div>
@@ -431,18 +435,18 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
 
                   {/* Video */}
                   {message.media_type === 'video' && message.media_url && (
-                    <div className="mb-2">
+                    <div className="mb-3">
                       <video
                         src={message.media_url}
                         controls
-                        className="rounded-lg max-w-full h-auto"
+                        className="rounded-2xl max-w-full h-auto shadow-xl border border-gold/20"
                       />
                     </div>
                   )}
 
                   {/* Audio */}
                   {message.media_type === 'audio' && message.media_url && (
-                    <div className="mb-2">
+                    <div className="mb-3 p-3 bg-background/20 rounded-xl">
                       <audio
                         src={message.media_url}
                         controls
@@ -458,30 +462,30 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                       download
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`flex items-center gap-2 mb-2 p-2 rounded-lg ${
-                        message.is_from_maestro ? "bg-muted" : "bg-background/20"
+                      className={`flex items-center gap-3 mb-3 p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
+                        message.is_from_maestro ? "bg-muted/50 hover:bg-muted/70" : "bg-background/20 hover:bg-background/30"
                       }`}
                     >
-                      <FileText className="w-5 h-5" />
-                      <span className="text-sm font-medium">Descargar archivo</span>
-                      <Download className="w-4 h-4 ml-auto" />
+                      <FileText className="w-6 h-6 flex-shrink-0" />
+                      <span className="text-sm font-medium flex-1">Archivo adjunto</span>
+                      <Download className="w-5 h-5 ml-auto animate-bounce" />
                     </a>
                   )}
 
                   {/* Texto */}
                   {message.text && (
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap font-medium">{message.text}</p>
                   )}
 
-                  <div className={`flex items-center justify-end gap-1 mt-1 ${message.is_from_maestro ? "text-muted-foreground" : "text-background/70"}`}>
-                    <p className="text-[10px]">
+                  <div className={`flex items-center justify-end gap-2 mt-2 ${message.is_from_maestro ? "text-muted-foreground/70" : "text-background/80"}`}>
+                    <p className="text-xs font-medium tracking-wide">
                       {new Date(message.created_at).toLocaleTimeString("es-ES", {
                         hour: "2-digit",
                         minute: "2-digit"
                       })}
                     </p>
                     {!message.is_from_maestro && (
-                      <span className={`text-[12px] font-bold tracking-tighter leading-none ${message.read_at ? "text-blue-500" : ""}`}>
+                      <span className={`text-sm font-bold tracking-tighter leading-none transition-all duration-300 ${message.read_at ? "text-blue-400 scale-110" : "text-background/60"}`}>
                         {message.read_at ? "✓✓" : "✓"}
                       </span>
                     )}
@@ -498,139 +502,145 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       <motion.div
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t-2 border-gold/20 p-4 z-20"
+        className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/98 to-background/95 backdrop-blur-xl border-t border-gold/20 p-3 pb-safe md:p-6 z-20 shadow-2xl"
       >
         <div className="max-w-4xl mx-auto">
           {/* Preview de archivo */}
           {selectedFile && (
-            <div className="mb-3 p-3 bg-card rounded-lg border border-gold/20">
-              <div className="flex items-center gap-3">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-3 md:mb-4 p-3 md:p-4 bg-card/80 backdrop-blur-md rounded-2xl border border-gold/20 shadow-xl"
+            >
+              <div className="flex items-center gap-3 md:gap-4">
                 {filePreview ? (
-                  <img src={filePreview} alt="Preview" className="w-16 h-16 object-cover rounded" />
+                  <img src={filePreview} alt="Preview" className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-xl shadow-md" />
                 ) : (
-                  <div className="w-16 h-16 bg-muted rounded flex items-center justify-center">
-                    <FileText className="w-8 h-8 text-gold" />
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-muted/50 rounded-xl flex items-center justify-center shadow-inner">
+                    <FileText className="w-8 h-8 md:w-10 md:h-10 text-gold" />
                   </div>
                 )}
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
-                  <p className="text-xs text-muted-foreground">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{selectedFile.name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
                 <button
                   onClick={removeFile}
-                  className="p-2 hover:bg-destructive/10 rounded-lg transition"
+                  className="p-2 hover:bg-destructive/20 rounded-xl transition-all duration-300 hover:scale-110 group"
                 >
-                  <X className="w-5 h-5 text-destructive" />
+                  <X className="w-5 h-5 md:w-6 md:h-6 text-destructive group-hover:rotate-90 transition-transform duration-300" />
                 </button>
               </div>
-            </div>
+            </motion.div>
           )}
 
-          <div className="flex items-end gap-2">
-            {/* Botones multimedia */}
-            <div className="flex gap-1">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-end gap-2 md:gap-3">
+              {/* Botones multimedia */}
+              <div className="flex gap-1 md:gap-2 flex-shrink-0">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <motion.button
+                  whileHover={{ scale: 1.15, rotate: 15 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="p-2.5 md:p-4 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-xl md:rounded-2xl border-2 border-gold/30 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-gold/20 hover:shadow-xl group"
+                  title="Adjuntar archivo"
+                >
+                  <Paperclip className="w-5 h-5 md:w-6 md:h-6 text-gold group-hover:text-amber-300 transition-colors" />
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.15, rotate: -15 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = (e: any) => handleFileSelect(e);
+                    input.click();
+                  }}
+                  disabled={isUploading}
+                  className="p-2.5 md:p-4 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-xl md:rounded-2xl border-2 border-gold/30 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-gold/20 hover:shadow-xl group"
+                  title="Enviar foto"
+                >
+                  <Image className="w-5 h-5 md:w-6 md:h-6 text-gold group-hover:text-amber-300 transition-colors" />
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.15, rotate: 15 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'video/*';
+                    input.onchange = (e: any) => handleFileSelect(e);
+                    input.click();
+                  }}
+                  disabled={isUploading}
+                  className="hidden sm:block p-2.5 md:p-4 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-xl md:rounded-2xl border-2 border-gold/30 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-gold/20 hover:shadow-xl group"
+                  title="Enviar video"
+                >
+                  <Video className="w-5 h-5 md:w-6 md:h-6 text-gold group-hover:text-amber-300 transition-colors" />
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.15, rotate: -15 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'audio/*';
+                    input.onchange = (e: any) => handleFileSelect(e);
+                    input.click();
+                  }}
+                  disabled={isUploading}
+                  className="hidden sm:block p-2.5 md:p-4 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-xl md:rounded-2xl border-2 border-gold/30 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-gold/20 hover:shadow-xl group"
+                  title="Enviar audio"
+                >
+                  <Mic className="w-5 h-5 md:w-6 md:h-6 text-gold group-hover:text-amber-300 transition-colors" />
+                </motion.button>
+              </div>
+
+              {/* Input de texto */}
               <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
-                onChange={handleFileSelect}
-                className="hidden"
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                placeholder={isUploading ? "Subiendo..." : "Mensaje..."}
+                disabled={isUploading}
+                className="flex-1 w-full min-w-0 px-4 py-3 md:px-6 md:py-4 bg-card/80 backdrop-blur-md border-2 border-gold/30 rounded-2xl md:rounded-3xl text-foreground placeholder-muted-foreground focus:outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/20 transition-all duration-300 disabled:opacity-50 shadow-inner text-sm md:text-[15px] font-medium"
               />
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="p-3 bg-card hover:bg-gold/20 rounded-full border-2 border-gold/30 transition disabled:opacity-50"
-                title="Adjuntar archivo"
-              >
-                <Paperclip className="w-5 h-5 text-gold" />
-              </motion.button>
 
+              {/* Botón enviar */}
               <motion.button
-                whileHover={{ scale: 1.1 }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = 'image/*';
-                  input.onchange = (e: any) => handleFileSelect(e);
-                  input.click();
-                }}
-                disabled={isUploading}
-                className="p-3 bg-card hover:bg-gold/20 rounded-full border-2 border-gold/30 transition disabled:opacity-50"
-                title="Enviar foto"
+                onClick={handleSendMessage}
+                disabled={(!newMessage.trim() && !selectedFile) || isUploading}
+                className="p-3 md:p-4 bg-gradient-to-br from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold rounded-xl md:rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-gold/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 group flex-shrink-0"
               >
-                <Image className="w-5 h-5 text-gold" />
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = 'video/*';
-                  input.onchange = (e: any) => handleFileSelect(e);
-                  input.click();
-                }}
-                disabled={isUploading}
-                className="p-3 bg-card hover:bg-gold/20 rounded-full border-2 border-gold/30 transition disabled:opacity-50"
-                title="Enviar video"
-              >
-                <Video className="w-5 h-5 text-gold" />
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = 'audio/*';
-                  input.onchange = (e: any) => handleFileSelect(e);
-                  input.click();
-                }}
-                disabled={isUploading}
-                className="p-3 bg-card hover:bg-gold/20 rounded-full border-2 border-gold/30 transition disabled:opacity-50"
-                title="Enviar audio"
-              >
-                <Mic className="w-5 h-5 text-gold" />
+                {isUploading ? (
+                  <Loader2 className="w-5 h-5 md:w-7 md:h-7 text-background animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5 md:w-7 md:h-7 text-background group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" />
+                )}
               </motion.button>
             </div>
-
-            {/* Input de texto */}
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              placeholder={isUploading ? "Subiendo archivo..." : "Escribe tu mensaje..."}
-              disabled={isUploading}
-              className="flex-1 px-4 py-3 bg-card border-2 border-gold/30 rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:border-gold/60 transition disabled:opacity-50"
-            />
-
-            {/* Botón enviar */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleSendMessage}
-              disabled={(!newMessage.trim() && !selectedFile) || isUploading}
-              className="p-3 bg-gradient-to-br from-gold to-amber-500 hover:from-amber-500 hover:to-gold rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {isUploading ? (
-                <Loader2 className="w-6 h-6 text-background animate-spin" />
-              ) : (
-                <Send className="w-6 h-6 text-background" />
-              )}
-            </motion.button>
           </div>
         </div>
       </motion.div>
@@ -642,19 +652,26 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm"
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-8"
             onClick={() => setViewingImage(null)}
           >
-            <button 
+            <motion.button 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
               onClick={() => setViewingImage(null)}
-              className="absolute top-4 right-4 p-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition"
+              className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition-all duration-300 hover:scale-110 backdrop-blur-md shadow-2xl group z-10"
             >
-              <X className="w-6 h-6" />
-            </button>
-            <img 
+              <X className="w-7 h-7 group-hover:rotate-90 transition-transform duration-300" />
+            </motion.button>
+            <motion.img 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
               src={viewingImage} 
               alt="Vista ampliada" 
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              className="max-w-[90%] max-h-[90%] object-contain rounded-3xl shadow-2xl border-2 border-gold/30"
               onClick={(e) => e.stopPropagation()}
             />
           </motion.div>
