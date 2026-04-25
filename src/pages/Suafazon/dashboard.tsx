@@ -37,9 +37,7 @@ import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
-type Lead = LeadRow & {
-  consultation_status?: string;
-};
+type Lead = LeadRow;
 
 export default function Dashboard() {
   const router = useRouter();
@@ -195,7 +193,7 @@ export default function Dashboard() {
     setShowProfile(false);
   };
   
-  // Filtrar leads según tab activo y filtro de estado de consulta
+  // Filtrar leads según tab activo y filtro de estado
   const filteredLeads = leads.filter((lead) => {
     // Filtrar por tab activo
     let tabMatch = false;
@@ -215,10 +213,10 @@ export default function Dashboard() {
         tabMatch = true;
     }
 
-    // Filtrar por estado de consulta seleccionado
+    // Filtrar por estado del ritual seleccionado
     if (selectedStatus !== "todos") {
-      const consultationMatch = lead.consultation_status === selectedStatus;
-      return tabMatch && consultationMatch;
+      const statusMatch = lead.status === selectedStatus;
+      return tabMatch && statusMatch;
     }
 
     return tabMatch;
@@ -472,21 +470,23 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* Filtros por estado de consulta */}
-              <div className="pt-4 lg:pt-6 border-t border-gold/10 bg-gradient-to-r from-background to-secondary/5 rounded-xl p-4">
+              {/* Filtros mejorados */}
+              <div className="p-4 lg:p-6 border-t border-gold/10 bg-gradient-to-r from-background to-secondary/5">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-xs font-bold tracking-wider uppercase text-gold/80 mb-3">
                     <Filter className="w-4 h-4" />
-                    <span>Estado de Consulta</span>
+                    <span>Estado del Ritual</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { id: "todos", label: "Todos", count: filteredLeads.length, color: "gold" },
-                      { id: "pendiente", label: "Pendiente", count: leads.filter(l => l.consultation_status === "pendiente").length, color: "blue-500" },
-                      { id: "en_proceso", label: "En Proceso", count: leads.filter(l => l.consultation_status === "en_proceso").length, color: "yellow-500" },
-                      { id: "completado", label: "Completado", count: leads.filter(l => l.consultation_status === "completado").length, color: "green-500" },
-                      { id: "cancelado", label: "Cancelado", count: leads.filter(l => l.consultation_status === "cancelado").length, color: "red-500" },
+                      { id: "todos", label: "Todos", count: leads.length, icon: "📊" },
+                      { id: "nuevo", label: "Nuevo", count: leads.filter(l => l.status === "nuevo").length, icon: "🆕" },
+                      { id: "enConversacion", label: "En Chat", count: leads.filter(l => l.status === "enConversacion").length, icon: "💬" },
+                      { id: "clienteCaliente", label: "Caliente", count: leads.filter(l => l.status === "clienteCaliente").length, icon: "🔥" },
+                      { id: "listo", label: "Listo", count: leads.filter(l => l.status === "listo").length, icon: "✅" },
+                      { id: "cerrado", label: "Cerrado", count: leads.filter(l => l.status === "cerrado").length, icon: "🔒" },
+                      { id: "perdido", label: "Perdido", count: leads.filter(l => l.status === "perdido").length, icon: "❌" },
                     ].map(status => (
                       <button
                         key={status.id}
@@ -500,9 +500,12 @@ export default function Dashboard() {
                             : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-gold/30"
                         }`}
                       >
-                        <div className="flex flex-col items-center gap-0.5">
-                          <span className="text-xs">{status.label}</span>
-                          <span className="text-xs opacity-70">({status.count})</span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm">{status.icon}</span>
+                          <div className="flex flex-col items-end">
+                            <span className="text-xs">{status.label}</span>
+                            <span className="text-xs opacity-70">({status.count})</span>
+                          </div>
                         </div>
                       </button>
                     ))}
@@ -798,11 +801,30 @@ export default function Dashboard() {
                                 </div>
                               </div>
 
-                              <span className="shrink-0 px-3 lg:px-4 py-1.5 lg:py-2 rounded-xl text-xs lg:text-sm font-bold border-2 whitespace-nowrap bg-blue-500/20 text-blue-400 border-blue-500/50">
-                                {lead.consultation_status === "pendiente" ? "Pendiente"
-                                  : lead.consultation_status === "en_proceso" ? "En Proceso"
-                                  : lead.consultation_status === "completado" ? "Completado"
-                                  : lead.consultation_status === "cancelado" ? "Cancelado"
+                              {/* Badge de estado */}
+                              <span
+                                className={`shrink-0 px-3 lg:px-4 py-1.5 lg:py-2 rounded-xl text-xs lg:text-sm font-bold border-2 whitespace-nowrap ${
+                                  lead.status === "nuevo"
+                                    ? "bg-blue-500/20 text-blue-400 border-blue-500/50"
+                                    : lead.status === "enConversacion"
+                                    ? "bg-purple-500/20 text-purple-400 border-purple-500/50"
+                                    : lead.status === "clienteCaliente"
+                                    ? "bg-orange-500/20 text-orange-400 border-orange-500/50"
+                                    : lead.status === "listo"
+                                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
+                                    : lead.status === "cerrado"
+                                    ? "bg-green-500/20 text-green-400 border-green-500/50"
+                                    : lead.status === "perdido"
+                                    ? "bg-gray-500/20 text-gray-400 border-gray-500/50"
+                                    : "bg-muted/20 text-muted-foreground border-muted/50"
+                                }`}
+                              >
+                                {lead.status === "nuevo" ? "Nuevo"
+                                  : lead.status === "enConversacion" ? "En Chat"
+                                  : lead.status === "clienteCaliente" ? "Caliente"
+                                  : lead.status === "listo" ? "Listo"
+                                  : lead.status === "cerrado" ? "Cerrado"
+                                  : lead.status === "perdido" ? "Perdido"
                                   : "Sin Estado"}
                               </span>
                             </div>
