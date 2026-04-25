@@ -27,6 +27,7 @@ import {
   MessageCircle
 } from "lucide-react";
 import Link from "next/link";
+import { supabase } from "@/integrations/supabase";
 
 type Lead = Database["public"]["Tables"]["leads"]["Row"];
 type Message = Database["public"]["Tables"]["messages"]["Row"];
@@ -128,19 +129,78 @@ export default function ChatPage() {
           setLead(leadData);
         }
 
-        // Cargar mensajes
-        const messagesData = await MessageService.getByLeadId(id);
-        setMessages(messagesData);
+        // Cargar mensajes y suscribirse a cambios
+        const leadId = id;
+        if (!leadId) return;
 
-        // Cargar perfil del maestro y su avatar
-        const { data: profiles } = await ProfileService.getAll();
-        if (profiles && profiles.length > 0) {
-          setMaestroProfile(profiles[0]);
-          // Usar el avatar del perfil si existe
-          if (profiles[0].avatar_url) {
-            setMaestroAvatar(profiles[0].avatar_url);
+        const loadMessages = async () => {
+          try {
+            console.log("📨 [ChatMaestro] Cargando mensajes del lead:", leadId);
+            const fetchedMessages = await MessageService.getByLeadId(leadId);
+            console.log("✅ [ChatMaestro] Mensajes cargados:", fetchedMessages.length);
+            setMessages(fetchedMessages);
+          } catch (error) {
+            console.error("❌ [ChatMaestro] Error cargando mensajes:", error);
           }
-        }
+        };
+
+        loadMessages();
+
+        // Configurar suscripción en tiempo real
+        useEffect(() => {
+          if (!leadId) return;
+
+          console.log("🔌 Configurando suscripción realtime para lead:", leadId);
+
+          const messagesSubscription = supabase
+            .channel(`admin-messages-${leadId}`)
+            .on(
+              "postgres_changes",
+              {
+                event: "*",
+                schema: "public",
+                table: "messages",
+                filter: `lead_id=eq.${leadId}`,
+              },
+              (payload) => {
+                console.log("🔔 Cambio detectado en mensajes:", payload.eventType);
+                
+                if (payload.eventType === "INSERT") {
+                  const newMessage = payload.new as Message;
+                  console.log("📨 Nuevo mensaje recibido:", newMessage);
+                  
+                  setMessages((prev) => {
+                    // Evitar duplicados
+                    if (prev.some(m => m.id === newMessage.id)) {
+                      console.log("⚠️ Mensaje duplicado, ignorando");
+                      return prev;
+                    }
+                    return [...prev, newMessage];
+                  });
+                }
+              }
+            )
+            .subscribe((status) => {
+              console.log("📡 Estado de suscripción realtime:", status);
+              
+              if (status === "SUBSCRIBED") {
+                console.log("✅ Suscripción realtime activa para admin");
+              } else if (status === "CLOSED") {
+                console.error("❌ Suscripción cerrada, intentando reconectar...");
+                setTimeout(() => {
+                  console.log("🔄 Intentando reconectar suscripción...");
+                  messagesSubscription.subscribe();
+                }, 2000);
+              } else if (status === "CHANNEL_ERROR") {
+                console.error("❌ Error en canal realtime");
+              }
+            });
+
+          return () => {
+            console.log("🔌 Cerrando suscripción realtime del admin");
+            messagesSubscription.unsubscribe();
+          };
+        }, [leadId]);
       } catch (error) {
         console.error("Error cargando datos:", error);
       } finally {
