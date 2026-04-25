@@ -201,9 +201,6 @@ export default function Dashboard() {
     let tabMatch = false;
     
     switch (activeTab) {
-      case "chats":
-        tabMatch = ["enConversacion", "caliente", "clienteCaliente"].includes(lead.status || "");
-        break;
       case "leads":
         tabMatch = lead.status === "nuevo";
         break;
@@ -218,12 +215,10 @@ export default function Dashboard() {
         tabMatch = true;
     }
 
-    // Filtrar por estado seleccionado
+    // Filtrar por estado de consulta seleccionado
     if (selectedStatus !== "todos") {
-      const statusMatch = selectedStatus === "caliente" 
-        ? ["caliente", "clienteCaliente"].includes(lead.status || "")
-        : lead.status === selectedStatus;
-      return tabMatch && statusMatch;
+      const consultationMatch = lead.consultation_status === selectedStatus;
+      return tabMatch && consultationMatch;
     }
 
     return tabMatch;
@@ -394,27 +389,6 @@ export default function Dashboard() {
               <div className="space-y-2">
                 <button
                   onClick={() => {
-                    setActiveTab("chats");
-                    setSidebarOpen(false);
-                  }}
-                  className={`w-full px-4 lg:px-5 py-3 lg:py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
-                    activeTab === "chats"
-                      ? "bg-gradient-to-r from-gold/20 to-gold/10 text-gold border-2 border-gold/40 shadow-lg shadow-gold/20"
-                      : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-gold/30"
-                  }`}
-                >
-                  <span className="text-sm tracking-wider uppercase">Chats</span>
-                  <span className={`px-2.5 lg:px-3 py-1 rounded-lg text-xs font-bold ${
-                    activeTab === "chats" 
-                      ? "bg-gold/30 text-gold border border-gold/40" 
-                      : "bg-muted/50 text-muted-foreground group-hover:bg-muted"
-                  }`}>
-                    {leads.filter(l => ["enConversacion", "caliente", "clienteCaliente"].includes(l.status || "")).length}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => {
                     setActiveTab("leads");
                     setSidebarOpen(false);
                   }}
@@ -424,7 +398,7 @@ export default function Dashboard() {
                       : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-blue-500/30"
                   }`}
                 >
-                  <span className="text-sm tracking-wider uppercase">Leads</span>
+                  <span className="text-sm tracking-wider uppercase">📋 Leads</span>
                   <span className={`px-2.5 lg:px-3 py-1 rounded-lg text-xs font-bold ${
                     activeTab === "leads" 
                       ? "bg-blue-500/30 text-blue-400 border border-blue-500/40" 
@@ -445,7 +419,7 @@ export default function Dashboard() {
                       : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-emerald-500/30"
                   }`}
                 >
-                  <span className="text-sm tracking-wider uppercase">Listo</span>
+                  <span className="text-sm tracking-wider uppercase">✅ Listo</span>
                   <span className={`px-2.5 lg:px-3 py-1 rounded-lg text-xs font-bold ${
                     activeTab === "listo" 
                       ? "bg-emerald-500/30 text-emerald-400 border border-emerald-500/40" 
@@ -525,17 +499,16 @@ export default function Dashboard() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-xs font-bold tracking-wider uppercase text-gold/80 mb-3">
                     <Filter className="w-4 h-4" />
-                    <span>Filtros</span>
+                    <span>Estado de Consulta</span>
                   </div>
 
                   <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-2">
                     {[
-                      { id: "todos", label: "Todos", count: leads.length },
-                      { id: "nuevo", label: "Nuevo", count: leads.filter(l => l.status === "nuevo").length },
-                      { id: "enConversacion", label: "En Chat", count: leads.filter(l => l.status === "enConversacion").length },
-                      { id: "caliente", label: "Caliente", count: leads.filter(l => l.status === "caliente" || l.status === "clienteCaliente").length },
-                      { id: "cerrado", label: "Cerrado", count: leads.filter(l => l.status === "cerrado").length },
-                      { id: "perdido", label: "Perdido", count: leads.filter(l => l.status === "perdido").length },
+                      { id: "todos", label: "Todos", count: leads.length, color: "gold" },
+                      { id: "pendiente", label: "Pendiente", count: leads.filter(l => l.consultation_status === "pendiente").length, color: "blue-500" },
+                      { id: "en_proceso", label: "En Proceso", count: leads.filter(l => l.consultation_status === "en_proceso").length, color: "yellow-500" },
+                      { id: "completado", label: "Completado", count: leads.filter(l => l.consultation_status === "completado").length, color: "green-500" },
+                      { id: "cancelado", label: "Cancelado", count: leads.filter(l => l.consultation_status === "cancelado").length, color: "red-500" },
                     ].map(status => (
                       <button
                         key={status.id}
@@ -545,7 +518,7 @@ export default function Dashboard() {
                         }}
                         className={`px-3 lg:px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                           selectedStatus === status.id
-                            ? "bg-gold/20 text-gold border-2 border-gold/40 shadow-lg shadow-gold/20"
+                            ? `bg-${status.color}/20 text-${status.color === "gold" ? "gold" : status.color.split("-")[0] + "-400"} border-2 border-${status.color}/40 shadow-lg shadow-${status.color}/20`
                             : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-gold/30"
                         }`}
                       >
@@ -743,215 +716,4 @@ export default function Dashboard() {
                               <div className="flex flex-col gap-1">
                                 <p className="text-sm lg:text-base text-muted-foreground flex items-center gap-2">
                                   <span className="text-primary">📱</span>
-                                  <span className="font-mono">{lead.country_code} {lead.whatsapp}</span>
-                                </p>
-                                <p className="text-xs text-muted-foreground/70">
-                                  Registrado: {new Date(lead.created_at).toLocaleDateString("es-MX", {
-                                    day: "2-digit",
-                                    month: "long",
-                                    year: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit"
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Badge estado */}
-                            <span
-                              className={`shrink-0 px-3 lg:px-4 py-1.5 lg:py-2 rounded-xl text-xs lg:text-sm font-bold border-2 whitespace-nowrap ${
-                                lead.status === "nuevo"
-                                  ? "bg-blue-500/20 text-blue-400 border-blue-500/50"
-                                  : lead.status === "enConversacion"
-                                  ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
-                                  : lead.status === "caliente" || lead.status === "clienteCaliente"
-                                  ? "bg-orange-500/20 text-orange-400 border-orange-500/50"
-                                  : lead.status === "listo"
-                                  ? "bg-green-500/20 text-green-400 border-green-500/50"
-                                  : "bg-gray-500/20 text-gray-400 border-gray-500/50"
-                              }`}
-                            >
-                              {lead.status === "enConversacion" ? "En Chat"
-                                : lead.status === "clienteCaliente" ? "Caliente"
-                                : lead.status === "listo" ? "Listo"
-                                : "Nuevo"}
-                            </span>
-                          </div>
-
-                          {/* Consulta */}
-                          <div className="bg-secondary/20 rounded-xl p-4 border border-border mb-3">
-                            <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-2 font-semibold">
-                              Consulta:
-                            </p>
-                            <p className="text-sm lg:text-base text-foreground leading-relaxed">
-                              {lead.problem}
-                            </p>
-                          </div>
-
-                          {/* Cartas */}
-                          {Array.isArray(lead.selected_cards) && lead.selected_cards.length > 0 && (
-                            <div className="bg-primary/5 rounded-xl p-3 border border-primary/20 mb-3">
-                              <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-2 font-semibold">
-                                Cartas:
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {lead.selected_cards.map((card: any, idx: number) => (
-                                  <span
-                                    key={idx}
-                                    className="text-xs lg:text-sm bg-primary/20 text-primary px-3 py-1.5 rounded-lg font-bold border border-primary/40"
-                                  >
-                                    🎴 {String(card)}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Botón chat */}
-                          <button
-                            onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                            className="w-full px-4 py-3 bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 text-primary rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border border-primary/40 shadow-md flex items-center justify-center gap-2"
-                          >
-                            <span>💬</span>
-                            <span>Ver Chat Completo</span>
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Modal de Perfil del Maestro */}
-      <AnimatePresence>
-        {showProfile && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="w-full max-w-md bg-card rounded-2xl p-8 border border-gold/30 relative"
-              style={{
-                boxShadow: "0 0 50px hsl(var(--gold) / 0.3)",
-              }}
-            >
-              {/* Botón cerrar */}
-              <button
-                onClick={() => setShowProfile(false)}
-                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* Título */}
-              <h2 className="text-2xl font-serif text-gold text-center mb-8 tracking-wider">
-                PERFIL SAGRADO
-              </h2>
-
-              {/* Avatar */}
-              <div className="flex justify-center mb-8">
-                <div className="relative">
-                  <div 
-                    className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border-2 border-primary/30"
-                    style={{
-                      boxShadow: "0 0 30px hsl(var(--gold) / 0.4)",
-                    }}
-                  >
-                    <img
-                      src={profileData.avatar}
-                      alt="Maestro"
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-gold rounded-full flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-background" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Formulario editable */}
-              <div className="space-y-6">
-                {/* Upload de Foto */}
-                <div className="space-y-2">
-                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
-                    <ImageIcon className="w-3 h-3" />
-                    Foto del Maestro
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id="avatar-upload"
-                    />
-                    <label
-                      htmlFor="avatar-upload"
-                      className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground hover:bg-muted/70 transition-all cursor-pointer flex items-center justify-center gap-2 text-sm"
-                    >
-                      <ImageIcon className="w-4 h-4" />
-                      Seleccionar imagen
-                    </label>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Tamaño máximo: 2MB
-                  </p>
-                </div>
-
-                {/* Nombre del Maestro */}
-                <div className="space-y-2">
-                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
-                    <User className="w-3 h-3" />
-                    Nombre del Maestro
-                  </label>
-                  <input
-                    type="text"
-                    value={profileData.name}
-                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
-                  />
-                </div>
-
-                {/* Texto del Header */}
-                <div className="space-y-2">
-                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
-                    <Sparkles className="w-3 h-3" />
-                    Estado / Texto del Header
-                  </label>
-                  <input
-                    type="text"
-                    value={profileData.headerText}
-                    onChange={(e) => setProfileData({ ...profileData, headerText: e.target.value })}
-                    placeholder="Ej: CANAL SAGRADO, VISIÓN ESPIRITUAL, etc."
-                    className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
-                  />
-                </div>
-
-                {/* Botones */}
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={() => setShowProfile(false)}
-                    className="flex-1 px-6 py-3 rounded-lg border border-gold/30 text-muted-foreground hover:text-foreground hover:border-gold/50 transition-all"
-                  >
-                    CANCELAR
-                  </button>
-                  <button
-                    onClick={handleSaveProfile}
-                    className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Save className="w-4 h-4" />
-                    GUARDAR
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </>
-  );
-}
+                                  <span className="fon
