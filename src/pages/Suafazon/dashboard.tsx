@@ -36,7 +36,10 @@ import {
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
-type Lead = Database["public"]["Tables"]["leads"]["Row"];
+type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
+type Lead = LeadRow & {
+  consultation_status?: string;
+};
 
 export default function Dashboard() {
   const router = useRouter();
