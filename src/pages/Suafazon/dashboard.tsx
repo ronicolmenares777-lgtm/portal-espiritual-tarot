@@ -195,37 +195,49 @@ export default function Dashboard() {
   // Proteger ruta - redirige a login si no está autenticado
   // useRequireAuth("/Suafazon");
   
-  // Filtrar leads según tab activo, búsqueda y estado seleccionado
+  // Filtrar leads según tab activo y filtro de estado
   const filteredLeads = leads.filter((lead) => {
-    // Filtro por tab
-    if (activeTab === "leads" && lead.status !== "nuevo") return false;
-    if (activeTab === "chats") {
-      const isInChat = ["enConversacion", "caliente", "clienteCaliente"].includes(lead.status || "");
-      if (!isInChat) return false;
+    // Filtrar por tab activo
+    let tabMatch = false;
+    
+    switch (activeTab) {
+      case "chats":
+        tabMatch = ["enConversacion", "caliente", "clienteCaliente"].includes(lead.status || "");
+        break;
+      case "leads":
+        tabMatch = lead.status === "nuevo";
+        break;
+      case "listo":
+        tabMatch = lead.status === "listo";
+        break;
+      case "papelera":
+        // La papelera usa deletedLeads, no este filtro
+        tabMatch = false;
+        break;
+      default:
+        tabMatch = true;
     }
-    if (activeTab === "listo" && lead.status !== "listo") return false;
 
-    // Filtro por estado seleccionado
+    // Filtrar por estado seleccionado
     if (selectedStatus !== "todos") {
-      if (selectedStatus === "clienteCaliente" && lead.status === "caliente") {
-        // Tratar "caliente" y "clienteCaliente" como el mismo estado
-        return true;
-      }
-      if (lead.status !== selectedStatus) return false;
+      const statusMatch = selectedStatus === "caliente" 
+        ? ["caliente", "clienteCaliente"].includes(lead.status || "")
+        : lead.status === selectedStatus;
+      return tabMatch && statusMatch;
     }
 
-    // Filtro por búsqueda
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        lead.name?.toLowerCase().includes(query) ||
-        lead.whatsapp?.includes(query) ||
-        lead.problem?.toLowerCase().includes(query)
-      );
-    }
-
-    return true;
+    return tabMatch;
   });
+
+  // Logs para debugging
+  useEffect(() => {
+    console.log("📊 Dashboard Estado:");
+    console.log("  - Active Tab:", activeTab);
+    console.log("  - Total Leads:", leads.length);
+    console.log("  - Filtered Leads:", filteredLeads.length);
+    console.log("  - Deleted Leads:", deletedLeads.length);
+    console.log("  - Selected Status:", selectedStatus);
+  }, [activeTab, leads.length, filteredLeads.length, deletedLeads.length, selectedStatus]);
 
   // Contadores para tabs
   const statusCounts = {
