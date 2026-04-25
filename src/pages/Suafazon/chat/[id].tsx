@@ -7,7 +7,6 @@ import { LeadService } from "@/services/leadService";
 import { MessageService } from "@/services/messageService";
 import { AuthService } from "@/services/authService";
 import { ProfileService } from "@/services/profileService";
-import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -28,7 +27,6 @@ import {
   MessageCircle
 } from "lucide-react";
 import Link from "next/link";
-import { supabase } from "@/integrations/supabase/client";
 
 type Lead = Database["public"]["Tables"]["leads"]["Row"];
 type Message = Database["public"]["Tables"]["messages"]["Row"];
@@ -36,6 +34,7 @@ type Message = Database["public"]["Tables"]["messages"]["Row"];
 export default function ChatPage() {
   const router = useRouter();
   const { id } = router.query;
+  const leadId = typeof id === "string" ? id : null;
   
   // Verificar autenticación
   useEffect(() => {
