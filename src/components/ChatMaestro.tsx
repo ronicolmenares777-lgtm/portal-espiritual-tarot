@@ -624,22 +624,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                           onClick={() => {
                             const input = document.createElement('input');
                             input.type = 'file';
-                            input.accept = 'video/*';
-                            input.onchange = (e: any) => {
-                              handleFileSelect(e);
-                              setShowMediaMenu(false);
-                            };
-                            input.click();
-                          }}
-                          className="w-full flex items-center gap-3 p-3 hover:bg-gold/20 rounded-xl transition-all text-left"
-                        >
-                          <Video className="w-5 h-5 text-gold" />
-                          <span className="text-sm font-medium text-foreground">Video</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            const input = document.createElement('input');
-                            input.type = 'file';
                             input.accept = 'audio/*';
                             input.onchange = (e: any) => {
                               handleFileSelect(e);
@@ -694,23 +678,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                   title="Enviar foto"
                 >
                   <Image className="w-6 h-6 text-gold group-hover:text-amber-300 transition-colors" />
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ scale: 1.15, rotate: 15 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = 'video/*';
-                    input.onchange = (e: any) => handleFileSelect(e);
-                    input.click();
-                  }}
-                  disabled={isUploading}
-                  className="hidden md:block p-4 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-2xl border-2 border-gold/30 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-gold/20 hover:shadow-xl group"
-                  title="Enviar video"
-                >
-                  <Video className="w-6 h-6 text-gold group-hover:text-amber-300 transition-colors" />
                 </motion.button>
 
                 <motion.button

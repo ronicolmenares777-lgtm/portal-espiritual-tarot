@@ -651,9 +651,9 @@ export default function ChatPage() {
           {/* Layout del chat */}
           <div className="flex h-[calc(100vh-57px)] md:h-[calc(100vh-65px)] overflow-hidden">
             {/* Área de mensajes - siempre visible */}
-            <div className="flex-1 flex flex-col min-w-0 bg-[hsl(260,35%,12%)]">
+            <div className="flex-1 flex flex-col min-w-0 bg-gradient-to-b from-[hsl(260,35%,12%)] to-[hsl(260,40%,10%)]">
               {/* Mensajes */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
                 {messages.map((msg) => {
                   const isFromMaestro = msg.is_from_maestro;
                   const isRead = msg.read_at !== null;
@@ -800,7 +800,7 @@ export default function ChatPage() {
               </div>
 
               {/* Input de mensaje */}
-              <div className="border-t-2 border-gold/20 bg-[hsl(260,35%,14%)] p-2 md:p-4 shadow-2xl">
+              <div className="border-t-2 border-gold/20 bg-gradient-to-b from-[hsl(260,35%,14%)] to-[hsl(260,40%,12%)] backdrop-blur-xl p-3 md:p-4 shadow-2xl">
                 {/* Preview de multimedia */}
                 <AnimatePresence>
                   {mediaPreview && (
@@ -808,18 +808,18 @@ export default function ChatPage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 20 }}
-                      className="mb-2 md:mb-4 p-3 md:p-4 bg-[hsl(260,40%,18%)] rounded-xl border-2 border-gold/30 backdrop-blur-sm shadow-lg"
+                      className="mb-3 md:mb-4 p-3 md:p-4 bg-card/80 backdrop-blur-md rounded-2xl border-2 border-gold/30 shadow-xl"
                     >
                       <div className="flex items-start justify-between gap-2 md:gap-4">
                         <div className="flex-1">
                           {mediaPreview.type === "image" && (
-                            <div className="relative rounded-lg overflow-hidden border-2 border-gold/20">
+                            <div className="relative rounded-xl overflow-hidden border-2 border-gold/20 shadow-lg">
                               <img
                                 src={mediaPreview.url}
                                 alt="Preview"
-                                className="w-full max-w-[200px] md:max-w-xs rounded-lg"
+                                className="w-full max-w-[200px] md:max-w-xs rounded-xl"
                               />
-                              <div className="absolute top-1 right-1 md:top-2 md:right-2">
+                              <div className="absolute top-2 right-2">
                                 <div className="px-2 py-1 md:px-3 md:py-1.5 bg-black/80 rounded-lg text-[10px] md:text-xs text-gold font-medium border border-gold/30">
                                   Imagen
                                 </div>
@@ -827,13 +827,13 @@ export default function ChatPage() {
                             </div>
                           )}
                           {mediaPreview.type === "video" && (
-                            <div className="relative rounded-lg overflow-hidden border-2 border-gold/20">
+                            <div className="relative rounded-xl overflow-hidden border-2 border-gold/20 shadow-lg">
                               <video
                                 src={mediaPreview.url}
                                 controls
-                                className="w-full max-w-[200px] md:max-w-xs rounded-lg"
+                                className="w-full max-w-[200px] md:max-w-xs rounded-xl"
                               />
-                              <div className="absolute top-1 right-1 md:top-2 md:right-2">
+                              <div className="absolute top-2 right-2">
                                 <div className="px-2 py-1 md:px-3 md:py-1.5 bg-black/80 rounded-lg text-[10px] md:text-xs text-gold font-medium border border-gold/30">
                                   Video
                                 </div>
@@ -841,9 +841,9 @@ export default function ChatPage() {
                             </div>
                           )}
                           {mediaPreview.type === "audio" && (
-                            <div className="flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-[hsl(260,35%,16%)] rounded-lg border-2 border-gold/30">
-                              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gold/20 flex items-center justify-center border border-gold/40">
-                                <Mic className="w-4 h-4 md:w-5 md:h-5 text-gold" />
+                            <div className="flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-[hsl(260,35%,16%)] rounded-xl border-2 border-gold/30 shadow-lg">
+                              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gold/20 flex items-center justify-center border border-gold/40">
+                                <Mic className="w-5 h-5 md:w-6 md:h-6 text-gold" />
                               </div>
                               <div className="flex-1">
                                 <p className="text-sm font-medium mb-1 text-gold">Audio grabado</p>
@@ -864,16 +864,16 @@ export default function ChatPage() {
                           <X className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground hover:text-red-400" />
                         </button>
                       </div>
-                      <div className="flex gap-2 mt-2 md:mt-4">
+                      <div className="flex gap-2 mt-3 md:mt-4">
                         <button
                           onClick={cancelMediaPreview}
-                          className="flex-1 px-3 py-2 md:px-4 md:py-2.5 rounded-lg border-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-gold/30 transition-all text-xs md:text-sm font-medium"
+                          className="flex-1 px-3 py-2 md:px-4 md:py-2.5 rounded-xl border-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-gold/30 transition-all text-xs md:text-sm font-medium"
                         >
                           Cancelar
                         </button>
                         <button
                           onClick={handleSendMedia}
-                          className="flex-1 px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-gradient-to-r from-gold to-accent text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-xs md:text-sm border-2 border-gold/50"
+                          className="flex-1 px-3 py-2 md:px-4 md:py-2.5 rounded-xl bg-gradient-to-r from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-xs md:text-sm border-2 border-gold/50"
                         >
                           Enviar
                         </button>
@@ -892,44 +892,50 @@ export default function ChatPage() {
                 />
                 <input
                   type="file"
-                  accept="video/*"
-                  onChange={(e) => handleFileAttach(e, "video")}
+                  accept="audio/*"
+                  onChange={(e) => handleFileAttach(e, "audio")}
                   className="hidden"
-                  id="video-upload"
+                  id="audio-upload"
                 />
 
                 <div className="flex items-end gap-2 md:gap-3">
                   {/* Botones de adjuntar */}
                   <div className="flex gap-1 md:gap-2 flex-shrink-0">
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => document.getElementById("image-upload")?.click()}
-                      className="p-2.5 md:p-3 bg-card hover:bg-gold/20 rounded-xl transition-all group border-2 border-gold/20 hover:border-gold/40 shadow-sm"
+                      className="p-2.5 md:p-3 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-xl transition-all group border-2 border-gold/20 hover:border-gold/40 shadow-lg hover:shadow-gold/20"
                       title="Enviar imagen"
                     >
-                      <ImageIcon className="w-5 h-5 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
-                    </button>
-                    <button
-                      onClick={() => document.getElementById("video-upload")?.click()}
-                      className="hidden sm:block p-2.5 md:p-3 bg-card hover:bg-gold/20 rounded-xl transition-all group border-2 border-gold/20 hover:border-gold/40 shadow-sm"
-                      title="Enviar video"
+                      <ImageIcon className="w-5 h-5 text-gold group-hover:text-amber-300 transition-colors" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => document.getElementById("audio-upload")?.click()}
+                      className="p-2.5 md:p-3 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-xl transition-all group border-2 border-gold/20 hover:border-gold/40 shadow-lg hover:shadow-gold/20"
+                      title="Enviar audio"
                     >
-                      <Paperclip className="w-5 h-5 md:w-5 md:h-5 text-muted-foreground group-hover:text-gold transition-colors" />
-                    </button>
-                    <button
+                      <Mic className="w-5 h-5 text-gold group-hover:text-amber-300 transition-colors" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={isRecording ? stopRecording : startRecording}
-                      className={`p-2.5 md:p-3 rounded-xl transition-all group border-2 shadow-sm ${
+                      className={`p-2.5 md:p-3 rounded-xl transition-all group border-2 shadow-lg ${
                         isRecording 
                           ? "bg-red-500/30 border-red-500/60 shadow-red-500/20" 
-                          : "bg-card border-gold/20 hover:border-gold/40 hover:bg-gold/20"
+                          : "bg-gradient-to-br from-card to-secondary border-gold/20 hover:border-gold/40 hover:from-gold/20 hover:to-gold/10 hover:shadow-gold/20"
                       }`}
                       title={isRecording ? "Detener grabación" : "Grabar audio"}
                     >
-                      <Mic className={`w-5 h-5 md:w-5 md:h-5 transition-colors ${
+                      <Mic className={`w-5 h-5 transition-colors ${
                         isRecording 
                           ? "text-red-400 animate-pulse" 
-                          : "text-muted-foreground group-hover:text-gold"
+                          : "text-gold group-hover:text-amber-300"
                       }`} />
-                    </button>
+                    </motion.button>
                   </div>
 
                   {/* Input de texto */}
@@ -943,21 +949,23 @@ export default function ChatPage() {
                           handleSendMessage(messageInput);
                         }
                       }}
-                      placeholder="Escribe un mensaje..."
+                      placeholder="Escribe un mensaje sagrado..."
                       rows={1}
-                      className="w-full bg-[hsl(260,40%,18%)] border-2 border-gold/20 rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-sm md:text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40 transition-all resize-none shadow-md"
+                      className="w-full bg-card/80 backdrop-blur-md border-2 border-gold/30 rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-sm md:text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/50 transition-all resize-none shadow-inner"
                       style={{ minHeight: "48px", maxHeight: "120px" }}
                     />
                   </div>
 
                   {/* Botón enviar */}
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => handleSendMessage(messageInput)}
                     disabled={!messageInput.trim() || isSending}
-                    className="p-3 md:p-3.5 bg-gradient-to-r from-gold to-accent text-background rounded-xl md:rounded-2xl hover:shadow-xl hover:shadow-gold/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed border-2 border-gold/50 flex-shrink-0"
+                    className="p-3 md:p-3.5 bg-gradient-to-br from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-background rounded-xl md:rounded-2xl hover:shadow-xl hover:shadow-gold/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed border-2 border-gold/50 flex-shrink-0 shadow-lg"
                   >
-                    <Send className="w-5 h-5 md:w-5 md:h-5" />
-                  </button>
+                    <Send className="w-5 h-5 md:w-6 md:h-6" />
+                  </motion.button>
                 </div>
               </div>
             </div>
