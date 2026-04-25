@@ -105,7 +105,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         // Marcar como leídos los mensajes del maestro
         MessageService.markAsRead(currentLeadId, false).catch(console.error);
 
-        // --- POLLING DE RESPALDO (cada 3 segundos) ---
+        // --- POLLING DE RESPALDO (cada 1 segundo) ---
         pollingIntervalRef.current = setInterval(async () => {
           try {
             const latestMessages = await MessageService.getByLeadId(currentLeadId);
@@ -120,7 +120,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           } catch (error) {
             console.error("Error en polling:", error);
           }
-        }, 3000);
+        }, 1000); // Reducido a 1 segundo para respuesta instantánea
 
         // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
         // 1. Limpiar cualquier canal existente con el mismo nombre

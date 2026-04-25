@@ -75,18 +75,19 @@ export default function ChatPage() {
     headerText: ""
   });
   const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [lastMessageCount, setLastMessageCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
-  };
-
+  // Auto-scroll cuando llegan mensajes nuevos
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (messages.length > lastMessageCount) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      setLastMessageCount(messages.length);
+    }
+  }, [messages, lastMessageCount]);
 
   // Agregar atributo al body para cursor normal
   useEffect(() => {
@@ -150,9 +151,27 @@ export default function ChatPage() {
         
         setMessages(messagesData);
         console.log("✅ Mensajes cargados:", messagesData.length);
+        setLastMessageCount(messagesData.length);
 
         // Marcar como leídos los mensajes del usuario
         MessageService.markAsRead(leadId, true).catch(console.error);
+
+        // --- POLLING DE RESPALDO (cada 1 segundo para admin) ---
+        pollingIntervalRef.current = setInterval(async () => {
+          try {
+            const latestMessages = await MessageService.getByLeadId(leadId);
+            setMessages((prev) => {
+              // Solo actualizar si hay mensajes nuevos
+              if (latestMessages.length > prev.length) {
+                console.log(`🔄 ADMIN Polling: ${latestMessages.length - prev.length} mensajes nuevos detectados`);
+                return latestMessages;
+              }
+              return prev;
+            });
+          } catch (error) {
+            console.error("Error en polling del admin:", error);
+          }
+        }, 1000); // 1 segundo para respuesta rápida
 
         // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
         const channelName = `admin-messages-${leadId}`;
@@ -178,23 +197,38 @@ export default function ChatPage() {
             filter: `lead_id=eq.${leadId}`,
           },
           (payload) => {
-            console.log("🔔 Cambio detectado:", payload.eventType);
+            console.log("🔔 ADMIN REALTIME - Cambio detectado:", {
+              eventType: payload.eventType,
+              table: payload.table,
+              leadId: leadId
+            });
             
             if (payload.eventType === "INSERT") {
               const newMessage = payload.new as Message;
-              console.log("📨 Nuevo mensaje recibido:", newMessage);
+              console.log("📨 ADMIN REALTIME - Nuevo mensaje recibido:", {
+                id: newMessage.id,
+                text: newMessage.text?.substring(0, 50),
+                is_from_maestro: newMessage.is_from_maestro,
+                created_at: newMessage.created_at
+              });
               
               setMessages((prev) => {
-                if (prev.some(m => m.id === newMessage.id)) return prev;
+                if (prev.some(m => m.id === newMessage.id)) {
+                  console.log("⚠️ ADMIN REALTIME - Mensaje duplicado, ignorando");
+                  return prev;
+                }
+                console.log("➕ ADMIN REALTIME - Añadiendo mensaje al estado");
                 return [...prev, newMessage];
               });
 
               // Si es del usuario y estamos con el chat abierto, marcar como leído
               if (!newMessage.is_from_maestro) {
+                console.log("✓ ADMIN REALTIME - Marcando mensaje del usuario como leído");
                 MessageService.markAsRead(leadId, true).catch(console.error);
               }
             } else if (payload.eventType === "UPDATE") {
               const updatedMessage = payload.new as Message;
+              console.log("🔄 ADMIN REALTIME - Mensaje actualizado:", updatedMessage.id);
               setMessages((prev) => prev.map(m => m.id === updatedMessage.id ? updatedMessage : m));
             }
           }
@@ -228,28 +262,93 @@ export default function ChatPage() {
         console.log("🔌 Cerrando suscripción realtime del admin");
         supabase.removeChannel(channelSubscription);
       }
+      if (pollingIntervalRef.current) {
+        console.log("🛑 Deteniendo polling de respaldo del admin...");
+        clearInterval(pollingIntervalRef.current);
+      }
     };
   }, [leadId]);
 
-  const handleSendMessage = async (text?: string) => {
-    const messageText = text || messageInput;
-    if (!messageText.trim() || !id || typeof id !== "string") return;
-
-    setMessageInput("");
+  const handleSendMessage = async () => {
+    if ((!newMessage.trim() && !selectedFile) || !leadId) return;
 
     try {
-      const createdMessage = await MessageService.create({
-        lead_id: id,
-        text: messageText.trim(),
+      setIsUploading(true);
+      const messageText = newMessage.trim() || (selectedFile ? `Archivo: ${selectedFile.name}` : "");
+      console.log("📤 ADMIN Enviando mensaje del maestro:", messageText);
+
+      const messageData: any = {
+        lead_id: leadId,
+        text: messageText,
         is_from_maestro: true,
+      };
+
+      // Si hay archivo, subirlo
+      if (selectedFile) {
+        console.log("📎 ADMIN Subiendo archivo:", selectedFile.name);
+        const fileExt = selectedFile.name.split(".").pop();
+        const fileName = `${leadId}/${Date.now()}.${fileExt}`;
+        const filePath = `messages/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("chat-files")
+          .upload(filePath, selectedFile);
+
+        if (uploadError) {
+          console.error("❌ ADMIN Error subiendo archivo:", uploadError);
+          throw uploadError;
+        }
+
+        console.log("✅ ADMIN Archivo subido:", filePath);
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("chat-files")
+          .getPublicUrl(filePath);
+
+        messageData.media_url = publicUrl;
+
+        const fileType = selectedFile.type;
+        if (fileType.startsWith("image/")) {
+          messageData.media_type = "image";
+        } else if (fileType.startsWith("video/")) {
+          messageData.media_type = "video";
+        } else if (fileType.startsWith("audio/")) {
+          messageData.media_type = "audio";
+        } else {
+          messageData.media_type = "file";
+        }
+      }
+
+      console.log("💾 ADMIN Guardando mensaje en DB:", messageData);
+      const createdMessage = await MessageService.create(messageData);
+
+      if (!createdMessage) {
+        console.error("❌ ADMIN MessageService.create retornó null/undefined");
+        throw new Error("No se pudo crear el mensaje");
+      }
+
+      console.log("✅ ADMIN Mensaje guardado en DB con ID:", createdMessage.id);
+
+      // Añadir el mensaje a la lista local inmediatamente
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === createdMessage.id)) {
+          console.log("⚠️ ADMIN Mensaje duplicado detectado, no se añade");
+          return prev;
+        }
+        console.log("➕ ADMIN Añadiendo mensaje al estado local");
+        return [...prev, createdMessage];
       });
 
-      if (createdMessage) {
-        setMessages((prev) => [...prev, createdMessage]);
-      }
+      setNewMessage("");
+      setSelectedFile(null);
+      setFilePreview(null);
+
+      console.log("🎉 ADMIN Proceso de envío completado exitosamente");
     } catch (error) {
-      console.error("Error enviando mensaje:", error);
-      setMessageInput(messageText);
+      console.error("❌ ADMIN Error enviando mensaje:", error);
+      alert("Error enviando el mensaje. Por favor intenta de nuevo.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
