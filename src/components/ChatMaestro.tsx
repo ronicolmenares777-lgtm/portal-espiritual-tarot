@@ -36,6 +36,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
 
   // Cargar datos y suscribirse a Supabase - VERSIÓN CORREGIDA
   useEffect(() => {
+    let isMounted = true;
     let channelSubscription: ReturnType<typeof supabase.channel> | null = null;
 
     const loadData = async () => {
@@ -51,6 +52,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         
         console.log(`⏳ Intento ${attempts + 1}/6 - Esperando leadId...`);
         await new Promise(resolve => setTimeout(resolve, 500));
+        if (!isMounted) return;
         attempts++;
       }
       
@@ -68,6 +70,8 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
             precision_answers: []
           });
           
+          if (!isMounted) return;
+          
           if (emergencyLead && !error) {
             currentLeadId = emergencyLead.id;
             localStorage.setItem("currentLeadId", emergencyLead.id);
@@ -75,6 +79,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           }
         } catch (err) {
           console.error("❌ Error creando lead de emergencia:", err);
+          if (!isMounted) return;
         }
       }
       
@@ -84,16 +89,28 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
 
         // Cargar mensajes existentes
         const messagesData = await MessageService.getByLeadId(currentLeadId);
+        if (!isMounted) return;
+        
         console.log("✅ Mensajes cargados:", messagesData.length);
         setMessages(messagesData);
 
-        // Configurar suscripción en tiempo real - ORDEN CORRECTO GARANTIZADO
+        // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
+        // 1. Limpiar cualquier canal existente con el mismo nombre
+        const channelName = `messages-${currentLeadId}`;
+        const existingChannels = supabase.getChannels();
+        existingChannels.forEach((ch) => {
+          if (ch.topic === `realtime:${channelName}`) {
+            console.log("🧹 Limpiando canal huérfano previo:", channelName);
+            supabase.removeChannel(ch);
+          }
+        });
+
+        // Configurar suscripción en tiempo real
         console.log("🔔 Configurando suscripción realtime para lead:", currentLeadId);
         
-        // PASO 1: Crear el canal
-        const realtimeChannel = supabase.channel(`messages-${currentLeadId}`);
+        // 2. Crear canal nuevo y limpio
+        const realtimeChannel = supabase.channel(channelName);
         
-        // PASO 2: Configurar el listener ANTES de subscribe
         realtimeChannel.on(
           "postgres_changes",
           {
@@ -110,53 +127,47 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
               console.log("📨 Nuevo mensaje recibido:", newMessage);
               
               setMessages((prev) => {
-                if (prev.some(m => m.id === newMessage.id)) {
-                  console.log("⚠️ Mensaje duplicado, ignorando");
-                  return prev;
-                }
+                if (prev.some(m => m.id === newMessage.id)) return prev;
                 return [...prev, newMessage];
               });
             }
           }
         );
         
-        // PASO 3: Subscribe AL FINAL (después de configurar el .on)
         realtimeChannel.subscribe((status) => {
+          if (!isMounted) return;
           console.log("📡 Estado de suscripción:", status);
-          
           if (status === "SUBSCRIBED") {
             console.log("✅ Suscripción realtime activa");
-          } else if (status === "CLOSED") {
-            console.error("❌ Suscripción cerrada");
           } else if (status === "CHANNEL_ERROR") {
             console.error("❌ Error en canal realtime");
           }
         });
         
-        // Guardar referencia para cleanup
         channelSubscription = realtimeChannel;
-        
-        console.log("✅ Suscripción realtime configurada correctamente");
 
         // Cargar avatar del maestro desde el perfil
         const { data: profiles } = await ProfileService.getAll();
+        if (!isMounted) return;
+        
         if (profiles && profiles.length > 0) {
           const maestro = profiles[0];
-          console.log("👤 Perfil del maestro:", maestro);
           if (maestro.avatar_url) {
-            console.log("✅ Avatar del maestro cargado:", maestro.avatar_url);
             setMaestroAvatar(maestro.avatar_url);
           }
         }
       }
 
-      setIsReady(true);
+      if (isMounted) {
+        setIsReady(true);
+      }
     };
 
     loadData();
 
     // Cleanup: cancelar suscripción al desmontar
     return () => {
+      isMounted = false;
       if (channelSubscription) {
         console.log("🔌 Cancelando suscripción realtime...");
         supabase.removeChannel(channelSubscription);
