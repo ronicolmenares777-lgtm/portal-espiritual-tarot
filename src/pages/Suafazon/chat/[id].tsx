@@ -149,6 +149,9 @@ export default function ChatPage() {
         setMessages(messagesData);
         console.log("✅ Mensajes cargados:", messagesData.length);
 
+        // Marcar como leídos los mensajes del usuario
+        MessageService.markAsRead(leadId, true).catch(console.error);
+
         // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
         const channelName = `admin-messages-${leadId}`;
         const existingChannels = supabase.getChannels();
@@ -183,6 +186,14 @@ export default function ChatPage() {
                 if (prev.some(m => m.id === newMessage.id)) return prev;
                 return [...prev, newMessage];
               });
+
+              // Si es del usuario y estamos con el chat abierto, marcar como leído
+              if (!newMessage.is_from_maestro) {
+                MessageService.markAsRead(leadId, true).catch(console.error);
+              }
+            } else if (payload.eventType === "UPDATE") {
+              const updatedMessage = payload.new as Message;
+              setMessages((prev) => prev.map(m => m.id === updatedMessage.id ? updatedMessage : m));
             }
           }
         );
@@ -627,7 +638,7 @@ export default function ChatPage() {
 
                           {/* Timestamp, checkmarks y botón eliminar */}
                           <div className={`flex items-center gap-2 mt-1 px-2 ${isFromMaestro ? "justify-end" : "justify-start"}`}>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-[10px] text-muted-foreground">
                               {new Date(msg.created_at).toLocaleTimeString("es-MX", {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -636,9 +647,9 @@ export default function ChatPage() {
                             {isFromMaestro && (
                               <div className="flex items-center">
                                 {isRead ? (
-                                  <span className="text-primary text-xs">✓✓</span>
+                                  <span className="text-blue-500 text-[12px] font-bold tracking-tighter leading-none">✓✓</span>
                                 ) : (
-                                  <span className="text-muted-foreground text-xs">✓</span>
+                                  <span className="text-muted-foreground text-[12px] font-bold tracking-tighter leading-none">✓</span>
                                 )}
                               </div>
                             )}

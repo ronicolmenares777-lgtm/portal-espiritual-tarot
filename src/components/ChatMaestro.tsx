@@ -98,6 +98,9 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         console.log("✅ Mensajes cargados:", messagesData.length);
         setMessages(messagesData);
 
+        // Marcar como leídos los mensajes del maestro
+        MessageService.markAsRead(currentLeadId, false).catch(console.error);
+
         // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
         // 1. Limpiar cualquier canal existente con el mismo nombre
         const channelName = `messages-${currentLeadId}`;
@@ -134,6 +137,14 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                 if (prev.some(m => m.id === newMessage.id)) return prev;
                 return [...prev, newMessage];
               });
+
+              // Si es del maestro y estamos con el chat abierto, marcar como leído
+              if (newMessage.is_from_maestro) {
+                MessageService.markAsRead(currentLeadId, false).catch(console.error);
+              }
+            } else if (payload.eventType === "UPDATE") {
+              const updatedMessage = payload.new as Message;
+              setMessages((prev) => prev.map(m => m.id === updatedMessage.id ? updatedMessage : m));
             }
           }
         );
@@ -389,12 +400,19 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
                   )}
 
-                  <p className={`text-xs mt-2 ${message.is_from_maestro ? "text-muted-foreground" : "text-background/70"}`}>
-                    {new Date(message.created_at).toLocaleTimeString("es-ES", {
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })}
-                  </p>
+                  <div className={`flex items-center justify-end gap-1 mt-1 ${message.is_from_maestro ? "text-muted-foreground" : "text-background/70"}`}>
+                    <p className="text-[10px]">
+                      {new Date(message.created_at).toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
+                    </p>
+                    {!message.is_from_maestro && (
+                      <span className={`text-[12px] font-bold tracking-tighter leading-none ${message.read_at ? "text-blue-500" : ""}`}>
+                        {message.read_at ? "✓✓" : "✓"}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}
