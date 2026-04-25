@@ -269,55 +269,18 @@ export default function ChatPage() {
     };
   }, [leadId]);
 
-  const handleSendMessage = async () => {
-    if ((!newMessage.trim() && !selectedFile) || !leadId) return;
+  const handleSendMessage = async (textToSend: string) => {
+    if (!textToSend.trim() || !leadId) return;
 
     try {
-      setIsUploading(true);
-      const messageText = newMessage.trim() || (selectedFile ? `Archivo: ${selectedFile.name}` : "");
-      console.log("📤 ADMIN Enviando mensaje del maestro:", messageText);
+      setIsSending(true);
+      console.log("📤 ADMIN Enviando mensaje del maestro:", textToSend);
 
       const messageData: any = {
         lead_id: leadId,
-        text: messageText,
+        text: textToSend.trim(),
         is_from_maestro: true,
       };
-
-      // Si hay archivo, subirlo
-      if (selectedFile) {
-        console.log("📎 ADMIN Subiendo archivo:", selectedFile.name);
-        const fileExt = selectedFile.name.split(".").pop();
-        const fileName = `${leadId}/${Date.now()}.${fileExt}`;
-        const filePath = `messages/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("chat-files")
-          .upload(filePath, selectedFile);
-
-        if (uploadError) {
-          console.error("❌ ADMIN Error subiendo archivo:", uploadError);
-          throw uploadError;
-        }
-
-        console.log("✅ ADMIN Archivo subido:", filePath);
-
-        const { data: { publicUrl } } = supabase.storage
-          .from("chat-files")
-          .getPublicUrl(filePath);
-
-        messageData.media_url = publicUrl;
-
-        const fileType = selectedFile.type;
-        if (fileType.startsWith("image/")) {
-          messageData.media_type = "image";
-        } else if (fileType.startsWith("video/")) {
-          messageData.media_type = "video";
-        } else if (fileType.startsWith("audio/")) {
-          messageData.media_type = "audio";
-        } else {
-          messageData.media_type = "file";
-        }
-      }
 
       console.log("💾 ADMIN Guardando mensaje en DB:", messageData);
       const createdMessage = await MessageService.create(messageData);
@@ -339,16 +302,14 @@ export default function ChatPage() {
         return [...prev, createdMessage];
       });
 
-      setNewMessage("");
-      setSelectedFile(null);
-      setFilePreview(null);
+      setMessageInput("");
 
       console.log("🎉 ADMIN Proceso de envío completado exitosamente");
     } catch (error) {
       console.error("❌ ADMIN Error enviando mensaje:", error);
       alert("Error enviando el mensaje. Por favor intenta de nuevo.");
     } finally {
-      setIsUploading(false);
+      setIsSending(false);
     }
   };
 
