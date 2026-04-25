@@ -552,16 +552,6 @@ export default function Dashboard() {
             <div className="flex-1 p-6 overflow-y-auto">
               {/* Área principal mejorada */}
               <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden relative">
-                {/* Debug info - TEMPORAL */}
-                <div className="fixed top-4 right-4 bg-black/90 text-white p-4 rounded-lg text-xs z-50 max-w-xs">
-                  <p className="font-bold mb-2">🔍 DEBUG INFO:</p>
-                  <p>Tab activo: <span className="text-gold">{activeTab}</span></p>
-                  <p>Total leads: <span className="text-gold">{leads.length}</span></p>
-                  <p>Filtered: <span className="text-gold">{filteredLeads.length}</span></p>
-                  <p>Papelera: <span className="text-gold">{deletedLeads.length}</span></p>
-                  <p>Loading: <span className="text-gold">{loading ? "Sí" : "No"}</span></p>
-                </div>
-
                 {/* Botón hamburguesa móvil */}
                 <button
                   onClick={() => setSidebarOpen(true)}
@@ -608,6 +598,210 @@ export default function Dashboard() {
                 <div className="flex-1 overflow-hidden flex flex-col bg-background">
                 </div>
               </div>
+            </div>
+
+            {/* Lista de leads mejorada - AHORA MÁS GRANDE */}
+            <div className="flex-1 overflow-y-auto pr-2 space-y-3 lg:space-y-4 pb-20">
+              {loading ? (
+                <div className="text-center py-16 bg-card/30 border border-border rounded-2xl">
+                  <div className="inline-block animate-spin rounded-full h-14 w-14 border-b-3 border-primary"></div>
+                  <p className="mt-6 text-muted-foreground font-medium">Cargando leads...</p>
+                </div>
+              ) : activeTab === "papelera" ? (
+                /* Papelera */
+                deletedLeads.length === 0 ? (
+                  <div className="text-center py-16 bg-card/30 border border-red-500/20 rounded-2xl">
+                    <div className="text-6xl mb-4">🗑️</div>
+                    <p className="text-muted-foreground font-medium">No hay leads en la papelera</p>
+                    <p className="text-xs text-muted-foreground/60 mt-2">Los leads eliminados aparecerán aquí</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 lg:space-y-4">
+                    {deletedLeads.map((lead) => (
+                      <motion.div
+                        key={lead.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-card/50 border-2 border-red-500/30 rounded-2xl p-4 lg:p-6 hover:shadow-xl hover:shadow-red-500/10 transition-all hover:border-red-500/50"
+                      >
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                          <div className="flex-1 w-full">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 font-bold text-lg border-2 border-red-500/30">
+                                {lead.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <h3 className="font-bold text-base lg:text-lg text-foreground truncate">{lead.name}</h3>
+                                <p className="text-xs lg:text-sm text-muted-foreground truncate">
+                                  {lead.country_code} {lead.whatsapp}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-xs lg:text-sm text-muted-foreground/80 line-clamp-2 bg-secondary/20 rounded-lg p-3 border border-border">
+                              {lead.problem}
+                            </p>
+                            <div className="mt-3 flex items-center gap-2 text-[10px] lg:text-xs text-red-400 bg-red-500/10 rounded-lg px-2 lg:px-3 py-1.5 lg:py-2 border border-red-500/30 w-fit">
+                              <span>🗑️</span>
+                              <span className="truncate">Eliminado: {new Date(lead.deleted_at!).toLocaleDateString("es-MX")}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex sm:flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                            <button
+                              onClick={() => restoreFromTrash(lead.id)}
+                              className="flex-1 sm:flex-none px-4 lg:px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-primary/30 shadow-md flex items-center justify-center gap-2"
+                            >
+                              <span>↩️</span>
+                              <span>Restaurar</span>
+                            </button>
+                            <button
+                              onClick={() => deletePermanently(lead.id)}
+                              className="flex-1 sm:flex-none px-4 lg:px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-red-500/30 shadow-md flex items-center justify-center gap-2"
+                            >
+                              <span>🗑️</span>
+                              <span>Eliminar</span>
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )
+              ) : filteredLeads.length === 0 ? (
+                <div className="text-center py-16 bg-card/30 border border-border rounded-2xl">
+                  <div className="text-6xl mb-4">📭</div>
+                  <p className="text-muted-foreground font-medium text-lg mb-2">
+                    {activeTab === "leads" && "No hay leads nuevos"}
+                    {activeTab === "chats" && "No hay chats activos"}
+                    {activeTab === "listo" && "No hay leads listos"}
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 mt-2">
+                    Los nuevos leads aparecerán automáticamente aquí
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3 lg:space-y-4">
+                  {filteredLeads.map((lead) => (
+                    <motion.div
+                      key={lead.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`bg-card/50 border-2 rounded-2xl p-4 lg:p-6 hover:shadow-xl transition-all ${
+                        selectedLeads.has(lead.id) 
+                          ? "border-primary shadow-xl shadow-primary/30" 
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 lg:gap-4">
+                        {/* Checkbox */}
+                        <div className="pt-1 shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={selectedLeads.has(lead.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              toggleSelectLead(lead.id);
+                            }}
+                            className="w-5 h-5 lg:w-6 lg:h-6 rounded-lg border-2 border-primary/50 bg-transparent checked:bg-primary checked:border-primary cursor-pointer transition-all"
+                          />
+                        </div>
+
+                        {/* Contenido del lead */}
+                        <div className="flex-1 min-w-0">
+                          {/* Header */}
+                          <div 
+                            className="flex items-start gap-3 mb-4 cursor-pointer"
+                            onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                          >
+                            <div className="w-14 h-14 lg:w-16 lg:h-16 shrink-0 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-xl lg:text-2xl border-2 border-primary/40 shadow-lg">
+                              {lead.name.charAt(0).toUpperCase()}
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold text-lg lg:text-xl text-foreground mb-1">
+                                {lead.name}
+                              </h3>
+                              <div className="flex flex-col gap-1">
+                                <p className="text-sm lg:text-base text-muted-foreground flex items-center gap-2">
+                                  <span className="text-primary">📱</span>
+                                  <span className="font-mono">{lead.country_code} {lead.whatsapp}</span>
+                                </p>
+                                <p className="text-xs text-muted-foreground/70">
+                                  Registrado: {new Date(lead.created_at).toLocaleDateString("es-MX", {
+                                    day: "2-digit",
+                                    month: "long",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Badge estado */}
+                            <span
+                              className={`shrink-0 px-3 lg:px-4 py-1.5 lg:py-2 rounded-xl text-xs lg:text-sm font-bold border-2 whitespace-nowrap ${
+                                lead.status === "nuevo"
+                                  ? "bg-blue-500/20 text-blue-400 border-blue-500/50"
+                                  : lead.status === "enConversacion"
+                                  ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
+                                  : lead.status === "caliente" || lead.status === "clienteCaliente"
+                                  ? "bg-orange-500/20 text-orange-400 border-orange-500/50"
+                                  : lead.status === "listo"
+                                  ? "bg-green-500/20 text-green-400 border-green-500/50"
+                                  : "bg-gray-500/20 text-gray-400 border-gray-500/50"
+                              }`}
+                            >
+                              {lead.status === "enConversacion" ? "En Chat"
+                                : lead.status === "clienteCaliente" ? "Caliente"
+                                : lead.status === "listo" ? "Listo"
+                                : "Nuevo"}
+                            </span>
+                          </div>
+
+                          {/* Consulta */}
+                          <div className="bg-secondary/20 rounded-xl p-4 border border-border mb-3">
+                            <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-2 font-semibold">
+                              Consulta:
+                            </p>
+                            <p className="text-sm lg:text-base text-foreground leading-relaxed">
+                              {lead.problem}
+                            </p>
+                          </div>
+
+                          {/* Cartas */}
+                          {Array.isArray(lead.selected_cards) && lead.selected_cards.length > 0 && (
+                            <div className="bg-primary/5 rounded-xl p-3 border border-primary/20 mb-3">
+                              <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-2 font-semibold">
+                                Cartas:
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {lead.selected_cards.map((card: any, idx: number) => (
+                                  <span
+                                    key={idx}
+                                    className="text-xs lg:text-sm bg-primary/20 text-primary px-3 py-1.5 rounded-lg font-bold border border-primary/40"
+                                  >
+                                    🎴 {String(card)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Botón chat */}
+                          <button
+                            onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                            className="w-full px-4 py-3 bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 text-primary rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border border-primary/40 shadow-md flex items-center justify-center gap-2"
+                          >
+                            <span>💬</span>
+                            <span>Ver Chat Completo</span>
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
