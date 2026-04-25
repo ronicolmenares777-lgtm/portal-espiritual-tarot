@@ -25,7 +25,9 @@ import {
   Save,
   Sparkles,
   ImageIcon,
-  MessageCircle
+  MessageCircle,
+  FileText,
+  Download
 } from "lucide-react";
 import Link from "next/link";
 
