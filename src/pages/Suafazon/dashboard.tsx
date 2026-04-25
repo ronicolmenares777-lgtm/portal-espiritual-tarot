@@ -131,7 +131,7 @@ export default function Dashboard() {
       if (error) throw error;
 
       // Recargar datos
-      const { data: allLeads } = await LeadService.getAll();
+      const { data: allLeads } = await LeadService.getActive();
       const { data: trashedLeads } = await LeadService.getDeleted();
       
       if (allLeads) setLeads(allLeads);
@@ -152,7 +152,7 @@ export default function Dashboard() {
       if (error) throw error;
 
       // Recargar datos
-      const { data: allLeads } = await LeadService.getAll();
+      const { data: allLeads } = await LeadService.getActive();
       const { data: trashedLeads } = await LeadService.getDeleted();
       
       if (allLeads) setLeads(allLeads);
@@ -439,15 +439,15 @@ export default function Dashboard() {
       try {
         setLoading(true);
 
-        // Obtener todos los leads activos
-        const { data: allLeads, error: leadsError } = await LeadService.getAll();
+        // Obtener solo leads activos (no eliminados)
+        const { data: allLeads, error: leadsError } = await LeadService.getActive();
         
         if (leadsError) {
           console.error("Error cargando leads:", leadsError);
           throw leadsError;
         }
 
-        console.log("✅ Leads cargados:", allLeads?.length || 0);
+        console.log("✅ Leads activos cargados:", allLeads?.length || 0);
 
         if (allLeads) {
           setLeads(allLeads);
@@ -457,6 +457,7 @@ export default function Dashboard() {
         const { data: trashedLeads } = await LeadService.getDeleted();
         if (trashedLeads) {
           setDeletedLeads(trashedLeads);
+          console.log("✅ Leads en papelera:", trashedLeads.length);
         }
 
         setLoading(false);
@@ -512,415 +513,191 @@ export default function Dashboard() {
             />
           )}
 
-          {/* Sidebar izquierdo */}
-          <div className={`
-            fixed lg:relative inset-y-0 left-0 z-50
-            w-72 md:w-80 lg:w-96
-            bg-[hsl(260,35%,10%)] border-r border-gold/10
-            transform transition-transform duration-300 ease-in-out
-            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-            flex flex-col
-          `}>
-            {/* Logo */}
-            <div className="p-6 border-b border-gold/20">
-              <div className="flex items-center gap-3">
-                <Sparkles className="w-6 h-6 text-gold" />
-                <span className="text-lg font-serif text-gold tracking-wider">Portal Maestro</span>
+          {/* Sidebar mejorado */}
+          <div className="w-80 bg-gradient-to-b from-background via-secondary/10 to-background border-r border-gold/10 flex flex-col shadow-2xl">
+            {/* Header del sidebar */}
+            <div className="p-6 border-b border-gold/10 bg-gradient-to-r from-gold/5 to-transparent">
+              <Link href="/Suafazon/dashboard" className="flex items-center gap-3 group">
+                <div className="w-10 h-10 rounded-xl bg-gold/20 flex items-center justify-center border border-gold/40 group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-5 h-5 text-gold" />
+                </div>
+                <span className="font-serif text-xl font-bold bg-gradient-to-r from-gold via-amber-400 to-gold bg-clip-text text-transparent">
+                  Portal Maestro
+                </span>
+              </Link>
+            </div>
+
+            {/* Stats Card mejorado */}
+            <div className="p-6 border-b border-gold/10">
+              <Link
+                href="/Suafazon/dashboard"
+                className="block bg-gradient-to-br from-card/60 to-card/40 border border-gold/20 rounded-2xl p-6 hover:shadow-xl hover:shadow-gold/10 transition-all hover:scale-[1.02] hover:border-gold/40"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center border border-gold/40">
+                    <BarChart className="w-6 h-6 text-gold" />
+                  </div>
+                  <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-gold">
+                    Resumen Estadístico
+                  </h3>
+                </div>
+              </Link>
+            </div>
+
+            {/* Navigation Tabs mejorados */}
+            <div className="p-6 space-y-3 flex-1 overflow-y-auto">
+              <div className="space-y-2">
+                <button
+                  onClick={() => setActiveTab("chats")}
+                  className={`w-full px-5 py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
+                    activeTab === "chats"
+                      ? "bg-gradient-to-r from-gold/20 to-gold/10 text-gold border-2 border-gold/40 shadow-lg shadow-gold/20"
+                      : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-gold/30"
+                  }`}
+                >
+                  <span className="text-sm tracking-wider uppercase">Chats</span>
+                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                    activeTab === "chats" 
+                      ? "bg-gold/30 text-gold border border-gold/40" 
+                      : "bg-muted/50 text-muted-foreground group-hover:bg-muted"
+                  }`}>
+                    {leads.filter(l => ["enConversacion", "caliente"].includes(l.status || "")).length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("leads")}
+                  className={`w-full px-5 py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
+                    activeTab === "leads"
+                      ? "bg-gradient-to-r from-blue-500/20 to-blue-500/10 text-blue-400 border-2 border-blue-500/40 shadow-lg shadow-blue-500/20"
+                      : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-blue-500/30"
+                  }`}
+                >
+                  <span className="text-sm tracking-wider uppercase">Leads</span>
+                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                    activeTab === "leads" 
+                      ? "bg-blue-500/30 text-blue-400 border border-blue-500/40" 
+                      : "bg-muted/50 text-muted-foreground group-hover:bg-muted"
+                  }`}>
+                    {leads.filter(l => l.status === "nuevo").length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("listo")}
+                  className={`w-full px-5 py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
+                    activeTab === "listo"
+                      ? "bg-gradient-to-r from-emerald-500/20 to-emerald-500/10 text-emerald-400 border-2 border-emerald-500/40 shadow-lg shadow-emerald-500/20"
+                      : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-emerald-500/30"
+                  }`}
+                >
+                  <span className="text-sm tracking-wider uppercase">Listo</span>
+                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                    activeTab === "listo" 
+                      ? "bg-emerald-500/30 text-emerald-400 border border-emerald-500/40" 
+                      : "bg-muted/50 text-muted-foreground group-hover:bg-muted"
+                  }`}>
+                    {leads.filter(l => l.status === "listo").length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveTab("papelera");
+                    setSelectedStatus("todos");
+                    deselectAll();
+                  }}
+                  className={`w-full px-5 py-4 rounded-xl font-semibold transition-all text-left flex items-center justify-between group ${
+                    activeTab === "papelera"
+                      ? "bg-gradient-to-r from-red-500/20 to-red-500/10 text-red-400 border-2 border-red-500/40 shadow-lg shadow-red-500/20"
+                      : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-red-500/30"
+                  }`}
+                >
+                  <span className="text-sm tracking-wider uppercase flex items-center gap-2">
+                    <span>🗑️</span>
+                    <span>Papelera</span>
+                  </span>
+                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                    activeTab === "papelera" 
+                      ? "bg-red-500/30 text-red-400 border border-red-500/40" 
+                      : "bg-muted/50 text-muted-foreground group-hover:bg-muted"
+                  }`}>
+                    {deletedLeads.length}
+                  </span>
+                </button>
               </div>
-            </div>
 
-            {/* Resumen Estadístico Button */}
-            <div className="p-4">
-              <button 
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-gold/20 to-accent/20 border border-gold/30 hover:border-gold/50 transition-all group"
-              >
-                <BarChart3 className="w-5 h-5 text-gold group-hover:scale-110 transition-transform" />
-                <span className="text-sm tracking-wider text-gold">RESUMEN ESTADÍSTICO</span>
-              </button>
-            </div>
+              {/* Botones de acción mejorados */}
+              {activeTab !== "papelera" && (
+                <div className="pt-4 border-t border-gold/10 space-y-3">
+                  <button
+                    onClick={selectAll}
+                    className="w-full px-5 py-3 bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 text-primary rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border border-primary/30 shadow-md flex items-center justify-center gap-2"
+                  >
+                    <span>✅</span>
+                    <span>Seleccionar todo</span>
+                  </button>
+                  
+                  <button
+                    onClick={deselectAll}
+                    className="w-full px-5 py-3 bg-card/60 hover:bg-card/80 text-foreground rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border border-border shadow-md flex items-center justify-center gap-2"
+                  >
+                    <span>❌</span>
+                    <span>Deseleccionar</span>
+                  </button>
 
-            {/* Tabs */}
-            <div className="flex gap-2 mb-4 px-4">
-              <button
-                onClick={() => setActiveTab("chats")}
-                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
-                  activeTab === "chats"
-                    ? "bg-gold/20 text-gold border border-gold/50"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                <span className="text-xs uppercase tracking-wider">Chats</span>
-                <span className="ml-2 text-xs opacity-60">
-                  ({leads.filter(l => ["enConversacion", "caliente"].includes(l.status || "")).length})
-                </span>
-              </button>
-              <button
-                onClick={() => setActiveTab("leads")}
-                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
-                  activeTab === "leads"
-                    ? "bg-gold/20 text-gold border border-gold/50"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                <span className="text-xs uppercase tracking-wider">Leads</span>
-                <span className="ml-2 text-xs opacity-60">
-                  ({leads.filter(l => l.status === "nuevo").length})
-                </span>
-              </button>
-              <button
-                onClick={() => setActiveTab("listo")}
-                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
-                  activeTab === "listo"
-                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                <span className="text-xs uppercase tracking-wider">Listo</span>
-                <span className="ml-2 text-xs opacity-60">
-                  ({leads.filter(l => l.status === "listo").length})
-                </span>
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab("papelera");
-                  setSelectedStatus("todos");
-                  deselectAll();
-                }}
-                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
-                  activeTab === "papelera"
-                    ? "bg-red-500/20 text-red-400 border border-red-500/50"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                <span className="text-xs uppercase tracking-wider">🗑️ Papelera</span>
-                <span className="ml-2 text-xs opacity-60">
-                  ({deletedLeads.length})
-                </span>
-              </button>
-            </div>
-
-            {/* Barra de acciones - SOLO SI NO ES PAPELERA */}
-            {activeTab !== "papelera" && (
-              <div className="px-4 mb-4">
-                <div className="bg-card/30 border border-gold/20 rounded-lg p-4">
-                  <div className="flex gap-3 items-center flex-wrap">
-                    <button
-                      onClick={selectAll}
-                      className="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-lg transition-colors text-sm font-medium"
-                    >
-                      ✅ Seleccionar todo
-                    </button>
-                    <button
-                      onClick={deselectAll}
-                      className="px-4 py-2 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-lg transition-colors text-sm font-medium"
-                    >
-                      ❌ Deseleccionar
-                    </button>
-
-                    {selectedLeads.size > 0 && (
-                      <div className="flex gap-2 items-center ml-auto">
-                        <span className="text-sm text-foreground font-medium bg-primary/10 px-3 py-1 rounded-full">
+                  {selectedLeads.size > 0 && (
+                    <div className="space-y-3 pt-3 border-t border-border">
+                      <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/40 rounded-xl px-4 py-3 text-center">
+                        <span className="text-sm text-foreground font-bold">
                           {selectedLeads.size} seleccionado(s)
                         </span>
-                        <button
-                          onClick={moveSelectedToTrash}
-                          className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm font-bold flex items-center gap-2 border-2 border-red-500/50"
-                        >
-                          🗑️ Mover a papelera
-                        </button>
                       </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Search */}
-            <div className="p-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Buscar almas..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-muted/30 border border-gold/20 rounded-lg pl-10 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all"
-                />
-              </div>
-              
-              {/* Mensaje si no hay leads */}
-              {filteredLeads.length === 0 && !loading && (
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🔮</div>
-                  <p className="text-muted-foreground mb-2">
-                    {searchQuery ? "No se encontraron almas con ese criterio" : "Aún no hay almas en esta sección"}
-                  </p>
-                  {activeTab === "leads" && !searchQuery && (
-                    <p className="text-sm text-muted-foreground">
-                      Los nuevos leads aparecerán aquí automáticamente
-                    </p>
+                      <button
+                        onClick={moveSelectedToTrash}
+                        className="w-full px-5 py-3 bg-gradient-to-r from-red-500/20 to-red-500/10 hover:from-red-500/30 hover:to-red-500/20 text-red-400 rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border-2 border-red-500/40 shadow-lg shadow-red-500/20 flex items-center justify-center gap-2"
+                      >
+                        <span>🗑️</span>
+                        <span>Mover a papelera</span>
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
 
-              {/* Indicador de carga */}
-              {loading && (
-                <div className="text-center py-12">
-                  <Sparkles className="w-12 h-12 text-gold mx-auto mb-4 animate-pulse" />
-                  <p className="text-muted-foreground">Cargando almas...</p>
-                </div>
-              )}
-            </div>
-
-            {/* Filtros por estado */}
-            <div className="px-4 mb-3">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setSelectedStatus("todos")}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedStatus === "todos"
-                      ? "bg-gold text-background"
-                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  Todos ({filteredLeads.length})
-                </button>
-                <button
-                  onClick={() => setSelectedStatus("nuevo")}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedStatus === "nuevo"
-                      ? "bg-blue-500 text-white"
-                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  Nuevo ({leads.filter(l => l.status === "nuevo").length})
-                </button>
-                <button
-                  onClick={() => setSelectedStatus("enConversacion")}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedStatus === "enConversacion"
-                      ? "bg-purple-500 text-white"
-                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  En Chat ({leads.filter(l => l.status === "enConversacion").length})
-                </button>
-                <button
-                  onClick={() => setSelectedStatus("caliente")}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedStatus === "caliente"
-                      ? "bg-orange-500 text-white"
-                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  Caliente ({leads.filter(l => l.status === "caliente").length})
-                </button>
-                <button
-                  onClick={() => setSelectedStatus("cerrado")}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedStatus === "cerrado"
-                      ? "bg-green-500 text-white"
-                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  Cerrado ({leads.filter(l => l.status === "cerrado").length})
-                </button>
-                <button
-                  onClick={() => setSelectedStatus("perdido")}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedStatus === "perdido"
-                      ? "bg-red-500 text-white"
-                      : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  Perdido ({leads.filter(l => l.status === "perdido").length})
-                </button>
-                {activeTab === "listo" && (
-                  <button
-                    onClick={() => setSelectedStatus("listo")}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      selectedStatus === "listo"
-                        ? "bg-emerald-500 text-white"
-                        : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                    }`}
-                  >
-                    Listo ({leads.filter(l => l.status === "listo").length})
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Lista de leads mejorada */}
-            <div className="max-h-[calc(100vh-450px)] overflow-y-auto pr-2 space-y-4">
-              {loading ? (
-                <div className="text-center py-16 bg-card/30 border border-border rounded-2xl">
-                  <div className="inline-block animate-spin rounded-full h-14 w-14 border-b-3 border-primary"></div>
-                  <p className="mt-6 text-muted-foreground font-medium">Cargando leads...</p>
-                </div>
-              ) : activeTab === "papelera" ? (
-                /* Papelera mejorada */
-                deletedLeads.length === 0 ? (
-                  <div className="text-center py-16 bg-card/30 border border-red-500/20 rounded-2xl">
-                    <div className="text-6xl mb-4">🗑️</div>
-                    <p className="text-muted-foreground font-medium">No hay leads en la papelera</p>
-                    <p className="text-xs text-muted-foreground/60 mt-2">Los leads eliminados aparecerán aquí</p>
+              {/* Filtros mejorados */}
+              <div className="p-6 border-t border-gold/10 bg-gradient-to-r from-background to-secondary/5">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 text-xs font-bold tracking-wider uppercase text-gold/80 mb-3">
+                    <Filter className="w-4 h-4" />
+                    <span>Filtros</span>
                   </div>
-                ) : (
-                  deletedLeads.map((lead) => (
-                    <motion.div
-                      key={lead.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-card/50 border-2 border-red-500/30 rounded-2xl p-6 hover:shadow-xl hover:shadow-red-500/10 transition-all hover:border-red-500/50"
-                    >
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 font-bold text-lg border-2 border-red-500/30">
-                              {lead.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-lg text-foreground">{lead.name}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {lead.country_code} {lead.whatsapp}
-                              </p>
-                            </div>
-                          </div>
-                          <p className="text-sm text-muted-foreground/80 line-clamp-2 bg-secondary/20 rounded-xl p-4 border border-border">
-                            {lead.problem}
-                          </p>
-                          <div className="mt-3 flex items-center gap-2 text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/30">
-                            <span>🗑️</span>
-                            <span>Eliminado: {new Date(lead.deleted_at!).toLocaleDateString("es-MX", {
-                              day: "2-digit",
-                              month: "long",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit"
-                            })}</span>
-                          </div>
-                        </div>
 
-                        <div className="flex flex-col gap-2">
-                          <button
-                            onClick={() => restoreFromTrash(lead.id)}
-                            className="px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all hover:scale-105 text-sm font-semibold border border-primary/30 shadow-md flex items-center gap-2"
-                          >
-                            <span>↩️</span>
-                            <span>Restaurar</span>
-                          </button>
-                          <button
-                            onClick={() => deletePermanently(lead.id)}
-                            className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 text-sm font-semibold border border-red-500/30 shadow-md flex items-center gap-2"
-                          >
-                            <span>🗑️</span>
-                            <span>Eliminar</span>
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))
-                )
-              ) : filteredLeads.length === 0 ? (
-                <div className="text-center py-16 bg-card/30 border border-border rounded-2xl">
-                  <div className="text-6xl mb-4">📭</div>
-                  <p className="text-muted-foreground font-medium">No hay leads disponibles</p>
-                  <p className="text-xs text-muted-foreground/60 mt-2">Los nuevos leads aparecerán aquí</p>
-                </div>
-              ) : (
-                filteredLeads.map((lead) => (
-                  <motion.div
-                    key={lead.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`bg-card/50 border-2 rounded-2xl p-6 hover:shadow-xl transition-all cursor-pointer ${
-                      selectedLeads.has(lead.id) 
-                        ? "border-primary shadow-xl shadow-primary/30 scale-[1.02]" 
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Checkbox mejorado */}
-                      <div className="pt-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedLeads.has(lead.id)}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            toggleSelectLead(lead.id);
-                          }}
-                          className="w-6 h-6 rounded-lg border-2 border-primary/50 bg-transparent checked:bg-primary checked:border-primary cursor-pointer transition-all"
-                        />
-                      </div>
-
-                      {/* Contenido del lead mejorado */}
-                      <div
-                        className="flex-1"
-                        onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { id: "todos", label: "Todos", count: leads.length },
+                      { id: "nuevo", label: "Nuevo", count: leads.filter(l => l.status === "nuevo").length },
+                      { id: "enConversacion", label: "En Chat", count: leads.filter(l => l.status === "enConversacion").length },
+                      { id: "caliente", label: "Caliente", count: leads.filter(l => l.status === "caliente" || l.status === "clienteCaliente").length },
+                      { id: "cerrado", label: "Cerrado", count: leads.filter(l => l.status === "cerrado").length },
+                      { id: "perdido", label: "Perdido", count: leads.filter(l => l.status === "perdido").length },
+                    ].map(status => (
+                      <button
+                        key={status.id}
+                        onClick={() => setSelectedStatus(status.id)}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                          selectedStatus === status.id
+                            ? "bg-gold/20 text-gold border-2 border-gold/40 shadow-lg shadow-gold/20"
+                            : "bg-card/40 text-muted-foreground hover:bg-card/60 border border-border hover:border-gold/30"
+                        }`}
                       >
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg border-2 border-primary/30">
-                              {lead.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-lg text-foreground">{lead.name}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {lead.country_code} {lead.whatsapp}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col items-end gap-2">
-                            <span
-                              className={`px-4 py-1.5 rounded-xl text-xs font-bold border-2 ${
-                                lead.status === "nuevo"
-                                  ? "bg-blue-500/10 text-blue-400 border-blue-500/40"
-                                  : lead.status === "enConversacion"
-                                  ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/40"
-                                  : lead.status === "caliente" || lead.status === "clienteCaliente"
-                                  ? "bg-orange-500/10 text-orange-400 border-orange-500/40"
-                                  : lead.status === "listo"
-                                  ? "bg-green-500/10 text-green-400 border-green-500/40"
-                                  : lead.status === "cerrado"
-                                  ? "bg-purple-500/10 text-purple-400 border-purple-500/40"
-                                  : "bg-gray-500/10 text-gray-400 border-gray-500/40"
-                              }`}
-                            >
-                              {lead.status === "enConversacion"
-                                ? "En Conversación"
-                                : lead.status === "clienteCaliente"
-                                ? "Cliente Caliente"
-                                : lead.status || "Sin estado"}
-                            </span>
-
-                            <span className="text-xs text-muted-foreground bg-secondary/30 px-3 py-1 rounded-lg">
-                              {new Date(lead.created_at).toLocaleDateString("es-MX")}
-                            </span>
-                          </div>
-                        </div>
-
-                        <p className="text-sm text-muted-foreground/80 line-clamp-2 bg-secondary/20 rounded-xl p-4 border border-border">
-                          {lead.problem}
-                        </p>
-
-                        {Array.isArray(lead.selected_cards) && lead.selected_cards.length > 0 && (
-                          <div className="flex gap-2 mt-3">
-                            {lead.selected_cards.map((card: any, idx: number) => (
-                              <span
-                                key={idx}
-                                className="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-semibold border border-primary/30"
-                              >
-                                {String(card)}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))
-              )}
+                        <span>{status.label}</span>
+                        <span className="ml-2 opacity-70">({status.count})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

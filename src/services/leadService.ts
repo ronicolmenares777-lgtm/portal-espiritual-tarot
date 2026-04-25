@@ -46,9 +46,21 @@ export const LeadService = {
   },
 
   /**
-   * Obtener todos los leads
+   * Obtener todos los leads (incluyendo eliminados)
    */
   async getAll(): Promise<{ data: Lead[] | null; error: any }> {
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    return { data, error };
+  },
+
+  /**
+   * Obtener solo leads activos (no eliminados)
+   */
+  async getActive(): Promise<{ data: Lead[] | null; error: any }> {
     const { data, error } = await supabase
       .from("leads")
       .select("*")
