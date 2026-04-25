@@ -33,8 +33,8 @@ export default function Home() {
   
   const [formData, setFormData] = useState({
     name: "",
+    countryCode: "+1",
     whatsapp: "",
-    countryCode: "+52",
     problem: "",
   });
   
@@ -283,37 +283,57 @@ export default function Home() {
       <CustomCursor />
       <FloatingParticles />
 
-      <div className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-b from-background via-background/95 to-transparent backdrop-blur-sm border-b border-gold/10">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-gold" />
-            <span className="font-serif text-gold text-sm md:text-base tracking-wider hidden sm:block">
-              Portal Espiritual
-            </span>
+      {/* Header Section - MEJORADO */}
+      <motion.div
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative z-10 text-center mb-16 lg:mb-20"
+      >
+        {/* Logo/Icono místico */}
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 1, delay: 0.3, type: "spring" }}
+          className="inline-flex items-center justify-center mb-6 lg:mb-8"
+        >
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-gold/30 to-accent/30 blur-xl rounded-full animate-pulse" />
+            <div className="relative w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-gradient-to-br from-gold/20 to-accent/20 border-2 border-gold/40 flex items-center justify-center shadow-2xl shadow-gold/20">
+              <Sparkles className="w-10 h-10 lg:w-12 lg:h-12 text-gold animate-pulse" />
+            </div>
           </div>
+        </motion.div>
 
-          <div className="flex items-center gap-2 md:gap-3">
-            <a
-              href="https://www.facebook.com/centronlin"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all hover:shadow-lg hover:shadow-blue-500/50 group text-xs md:text-sm"
-            >
-              <Facebook className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
-              <span className="font-medium hidden sm:inline">Facebook</span>
-            </a>
+        {/* Título principal mejorado */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-4 lg:mb-6 leading-tight"
+        >
+          <span className="block bg-gradient-to-r from-gold via-amber-300 to-gold bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(250,214,54,0.3)]">
+            Portal Espiritual
+          </span>
+        </motion.h1>
 
-            <button
-              onClick={() => setShowLoginModal(true)}
-              className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 rounded-lg bg-gradient-to-r from-gold/20 to-accent/20 border border-gold/50 text-gold hover:bg-gold/30 transition-all hover:shadow-lg hover:shadow-gold/50 group text-xs md:text-sm font-medium"
-            >
-              <Star className="w-4 h-4 md:w-5 md:h-5 group-hover:rotate-180 transition-transform duration-500" />
-              <span className="hidden md:inline">Ingresar</span>
-              <span className="md:hidden">Login</span>
-            </button>
-          </div>
-        </div>
-      </div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.7 }}
+          className="text-lg sm:text-xl lg:text-2xl text-foreground/90 font-light tracking-wide max-w-2xl mx-auto px-4"
+        >
+          Descubre las respuestas que el universo tiene preparadas para ti
+        </motion.p>
+
+        {/* Línea decorativa */}
+        <motion.div
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 1, delay: 0.9 }}
+          className="mx-auto mt-8 w-32 h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent opacity-60"
+        />
+      </motion.div>
 
       <div className="min-h-screen flex items-center justify-center px-4 pt-24 pb-12">
         <div className="w-full">
@@ -356,96 +376,127 @@ export default function Home() {
                   </p>
                 </div>
 
-                <form 
-                  onSubmit={handleSubmit}
-                  className="relative backdrop-blur-md bg-card/40 border border-gold/20 rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300"
-                  style={{
-                    boxShadow: "0 0 60px hsl(var(--purple-border) / 0.2), inset 0 0 40px hsl(var(--card) / 0.5)",
-                  }}
+                {/* Formulario de entrada - MEJORADO */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6 }}
+                  className="relative max-w-2xl mx-auto"
                 >
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gold/5 via-transparent to-purple-500/5 pointer-events-none" />
+                  {/* Resplandor de fondo */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-gold/20 via-accent/20 to-gold/20 rounded-3xl blur-2xl opacity-60" />
                   
-                  <div className="space-y-2 relative">
-                    <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
-                      <Sparkles className="w-3 h-3" />
-                      Nombre Sagrado
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setFormData(prev => ({ ...prev, name: value }));
-                      }}
-                      placeholder={nombrePlaceholder}
-                      className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 backdrop-blur-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
-                      <Moon className="w-3 h-3" />
-                      Canal de Conexión (WhatsApp)
-                    </label>
-                    <div className="flex gap-2">
-                      <select
-                        value={formData.countryCode}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setFormData(prev => ({ ...prev, countryCode: value }));
-                        }}
-                        className="px-3 bg-muted/50 border border-gold/20 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 backdrop-blur-sm"
-                      >
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+52">🇲🇽 +52</option>
-                        <option value="+34">🇪🇸 +34</option>
-                        <option value="+54">🇦🇷 +54</option>
-                        <option value="+57">🇨🇴 +57</option>
-                        <option value="+58">🇻🇪 +58</option>
-                      </select>
-                      <input
-                        type="tel"
-                        required
-                        value={formData.whatsapp}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "");
-                          setFormData(prev => ({ ...prev, whatsapp: value }));
-                        }}
-                        placeholder="1234567890"
-                        className="flex-1 bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 backdrop-blur-sm"
-                      />
+                  <div className="relative bg-card/80 backdrop-blur-xl border-2 border-gold/30 rounded-3xl p-8 lg:p-12 shadow-2xl shadow-black/50">
+                    {/* Título del formulario */}
+                    <div className="text-center mb-8 lg:mb-10">
+                      <div className="inline-flex items-center gap-3 mb-4">
+                        <div className="h-px w-12 bg-gradient-to-r from-transparent to-gold/50" />
+                        <Sparkles className="w-6 h-6 text-gold" />
+                        <div className="h-px w-12 bg-gradient-to-l from-transparent to-gold/50" />
+                      </div>
+                      <h2 className="text-2xl lg:text-3xl font-serif font-bold text-foreground mb-3">
+                        Canal de Conexión
+                      </h2>
+                      <p className="text-sm lg:text-base text-muted-foreground/80 max-w-md mx-auto">
+                        Comparte tu información para que podamos guiarte en tu camino espiritual
+                      </p>
                     </div>
-                  </div>
 
-                  <div className="space-y-2 relative">
-                    <label className="text-xs text-gold tracking-[0.2em] uppercase font-medium flex items-center gap-2">
-                      <Star className="w-3 h-3" />
-                      ¿Qué te guía hasta aquí? <span className="text-accent">*</span>
-                    </label>
-                    <textarea
-                      rows={4}
-                      required
-                      value={formData.problem}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setFormData(prev => ({ ...prev, problem: value }));
-                      }}
-                      placeholder="Comparte tu intención con el cosmos..."
-                      className="w-full bg-muted/50 border border-gold/20 rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 resize-none backdrop-blur-sm"
-                    />
-                  </div>
+                    <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-7">
+                      {/* Nombre */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
+                          <span className="text-gold">✦</span>
+                          Tu Nombre
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Nombre completo"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 lg:px-5 py-3 lg:py-4 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all text-base lg:text-lg"
+                          required
+                        />
+                      </div>
 
-                  <motion.button
-                    type="submit"
-                    disabled={isSubmitting}
-                    whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
-                    whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                    className={`w-full bg-gradient-to-r from-gold to-accent text-background py-4 rounded-lg font-medium tracking-wider hover:shadow-xl hover:shadow-gold/50 transition-all ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {isSubmitting ? 'VALIDANDO...' : 'COMENZAR LECTURA'}
-                  </motion.button>
-                </form>
+                      {/* WhatsApp */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
+                          <span className="text-gold">✦</span>
+                          WhatsApp
+                        </label>
+                        <div className="flex gap-3">
+                          <select
+                            value={formData.countryCode}
+                            onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
+                            className="w-28 bg-secondary/30 border-2 border-gold/30 rounded-xl px-3 py-3 lg:py-4 text-foreground font-medium focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all appearance-none cursor-pointer text-base lg:text-lg"
+                            style={{
+                              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FAD636'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                              backgroundRepeat: 'no-repeat',
+                              backgroundPosition: 'right 0.5rem center',
+                              backgroundSize: '1.5em 1.5em',
+                              paddingRight: '2.5rem'
+                            }}
+                          >
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+52">🇲🇽 +52</option>
+                            <option value="+34">🇪🇸 +34</option>
+                            <option value="+54">🇦🇷 +54</option>
+                            <option value="+57">🇨🇴 +57</option>
+                            <option value="+51">🇵🇪 +51</option>
+                            <option value="+56">🇨🇱 +56</option>
+                          </select>
+                          <input
+                            type="tel"
+                            placeholder="Tu número de WhatsApp"
+                            value={formData.whatsapp}
+                            onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") })}
+                            className="flex-1 bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 lg:px-5 py-3 lg:py-4 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all text-base lg:text-lg"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Problema/Consulta */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
+                          <span className="text-gold">✦</span>
+                          ¿Qué te preocupa?
+                        </label>
+                        <textarea
+                          placeholder="Cuéntanos qué situación te trae aquí... El universo escucha"
+                          value={formData.problem}
+                          onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
+                          rows={4}
+                          className="w-full bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 lg:px-5 py-3 lg:py-4 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all resize-none text-base lg:text-lg"
+                          required
+                        />
+                      </div>
+
+                      {/* Botón de envío mejorado */}
+                      <motion.button
+                        type="submit"
+                        disabled={!formData.name || !formData.whatsapp || !formData.problem}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full relative group overflow-hidden rounded-xl py-4 lg:py-5 font-bold text-lg lg:text-xl tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-gold/30 hover:shadow-2xl hover:shadow-gold/50"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-gold via-accent to-gold transition-all group-hover:scale-105" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="relative text-background flex items-center justify-center gap-3">
+                          <Sparkles className="w-6 h-6" />
+                          Iniciar Mi Lectura
+                          <Sparkles className="w-6 h-6" />
+                        </span>
+                      </motion.button>
+                    </form>
+
+                    {/* Nota de privacidad */}
+                    <p className="text-center text-xs text-muted-foreground/60 mt-6 lg:mt-8">
+                      🔒 Tu información está protegida y solo será usada para tu lectura espiritual
+                    </p>
+                  </div>
+                </motion.div>
 
                 <p className="text-center text-xs text-gold/40 italic animate-in fade-in duration-1000 delay-700 tracking-wide">
                   El universo conspira a favor del amor verdadero
