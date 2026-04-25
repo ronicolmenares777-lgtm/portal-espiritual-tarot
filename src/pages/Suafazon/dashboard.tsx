@@ -552,6 +552,16 @@ export default function Dashboard() {
             <div className="flex-1 p-6 overflow-y-auto">
               {/* Área principal mejorada */}
               <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden relative">
+                {/* Debug info - TEMPORAL */}
+                <div className="fixed top-4 right-4 bg-black/90 text-white p-4 rounded-lg text-xs z-50 max-w-xs">
+                  <p className="font-bold mb-2">🔍 DEBUG INFO:</p>
+                  <p>Tab activo: <span className="text-gold">{activeTab}</span></p>
+                  <p>Total leads: <span className="text-gold">{leads.length}</span></p>
+                  <p>Filtered: <span className="text-gold">{filteredLeads.length}</span></p>
+                  <p>Papelera: <span className="text-gold">{deletedLeads.length}</span></p>
+                  <p>Loading: <span className="text-gold">{loading ? "Sí" : "No"}</span></p>
+                </div>
+
                 {/* Botón hamburguesa móvil */}
                 <button
                   onClick={() => setSidebarOpen(true)}
