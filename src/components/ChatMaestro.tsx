@@ -28,8 +28,10 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [lastMessageCount, setLastMessageCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -98,9 +100,27 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         
         console.log("✅ Mensajes cargados:", messagesData.length);
         setMessages(messagesData);
+        setLastMessageCount(messagesData.length);
 
         // Marcar como leídos los mensajes del maestro
         MessageService.markAsRead(currentLeadId, false).catch(console.error);
+
+        // --- POLLING DE RESPALDO (cada 3 segundos) ---
+        pollingIntervalRef.current = setInterval(async () => {
+          try {
+            const latestMessages = await MessageService.getByLeadId(currentLeadId);
+            setMessages((prev) => {
+              // Solo actualizar si hay mensajes nuevos
+              if (latestMessages.length > prev.length) {
+                console.log(`🔄 Polling: ${latestMessages.length - prev.length} mensajes nuevos detectados`);
+                return latestMessages;
+              }
+              return prev;
+            });
+          } catch (error) {
+            console.error("Error en polling:", error);
+          }
+        }, 3000);
 
         // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
         // 1. Limpiar cualquier canal existente con el mismo nombre
@@ -128,23 +148,38 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
             filter: `lead_id=eq.${currentLeadId}`,
           },
           (payload) => {
-            console.log("🔔 Cambio detectado:", payload.eventType);
+            console.log("🔔 REALTIME - Cambio detectado:", {
+              eventType: payload.eventType,
+              table: payload.table,
+              leadId: currentLeadId
+            });
             
             if (payload.eventType === "INSERT") {
               const newMessage = payload.new as Message;
-              console.log("📨 Nuevo mensaje recibido:", newMessage);
+              console.log("📨 REALTIME - Nuevo mensaje recibido:", {
+                id: newMessage.id,
+                text: newMessage.text?.substring(0, 50),
+                is_from_maestro: newMessage.is_from_maestro,
+                created_at: newMessage.created_at
+              });
               
               setMessages((prev) => {
-                if (prev.some(m => m.id === newMessage.id)) return prev;
+                if (prev.some(m => m.id === newMessage.id)) {
+                  console.log("⚠️ REALTIME - Mensaje duplicado, ignorando");
+                  return prev;
+                }
+                console.log("➕ REALTIME - Añadiendo mensaje al estado");
                 return [...prev, newMessage];
               });
 
               // Si es del maestro y estamos con el chat abierto, marcar como leído
               if (newMessage.is_from_maestro) {
+                console.log("✓ REALTIME - Marcando mensaje del maestro como leído");
                 MessageService.markAsRead(currentLeadId, false).catch(console.error);
               }
             } else if (payload.eventType === "UPDATE") {
               const updatedMessage = payload.new as Message;
+              console.log("🔄 REALTIME - Mensaje actualizado:", updatedMessage.id);
               setMessages((prev) => prev.map(m => m.id === updatedMessage.id ? updatedMessage : m));
             }
           }
@@ -188,6 +223,10 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         console.log("🔌 Cancelando suscripción realtime...");
         supabase.removeChannel(channelSubscription);
       }
+      if (pollingIntervalRef.current) {
+        console.log("🛑 Deteniendo polling de respaldo...");
+        clearInterval(pollingIntervalRef.current);
+      }
     };
   }, [userName, userPhone, userProblem, userCard]);
 
@@ -196,16 +235,18 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
 
     try {
       setIsUploading(true);
-      console.log("📤 Enviando mensaje del usuario:", newMessage);
+      const messageText = newMessage.trim() || (selectedFile ? `Archivo: ${selectedFile.name}` : "");
+      console.log("📤 Enviando mensaje del usuario:", messageText);
       
       const messageData: any = {
         lead_id: leadId,
-        text: newMessage.trim() || (selectedFile ? `Archivo: ${selectedFile.name}` : ""),
+        text: messageText,
         is_from_maestro: false,
       };
 
       // Si hay archivo, subirlo a Supabase Storage
       if (selectedFile) {
+        console.log("📎 Subiendo archivo:", selectedFile.name);
         const fileExt = selectedFile.name.split('.').pop();
         const fileName = `${leadId}/${Date.now()}.${fileExt}`;
         const filePath = `messages/${fileName}`;
@@ -218,6 +259,8 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           console.error("❌ Error subiendo archivo:", uploadError);
           throw uploadError;
         }
+
+        console.log("✅ Archivo subido:", filePath);
 
         // Obtener URL pública del archivo
         const { data: { publicUrl } } = supabase.storage
@@ -239,23 +282,35 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         }
       }
 
+      console.log("💾 Guardando mensaje en DB:", messageData);
       const createdMessage = await MessageService.create(messageData);
-      console.log("✅ Mensaje enviado:", createdMessage);
+      
+      if (!createdMessage) {
+        console.error("❌ MessageService.create retornó null/undefined");
+        throw new Error("No se pudo crear el mensaje");
+      }
+      
+      console.log("✅ Mensaje guardado en DB con ID:", createdMessage.id);
 
       // Añadir el mensaje a la lista local inmediatamente
-      if (createdMessage) {
-        setMessages((prev) => {
-          // Evitar duplicados
-          if (prev.some(m => m.id === createdMessage.id)) return prev;
-          return [...prev, createdMessage];
-        });
-      }
+      setMessages((prev) => {
+        // Evitar duplicados
+        if (prev.some(m => m.id === createdMessage.id)) {
+          console.log("⚠️ Mensaje duplicado detectado, no se añade");
+          return prev;
+        }
+        console.log("➕ Añadiendo mensaje al estado local");
+        return [...prev, createdMessage];
+      });
 
       setNewMessage("");
       setSelectedFile(null);
       setFilePreview(null);
+      
+      console.log("🎉 Proceso de envío completado exitosamente");
     } catch (error) {
       console.error("❌ Error enviando mensaje:", error);
+      alert("Error enviando el mensaje. Por favor intenta de nuevo.");
     } finally {
       setIsUploading(false);
     }
@@ -597,6 +652,14 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Auto-scroll cuando llegan mensajes nuevos */}
+      <useEffect(() => {
+        if (messages.length > lastMessageCount) {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+          setLastMessageCount(messages.length);
+        }
+      }, [messages, lastMessageCount]);
     </div>
   );
 }
