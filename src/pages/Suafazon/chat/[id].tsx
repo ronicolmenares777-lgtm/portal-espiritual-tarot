@@ -595,13 +595,26 @@ export default function ChatPage() {
                             {msg.media_url ? (
                               <div className="space-y-2">
                                 {msg.media_type === "image" && (
-                                  <img src={msg.media_url} alt="Imagen" className="rounded-lg max-w-full h-auto" />
+                                  <img src={msg.media_url} alt="Imagen" className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition" onClick={() => window.open(msg.media_url || '', '_blank')} />
                                 )}
                                 {msg.media_type === "video" && (
                                   <video src={msg.media_url} controls className="rounded-lg max-w-full h-auto" />
                                 )}
                                 {msg.media_type === "audio" && (
                                   <audio src={msg.media_url} controls className="w-full" />
+                                )}
+                                {msg.media_type === "file" && (
+                                  <a
+                                    href={msg.media_url}
+                                    download
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 p-2 rounded-lg bg-muted hover:bg-muted/80 transition"
+                                  >
+                                    <FileText className="w-5 h-5" />
+                                    <span className="text-sm font-medium">Descargar archivo</span>
+                                    <Download className="w-4 h-4 ml-auto" />
+                                  </a>
                                 )}
                                 {msg.text && <p className="whitespace-pre-wrap break-words">{msg.text}</p>}
                               </div>
