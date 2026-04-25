@@ -12,9 +12,9 @@ import { sanitizeText, validateName, validatePhone, validateProblem, rateLimiter
 import { LeadService } from "@/services/leadService";
 import type { TarotCard } from "@/lib/tarotCards";
 import { useState, useEffect } from "react";
-import { Moon, Star, Facebook, Sparkles } from "lucide-react";
+import { Moon, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 
 const nombreEjemplos = [
   "María González",
