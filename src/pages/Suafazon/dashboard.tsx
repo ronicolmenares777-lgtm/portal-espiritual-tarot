@@ -519,548 +519,320 @@ export default function Dashboard() {
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Header mejorado */}
             <div className="flex-1 p-6 overflow-y-auto">
-              {/* Header mejorado */}
-              <div className="bg-gradient-to-r from-background via-secondary/20 to-background border border-gold/20 rounded-2xl p-6 mb-8 shadow-lg shadow-black/50">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h1 className="text-3xl font-serif font-bold bg-gradient-to-r from-gold via-amber-400 to-gold bg-clip-text text-transparent tracking-wider mb-2">
-                      Portal Maestro
-                    </h1>
-                    <p className="text-muted-foreground/80 text-sm">
-                      Gestión de almas y conexiones espirituales
-                    </p>
-                  </div>
+              {/* Área principal mejorada */}
+              <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden relative">
+                {/* Botón hamburguesa móvil */}
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-gold to-amber-500 shadow-[0_0_20px_rgba(250,214,54,0.4)] flex items-center justify-center text-background z-30 hover:scale-110 transition-transform border border-amber-300"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
 
-                  <div className="flex gap-3">
-                    <Link
-                      href="/Suafazon/perfil"
-                      className="px-5 py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-border shadow-md"
-                    >
-                      <User className="w-4 h-4" />
-                      <span className="text-sm font-medium">Perfil</span>
-                    </Link>
-
-                    <button
-                      onClick={handleLogout}
-                      className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-red-500/30 shadow-md"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span className="text-sm font-medium">Salir</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Área de contenido principal */}
-              <div className="flex-1 overflow-hidden flex flex-col bg-background">
-                {/* Título y métricas */}
-                <div className="p-4 md:p-8 overflow-y-auto">
-                  <div className="max-w-6xl mx-auto">
-                    {/* Título */}
-                    <div className="text-center mb-8 md:mb-12">
-                      <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif text-gold tracking-[0.2em] md:tracking-[0.3em] mb-2">
-                        VISIÓN DEL DESTINO
+                {/* Header mejorado */}
+                <div className="bg-gradient-to-r from-background via-secondary/20 to-background border border-gold/20 rounded-2xl p-4 lg:p-6 mb-4 lg:mb-6 shadow-lg shadow-black/50 shrink-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-serif font-bold bg-gradient-to-r from-gold via-amber-400 to-gold bg-clip-text text-transparent tracking-wider mb-1 sm:mb-2">
+                        Portal Maestro
                       </h1>
-                      <p className="text-xs md:text-sm text-gold/60 tracking-[0.2em] md:tracking-[0.3em]">
-                        RESUMEN ESTADÍSTICO DE ALMAS Y CONEXIONES
+                      <p className="text-muted-foreground/80 text-xs sm:text-sm">
+                        Gestión de almas y conexiones espirituales
                       </p>
                     </div>
 
-                    {/* Métricas */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-12">
-                      {/* Total Almas */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                        style={{
-                          boxShadow: "0 0 20px hsl(220 90% 56% / 0.1)",
-                        }}
+                    <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+                      <Link
+                        href="/Suafazon/perfil"
+                        className="flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 border border-border shadow-md"
                       >
-                        <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-400 mx-auto mb-2 md:mb-3" />
-                        <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                          {stats.totalAlmas}
-                        </p>
-                        <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                          Total Almas
-                        </p>
-                      </motion.div>
+                        <User className="w-4 h-4" />
+                        <span className="text-xs sm:text-sm font-medium">Perfil</span>
+                      </Link>
 
-                      {/* Click WA */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                        style={{
-                          boxShadow: "0 0 20px hsl(142 76% 36% / 0.1)",
-                        }}
+                      <button
+                        onClick={handleLogout}
+                        className="flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 border border-red-500/30 shadow-md"
                       >
-                        <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-green-400 mx-auto mb-2 md:mb-3" />
-                        <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                          {stats.clickWA}
-                        </p>
-                        <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                          Click WA
-                        </p>
-                      </motion.div>
-
-                      {/* Atendidos */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                        style={{
-                          boxShadow: "0 0 20px hsl(var(--gold) / 0.1)",
-                        }}
-                      >
-                        <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-gold mx-auto mb-2 md:mb-3" />
-                        <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                          {stats.atendidos}
-                        </p>
-                        <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                          Atendidos
-                        </p>
-                      </motion.div>
-
-                      {/* Sin Responder */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
-                        style={{
-                          boxShadow: "0 0 20px hsl(0 84% 60% / 0.1)",
-                        }}
-                      >
-                        <AlertCircle className="w-6 h-6 md:w-8 md:h-8 text-red-400 mx-auto mb-2 md:mb-3" />
-                        <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
-                          {stats.sinResponder}
-                        </p>
-                        <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
-                          Sin Responder
-                        </p>
-                      </motion.div>
+                        <LogOut className="w-4 h-4" />
+                        <span className="text-xs sm:text-sm font-medium">Salir</span>
+                      </button>
                     </div>
+                  </div>
+                </div>
 
-                    {/* Pipeline */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="bg-card/30 rounded-xl p-4 md:p-8 border border-gold/20"
-                    >
-                      <div className="flex items-center justify-between mb-4 md:mb-6">
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-gold" />
-                          <h2 className="text-base md:text-lg font-medium text-gold tracking-wider uppercase">
-                            Estado del Pipeline
-                          </h2>
-                        </div>
-                        <span className="text-xs md:text-sm text-muted-foreground">
-                          24 horas
-                        </span>
+                {/* Área de contenido principal */}
+                <div className="flex-1 overflow-hidden flex flex-col bg-background">
+                  {/* Título y métricas */}
+                  <div className="p-4 md:p-8 overflow-y-auto">
+                    <div className="max-w-6xl mx-auto">
+                      {/* Título */}
+                      <div className="text-center mb-8 md:mb-12">
+                        <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif text-gold tracking-[0.2em] md:tracking-[0.3em] mb-2">
+                          VISIÓN DEL DESTINO
+                        </h1>
+                        <p className="text-xs md:text-sm text-gold/60 tracking-[0.2em] md:tracking-[0.3em]">
+                          RESUMEN ESTADÍSTICO DE ALMAS Y CONEXIONES
+                        </p>
                       </div>
 
-                      <div className="space-y-3 md:space-y-4">
-                        {pipelineData.map((item, index) => (
-                          <motion.div
-                            key={item.label}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="space-y-2"
-                          >
-                            <div className="flex items-center justify-between text-sm">
-                              <div className="flex items-center gap-2">
-                                <Circle className={`w-3 h-3 ${item.color.replace("bg-", "text-")}`} fill="currentColor" />
-                                <span className="text-muted-foreground tracking-wider">{item.label}</span>
+                      {/* Métricas */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-12">
+                        {/* Total Almas */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                          style={{
+                            boxShadow: "0 0 20px hsl(220 90% 56% / 0.1)",
+                          }}
+                        >
+                          <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-400 mx-auto mb-2 md:mb-3" />
+                          <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                            {stats.totalAlmas}
+                          </p>
+                          <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                            Total Almas
+                          </p>
+                        </motion.div>
+
+                        {/* Click WA */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                          style={{
+                            boxShadow: "0 0 20px hsl(142 76% 36% / 0.1)",
+                          }}
+                        >
+                          <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-green-400 mx-auto mb-2 md:mb-3" />
+                          <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                            {stats.clickWA}
+                          </p>
+                          <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                            Click WA
+                          </p>
+                        </motion.div>
+
+                        {/* Atendidos */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                          style={{
+                            boxShadow: "0 0 20px hsl(var(--gold) / 0.1)",
+                          }}
+                        >
+                          <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-gold mx-auto mb-2 md:mb-3" />
+                          <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                            {stats.atendidos}
+                          </p>
+                          <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                            Atendidos
+                          </p>
+                        </motion.div>
+
+                        {/* Sin Responder */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="bg-card/50 rounded-xl p-4 md:p-6 border border-gold/10 text-center"
+                          style={{
+                            boxShadow: "0 0 20px hsl(0 84% 60% / 0.1)",
+                          }}
+                        >
+                          <AlertCircle className="w-6 h-6 md:w-8 md:h-8 text-red-400 mx-auto mb-2 md:mb-3" />
+                          <p className="text-2xl md:text-4xl font-bold text-foreground mb-1">
+                            {stats.sinResponder}
+                          </p>
+                          <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                            Sin Responder
+                          </p>
+                        </motion.div>
+                      </div>
+
+                      {/* Pipeline */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="bg-card/30 rounded-xl p-4 md:p-8 border border-gold/20"
+                      >
+                        <div className="flex items-center justify-between mb-4 md:mb-6">
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-gold" />
+                            <h2 className="text-base md:text-lg font-medium text-gold tracking-wider uppercase">
+                              Estado del Pipeline
+                            </h2>
+                          </div>
+                          <span className="text-xs md:text-sm text-muted-foreground">
+                            24 horas
+                          </span>
+                        </div>
+
+                        <div className="space-y-3 md:space-y-4">
+                          {pipelineData.map((item, index) => (
+                            <motion.div
+                              key={item.label}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                              className="space-y-2"
+                            >
+                              <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                  <Circle className={`w-3 h-3 ${item.color.replace("bg-", "text-")}`} fill="currentColor" />
+                                  <span className="text-muted-foreground tracking-wider">{item.label}</span>
+                                </div>
+                                <span className="font-medium text-foreground">{item.count}</span>
                               </div>
-                              <span className="font-medium text-foreground">{item.count}</span>
-                            </div>
-                            <div className="h-3 bg-muted/20 rounded-full overflow-hidden">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${(item.count / item.max) * 100}%` }}
-                                transition={{ duration: 1, delay: index * 0.1 + 0.2 }}
-                                className={`h-full ${item.color} rounded-full relative`}
-                                style={{
-                                  boxShadow: `0 0 20px ${item.color.includes("blue") ? "rgba(59, 130, 246, 0.5)" : 
+                              <div className="h-3 bg-muted/20 rounded-full overflow-hidden">
+                                <motion.div
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${(item.count / item.max) * 100}%` }}
+                                  transition={{ duration: 1, delay: index * 0.1 + 0.2 }}
+                                  className={`h-full ${item.color} rounded-full relative`}
+                                  style={{
+                                    boxShadow: `0 0 20px ${item.color.includes("blue") ? "rgba(59, 130, 246, 0.5)" : 
                                                                  item.color.includes("yellow") ? "rgba(234, 179, 8, 0.5)" :
                                                                  item.color.includes("orange") ? "rgba(249, 115, 22, 0.5)" :
                                                                  item.color.includes("green") ? "rgba(34, 197, 94, 0.5)" :
                                                                  "rgba(239, 68, 68, 0.5)"}`
-                                }}
-                              />
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
+                                  }}
+                                />
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
 
-                      {/* Nuevo */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-blue-400" />
-                            Nuevo
-                          </span>
-                          <span className="text-base md:text-xl font-bold text-foreground">
-                            {stats.pipeline.nuevo}
-                          </span>
+                        {/* Nuevo */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-blue-400" />
+                              Nuevo
+                            </span>
+                            <span className="text-base md:text-xl font-bold text-foreground">
+                              {stats.pipeline.nuevo}
+                            </span>
+                          </div>
+                          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(stats.pipeline.nuevo / stats.totalAlmas) * 100}%` }}
+                              transition={{ duration: 1, delay: 0.5 }}
+                              className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
+                              style={{
+                                boxShadow: "0 0 10px hsl(220 90% 56% / 0.5)",
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(stats.pipeline.nuevo / stats.totalAlmas) * 100}%` }}
-                            transition={{ duration: 1, delay: 0.5 }}
-                            className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
-                            style={{
-                              boxShadow: "0 0 10px hsl(220 90% 56% / 0.5)",
-                            }}
-                          />
-                        </div>
-                      </div>
 
-                      {/* En Conversación */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-purple-400" />
-                            En Conversación
-                          </span>
-                          <span className="text-base md:text-xl font-bold text-foreground">
-                            {stats.pipeline.enConversacion}
-                          </span>
+                        {/* En Conversación */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-purple-400" />
+                              En Conversación
+                            </span>
+                            <span className="text-base md:text-xl font-bold text-foreground">
+                              {stats.pipeline.enConversacion}
+                            </span>
+                          </div>
+                          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(stats.pipeline.enConversacion / stats.totalAlmas) * 100}%` }}
+                              transition={{ duration: 1, delay: 0.6 }}
+                              className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full"
+                              style={{
+                                boxShadow: "0 0 10px hsl(270 91% 65% / 0.5)",
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(stats.pipeline.enConversacion / stats.totalAlmas) * 100}%` }}
-                            transition={{ duration: 1, delay: 0.6 }}
-                            className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full"
-                            style={{
-                              boxShadow: "0 0 10px hsl(270 91% 65% / 0.5)",
-                            }}
-                          />
-                        </div>
-                      </div>
 
-                      {/* Cliente Caliente */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-orange-400" />
-                            Cliente Caliente
-                          </span>
-                          <span className="text-base md:text-xl font-bold text-foreground">
-                            {stats.pipeline.clienteCaliente}
-                          </span>
+                        {/* Cliente Caliente */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-orange-400" />
+                              Cliente Caliente
+                            </span>
+                            <span className="text-base md:text-xl font-bold text-foreground">
+                              {stats.pipeline.clienteCaliente}
+                            </span>
+                          </div>
+                          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(stats.pipeline.clienteCaliente / stats.totalAlmas) * 100}%` }}
+                              transition={{ duration: 1, delay: 0.7 }}
+                              className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full"
+                              style={{
+                                boxShadow: "0 0 10px hsl(25 95% 53% / 0.5)",
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(stats.pipeline.clienteCaliente / stats.totalAlmas) * 100}%` }}
-                            transition={{ duration: 1, delay: 0.7 }}
-                            className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full"
-                            style={{
-                              boxShadow: "0 0 10px hsl(25 95% 53% / 0.5)",
-                            }}
-                          />
-                        </div>
-                      </div>
 
-                      {/* Cerrado */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-green-400" />
-                            Cerrado
-                          </span>
-                          <span className="text-base md:text-xl font-bold text-foreground">
-                            {stats.pipeline.cerrado}
-                          </span>
+                        {/* Cerrado */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-green-400" />
+                              Cerrado
+                            </span>
+                            <span className="text-base md:text-xl font-bold text-foreground">
+                              {stats.pipeline.cerrado}
+                            </span>
+                          </div>
+                          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(stats.pipeline.cerrado / stats.totalAlmas) * 100}%` }}
+                              transition={{ duration: 1, delay: 0.8 }}
+                              className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
+                              style={{
+                                boxShadow: "0 0 10px hsl(142 76% 36% / 0.5)",
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(stats.pipeline.cerrado / stats.totalAlmas) * 100}%` }}
-                            transition={{ duration: 1, delay: 0.8 }}
-                            className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
-                            style={{
-                              boxShadow: "0 0 10px hsl(142 76% 36% / 0.5)",
-                            }}
-                          />
-                        </div>
-                      </div>
 
-                      {/* Perdido */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-gray-400" />
-                            Perdido
-                          </span>
-                          <span className="text-base md:text-xl font-bold text-foreground">
-                            {stats.pipeline.perdido}
-                          </span>
+                        {/* Perdido */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-gray-400" />
+                              Perdido
+                            </span>
+                            <span className="text-base md:text-xl font-bold text-foreground">
+                              {stats.pipeline.perdido}
+                            </span>
+                          </div>
+                          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(stats.pipeline.perdido / stats.totalAlmas) * 100}%` }}
+                              transition={{ duration: 1, delay: 0.9 }}
+                              className="h-full bg-gradient-to-r from-gray-500 to-gray-400 rounded-full"
+                              style={{
+                                boxShadow: "0 0 10px hsl(0 0% 50% / 0.5)",
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(stats.pipeline.perdido / stats.totalAlmas) * 100}%` }}
-                            transition={{ duration: 1, delay: 0.9 }}
-                            className="h-full bg-gradient-to-r from-gray-500 to-gray-400 rounded-full"
-                            style={{
-                              boxShadow: "0 0 10px hsl(0 0% 50% / 0.5)",
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </motion.div>
+                      </motion.div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tabs de navegación mejorados - AHORA EN EL ÁREA PRINCIPAL */}
-          <div className="bg-card/40 border border-gold/10 rounded-2xl p-4 lg:p-6 mb-4 lg:mb-6 shadow-lg shadow-black/30">
-            <div className="flex gap-2 lg:gap-3 flex-wrap mb-4 lg:mb-6">
-              <button
-                onClick={() => {
-                  setActiveTab("chats");
-                  setSelectedStatus("todos");
-                  deselectAll();
-                }}
-                className={`flex-1 min-w-[100px] lg:min-w-[120px] px-4 lg:px-6 py-3 lg:py-3.5 rounded-xl font-medium transition-all text-sm lg:text-base ${
-                  activeTab === "chats"
-                    ? "bg-gold/20 text-gold border-2 border-gold/50 shadow-lg shadow-gold/20 scale-105"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-gold/20"
-                }`}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-xs lg:text-sm font-semibold tracking-wider">💬 CHATS</span>
-                  <span className="text-xs opacity-70">
-                    ({leads.filter(l => ["enConversacion", "caliente", "clienteCaliente"].includes(l.status || "")).length})
-                  </span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("leads");
-                  setSelectedStatus("todos");
-                  deselectAll();
-                }}
-                className={`flex-1 min-w-[100px] lg:min-w-[120px] px-4 lg:px-6 py-3 lg:py-3.5 rounded-xl font-medium transition-all text-sm lg:text-base ${
-                  activeTab === "leads"
-                    ? "bg-blue-500/20 text-blue-400 border-2 border-blue-500/50 shadow-lg shadow-blue-500/20 scale-105"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-blue-500/20"
-                }`}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-xs lg:text-sm font-semibold tracking-wider">📋 LEADS</span>
-                  <span className="text-xs opacity-70">
-                    ({leads.filter(l => l.status === "nuevo").length})
-                  </span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("listo");
-                  setSelectedStatus("todos");
-                  deselectAll();
-                }}
-                className={`flex-1 min-w-[100px] lg:min-w-[120px] px-4 lg:px-6 py-3 lg:py-3.5 rounded-xl font-medium transition-all text-sm lg:text-base ${
-                  activeTab === "listo"
-                    ? "bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/50 shadow-lg shadow-emerald-500/20 scale-105"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-emerald-500/20"
-                }`}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-xs lg:text-sm font-semibold tracking-wider">✅ LISTO</span>
-                  <span className="text-xs opacity-70">
-                    ({leads.filter(l => l.status === "listo").length})
-                  </span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("papelera");
-                  setSelectedStatus("todos");
-                  deselectAll();
-                }}
-                className={`flex-1 min-w-[100px] lg:min-w-[120px] px-4 lg:px-6 py-3 lg:py-3.5 rounded-xl font-medium transition-all text-sm lg:text-base ${
-                  activeTab === "papelera"
-                    ? "bg-red-500/20 text-red-400 border-2 border-red-500/50 shadow-lg shadow-red-500/20 scale-105"
-                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-red-500/20"
-                }`}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-xs lg:text-sm font-semibold tracking-wider">🗑️ PAPELERA</span>
-                  <span className="text-xs opacity-70">
-                    ({deletedLeads.length})
-                  </span>
-                </div>
-              </button>
-            </div>
-
-            {/* Barra de acciones profesional */}
-            {activeTab !== "papelera" && (
-              <div className="border-t border-gold/10 pt-4 lg:pt-6">
-                <div className="flex gap-2 lg:gap-3 items-center flex-wrap">
-                  <button
-                    onClick={selectAll}
-                    className="px-4 lg:px-5 py-2 lg:py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-primary/30 shadow-md"
-                  >
-                    ✅ Seleccionar todo
-                  </button>
-                  <button
-                    onClick={deselectAll}
-                    className="px-4 lg:px-5 py-2 lg:py-2.5 bg-secondary/30 hover:bg-secondary/50 text-foreground rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-semibold border border-border shadow-md"
-                  >
-                    ❌ Deseleccionar
-                  </button>
-
-                  {selectedLeads.size > 0 && (
-                    <div className="flex gap-2 lg:gap-3 items-center ml-auto">
-                      <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/40 rounded-xl px-3 lg:px-4 py-1.5 lg:py-2 shadow-md">
-                        <span className="text-xs lg:text-sm text-foreground font-bold">
-                          {selectedLeads.size} seleccionado(s)
-                        </span>
-                      </div>
-                      <button
-                        onClick={moveSelectedToTrash}
-                        className="px-4 lg:px-6 py-2 lg:py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all hover:scale-105 text-xs lg:text-sm font-bold flex items-center gap-2 border-2 border-red-500/40 shadow-lg shadow-red-500/20"
-                      >
-                        <span>🗑️</span>
-                        <span className="hidden sm:inline">Mover a papelera</span>
-                        <span className="sm:hidden">Papelera</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Lista de leads mejorada - ASEGURAR QUE ESTÉ AQUÍ */}
-          <div className="max-h-[calc(100vh-450px)] overflow-y-auto pr-2 space-y-3 lg:space-y-4">
-            {/* Lista de leads mejorada */}
-            <div className="bg-card/50 rounded-xl p-4 lg:p-6 border border-gold/10 shadow-lg shadow-black/30">
-              <div className="flex items-center justify-between mb-4 lg:mb-6">
-                <h3 className="text-lg lg:text-xl font-medium text-foreground tracking-wider">
-                  {activeTab === "chats" ? "Chats activos" : 
-                   activeTab === "leads" ? "Leads activos" : 
-                   activeTab === "listo" ? "Leads listos" : "Leads en papelera"}
-                </h3>
-                <span className="text-xs lg:text-sm text-muted-foreground">
-                  {filteredLeads.length} lead(s) encontrados
-                </span>
-              </div>
-
-              {/* Lista de leads mejorada */}
-              <div className="space-y-3 lg:space-y-4">
-                {filteredLeads.map((lead) => (
-                  <motion.div
-                    key={lead.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="bg-card/40 rounded-xl p-4 lg:p-6 border border-gold/10 hover:border-gold/20 hover:shadow-md hover:shadow-gold/10 transition-all"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <div 
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/30"
-                            style={{
-                              boxShadow: "0 0 20px hsl(220 90% 56% / 0.1)",
-                            }}
-                          >
-                            <User className="w-5 h-5 text-primary" />
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
-                            <Sparkles className="w-2 h-2 text-primary" />
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-foreground text-sm lg:text-base">
-                            {lead.name}
-                          </h4>
-                          <p className="text-xs lg:text-sm text-muted-foreground">
-                            {lead.whatsapp}
-                          </p>
-                          <p className="text-xs lg:text-sm text-muted-foreground">
-                            {lead.problem}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs lg:text-sm font-bold ${
-                          lead.status === "nuevo" 
-                            ? "text-blue-400 bg-blue-500/10" 
-                            : lead.status === "enConversacion" 
-                            ? "text-yellow-400 bg-yellow-500/10" 
-                            : lead.status === "caliente" || lead.status === "clienteCaliente" 
-                            ? "text-orange-400 bg-orange-500/10" 
-                            : lead.status === "cerrado" 
-                            ? "text-green-400 bg-green-500/10" 
-                            : "text-red-400 bg-red-500/10"
-                        }`}>
-                          {getStatusLabel(lead.status)}
-                        </span>
-                        <span className="text-xs lg:text-sm text-muted-foreground">
-                          {getTimeAgo(lead.created_at)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Acciones */}
-                    <div className="flex gap-2 lg:gap-3">
-                      {activeTab === "chats" && (
-                        <Link
-                          href={`/Suafazon/chat/${lead.id}`}
-                          className="px-4 lg:px-5 py-2 lg:py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-border shadow-md"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          <span className="text-xs lg:text-sm font-medium">Chat</span>
-                        </Link>
-                      )}
-                      {activeTab === "leads" && (
-                        <Link
-                          href={`/Suafazon/lead/${lead.id}`}
-                          className="px-4 lg:px-5 py-2 lg:py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-border shadow-md"
-                        >
-                          <Mail className="w-4 h-4" />
-                          <span className="text-xs lg:text-sm font-medium">Lead</span>
-                        </Link>
-                      )}
-                      {activeTab === "listo" && (
-                        <Link
-                          href={`/Suafazon/lead/${lead.id}`}
-                          className="px-4 lg:px-5 py-2 lg:py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-border shadow-md"
-                        >
-                          <Mail className="w-4 h-4" />
-                          <span className="text-xs lg:text-sm font-medium">Lead</span>
-                        </Link>
-                      )}
-                      {activeTab === "papelera" && (
-                        <button
-                          onClick={() => restoreFromTrash(lead.id)}
-                          className="px-4 lg:px-5 py-2 lg:py-2.5 bg-secondary/50 hover:bg-secondary/70 text-foreground rounded-xl transition-all hover:scale-105 flex items-center gap-2 border border-border shadow-md"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                          <span className="text-xs lg:text-sm font-medium">Restaurar</span>
-                        </button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
               </div>
             </div>
           </div>
@@ -1097,7 +869,7 @@ export default function Dashboard() {
               <div className="flex justify-center mb-8">
                 <div className="relative">
                   <div 
-                    className="w-32 h-32 rounded-full overflow-hidden border-2 border-gold/50"
+                    className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border-2 border-primary/30"
                     style={{
                       boxShadow: "0 0 30px hsl(var(--gold) / 0.4)",
                     }}
@@ -1105,7 +877,7 @@ export default function Dashboard() {
                     <img
                       src={profileData.avatar}
                       alt="Maestro"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-full"
                     />
                   </div>
                   <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-gold rounded-full flex items-center justify-center">
