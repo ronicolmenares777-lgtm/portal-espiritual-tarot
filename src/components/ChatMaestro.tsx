@@ -166,8 +166,8 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       
       const messageData = {
         lead_id: leadId,
-        sender: "user" as const,
         text: newMessage.trim(),
+        is_from_maestro: false,
       };
 
       const createdMessage = await MessageService.create(messageData);
@@ -226,16 +226,16 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${message.is_from_maestro ? "justify-start" : "justify-end"}`}
               >
                 <div
                   className={`max-w-[75%] rounded-2xl p-4 shadow-lg ${
-                    message.sender === "user"
-                      ? "bg-gradient-to-br from-gold to-amber-500 text-background"
-                      : "bg-card border-2 border-gold/20 text-foreground"
+                    message.is_from_maestro
+                      ? "bg-card border-2 border-gold/20 text-foreground"
+                      : "bg-gradient-to-br from-gold to-amber-500 text-background"
                   }`}
                 >
-                  {message.sender === "maestro" && (
+                  {message.is_from_maestro && (
                     <div className="flex items-center gap-2 mb-2">
                       <img
                         src={maestroAvatar}
@@ -246,7 +246,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                     </div>
                   )}
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
-                  <p className={`text-xs mt-2 ${message.sender === "user" ? "text-background/70" : "text-muted-foreground"}`}>
+                  <p className={`text-xs mt-2 ${message.is_from_maestro ? "text-muted-foreground" : "text-background/70"}`}>
                     {new Date(message.created_at).toLocaleTimeString("es-ES", {
                       hour: "2-digit",
                       minute: "2-digit"
