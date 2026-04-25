@@ -265,15 +265,25 @@ export default function Dashboard() {
       try {
         setLoading(true);
 
+        console.log("🔄 Cargando leads desde Supabase...");
+
         // Obtener solo leads activos (no eliminados)
         const { data: allLeads, error: leadsError } = await LeadService.getActive();
         
         if (leadsError) {
-          console.error("Error cargando leads:", leadsError);
+          console.error("❌ Error cargando leads:", leadsError);
           throw leadsError;
         }
 
-        console.log("✅ Leads activos cargados:", allLeads?.length || 0);
+        console.log("✅ Leads activos obtenidos:", allLeads?.length || 0);
+        if (allLeads && allLeads.length > 0) {
+          console.log("📋 Primeros 3 leads:", allLeads.slice(0, 3).map(l => ({
+            id: l.id,
+            name: l.name,
+            status: l.status,
+            created: new Date(l.created_at).toLocaleString()
+          })));
+        }
 
         if (allLeads) {
           setLeads(allLeads);
@@ -283,21 +293,22 @@ export default function Dashboard() {
         const { data: trashedLeads } = await LeadService.getDeleted();
         if (trashedLeads) {
           setDeletedLeads(trashedLeads);
-          console.log("✅ Leads en papelera:", trashedLeads.length);
+          console.log("🗑️ Leads en papelera:", trashedLeads.length);
         }
 
         setLoading(false);
       } catch (err) {
-        console.error("Error en loadData:", err);
+        console.error("❌ Error fatal en loadData:", err);
         setLoading(false);
       }
     };
 
     loadData();
 
-    // Suscribirse a cambios en leads
+    // Suscribirse a cambios en leads - MEJORADO
+    console.log("🔌 Configurando suscripción en tiempo real...");
     const leadsSubscription = supabase
-      .channel("leads-changes")
+      .channel("leads-dashboard-changes")
       .on(
         "postgres_changes",
         {
@@ -305,14 +316,18 @@ export default function Dashboard() {
           schema: "public",
           table: "leads",
         },
-        () => {
-          console.log("🔄 Cambio detectado en leads, recargando...");
+        (payload) => {
+          console.log("🔔 Cambio detectado en leads:", payload.eventType);
+          console.log("📦 Payload:", payload.new || payload.old);
           loadData();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("📡 Estado de suscripción realtime:", status);
+      });
 
     return () => {
+      console.log("🔌 Cerrando suscripción realtime...");
       leadsSubscription.unsubscribe();
     };
   }, []);
