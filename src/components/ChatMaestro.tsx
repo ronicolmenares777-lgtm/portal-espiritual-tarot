@@ -27,6 +27,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -241,6 +242,15 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       const createdMessage = await MessageService.create(messageData);
       console.log("✅ Mensaje enviado:", createdMessage);
 
+      // Añadir el mensaje a la lista local inmediatamente
+      if (createdMessage) {
+        setMessages((prev) => {
+          // Evitar duplicados
+          if (prev.some(m => m.id === createdMessage.id)) return prev;
+          return [...prev, createdMessage];
+        });
+      }
+
       setNewMessage("");
       setSelectedFile(null);
       setFilePreview(null);
@@ -351,7 +361,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                         src={message.media_url}
                         alt="Imagen adjunta"
                         className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition"
-                        onClick={() => window.open(message.media_url || '', '_blank')}
+                        onClick={() => setViewingImage(message.media_url!)}
                       />
                     </div>
                   )}
@@ -561,6 +571,32 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           </div>
         </div>
       </motion.div>
+
+      {/* Lightbox para imágenes */}
+      <AnimatePresence>
+        {viewingImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm"
+            onClick={() => setViewingImage(null)}
+          >
+            <button 
+              onClick={() => setViewingImage(null)}
+              className="absolute top-4 right-4 p-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <img 
+              src={viewingImage} 
+              alt="Vista ampliada" 
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

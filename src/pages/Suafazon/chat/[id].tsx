@@ -74,7 +74,9 @@ export default function ChatPage() {
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro",
     headerText: ""
   });
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -608,7 +610,12 @@ export default function ChatPage() {
                             {msg.media_url ? (
                               <div className="space-y-2">
                                 {msg.media_type === "image" && (
-                                  <img src={msg.media_url} alt="Imagen" className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition" onClick={() => window.open(msg.media_url || '', '_blank')} />
+                                  <img 
+                                    src={msg.media_url} 
+                                    alt="Imagen" 
+                                    className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition" 
+                                    onClick={() => setViewingImage(msg.media_url!)} 
+                                  />
                                 )}
                                 {msg.media_type === "video" && (
                                   <video src={msg.media_url} controls className="rounded-lg max-w-full h-auto" />
@@ -1106,6 +1113,32 @@ export default function ChatPage() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Lightbox para imágenes */}
+      <AnimatePresence>
+        {viewingImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm"
+            onClick={() => setViewingImage(null)}
+          >
+            <button 
+              onClick={() => setViewingImage(null)}
+              className="absolute top-4 right-4 p-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <img 
+              src={viewingImage} 
+              alt="Vista ampliada" 
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
         )}
       </AnimatePresence>
     </>
