@@ -30,13 +30,8 @@ export default function ChatUsuario() {
     // Cargar mensajes del lead
     const loadMessages = async () => {
       try {
-        const { data, error } = await MessageService.getByLead(user.id);
+        const data = await MessageService.getByLeadId(user.id);
         
-        if (error) {
-          console.error("Error cargando mensajes:", error);
-          return;
-        }
-
         console.log("✅ Mensajes cargados:", data?.length || 0);
         setMessages(data || []);
       } catch (err) {
