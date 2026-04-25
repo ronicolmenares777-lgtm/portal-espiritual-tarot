@@ -87,50 +87,56 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         console.log("✅ Mensajes cargados:", messagesData.length);
         setMessages(messagesData);
 
-        // Configurar suscripción en tiempo real - ORDEN CORRECTO DEFINITIVO
+        // Configurar suscripción en tiempo real - ORDEN CORRECTO GARANTIZADO
         console.log("🔔 Configurando suscripción realtime para lead:", currentLeadId);
         
-        // CREAR canal y configurar callback ANTES de subscribe
-        channelSubscription = supabase
-          .channel(`messages-${currentLeadId}`)
-          .on(
-            "postgres_changes",
-            {
-              event: "*",
-              schema: "public",
-              table: "messages",
-              filter: `lead_id=eq.${currentLeadId}`,
-            },
-            (payload) => {
-              console.log("🔔 Cambio detectado:", payload.eventType);
-              
-              if (payload.eventType === "INSERT") {
-                const newMessage = payload.new as Message;
-                console.log("📨 Nuevo mensaje recibido:", newMessage);
-                
-                setMessages((prev) => {
-                  if (prev.some(m => m.id === newMessage.id)) {
-                    console.log("⚠️ Mensaje duplicado, ignorando");
-                    return prev;
-                  }
-                  return [...prev, newMessage];
-                });
-              }
-            }
-          )
-          .subscribe((status) => {
-            console.log("📡 Estado de suscripción:", status);
-            
-            if (status === "SUBSCRIBED") {
-              console.log("✅ Suscripción realtime activa");
-            } else if (status === "CLOSED") {
-              console.error("❌ Suscripción cerrada");
-            } else if (status === "CHANNEL_ERROR") {
-              console.error("❌ Error en canal realtime");
-            }
-          });
+        // PASO 1: Crear el canal
+        const realtimeChannel = supabase.channel(`messages-${currentLeadId}`);
         
-        console.log("✅ Suscripción realtime configurada");
+        // PASO 2: Configurar el listener ANTES de subscribe
+        realtimeChannel.on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "messages",
+            filter: `lead_id=eq.${currentLeadId}`,
+          },
+          (payload) => {
+            console.log("🔔 Cambio detectado:", payload.eventType);
+            
+            if (payload.eventType === "INSERT") {
+              const newMessage = payload.new as Message;
+              console.log("📨 Nuevo mensaje recibido:", newMessage);
+              
+              setMessages((prev) => {
+                if (prev.some(m => m.id === newMessage.id)) {
+                  console.log("⚠️ Mensaje duplicado, ignorando");
+                  return prev;
+                }
+                return [...prev, newMessage];
+              });
+            }
+          }
+        );
+        
+        // PASO 3: Subscribe AL FINAL (después de configurar el .on)
+        realtimeChannel.subscribe((status) => {
+          console.log("📡 Estado de suscripción:", status);
+          
+          if (status === "SUBSCRIBED") {
+            console.log("✅ Suscripción realtime activa");
+          } else if (status === "CLOSED") {
+            console.error("❌ Suscripción cerrada");
+          } else if (status === "CHANNEL_ERROR") {
+            console.error("❌ Error en canal realtime");
+          }
+        });
+        
+        // Guardar referencia para cleanup
+        channelSubscription = realtimeChannel;
+        
+        console.log("✅ Suscripción realtime configurada correctamente");
 
         // Cargar avatar del maestro desde el perfil
         const { data: profiles } = await ProfileService.getAll();
