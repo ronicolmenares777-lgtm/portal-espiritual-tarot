@@ -212,17 +212,18 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           .from('chat-files')
           .getPublicUrl(filePath);
 
+        messageData.media_url = publicUrl;
+
         // Detectar tipo de archivo
         const fileType = selectedFile.type;
         if (fileType.startsWith('image/')) {
-          messageData.image_url = publicUrl;
+          messageData.media_type = 'image';
         } else if (fileType.startsWith('video/')) {
-          messageData.video_url = publicUrl;
+          messageData.media_type = 'video';
         } else if (fileType.startsWith('audio/')) {
-          messageData.audio_url = publicUrl;
+          messageData.media_type = 'audio';
         } else {
-          messageData.file_url = publicUrl;
-          messageData.file_name = selectedFile.name;
+          messageData.media_type = 'file';
         }
       }
 
@@ -333,22 +334,22 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                   )}
 
                   {/* Imagen */}
-                  {message.image_url && (
+                  {message.media_type === 'image' && message.media_url && (
                     <div className="mb-2">
                       <img
-                        src={message.image_url}
+                        src={message.media_url}
                         alt="Imagen adjunta"
                         className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition"
-                        onClick={() => window.open(message.image_url, '_blank')}
+                        onClick={() => window.open(message.media_url || '', '_blank')}
                       />
                     </div>
                   )}
 
                   {/* Video */}
-                  {message.video_url && (
+                  {message.media_type === 'video' && message.media_url && (
                     <div className="mb-2">
                       <video
-                        src={message.video_url}
+                        src={message.media_url}
                         controls
                         className="rounded-lg max-w-full h-auto"
                       />
@@ -356,10 +357,10 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                   )}
 
                   {/* Audio */}
-                  {message.audio_url && (
+                  {message.media_type === 'audio' && message.media_url && (
                     <div className="mb-2">
                       <audio
-                        src={message.audio_url}
+                        src={message.media_url}
                         controls
                         className="w-full"
                       />
@@ -367,10 +368,10 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                   )}
 
                   {/* Archivo */}
-                  {message.file_url && !message.image_url && !message.video_url && !message.audio_url && (
+                  {message.media_type === 'file' && message.media_url && (
                     <a
-                      href={message.file_url}
-                      download={message.file_name}
+                      href={message.media_url}
+                      download
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`flex items-center gap-2 mb-2 p-2 rounded-lg ${
@@ -378,7 +379,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                       }`}
                     >
                       <FileText className="w-5 h-5" />
-                      <span className="text-sm font-medium">{message.file_name || "Archivo adjunto"}</span>
+                      <span className="text-sm font-medium">Descargar archivo</span>
                       <Download className="w-4 h-4 ml-auto" />
                     </a>
                   )}
