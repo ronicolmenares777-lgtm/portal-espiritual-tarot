@@ -13,7 +13,7 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Base de datos completamente configurada, login admin arreglado, columnas faltantes agregadas, polling funcionando.
+COMPLETADO: Base de datos completamente configurada, archivos /Suafazon restaurados a versión funcional, columnas agregadas, polling funcionando.
 
 ## Checklist
 - [x] Corregir project ID (klxepxdekgnfyazqsytk)
@@ -21,15 +21,15 @@ COMPLETADO: Base de datos completamente configurada, login admin arreglado, colu
 - [x] Eliminar foreign key incorrecta en profiles
 - [x] Agregar columna precision_answers a leads
 - [x] Crear perfil admin (tubrujo@gmail.com)
-- [x] Arreglar auth.ts para usar Supabase Auth
-- [x] Arreglar login en /Suafazon
-- [x] Generar tipos TypeScript
-- [x] Verificar servidor sin errores (restart #69)
+- [x] Restaurar /Suafazon a versión funcional (commit 583293c)
+- [x] Restaurar /Suafazon/dashboard a versión funcional
+- [x] Verificar servidor sin errores (restart #70)
 
 ## Acceptance
 - ✅ Supabase conectado (klxepxdekgnfyazqsytk)
 - ✅ Tabla leads tiene columna precision_answers
-- ✅ Perfil admin creado correctamente
-- ✅ Login admin funciona con email/password
+- ✅ Perfil admin creado (20cbd892-ea2a-4715-bb7e-22fc8e244887)
+- ✅ Login /Suafazon restaurado a versión funcional
+- ✅ Dashboard restaurado a versión funcional
 - ✅ Sin errores de compilación
-- ✅ Servidor funcionando (restart #69)
+- ✅ Servidor funcionando (restart #70)
