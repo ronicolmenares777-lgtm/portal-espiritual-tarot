@@ -522,7 +522,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="h-screen bg-black flex flex-col overflow-hidden">
       {/* Header elegante */}
       <div className="bg-gradient-to-r from-black via-[hsl(260,30%,8%)] to-black backdrop-blur-xl border-b border-gold/20 px-3 md:px-6 py-3 md:py-4 shadow-2xl flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -1070,6 +1070,6 @@ export default function ChatPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
