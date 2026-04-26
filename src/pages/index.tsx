@@ -109,28 +109,30 @@ export default function Home() {
       setIsSubmitting(true);
       console.log("📝 Enviando formulario a Supabase:", formData);
 
-      const leadData = {
-        name: formData.name,
-        whatsapp: formData.whatsapp,
-        country_code: formData.countryCode,
-        problem: formData.problem,
-        status: "nuevo" as const,
-      };
-
-      const result = await LeadService.create(leadData);
+      const { data, error } = await supabase
+        .from("leads")
+        .insert({
+          name: formData.name,
+          whatsapp: formData.whatsapp,
+          country_code: formData.countryCode,
+          problem: formData.problem,
+          status: "nuevo",
+        })
+        .select()
+        .single();
       
-      if (result.error) {
-        console.error("❌ Error Supabase:", result.error);
-        throw new Error(result.error.message || "No se pudo conectar con Supabase");
+      if (error) {
+        console.error("❌ Error Supabase:", error);
+        throw new Error(error.message || "No se pudo conectar con Supabase");
       }
       
-      if (!result.data) {
+      if (!data) {
         throw new Error("Supabase no devolvió datos");
       }
 
-      console.log("✅ Lead creado en Supabase con ID:", result.data.id);
+      console.log("✅ Lead creado en Supabase con ID:", data.id);
       
-      setLeadId(result.data.id);
+      setLeadId(data.id);
       setCurrentScreen("loading");
       
       setTimeout(() => {
@@ -138,13 +140,7 @@ export default function Home() {
       }, 3000);
     } catch (error: any) {
       console.error("❌ Error completo:", error);
-      
-      // Mensaje de error más claro para el usuario
-      if (error.message?.includes("ECONNREFUSED") || error.message?.includes("Failed to fetch")) {
-        alert("Error de conexión con Supabase. Por favor verifica que el proyecto esté activo en supabase.com");
-      } else {
-        alert(`Error: ${error.message || 'Por favor intenta de nuevo'}`);
-      }
+      alert(`Error: ${error.message || 'Por favor intenta de nuevo'}`);
     } finally {
       setIsSubmitting(false);
     }

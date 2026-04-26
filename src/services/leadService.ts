@@ -400,7 +400,6 @@ export async function createLead(
           status: formData.status || "nuevo",
           is_favorite: false,
           notes: formData.notes || null,
-          precision_answers: formData.precision_answers || {},
           answers: formData.answers || {},
         },
       ])
