@@ -89,44 +89,51 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    if (!validateName(formData.name)) {
-      alert("⚠️ Por favor ingresa un nombre válido");
-      setIsSubmitting(false);
+    
+    if (!formData.name || !formData.whatsapp || !formData.problem) {
+      alert("Por favor completa todos los campos");
       return;
     }
 
-    if (!validatePhone(formData.whatsapp, formData.countryCode)) {
-      alert("⚠️ Por favor ingresa un número de teléfono válido");
-      setIsSubmitting(false);
-      return;
-    }
+    try {
+      setIsSubmitting(true);
+      console.log("📝 Enviando formulario:", formData);
 
-    if (!validateProblem(formData.problem)) {
-      alert("⚠️ Por favor describe tu situación (mínimo 10 caracteres)");
-      setIsSubmitting(false);
-      return;
-    }
+      const leadData = {
+        name: formData.name,
+        whatsapp: formData.whatsapp,
+        country_code: formData.country_code,
+        problem: formData.problem,
+        status: "nuevo" as const,
+        ritual_state: "listo" as const,
+        whatsapp_notified: false,
+      };
 
-    const clientKey = `form_${formData.whatsapp}`;
-    if (!rateLimiter.isAllowed(clientKey, 3, 60000)) {
-      const remainingTime = rateLimiter.getRemainingTime(clientKey, 3, 60000);
-      alert(`⚠️ Por favor espera ${remainingTime} segundos antes de intentar nuevamente`);
-      setIsSubmitting(false);
-      return;
-    }
+      const result = await LeadService.create(leadData);
+      
+      if (result.error || !result.data) {
+        throw new Error(result.error?.message || "No se pudo crear el lead");
+      }
 
-    const isSuspicious = detectSuspiciousContent(formData.problem);
-    if (isSuspicious) {
-      alert("⚠️ Por favor describe tu situación de forma más específica");
-      setIsSubmitting(false);
-      return;
-    }
+      console.log("✅ Lead creado con ID:", result.data.id);
 
-    console.log("✅ Validaciones pasadas, avanzando a loading screen");
-    setIsSubmitting(false);
-    setCurrentScreen("loading");
+      // Guardar en localStorage
+      localStorage.setItem("currentLeadId", result.data.id);
+      localStorage.setItem("userName", formData.name);
+      
+      setLeadId(result.data.id);
+      setCurrentStep("loading");
+      
+      // Simular análisis del alma
+      setTimeout(() => {
+        setCurrentStep("cards");
+      }, 3000);
+    } catch (error: any) {
+      console.error("❌ Error creando lead:", error);
+      alert(`Error al enviar el formulario: ${error.message || 'Por favor intenta de nuevo'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCardSelected = (card: TarotCard, cardIndex: number) => {
