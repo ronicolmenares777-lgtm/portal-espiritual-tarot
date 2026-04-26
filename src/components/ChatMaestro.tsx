@@ -282,8 +282,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         const fileType = selectedFile.type;
         if (fileType.startsWith('image/')) {
           messageData.media_type = 'image';
-        } else if (fileType.startsWith('video/')) {
-          messageData.media_type = 'video';
         } else if (fileType.startsWith('audio/')) {
           messageData.media_type = 'audio';
         } else {
@@ -313,6 +311,9 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         console.log("➕ Añadiendo mensaje al estado local");
         return [...prev, createdMessage];
       });
+
+      // DELAY MÍNIMO de 500ms para que el usuario vea el mensaje antes de limpiar
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       setNewMessage("");
       setSelectedFile(null);

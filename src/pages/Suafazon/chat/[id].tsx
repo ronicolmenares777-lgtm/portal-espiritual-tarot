@@ -185,45 +185,46 @@ export default function ChatPage() {
     };
   }, [leadId]);
 
-  const handleSendMessage = async (textToSend: string) => {
-    if (!textToSend.trim() || !leadId) return;
+  const handleSendMessage = async (text?: string) => {
+    const messageText = text || messageInput;
+    if (!messageText.trim() || !leadId || isSending) return;
 
     try {
       setIsSending(true);
-      console.log("📤 ADMIN Enviando mensaje del maestro:", textToSend);
+      console.log("📤 ADMIN Enviando mensaje:", messageText);
 
-      const messageData: any = {
+      const messageData = {
         lead_id: leadId,
-        text: textToSend.trim(),
+        text: messageText.trim(),
         is_from_maestro: true,
       };
 
-      console.log("💾 ADMIN Guardando mensaje en DB:", messageData);
       const createdMessage = await MessageService.create(messageData);
-
+      
       if (!createdMessage) {
-        console.error("❌ ADMIN MessageService.create retornó null/undefined");
         throw new Error("No se pudo crear el mensaje");
       }
 
-      console.log("✅ ADMIN Mensaje guardado en DB con ID:", createdMessage.id);
+      console.log("✅ ADMIN Mensaje guardado:", createdMessage.id);
 
-      // Añadir el mensaje a la lista local inmediatamente
+      // Añadir mensaje al estado local
       setMessages((prev) => {
-        if (prev.some((m) => m.id === createdMessage.id)) {
-          console.log("⚠️ ADMIN Mensaje duplicado detectado, no se añade");
+        if (prev.some(m => m.id === createdMessage.id)) {
           return prev;
         }
-        console.log("➕ ADMIN Añadiendo mensaje al estado local");
         return [...prev, createdMessage];
       });
 
-      setMessageInput("");
+      // DELAY MÍNIMO de 500ms
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      console.log("🎉 ADMIN Proceso de envío completado exitosamente");
-    } catch (error) {
+      setMessageInput("");
+      setShowQuickResponses(false);
+      
+      console.log("🎉 ADMIN Mensaje enviado exitosamente");
+    } catch (error: any) {
       console.error("❌ ADMIN Error enviando mensaje:", error);
-      alert("Error enviando el mensaje. Por favor intenta de nuevo.");
+      alert(`Error enviando el mensaje: ${error.message || 'Intenta de nuevo'}`);
     } finally {
       setIsSending(false);
     }
@@ -597,7 +598,7 @@ export default function ChatPage() {
                   className={`flex ${isFromMaestro ? "justify-end" : "justify-start"} group`}
                 >
                   <div
-                    className={`relative max-w-[85%] md:max-w-[60%] rounded-2xl p-3 md:p-4 shadow-lg transition-all duration-300 ${
+                    className={`relative max-w-[90%] sm:max-w-[85%] md:max-w-[60%] rounded-2xl p-2.5 sm:p-3 md:p-4 shadow-lg transition-all duration-300 ${
                       isFromMaestro
                         ? "bg-gradient-to-br from-amber-400 via-gold to-amber-600 text-black shadow-gold/20 border border-amber-500/50 rounded-br-sm"
                         : "bg-[hsl(260,20%,14%)] border border-gold/30 text-foreground shadow-md rounded-bl-sm"
@@ -605,10 +606,10 @@ export default function ChatPage() {
                   >
                     {!isFromMaestro && (
                       <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gold/10">
-                        <div className="w-7 h-7 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30">
                           <span className="text-gold font-bold text-xs">{lead?.name?.charAt(0) || "U"}</span>
                         </div>
-                        <span className="text-xs font-semibold text-gold">{lead?.name}</span>
+                        <span className="text-xs font-semibold text-gold truncate">{lead?.name}</span>
                       </div>
                     )}
 
@@ -619,7 +620,7 @@ export default function ChatPage() {
                             <img 
                               src={msg.media_url} 
                               alt="Imagen" 
-                              className="rounded-2xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all shadow-xl border border-black/20" 
+                              className="rounded-xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all shadow-lg border border-black/20" 
                               onClick={() => setViewingImage(msg.media_url!)} 
                             />
                             <a
@@ -627,29 +628,29 @@ export default function ChatPage() {
                               download
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="absolute top-2 right-2 p-2 bg-black/80 hover:bg-black rounded-xl opacity-0 group-hover/img:opacity-100 transition-all border border-gold/30"
+                              className="absolute top-2 right-2 p-1.5 bg-black/80 hover:bg-black rounded-lg opacity-0 group-hover/img:opacity-100 transition-all border border-gold/30"
                             >
-                              <Download className="w-4 h-4 text-gold" />
+                              <Download className="w-3.5 h-3.5 text-gold" />
                             </a>
                           </div>
                         )}
                         {msg.media_type === "audio" && (
-                          <div className={`p-2 rounded-xl ${isFromMaestro ? "bg-black/20" : "bg-black/40"}`}>
-                            <audio src={msg.media_url} controls className="w-full h-10" />
+                          <div className={`p-2 rounded-lg ${isFromMaestro ? "bg-black/20" : "bg-black/40"}`}>
+                            <audio src={msg.media_url} controls className="w-full h-8" />
                           </div>
                         )}
                       </div>
                     ) : null}
 
                     {msg.text && (
-                      <p className={`text-sm leading-relaxed whitespace-pre-wrap ${
+                      <p className={`text-xs sm:text-sm leading-relaxed whitespace-pre-wrap ${
                         isFromMaestro ? "font-medium" : "font-normal text-foreground/90"
                       } ${msg.media_url ? "mt-2" : ""}`}>
                         {msg.text}
                       </p>
                     )}
 
-                    <div className={`flex items-center gap-2 mt-2 ${isFromMaestro ? "justify-end text-black/60" : "justify-start text-muted-foreground/50"}`}>
+                    <div className={`flex items-center gap-1.5 mt-2 ${isFromMaestro ? "justify-end text-black/60" : "justify-start text-muted-foreground/50"}`}>
                       <p className="text-[10px] font-semibold">
                         {new Date(msg.created_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
                       </p>
@@ -748,30 +749,30 @@ export default function ChatPage() {
               id="audio-upload"
             />
 
-            <div className="flex items-end gap-2 md:gap-3">
-              {/* Botones de adjuntar */}
-              <div className="flex gap-1 md:gap-2 flex-shrink-0">
+            <div className="flex items-end gap-1.5 sm:gap-2">
+              {/* Botones multimedia */}
+              <div className="flex gap-1 flex-shrink-0">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => document.getElementById("image-upload")?.click()}
-                  className="p-2.5 md:p-3 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-xl transition-all group border-2 border-gold/20 hover:border-gold/40 shadow-lg hover:shadow-gold/20"
+                  className="p-2 sm:p-2.5 md:p-2.5 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-xl transition-all group border-2 border-gold/20 hover:border-gold/40 shadow-lg hover:shadow-gold/20"
                   title="Enviar imagen"
                 >
-                  <ImageIcon className="w-5 h-5 text-gold group-hover:text-amber-300 transition-colors" />
+                  <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gold group-hover:text-amber-300 transition-colors" />
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={isRecording ? stopRecording : startRecording}
-                  className={`p-2.5 md:p-3 rounded-xl transition-all group border-2 shadow-lg ${
+                  className={`p-2 sm:p-2.5 md:p-2.5 rounded-xl transition-all group border-2 shadow-lg ${
                     isRecording 
                       ? "bg-red-500/30 border-red-500/60 shadow-red-500/20" 
                       : "bg-gradient-to-br from-card to-secondary border-gold/20 hover:border-gold/40 hover:from-gold/20 hover:to-gold/10 hover:shadow-gold/20"
                   }`}
                   title={isRecording ? "Detener grabación" : "Grabar audio"}
                 >
-                  <Mic className={`w-5 h-5 transition-colors ${
+                  <Mic className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${
                     isRecording 
                       ? "text-red-400 animate-pulse" 
                       : "text-gold group-hover:text-amber-300"
@@ -792,8 +793,8 @@ export default function ChatPage() {
                   }}
                   placeholder="Escribe un mensaje..."
                   rows={1}
-                  className="w-full bg-[hsl(260,20%,12%)] border border-gold/20 rounded-xl px-3 py-2.5 md:px-4 md:py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none shadow-inner"
-                  style={{ minHeight: "44px", maxHeight: "100px" }}
+                  className="w-full bg-[hsl(260,20%,12%)] border border-gold/20 rounded-xl px-2.5 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none shadow-inner"
+                  style={{ minHeight: "40px", maxHeight: "100px" }}
                 />
               </div>
 
@@ -803,9 +804,13 @@ export default function ChatPage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleSendMessage(messageInput)}
                 disabled={!messageInput.trim() || isSending}
-                className="p-2.5 md:p-3 bg-gradient-to-br from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-black rounded-xl hover:shadow-md hover:shadow-gold/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-black rounded-xl hover:shadow-md hover:shadow-gold/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
               >
-                <Send className="w-4 h-4 md:w-5 md:h-5" />
+                {isSending ? (
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                )}
               </motion.button>
             </div>
           </div>
