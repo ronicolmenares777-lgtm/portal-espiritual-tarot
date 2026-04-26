@@ -13,24 +13,23 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Conexión Supabase restaurada con project ID correcto (klxepxdekgnfyazqsytk), tablas creadas, RLS configurado, polling de 3 segundos implementado.
+COMPLETADO: Base de datos completamente configurada, login admin arreglado, columnas faltantes agregadas, polling funcionando.
 
 ## Checklist
-- [x] Corregir project ID (klxepxdekgnfyazqsytk - con 's')
-- [x] Actualizar .env.local con URL correcta
-- [x] Actualizar client.ts con credenciales correctas
-- [x] Crear tabla leads con políticas RLS públicas
-- [x] Crear tabla messages con políticas RLS públicas
-- [x] Crear tabla profiles con columna role
-- [x] Crear tabla tarot_cards
-- [x] Implementar polling de 3 segundos con flag anti-saturación
+- [x] Corregir project ID (klxepxdekgnfyazqsytk)
+- [x] Crear todas las tablas (leads, messages, profiles, tarot_cards)
+- [x] Eliminar foreign key incorrecta en profiles
+- [x] Agregar columna precision_answers a leads
+- [x] Crear perfil admin (tubrujo@gmail.com)
+- [x] Arreglar auth.ts para usar Supabase Auth
+- [x] Arreglar login en /Suafazon
+- [x] Generar tipos TypeScript
 - [x] Verificar servidor sin errores
-- [x] Generar tipos TypeScript automáticamente
 
 ## Acceptance
 - ✅ Supabase conectado (klxepxdekgnfyazqsytk)
-- ✅ Todas las tablas creadas y visibles en Table Editor
-- ✅ RLS público configurado
-- ✅ Chat funciona con polling de 3 segundos
-- ✅ Sin errores de TypeScript
-- ✅ Formulario crea leads en Supabase
+- ✅ Tabla leads tiene columna precision_answers
+- ✅ Perfil admin creado correctamente
+- ✅ Login admin funciona con email/password
+- ✅ Sin errores 400 en /api/leads
+- ✅ Servidor sin errores de compilación

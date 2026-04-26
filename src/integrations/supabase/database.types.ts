@@ -17,6 +17,7 @@ export type Database = {
     Tables: {
       leads: {
         Row: {
+          answers: Json | null
           country_code: string | null
           created_at: string | null
           deleted_at: string | null
@@ -27,6 +28,7 @@ export type Database = {
           notes: string | null
           precision_answers: Json | null
           problem: string
+          selected_card_id: string | null
           selected_cards: Json | null
           status: string | null
           tags: string[] | null
@@ -37,6 +39,7 @@ export type Database = {
           whatsapp: string
         }
         Insert: {
+          answers?: Json | null
           country_code?: string | null
           created_at?: string | null
           deleted_at?: string | null
@@ -47,6 +50,7 @@ export type Database = {
           notes?: string | null
           precision_answers?: Json | null
           problem: string
+          selected_card_id?: string | null
           selected_cards?: Json | null
           status?: string | null
           tags?: string[] | null
@@ -57,6 +61,7 @@ export type Database = {
           whatsapp: string
         }
         Update: {
+          answers?: Json | null
           country_code?: string | null
           created_at?: string | null
           deleted_at?: string | null
@@ -67,6 +72,7 @@ export type Database = {
           notes?: string | null
           precision_answers?: Json | null
           problem?: string
+          selected_card_id?: string | null
           selected_cards?: Json | null
           status?: string | null
           tags?: string[] | null

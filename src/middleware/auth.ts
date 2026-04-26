@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface AuthSession {
   isAuthenticated: boolean;
@@ -111,4 +112,121 @@ export function useAuth() {
     session,
     logout: () => AuthManager.clearSession()
   };
+}
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  role: "admin" | "user";
+}
+
+/**
+ * Verificar credenciales de admin contra Supabase Auth
+ */
+export async function verifyAdminCredentials(
+  email: string,
+  password: string
+): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
+  try {
+    console.log("🔐 Verificando credenciales para:", email);
+
+    // Intentar login con Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (authError) {
+      console.error("❌ Error de autenticación:", authError.message);
+      return {
+        success: false,
+        error: "Email o contraseña incorrectos",
+      };
+    }
+
+    if (!authData.user) {
+      return {
+        success: false,
+        error: "Usuario no encontrado",
+      };
+    }
+
+    console.log("✅ Usuario autenticado:", authData.user.id);
+
+    // Obtener el perfil del usuario
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", authData.user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error("❌ Error obteniendo perfil:", profileError);
+      return {
+        success: false,
+        error: "Perfil no encontrado",
+      };
+    }
+
+    // Verificar que sea admin
+    if (profile.role !== "admin") {
+      console.error("❌ Usuario no es admin:", profile.role);
+      return {
+        success: false,
+        error: "Acceso no autorizado",
+      };
+    }
+
+    console.log("✅ Login exitoso - Admin verificado");
+
+    return {
+      success: true,
+      user: {
+        id: authData.user.id,
+        email: authData.user.email || email,
+        role: "admin",
+      },
+    };
+  } catch (error: any) {
+    console.error("❌ Error en verifyAdminCredentials:", error);
+    return {
+      success: false,
+      error: error.message || "Error del servidor",
+    };
+  }
+}
+
+/**
+ * Obtener usuario autenticado actual
+ */
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return null;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile) return null;
+
+    return {
+      id: user.id,
+      email: user.email || "",
+      role: profile.role as "admin" | "user",
+    };
+  } catch (error) {
+    console.error("Error obteniendo usuario actual:", error);
+    return null;
+  }
+}
+
+/**
+ * Cerrar sesión
+ */
+export async function logout(): Promise<void> {
+  await supabase.auth.signOut();
 }

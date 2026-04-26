@@ -32,32 +32,40 @@ export default function AdminLogin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setIsLoading(true);
 
     try {
-      console.log("🔐 Intentando login con:", email);
-      
-      const { user, session, error } = await AuthService.signIn(email, password);
+      console.log("🔐 Intentando login con:", credentials.email);
 
-      if (error) {
-        console.error("❌ Error de autenticación:", error);
-        setError(error.message || "Credenciales inválidas");
-        setLoading(false);
+      const result = await verifyAdminCredentials(
+        credentials.email,
+        credentials.password
+      );
+
+      if (!result.success) {
+        console.error("❌ Login fallido:", result.error);
+        setError(result.error || "Credenciales inválidas");
+        setIsLoading(false);
         return;
       }
 
-      if (session) {
-        console.log("✅ Login exitoso, sesión creada");
-        router.push("/Suafazon/dashboard");
-      } else {
-        console.error("❌ No se creó sesión");
-        setError("Error al iniciar sesión");
-        setLoading(false);
+      if (!result.user) {
+        setError("Error del servidor");
+        setIsLoading(false);
+        return;
       }
-    } catch (err) {
-      console.error("❌ Error en handleLogin:", err);
-      setError("Error al iniciar sesión. Intenta de nuevo.");
-      setLoading(false);
+
+      console.log("✅ Login exitoso, usuario:", result.user);
+
+      // Guardar en localStorage
+      localStorage.setItem("admin_user", JSON.stringify(result.user));
+
+      // Redirigir al dashboard
+      window.location.href = "/Suafazon/dashboard";
+    } catch (error: any) {
+      console.error("❌ Error en handleLogin:", error);
+      setError(error.message || "Error al iniciar sesión");
+      setIsLoading(false);
     }
   };
 
