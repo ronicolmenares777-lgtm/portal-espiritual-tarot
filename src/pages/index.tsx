@@ -88,17 +88,13 @@ export default function Home() {
     }
   }, [currentScreen]);
 
-  // Verificar si hay un lead guardado en localStorage al cargar
+  // Verificar sesión activa en Supabase al cargar
   useEffect(() => {
-    const savedLeadId = localStorage.getItem("currentLeadId");
-    const savedName = localStorage.getItem("userName");
-    
-    if (savedLeadId && savedName) {
-      console.log("🔄 Recuperando sesión:", { savedLeadId, savedName });
-      setLeadId(savedLeadId);
-      setFormData(prev => ({ ...prev, name: savedName }));
-      setCurrentScreen("chat");
-    }
+    const checkSession = async () => {
+      // TODO: Implementar verificación de sesión con Supabase Auth
+      // Por ahora, el usuario debe iniciar sesión cada vez
+    };
+    checkSession();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,15 +126,10 @@ export default function Home() {
       }
 
       console.log("✅ Lead creado con ID:", result.data.id);
-
-      // Guardar en localStorage
-      localStorage.setItem("currentLeadId", result.data.id);
-      localStorage.setItem("userName", formData.name);
       
       setLeadId(result.data.id);
       setCurrentScreen("loading");
       
-      // Simular análisis del alma
       setTimeout(() => {
         setCurrentScreen("cards");
       }, 3000);
@@ -159,44 +150,35 @@ export default function Home() {
   };
 
   const handleFinalSubmit = async () => {
-    console.log("📝 Guardando lead en Supabase...");
+    console.log("📝 Actualizando lead en Supabase...");
     
-    // Preparar datos del lead para Supabase
-    const leadData = {
-      name: formData.name,
-      whatsapp: formData.whatsapp,
-      country_code: formData.countryCode,
-      problem: formData.problem,
-      status: "nuevo" as const,
-      ritual_state: "listo" as const,
-      selected_cards: selectedCards.map(c => c.name),
-      precision_answers: answers,
-      whatsapp_notified: false,
-    };
+    if (!leadId) {
+      console.error("❌ No hay leadId para actualizar");
+      return;
+    }
 
     try {
-      const result = await LeadService.create(leadData);
+      const updates = {
+        selected_cards: selectedCards.map(c => c.name),
+        precision_answers: answers,
+      };
+
+      const result = await LeadService.update(leadId, updates);
       
       if (result.error || !result.data) {
-        throw new Error(result.error?.message || "Error al guardar los datos");
+        throw new Error(result.error?.message || "Error al actualizar datos");
       }
 
-      console.log("✅ Lead guardado con ID:", result.data.id);
+      console.log("✅ Lead actualizado en Supabase");
       
-      // Guardar ID en localStorage
-      localStorage.setItem("currentLeadId", result.data.id);
-      localStorage.setItem("userName", formData.name);
-      
-      setLeadId(result.data.id);
       setCurrentScreen("warning");
       
-      // Después de 6 segundos, avanzar al chat
       setTimeout(() => {
         setCurrentScreen("chat");
       }, 6000);
     } catch (error: any) {
-      console.error("❌ Error guardando lead:", error);
-      alert(`Error al guardar: ${error.message}`);
+      console.error("❌ Error actualizando lead:", error);
+      alert(`Error: ${error.message}`);
     }
   };
 
@@ -210,28 +192,23 @@ export default function Home() {
     }
 
     try {
-      console.log("🔍 Buscando lead:", { name: loginData.name, whatsapp: loginData.whatsapp });
+      console.log("🔍 Buscando lead en Supabase:", { name: loginData.name, whatsapp: loginData.whatsapp });
       
-      // Intentar buscar en Supabase
       const result = await LeadService.findByNameAndWhatsApp(loginData.name, loginData.whatsapp);
       
       if (result.error) {
-        console.error("❌ Error consultando Supabase:", result.error);
-        setLoginError("Error de conexión. Por favor intenta de nuevo.");
+        console.error("❌ Error en Supabase:", result.error);
+        setLoginError("Error de conexión con Supabase. Verifica tu internet.");
         return;
       }
       
       if (!result.data || result.data.length === 0) {
-        setLoginError("No se encontró ninguna consulta con estos datos. Verifica tu nombre y WhatsApp.");
+        setLoginError("No se encontró ninguna consulta con estos datos. Verifica tu nombre y WhatsApp exactos.");
         return;
       }
 
       const lead = result.data[0];
-      console.log("✅ Lead encontrado:", lead.id);
-      
-      // Guardar en localStorage
-      localStorage.setItem("currentLeadId", lead.id);
-      localStorage.setItem("userName", lead.name);
+      console.log("✅ Lead encontrado en Supabase:", lead.id);
       
       setLeadId(lead.id);
       setFormData(prev => ({ ...prev, name: lead.name, whatsapp: lead.whatsapp }));
@@ -239,7 +216,7 @@ export default function Home() {
       setCurrentScreen("chat");
     } catch (error: any) {
       console.error("❌ Error en login:", error);
-      setLoginError(`Error: ${error.message || 'Por favor intenta de nuevo'}`);
+      setLoginError(`Error de Supabase: ${error.message || 'Intenta de nuevo'}`);
     }
   };
 
