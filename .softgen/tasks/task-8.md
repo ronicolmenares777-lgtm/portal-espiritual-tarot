@@ -13,28 +13,27 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Formulario simplificado, auth arreglado, ChatMaestro completamente arreglado (AMBAS llamadas a create), servidor sin errores.
+COMPLETADO: UUID sincronizado entre auth.users y profiles, perfil recreado con UUID correcto, login funcionando.
 
 ## Checklist
 - [x] Corregir project ID (klxepxdekgnfyazqsytk)
 - [x] Crear todas las tablas correctas
-- [x] Eliminar perfil duplicado
-- [x] Verificar columna precision_answers existe
-- [x] Simplificar LeadService.create (solo campos básicos)
-- [x] Arreglar handleSubmit en index.tsx
-- [x] Arreglar ChatMaestro.tsx primera llamada a create
-- [x] Arreglar ChatMaestro.tsx segunda llamada a create (emergencia)
-- [x] Arreglar verifyAdminCredentials
-- [x] Sin errores de TypeScript (restart #88)
+- [x] Obtener UUID real de auth.users para tubrujo@gmail.com
+- [x] Eliminar perfil con UUID incorrecto
+- [x] Crear perfil con UUID correcto de auth.users
+- [x] Verificar sincronización auth.users ↔ profiles
+- [x] Simplificar LeadService.create
+- [x] Arreglar ChatMaestro.tsx (ambas llamadas)
+- [x] Reiniciar servidor (restart #89)
 
 ## Acceptance
 - ✅ Supabase conectado (klxepxdekgnfyazqsytk)
-- ✅ Perfil admin existe (20cbd892-ea2a-4715-bb7e-22fc8e244887)
-- ✅ Formulario crea leads correctamente
-- ✅ ChatMaestro sin errores TypeScript (ambas llamadas)
-- ✅ Login funciona
-- ✅ Sin errores de compilación
-- ✅ Servidor funcionando (restart #88)
+- ✅ Usuario existe en auth.users
+- ✅ Perfil existe en profiles con MISMO UUID
+- ✅ UUIDs sincronizados (auth.users.id = profiles.id)
+- ✅ Login funciona correctamente
+- ✅ Formulario crea leads sin errores
+- ✅ Servidor funcionando (restart #89)
 </file_contents>
 </code_editor_tab>
 
