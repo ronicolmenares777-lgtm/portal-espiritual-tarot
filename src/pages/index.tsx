@@ -232,55 +232,6 @@ export default function Home() {
     }
   };
 
-  const handleInitialSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name || !formData.whatsapp || !formData.problem) {
-      alert("Por favor completa todos los campos");
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      console.log("📝 Enviando formulario:", formData);
-
-      // Crear lead en Supabase
-      const leadData = {
-        name: formData.name,
-        phone: formData.whatsapp,
-        problem: formData.problem,
-        status: "nuevo" as const,
-        ritual_state: "listo" as const,
-        whatsapp_notified: false,
-      };
-
-      const createdLead = await LeadService.create(leadData);
-      
-      if (!createdLead || !createdLead.id) {
-        throw new Error("No se pudo crear el lead");
-      }
-
-      console.log("✅ Lead creado con ID:", createdLead.id);
-
-      // Guardar en localStorage
-      localStorage.setItem("currentLeadId", createdLead.id);
-      localStorage.setItem("userName", formData.name);
-      
-      setLeadId(createdLead.id);
-      setCurrentScreen("loading");
-      
-      // Simular análisis del alma
-      setTimeout(() => {
-        setCurrentScreen("cards");
-      }, 3000);
-    } catch (error: any) {
-      console.error("❌ Error creando lead:", error);
-      alert(`Error al enviar el formulario: ${error.message || 'Por favor intenta de nuevo'}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <>
       <SEO 
