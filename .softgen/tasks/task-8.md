@@ -13,25 +13,26 @@ position: 8
 ---
 
 ## Notes
-COMPLETED: Fixed all Supabase connection issues, created database tables, configured RLS policies, and implemented stable 3-second polling for chat messages.
+COMPLETADO: Conexión Supabase restaurada, tablas creadas, RLS configurado, usuario admin creado, tipos de TypeScript arreglados, polling de 3 segundos implementado.
 
 ## Checklist
-- [x] Update Supabase API keys (used fetch_and_update_api_keys)
-- [x] Update client.ts with correct Supabase URL (https://lqyogtdozblvdkyhpxiq.supabase.co)
-- [x] Create leads table with RLS policies for public access
-- [x] Create messages table with RLS policies for public access
-- [x] Create profiles table with RLS policies
-- [x] Remove Realtime subscription (causing CORS errors)
-- [x] Implement 3-second polling with anti-saturation flag
-- [x] Remove 500ms artificial delays from handleSendMessage
-- [x] Verify server runs without errors (restart #53 successful)
-- [x] Test complete flow: form → database → chat
+- [x] Actualizar claves Supabase (fetch_and_update_api_keys)
+- [x] Actualizar client.ts con URL correcta (https://lqyogtdozblvdkyhpxiq.supabase.co)
+- [x] Crear tabla leads con políticas RLS públicas
+- [x] Crear tabla messages con políticas RLS públicas
+- [x] Crear tabla profiles con columna role
+- [x] Crear usuario admin (tubrujo@gmail.com)
+- [x] Arreglar tipos TypeScript de Supabase
+- [x] Implementar polling de 3 segundos con flag anti-saturación
+- [x] Remover delays artificiales de 500ms
+- [x] Verificar servidor sin errores (restart #57)
+- [x] Probar flujo completo: formulario → chat
 
 ## Acceptance
-- ✅ Supabase connected (PostgreSQL 17.6 healthy)
-- ✅ All tables created with public RLS policies
-- ✅ Chat loads without "Conectando..." freeze
-- ✅ Messages appear within 3 seconds
-- ✅ No CORS/500/522/544 errors in console
-- ✅ Form submission creates lead in Supabase
-- ✅ Login recovery finds lead by name + WhatsApp
+- ✅ Supabase conectado (PostgreSQL 17.6)
+- ✅ Todas las tablas creadas con RLS público
+- ✅ Usuario admin puede entrar a /Suafazon
+- ✅ Chat carga sin errores
+- ✅ Mensajes aparecen en 3 segundos
+- ✅ Sin errores CORS/500/522/544
+- ✅ Sin errores de TypeScript
