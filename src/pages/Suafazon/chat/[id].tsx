@@ -110,7 +110,7 @@ export default function ChatPage() {
     if (!leadId) return;
 
     let isMounted = true;
-    let channelSubscription: any = null;
+    const channelSubscription: any = null;
 
     const initializeChat = async () => {
       console.log("🔄 Iniciando chat del administrador para lead:", leadId);
@@ -129,108 +129,37 @@ export default function ChatPage() {
         console.log("✅ Lead cargado:", leadData);
 
         // Cargar mensajes existentes
-        const messagesData = await MessageService.getByLeadId(leadId);
-        if (!isMounted) return;
-        
-        setMessages(messagesData);
-        console.log("✅ Mensajes cargados:", messagesData.length);
-        setLastMessageCount(messagesData.length);
+        console.log("🔗 ADMIN Iniciando carga de mensajes para lead:", leadId);
+        const initialMessages = await MessageService.getByLeadId(leadId);
+        setMessages(initialMessages);
+        setLastMessageCount(initialMessages.length);
+        console.log(`✅ ADMIN Mensajes iniciales cargados: ${initialMessages.length}`);
 
-        // Marcar como leídos los mensajes del usuario
-        MessageService.markAsRead(leadId, true).catch(console.error);
-
-        // --- POLLING DE RESPALDO ---
-        let lastFetchTime = Date.now();
-        pollingIntervalRef.current = setInterval(async () => {
-          try {
-            const now = Date.now();
-            if (now - lastFetchTime < 2000) return;
-            lastFetchTime = now;
-
-            const latestMessages = await MessageService.getByLeadId(leadId);
-            setMessages((prev) => {
-              if (latestMessages.length > prev.length) {
-                console.log(`🔄 ADMIN Polling: ${latestMessages.length - prev.length} nuevos`);
-                return latestMessages;
-              }
-              return prev;
-            });
-          } catch (error) {
-            console.error("ADMIN Error en polling:", error);
-          }
-        }, 2500); // 2.5 segundos
-
-        // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
-        const channelName = `admin-messages-${leadId}`;
-        const existingChannels = supabase.getChannels();
-        existingChannels.forEach((ch) => {
-          if (ch.topic === `realtime:${channelName}`) {
-            console.log("🧹 Limpiando canal huérfano previo admin:", channelName);
-            supabase.removeChannel(ch);
-          }
-        });
-
-        // Configurar suscripción en tiempo real
-        console.log("🔌 Configurando suscripción realtime para admin");
-        
-        const realtimeChannel = supabase.channel(channelName);
-        
-        realtimeChannel.on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "messages",
-            filter: `lead_id=eq.${leadId}`,
-          },
-          (payload) => {
-            console.log("🔔 ADMIN REALTIME - Cambio detectado:", {
-              eventType: payload.eventType,
-              table: payload.table,
-              leadId: leadId
-            });
-            
-            if (payload.eventType === "INSERT") {
-              const newMessage = payload.new as Message;
-              console.log("📨 ADMIN REALTIME - Nuevo mensaje recibido:", {
-                id: newMessage.id,
-                text: newMessage.text?.substring(0, 50),
-                is_from_maestro: newMessage.is_from_maestro,
-                created_at: newMessage.created_at
-              });
-              
-              setMessages((prev) => {
-                if (prev.some(m => m.id === newMessage.id)) {
-                  console.log("⚠️ ADMIN REALTIME - Mensaje duplicado, ignorando");
-                  return prev;
-                }
-                console.log("➕ ADMIN REALTIME - Añadiendo mensaje al estado");
-                return [...prev, newMessage];
-              });
-
-              // Si es del usuario y estamos con el chat abierto, marcar como leído
-              if (!newMessage.is_from_maestro) {
-                console.log("✓ ADMIN REALTIME - Marcando mensaje del usuario como leído");
-                MessageService.markAsRead(leadId, true).catch(console.error);
-              }
-            } else if (payload.eventType === "UPDATE") {
-              const updatedMessage = payload.new as Message;
-              console.log("🔄 ADMIN REALTIME - Mensaje actualizado:", updatedMessage.id);
-              setMessages((prev) => prev.map(m => m.id === updatedMessage.id ? updatedMessage : m));
+        // --- SUSCRIPCIÓN REALTIME (mensajes instantáneos) ---
+        const channel = supabase
+          .channel(`admin-messages:${leadId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'messages',
+              filter: `lead_id=eq.${leadId}`
+            },
+            (payload) => {
+              console.log('🔔 ADMIN REALTIME: Nuevo mensaje', payload.new);
+              setMessages((prev) => [...prev, payload.new as Message]);
             }
-          }
-        );
-        
-        realtimeChannel.subscribe((status) => {
-          if (!isMounted) return;
-          console.log("📡 Estado de suscripción realtime:", status);
-          if (status === "SUBSCRIBED") {
-            console.log("✅ Suscripción realtime activa para admin");
-          }
-        });
-        
-        channelSubscription = realtimeChannel;
+          )
+          .subscribe((status) => {
+            console.log('📡 ADMIN Estado suscripción realtime:', status);
+          });
 
+        // Cleanup
+        return () => {
+          console.log("🧹 ADMIN Limpiando suscripción realtime");
+          supabase.removeChannel(channel);
+        };
       } catch (error) {
         console.error("❌ Error inicializando chat:", error);
       } finally {
@@ -310,6 +239,27 @@ export default function ChatPage() {
       console.error("Error eliminando mensaje:", error);
       alert("Error al eliminar el mensaje");
     }
+  };
+
+  const handleUpdateLead = async (updates: Partial<Lead>) => {
+    if (!leadId) return;
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .update(updates)
+        .eq("id", leadId);
+      
+      if (error) throw error;
+      
+      setLead(prev => prev ? { ...prev, ...updates } as Lead : null);
+      console.log("✅ Lead actualizado:", updates);
+    } catch (error) {
+      console.error("Error actualizando lead:", error);
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    console.log("💾 Guardando notas...");
   };
 
   const handleQuickResponse = async (text: string) => {
@@ -792,18 +742,8 @@ export default function ChatPage() {
                             </div>
                           )}
                           {mediaPreview.type === "audio" && (
-                            <div className="flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-[hsl(260,35%,16%)] rounded-xl border-2 border-gold/30 shadow-lg">
-                              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gold/20 flex items-center justify-center border border-gold/40">
-                                <Mic className="w-5 h-5 md:w-6 md:h-6 text-gold" />
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-sm font-medium mb-1 text-gold">Audio grabado</p>
-                                <audio
-                                  src={mediaPreview.url}
-                                  controls
-                                  className="w-full"
-                                />
-                              </div>
+                            <div className={`p-3 rounded-xl shadow-inner ${isFromMaestro ? "bg-black/20" : "bg-black/40"}`}>
+                              <audio src={mediaPreview.url} controls className="w-full" />
                             </div>
                           )}
                         </div>
@@ -922,121 +862,94 @@ export default function ChatPage() {
                   transition={{ type: "spring", damping: 25 }}
                   className={`${
                     isMobile 
-                      ? "fixed inset-0 z-50 bg-background"
+                      ? "fixed inset-0 z-50 bg-[hsl(260,35%,10%)]"
                       : "w-80 border-l-2 border-gold/20"
                   } bg-gradient-to-b from-[hsl(260,35%,12%)] to-[hsl(260,40%,10%)] overflow-y-auto`}
                 >
-                  {/* Botón cerrar en móvil */}
-                  <button
-                    onClick={() => setShowSidebar(false)}
-                    className="lg:hidden absolute top-4 right-4 p-2 hover:bg-muted/50 rounded-lg transition-colors"
-                  >
-                    <X className="w-5 h-5 text-muted-foreground" />
-                  </button>
-
-                  <div className="space-y-6">
-                    {/* Avatar y Estrella */}
-                    <div className="text-center space-y-4">
-                      <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-                        Atributos del Alma
-                      </p>
-                      
-                      <div className="flex justify-center">
-                        <div className="relative">
-                          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gold/30 to-purple-500/30 flex items-center justify-center">
-                            <span className="text-3xl font-serif text-gold">
-                              {lead.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <button className="absolute -top-2 -right-2 w-10 h-10 bg-black border-2 border-gold/50 rounded-full flex items-center justify-center hover:bg-gold/20 transition-all">
-                            <Star className="w-5 h-5 text-gold" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <h2 className="text-xl font-serif text-gold">{lead.name}</h2>
-                      <p className="text-xs text-muted-foreground">
-                        Desde hace {new Date(lead.created_at).toLocaleDateString()}
-                      </p>
+                  {/* Header móvil */}
+                  {isMobile && (
+                    <div className="sticky top-0 bg-gradient-to-r from-secondary/95 to-card/95 backdrop-blur-xl border-b border-gold/20 p-4 flex items-center justify-between z-10">
+                      <h3 className="text-lg font-serif font-bold text-gold">Atributos del Alma</h3>
+                      <button
+                        onClick={() => setShowSidebar(false)}
+                        className="p-2 hover:bg-gold/20 rounded-xl transition-all"
+                      >
+                        <X className="w-5 h-5 text-gold" />
+                      </button>
                     </div>
+                  )}
 
-                    {/* Motivo de Consulta */}
+                  <div className="p-4 md:p-6 space-y-6">
+                    {/* Motivo de consulta */}
                     <div className="space-y-2">
-                      <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
+                      <label className="text-xs text-gold/60 tracking-[0.2em] uppercase">
                         Motivo de Consulta
-                      </p>
-                      <p className="text-sm text-foreground/80 bg-card/30 rounded-lg p-3 border border-gold/10">
-                        "{lead.problem}"
-                      </p>
-                    </div>
-
-                    {/* Estado del Ritual */}
-                    <div className="space-y-3">
-                      <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-                        Estado del Ritual
-                      </p>
-                      
-                      <div className="space-y-2">
-                        {[
-                          { value: "nuevo", label: "Nuevo", color: "blue" },
-                          { value: "enConversacion", label: "En Conversación", color: "purple" },
-                          { value: "clienteCaliente", label: "Cliente Caliente", color: "orange" },
-                          { value: "listo", label: "Listo", color: "emerald" },
-                          { value: "cerrado", label: "Cerrado", color: "green" },
-                          { value: "perdido", label: "Perdido", color: "gray" }
-                        ].map((status) => (
-                          <button
-                            key={status.value}
-                            onClick={() => handleStatusChange(status.value as Lead["status"])}
-                            className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
-                              lead.status === status.value
-                                ? `bg-${status.color}-500/20 border-2 border-${status.color}-500 text-${status.color}-400`
-                                : 'bg-card/30 border border-gold/10 text-muted-foreground hover:bg-card/50'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Circle className={`w-2 h-2 fill-current ${
-                                lead.status === status.value ? `text-${status.color}-400` : 'text-muted-foreground'
-                              }`} />
-                              <span className="text-sm">{status.label}</span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* WhatsApp */}
-                    <div className="space-y-2">
-                      <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">WhatsApp</p>
+                      </label>
                       <div className="flex items-center justify-between bg-card/30 rounded-lg p-3 border border-gold/10">
-                        <span className="text-sm text-foreground">{lead.whatsapp}</span>
+                        <span className="text-sm text-foreground">{lead?.consultation_reason || "No especificado"}</span>
                         <button className="text-xs text-green-400 hover:text-green-300 transition-colors uppercase tracking-wider">
                           Contactar
                         </button>
                       </div>
                     </div>
 
-                    {/* Notas Internas */}
+                    {/* Estado del ritual */}
                     <div className="space-y-2">
-                      <p className="text-xs text-gold/60 tracking-[0.2em] uppercase">
+                      <label className="text-xs text-gold/60 tracking-[0.2em] uppercase">
+                        Estado del Ritual
+                      </label>
+                      <select
+                        value={lead?.ritual_status || "nuevo"}
+                        onChange={(e) => handleUpdateLead({ ritual_status: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-card/50 border border-gold/20 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 text-sm"
+                      >
+                        <option value="nuevo">● Nuevo</option>
+                        <option value="en_conversacion">● En Conversación</option>
+                        <option value="cliente_caliente">● Cliente Caliente</option>
+                        <option value="listo">● Listo</option>
+                        <option value="cerrado">● Cerrado</option>
+                        <option value="perdido">● Perdido</option>
+                      </select>
+                    </div>
+
+                    {/* WhatsApp */}
+                    <div className="space-y-2">
+                      <label className="text-xs text-gold/60 tracking-[0.2em] uppercase">
+                        WhatsApp
+                      </label>
+                      <a
+                        href={`https://wa.me/${lead?.whatsapp}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-3 bg-green-500/10 hover:bg-green-500/20 rounded-xl border border-green-500/30 transition-all text-green-400 text-sm font-medium"
+                      >
+                        <Phone className="w-4 h-4" />
+                        {lead?.whatsapp}
+                      </a>
+                    </div>
+
+                    {/* Notas internas */}
+                    <div className="space-y-2">
+                      <label className="text-xs text-gold/60 tracking-[0.2em] uppercase">
                         Notas Internas
-                      </p>
+                      </label>
                       <textarea
-                        rows={4}
-                        value={lead.notes || ""}
-                        onChange={(e) => setLead({ ...lead, notes: e.target.value })}
+                        value={lead?.internal_notes || ""}
+                        onChange={(e) => handleUpdateLead({ internal_notes: e.target.value })}
+                        onBlur={handleSaveNotes}
                         placeholder="Añade anotaciones..."
-                        className="w-full bg-card/30 border border-gold/10 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none"
+                        className="w-full px-4 py-3 bg-card/50 border border-gold/20 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 resize-none text-sm"
+                        rows={4}
                       />
                     </div>
 
-                    {/* Botón Marcar como Listo */}
+                    {/* Botón marcar como listo */}
                     <button
-                      onClick={handleMarkAsComplete}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30 transition-all font-medium"
+                      onClick={() => handleUpdateLead({ ritual_status: "listo" })}
+                      className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-green-500/30 transition-all flex items-center justify-center gap-2 text-sm"
                     >
                       <CheckCircle className="w-5 h-5" />
-                      MARCAR COMO LISTO
+                      Marcar como Listo
                     </button>
                   </div>
                 </motion.div>
