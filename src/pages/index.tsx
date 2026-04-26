@@ -115,8 +115,6 @@ export default function Home() {
         country_code: formData.countryCode,
         problem: formData.problem,
         status: "nuevo" as const,
-        ritual_state: "listo" as const,
-        whatsapp_notified: false,
       };
 
       const result = await LeadService.create(leadData);

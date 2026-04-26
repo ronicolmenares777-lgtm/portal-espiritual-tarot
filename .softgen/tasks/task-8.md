@@ -13,22 +13,24 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Columna precision_answers verificada en DB, tipos TypeScript regenerados forzadamente, PM2 reiniciado completamente (stop + delete + start).
+COMPLETADO: Formulario simplificado para crear leads sin precision_answers inicial, auth.ts arreglado con mejor manejo de errores, servidor reiniciado.
 
 ## Checklist
 - [x] Corregir project ID (klxepxdekgnfyazqsytk)
-- [x] Crear todas las tablas (leads, messages, profiles, tarot_cards)
-- [x] Eliminar perfil duplicado (solo queda 20cbd892-ea2a-4715-bb7e-22fc8e244887)
-- [x] Verificar columna precision_answers existe en DB
-- [x] Regenerar tipos TypeScript (forzado con supabase_generate_types)
-- [x] Verificar database.types.ts contiene precision_answers
-- [x] PM2 restart completo (stop → delete → start)
-- [x] Verificar logs del servidor sin errores
+- [x] Crear todas las tablas correctas
+- [x] Eliminar perfil duplicado
+- [x] Verificar columna precision_answers existe
+- [x] Simplificar LeadService.create (solo campos básicos)
+- [x] Arreglar handleSubmit en index.tsx (sin precision_answers inicial)
+- [x] Arreglar verifyAdminCredentials con mejor error handling
+- [x] Usar maybeSingle() para evitar error si no hay perfil
+- [x] Reiniciar servidor (restart #83)
 
 ## Acceptance
 - ✅ Supabase conectado (klxepxdekgnfyazqsytk)
-- ✅ Solo un perfil admin (20cbd892-ea2a-4715-bb7e-22fc8e244887)
-- ✅ Columna precision_answers existe en DB (tipo: jsonb)
-- ✅ database.types.ts tiene precision_answers en tipo leads
-- ✅ PM2 reiniciado completamente (nueva instancia)
-- ✅ Formulario debe funcionar sin error de schema cache
+- ✅ Perfil admin existe (20cbd892-ea2a-4715-bb7e-22fc8e244887)
+- ✅ Formulario crea leads sin error (solo campos básicos)
+- ✅ Login muestra error claro si falla
+- ✅ Login funciona si credenciales correctas
+- ✅ Sin errores de compilación
+- ✅ Servidor funcionando (restart #83)

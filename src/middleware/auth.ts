@@ -158,13 +158,21 @@ export async function verifyAdminCredentials(
       .from("profiles")
       .select("role")
       .eq("id", authData.user.id)
-      .single();
+      .maybeSingle();
 
-    if (profileError || !profile) {
+    if (profileError) {
       console.error("❌ Error obteniendo perfil:", profileError);
       return {
         success: false,
-        error: "Perfil no encontrado",
+        error: "Error obteniendo perfil: " + profileError.message,
+      };
+    }
+
+    if (!profile) {
+      console.error("❌ Perfil no encontrado para usuario:", authData.user.id);
+      return {
+        success: false,
+        error: "Perfil no encontrado. Contacta al administrador.",
       };
     }
 
@@ -173,7 +181,7 @@ export async function verifyAdminCredentials(
       console.error("❌ Usuario no es admin:", profile.role);
       return {
         success: false,
-        error: "Acceso no autorizado",
+        error: "Acceso no autorizado. Solo administradores.",
       };
     }
 

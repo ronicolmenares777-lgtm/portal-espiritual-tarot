@@ -19,8 +19,6 @@ export const LeadService = {
     country_code: string;
     problem: string;
     status?: Lead["status"];
-    selected_cards?: string[];
-    precision_answers?: string[];
   }) {
     const { data, error } = await supabase
       .from("leads")
@@ -30,8 +28,6 @@ export const LeadService = {
         country_code: leadData.country_code,
         problem: leadData.problem,
         status: leadData.status || "nuevo",
-        selected_cards: leadData.selected_cards || [],
-        precision_answers: leadData.precision_answers || []
       })
       .select()
       .single();
