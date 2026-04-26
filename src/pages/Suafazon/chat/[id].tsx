@@ -258,10 +258,6 @@ export default function ChatPage() {
     }
   };
 
-  const handleSaveNotes = async () => {
-    console.log("💾 Guardando notas...");
-  };
-
   const handleQuickResponse = async (text: string) => {
     if (!id || typeof id !== "string") return;
 
@@ -648,8 +644,8 @@ export default function ChatPage() {
                                 </div>
                               )}
                               {msg.media_type === "audio" && (
-                                <div className={`p-3 rounded-xl shadow-inner ${isFromMaestro ? "bg-black/20" : "bg-black/40"}`}>
-                                  <audio src={msg.media_url} controls className="w-full" />
+                                <div className="p-3 rounded-xl shadow-inner bg-black/40 border border-gold/20">
+                                  <audio src={msg.media_url} controls className="w-full h-10" />
                                 </div>
                               )}
                               {msg.media_type === "file" && (
@@ -743,7 +739,7 @@ export default function ChatPage() {
                           )}
                           {mediaPreview.type === "audio" && (
                             <div className={`p-3 rounded-xl shadow-inner ${isFromMaestro ? "bg-black/20" : "bg-black/40"}`}>
-                              <audio src={mediaPreview.url} controls className="w-full" />
+                              <audio src={mediaPreview.url} controls className="w-full h-10" />
                             </div>
                           )}
                         </div>
@@ -764,7 +760,7 @@ export default function ChatPage() {
                         </button>
                         <button
                           onClick={handleSendMedia}
-                          className="flex-1 px-3 py-2 md:px-4 md:py-2.5 rounded-xl bg-gradient-to-r from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-background font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-xs md:text-sm border-2 border-gold/50"
+                          className="flex-1 px-3 py-2 md:px-4 md:py-2.5 rounded-xl bg-gradient-to-r from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-black font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-xs md:text-sm border-2 border-gold/50"
                         >
                           Enviar
                         </button>
@@ -882,25 +878,22 @@ export default function ChatPage() {
                   <div className="p-4 md:p-6 space-y-6">
                     {/* Motivo de consulta */}
                     <div className="space-y-2">
-                      <label className="text-xs text-gold/60 tracking-[0.2em] uppercase">
+                      <label className="text-sm font-semibold text-gold uppercase tracking-wider">
                         Motivo de Consulta
                       </label>
-                      <div className="flex items-center justify-between bg-card/30 rounded-lg p-3 border border-gold/10">
-                        <span className="text-sm text-foreground">{lead?.consultation_reason || "No especificado"}</span>
-                        <button className="text-xs text-green-400 hover:text-green-300 transition-colors uppercase tracking-wider">
-                          Contactar
-                        </button>
+                      <div className="p-3 bg-card/50 rounded-xl border border-gold/20">
+                        <p className="text-sm text-foreground/80">{lead?.problem || "No especificado"}</p>
                       </div>
                     </div>
 
                     {/* Estado del ritual */}
                     <div className="space-y-2">
-                      <label className="text-xs text-gold/60 tracking-[0.2em] uppercase">
+                      <label className="text-sm font-semibold text-gold uppercase tracking-wider">
                         Estado del Ritual
                       </label>
                       <select
-                        value={lead?.ritual_status || "nuevo"}
-                        onChange={(e) => handleUpdateLead({ ritual_status: e.target.value })}
+                        value={lead?.status || "nuevo"}
+                        onChange={(e) => handleUpdateLead({ status: e.target.value as any })}
                         className="w-full px-4 py-2.5 bg-card/50 border border-gold/20 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 text-sm"
                       >
                         <option value="nuevo">● Nuevo</option>
@@ -930,12 +923,10 @@ export default function ChatPage() {
 
                     {/* Notas internas */}
                     <div className="space-y-2">
-                      <label className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-                        Notas Internas
-                      </label>
+                      <label className="text-sm font-semibold text-gold uppercase tracking-wider">Notas Internas</label>
                       <textarea
-                        value={lead?.internal_notes || ""}
-                        onChange={(e) => handleUpdateLead({ internal_notes: e.target.value })}
+                        value={lead?.notes || ""}
+                        onChange={(e) => handleUpdateLead({ notes: e.target.value })}
                         onBlur={handleSaveNotes}
                         placeholder="Añade anotaciones..."
                         className="w-full px-4 py-3 bg-card/50 border border-gold/20 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 resize-none text-sm"
@@ -945,7 +936,7 @@ export default function ChatPage() {
 
                     {/* Botón marcar como listo */}
                     <button
-                      onClick={() => handleUpdateLead({ ritual_status: "listo" })}
+                      onClick={() => handleUpdateLead({ status: "listo" })}
                       className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-green-500/30 transition-all flex items-center justify-center gap-2 text-sm"
                     >
                       <CheckCircle className="w-5 h-5" />
@@ -1037,7 +1028,7 @@ export default function ChatPage() {
 
                 {/* Nombre del Maestro */}
                 <div className="space-y-2">
-                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
+                  <label className="text-xs text-gold/60 tracking-[0.2em] uppercase flex items-center gap-2">
                     <User className="w-3 h-3" />
                     Nombre del Maestro
                   </label>
@@ -1051,7 +1042,7 @@ export default function ChatPage() {
 
                 {/* Texto del Header */}
                 <div className="space-y-2">
-                  <label className="text-xs text-gold tracking-wider uppercase flex items-center gap-2">
+                  <label className="text-xs text-gold/60 tracking-[0.2em] uppercase flex items-center gap-2">
                     <Sparkles className="w-3 h-3" />
                     Estado / Texto del Header
                   </label>
