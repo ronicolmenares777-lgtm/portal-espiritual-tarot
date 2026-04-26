@@ -1,6 +1,6 @@
 ---
 title: Fix chat message delivery with stable polling
-status: done
+status: in_progress
 priority: urgent
 type: bug
 tags:
@@ -12,14 +12,18 @@ position: 8
 ---
 
 ## Notes
-The user was experiencing issues where chat messages were not appearing on screen. The Supabase Realtime subscription was failing silently (likely due to CORS, network constraints, or proxy issues). The user requested to bring back a 2-second polling interval to guarantee message delivery without overwhelming the database. Additionally, an artificial 500ms delay was causing UX lag and needed to be removed.
+Chat messages not appearing. Supabase connection issues detected - API returning 500/544 errors. Investigating root cause.
 
 ## Checklist
-- [x] In the user chat component (`src/components/ChatMaestro.tsx`), re-implement a stable 2-second interval polling mechanism (using `setInterval` and `MessageService.getByLeadId`) alongside the Realtime subscription.
-- [x] In the user chat component, remove the fake 500ms delay (`await new Promise...`) from the `handleSendMessage` function so the input clears immediately.
-- [x] In the admin chat page (`src/pages/Suafazon/chat/[id].tsx`), re-implement a stable 2-second interval polling mechanism.
-- [x] In the admin chat page, remove the fake 500ms delay from the `handleSendMessage` function.
+- [x] Remove Realtime subscription (causing errors)
+- [x] Implement 3-second polling with anti-saturation flag
+- [x] Remove 500ms artificial delays
+- [x] Update Supabase API keys via fetch_and_update_api_keys
+- [ ] Fix Supabase connection (currently failing with 500/544)
+- [ ] Verify RLS policies allow public access
+- [ ] Test complete flow: form → chat → messages
 
 ## Acceptance
-- New messages appear in both the user and admin chats within 2 seconds of being sent, even if websockets are blocked.
-- The message input clears instantly after clicking send, without a 500ms delay.
+- Chat loads without "Conectando..." freeze
+- Messages appear within 3 seconds
+- No CORS/500 errors in console
