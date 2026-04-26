@@ -597,10 +597,10 @@ export default function ChatPage() {
                   className={`flex ${isFromMaestro ? "justify-end" : "justify-start"} group`}
                 >
                   <div
-                    className={`relative max-w-[85%] md:max-w-[70%] rounded-3xl p-4 md:p-5 shadow-2xl transition-all duration-300 ${
+                    className={`relative max-w-[85%] md:max-w-[60%] rounded-2xl p-3 md:p-4 shadow-lg transition-all duration-300 ${
                       isFromMaestro
-                        ? "bg-gradient-to-br from-amber-400 via-gold to-amber-600 text-black shadow-gold/30 border border-amber-500/50 rounded-br-sm"
-                        : "bg-[hsl(260,20%,14%)] border-2 border-gold/30 text-foreground shadow-black/50 rounded-bl-sm"
+                        ? "bg-gradient-to-br from-amber-400 via-gold to-amber-600 text-black shadow-gold/20 border border-amber-500/50 rounded-br-sm"
+                        : "bg-[hsl(260,20%,14%)] border border-gold/30 text-foreground shadow-md rounded-bl-sm"
                     }`}
                   >
                     {!isFromMaestro && (
@@ -635,14 +635,14 @@ export default function ChatPage() {
                         )}
                         {msg.media_type === "audio" && (
                           <div className={`p-2 rounded-xl ${isFromMaestro ? "bg-black/20" : "bg-black/40"}`}>
-                            <audio src={msg.media_url} controls className="w-full h-8" />
+                            <audio src={msg.media_url} controls className="w-full h-10" />
                           </div>
                         )}
                       </div>
                     ) : null}
 
                     {msg.text && (
-                      <p className={`text-sm md:text-[15px] leading-relaxed whitespace-pre-wrap ${
+                      <p className={`text-sm leading-relaxed whitespace-pre-wrap ${
                         isFromMaestro ? "font-medium" : "font-normal text-foreground/90"
                       } ${msg.media_url ? "mt-2" : ""}`}>
                         {msg.text}
@@ -674,7 +674,7 @@ export default function ChatPage() {
           </div>
 
           {/* Input de mensaje - FIJO ABAJO */}
-          <div className="border-t border-gold/10 bg-black/95 backdrop-blur-xl p-2 md:p-4 shadow-[0_-20px_40px_rgba(0,0,0,0.8)] relative z-20">
+          <div className="border-t border-gold/10 bg-black/95 backdrop-blur-xl p-2 md:p-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] relative z-20">
             {/* Preview de multimedia */}
             <AnimatePresence>
               {mediaPreview && (
@@ -790,22 +790,22 @@ export default function ChatPage() {
                       handleSendMessage(messageInput);
                     }
                   }}
-                  placeholder="Escribe un mensaje sagrado..."
+                  placeholder="Escribe un mensaje..."
                   rows={1}
-                  className="w-full bg-[hsl(260,20%,12%)] border border-gold/20 rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-sm md:text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none shadow-inner"
-                  style={{ minHeight: "48px", maxHeight: "120px" }}
+                  className="w-full bg-[hsl(260,20%,12%)] border border-gold/20 rounded-xl px-3 py-2.5 md:px-4 md:py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none shadow-inner"
+                  style={{ minHeight: "44px", maxHeight: "100px" }}
                 />
               </div>
 
               {/* Botón enviar */}
               <motion.button
-                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleSendMessage(messageInput)}
                 disabled={!messageInput.trim() || isSending}
-                className="p-3 md:p-3.5 bg-gradient-to-br from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-black rounded-2xl hover:shadow-lg hover:shadow-gold/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                className="p-2.5 md:p-3 bg-gradient-to-br from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-black rounded-xl hover:shadow-md hover:shadow-gold/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
               >
-                <Send className="w-5 h-5 md:w-6 md:h-6" />
+                <Send className="w-4 h-4 md:w-5 md:h-5" />
               </motion.button>
             </div>
           </div>

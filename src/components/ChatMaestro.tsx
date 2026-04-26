@@ -107,28 +107,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         // Marcar como leídos los mensajes del maestro
         MessageService.markAsRead(currentLeadId, false).catch(console.error);
 
-        // --- POLLING DE RESPALDO ---
-        let lastFetchTime = Date.now();
-        pollingIntervalRef.current = setInterval(async () => {
-          try {
-            // Debounce: solo fetch si han pasado al menos 2 segundos
-            const now = Date.now();
-            if (now - lastFetchTime < 2000) return;
-            lastFetchTime = now;
-
-            const latestMessages = await MessageService.getByLeadId(currentLeadId);
-            setMessages((prev) => {
-              if (latestMessages.length > prev.length) {
-                console.log(`🔄 Polling: ${latestMessages.length - prev.length} nuevos mensajes`);
-                return latestMessages;
-              }
-              return prev;
-            });
-          } catch (error) {
-            console.error("Error en polling:", error);
-          }
-        }, 2500); // 2.5 segundos - más estable
-
         // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
         // 1. Limpiar cualquier canal existente con el mismo nombre
         const channelName = `messages-${currentLeadId}`;
