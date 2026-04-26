@@ -51,6 +51,17 @@ export default function ChatPage() {
     file?: File;
   } | null>(null);
 
+  const [lastMessageCount, setLastMessageCount] = useState(0);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [profileData, setProfileData] = useState({
+    name: "Maestro Espiritual",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro",
+    headerText: "En línea • Responde en segundos"
+  });
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const isMobile = useIsMobile();
 
   // Auto-scroll cuando llegan mensajes nuevos
@@ -688,7 +699,7 @@ export default function ChatPage() {
                               )}
                               {msg.media_type === "audio" && (
                                 <div className={`p-3 rounded-xl shadow-inner ${isFromMaestro ? "bg-black/20" : "bg-black/40"}`}>
-                                  <audio src={msg.media_url} controls className="w-full h-10" />
+                                  <audio src={msg.media_url} controls className="w-full" />
                                 </div>
                               )}
                               {msg.media_type === "file" && (
