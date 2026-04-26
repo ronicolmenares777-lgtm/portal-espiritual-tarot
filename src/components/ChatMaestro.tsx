@@ -46,7 +46,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
   // Cargar datos y suscribirse a Supabase - VERSIÓN CORREGIDA
   useEffect(() => {
     let isMounted = true;
-    let channelSubscription: ReturnType<typeof supabase.channel> | null = null;
+    const channelSubscription: ReturnType<typeof supabase.channel> | null = null;
 
     const loadData = async () => {
       console.log("🔄 ChatMaestro: Iniciando...");
@@ -107,80 +107,52 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         // Marcar como leídos los mensajes del maestro
         MessageService.markAsRead(currentLeadId, false).catch(console.error);
 
-        // --- SOLUCIÓN AL ERROR DE SUSCRIPCIÓN ---
-        // 1. Limpiar cualquier canal existente con el mismo nombre
-        const channelName = `messages-${currentLeadId}`;
-        const existingChannels = supabase.getChannels();
-        existingChannels.forEach((ch) => {
-          if (ch.topic === `realtime:${channelName}`) {
-            console.log("🧹 Limpiando canal huérfano previo:", channelName);
-            supabase.removeChannel(ch);
-          }
-        });
-
-        // Configurar suscripción en tiempo real
-        console.log("🔔 Configurando suscripción realtime para lead:", currentLeadId);
-        
-        // 2. Crear canal nuevo y limpio
-        const realtimeChannel = supabase.channel(channelName);
-        
-        realtimeChannel.on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "messages",
-            filter: `lead_id=eq.${currentLeadId}`,
-          },
-          (payload) => {
-            console.log("🔔 REALTIME - Cambio detectado:", {
-              eventType: payload.eventType,
-              table: payload.table,
-              leadId: currentLeadId
-            });
-            
-            if (payload.eventType === "INSERT") {
-              const newMessage = payload.new as Message;
-              console.log("📨 REALTIME - Nuevo mensaje recibido:", {
-                id: newMessage.id,
-                text: newMessage.text?.substring(0, 50),
-                is_from_maestro: newMessage.is_from_maestro,
-                created_at: newMessage.created_at
-              });
-              
-              setMessages((prev) => {
-                if (prev.some(m => m.id === newMessage.id)) {
-                  console.log("⚠️ REALTIME - Mensaje duplicado, ignorando");
-                  return prev;
-                }
-                console.log("➕ REALTIME - Añadiendo mensaje al estado");
-                return [...prev, newMessage];
-              });
-
-              // Si es del maestro y estamos con el chat abierto, marcar como leído
-              if (newMessage.is_from_maestro) {
-                console.log("✓ REALTIME - Marcando mensaje del maestro como leído");
-                MessageService.markAsRead(currentLeadId, false).catch(console.error);
+        // --- POLLING ESTABLE (2 SEGUNDOS) ---
+        // Garantiza que los mensajes lleguen incluso si los websockets fallan
+        const pollInterval = setInterval(async () => {
+          try {
+            const latestMessages = await MessageService.getByLeadId(currentLeadId);
+            setMessages((prev) => {
+              if (latestMessages.length > prev.length) {
+                console.log(`🔄 Polling: ${latestMessages.length - prev.length} mensajes nuevos`);
+                return latestMessages;
               }
-            } else if (payload.eventType === "UPDATE") {
-              const updatedMessage = payload.new as Message;
-              console.log("🔄 REALTIME - Mensaje actualizado:", updatedMessage.id);
-              setMessages((prev) => prev.map(m => m.id === updatedMessage.id ? updatedMessage : m));
+              return prev;
+            });
+          } catch (error) {
+            console.error("Error en polling:", error);
+          }
+        }, 2000);
+
+        // --- SUSCRIPCIÓN REALTIME (backup instantáneo) ---
+        const channel = supabase
+          .channel(`messages:${currentLeadId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'messages',
+              filter: `lead_id=eq.${currentLeadId}`
+            },
+            (payload) => {
+              console.log('🔔 REALTIME: Nuevo mensaje', payload.new);
+              setMessages((prev) => {
+                if (!prev.some(m => m.id === payload.new.id)) {
+                  return [...prev, payload.new as Message];
+                }
+                return prev;
+              });
             }
-          }
-        );
-        
-        realtimeChannel.subscribe((status) => {
-          if (!isMounted) return;
-          console.log("📡 Estado de suscripción:", status);
-          if (status === "SUBSCRIBED") {
-            console.log("✅ Suscripción realtime activa");
-          } else if (status === "CHANNEL_ERROR") {
-            console.error("❌ Error en canal realtime");
-          }
-        });
-        
-        channelSubscription = realtimeChannel;
+          )
+          .subscribe();
+
+        // Cleanup
+        return () => {
+          console.log("🧹 Limpiando polling y realtime");
+          clearInterval(pollInterval);
+          supabase.removeChannel(channel);
+        };
 
         // Cargar avatar del maestro desde el perfil
         const { data: profiles } = await ProfileService.getAll();
@@ -311,9 +283,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         console.log("➕ Añadiendo mensaje al estado local");
         return [...prev, createdMessage];
       });
-
-      // DELAY MÍNIMO de 500ms para que el usuario vea el mensaje antes de limpiar
-      await new Promise(resolve => setTimeout(resolve, 500));
 
       setNewMessage("");
       setSelectedFile(null);

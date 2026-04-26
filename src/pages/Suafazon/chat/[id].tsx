@@ -135,7 +135,27 @@ export default function ChatPage() {
         setLastMessageCount(initialMessages.length);
         console.log(`✅ ADMIN Mensajes iniciales cargados: ${initialMessages.length}`);
 
-        // --- SUSCRIPCIÓN REALTIME (mensajes instantáneos) ---
+        // Marcar mensajes del usuario como leídos
+        MessageService.markAsRead(leadId, false).catch(console.error);
+
+        // --- POLLING ESTABLE (2 SEGUNDOS) ---
+        // Garantiza que los mensajes lleguen al admin
+        const pollInterval = setInterval(async () => {
+          try {
+            const latestMessages = await MessageService.getByLeadId(leadId);
+            setMessages((prev) => {
+              if (latestMessages.length > prev.length) {
+                console.log(`🔄 ADMIN Polling: ${latestMessages.length - prev.length} mensajes nuevos`);
+                return latestMessages;
+              }
+              return prev;
+            });
+          } catch (error) {
+            console.error("ADMIN Error en polling:", error);
+          }
+        }, 2000);
+
+        // --- SUSCRIPCIÓN REALTIME (backup instantáneo) ---
         const channel = supabase
           .channel(`admin-messages:${leadId}`)
           .on(
@@ -148,16 +168,20 @@ export default function ChatPage() {
             },
             (payload) => {
               console.log('🔔 ADMIN REALTIME: Nuevo mensaje', payload.new);
-              setMessages((prev) => [...prev, payload.new as Message]);
+              setMessages((prev) => {
+                if (!prev.some(m => m.id === payload.new.id)) {
+                  return [...prev, payload.new as Message];
+                }
+                return prev;
+              });
             }
           )
-          .subscribe((status) => {
-            console.log('📡 ADMIN Estado suscripción realtime:', status);
-          });
+          .subscribe();
 
         // Cleanup
         return () => {
-          console.log("🧹 ADMIN Limpiando suscripción realtime");
+          console.log("🧹 ADMIN Limpiando polling y realtime");
+          clearInterval(pollInterval);
           supabase.removeChannel(channel);
         };
       } catch (error) {
@@ -214,9 +238,6 @@ export default function ChatPage() {
         }
         return [...prev, createdMessage];
       });
-
-      // DELAY MÍNIMO de 500ms
-      await new Promise(resolve => setTimeout(resolve, 500));
 
       setMessageInput("");
       setShowQuickResponses(false);
