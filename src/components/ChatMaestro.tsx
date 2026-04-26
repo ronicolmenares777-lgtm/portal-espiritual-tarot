@@ -74,8 +74,8 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         console.warn("⚠️ No se encontró leadId - Creando lead de emergencia...");
         try {
           const result = await LeadService.create({
-            name: userName || "Usuario",
-            whatsapp: userPhone || "0000000000",
+            name: userName || "Usuario Anónimo",
+            whatsapp: "0000000000",
             country_code: "+52",
             problem: userProblem || "Consulta desde chat",
             status: "nuevo",
@@ -83,11 +83,15 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           
           if (!isMounted) return;
           
-          if (result && !result.error) {
-            currentLeadId = result.id;
-            localStorage.setItem("currentLeadId", result.id);
-            console.log("✅ Lead de emergencia creado:", currentLeadId);
+          if (result.error || !result.data) {
+            console.error("Error creando lead de emergencia:", result.error);
+            return;
           }
+
+          // Type narrowing: ahora sabemos que result.data existe
+          currentLeadId = result.data.id;
+          localStorage.setItem("currentLeadId", result.data.id);
+          console.log("✅ Lead de emergencia creado:", currentLeadId);
         } catch (err) {
           console.error("❌ Error creando lead de emergencia:", err);
           if (!isMounted) return;
