@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { verifyAdminCredentials } from "@/middleware/auth";
-import CustomCursor from "@/components/CustomCursor";
-import FloatingParticles from "@/components/FloatingParticles";
+import { CustomCursor } from "@/components/CustomCursor";
+import { FloatingParticles } from "@/components/FloatingParticles";
 
 export default function AdminLogin() {
   const router = useRouter();

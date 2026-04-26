@@ -13,7 +13,7 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Base de datos completamente configurada, login restaurado con diseño místico (fondo negro, letras doradas), columnas agregadas, polling funcionando.
+COMPLETADO: Base de datos completamente configurada, login restaurado con diseño místico (fondo negro, letras doradas), imports arreglados, columnas agregadas, polling funcionando.
 
 ## Checklist
 - [x] Corregir project ID (klxepxdekgnfyazqsytk)
@@ -22,8 +22,9 @@ COMPLETADO: Base de datos completamente configurada, login restaurado con diseñ
 - [x] Agregar columna precision_answers a leads
 - [x] Crear perfil admin (20cbd892-ea2a-4715-bb7e-22fc8e244887)
 - [x] Restaurar login /Suafazon con diseño místico
+- [x] Arreglar imports de CustomCursor y FloatingParticles
 - [x] Mantener dashboard funcional
-- [x] Verificar servidor sin errores (restart #72)
+- [x] Verificar servidor sin errores (restart #73)
 
 ## Acceptance
 - ✅ Supabase conectado (klxepxdekgnfyazqsytk)
@@ -32,4 +33,4 @@ COMPLETADO: Base de datos completamente configurada, login restaurado con diseñ
 - ✅ Login con diseño místico (fondo negro, letras doradas)
 - ✅ Dashboard funcional
 - ✅ Sin errores de compilación
-- ✅ Servidor funcionando (restart #72)
+- ✅ Servidor funcionando (restart #73)
