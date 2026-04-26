@@ -210,25 +210,36 @@ export default function Home() {
     }
 
     try {
+      console.log("🔍 Buscando lead:", { name: loginData.name, whatsapp: loginData.whatsapp });
+      
+      // Intentar buscar en Supabase
       const result = await LeadService.findByNameAndWhatsApp(loginData.name, loginData.whatsapp);
       
-      if (result.error || !result.data) {
-        setLoginError("No se encontró ninguna consulta con estos datos");
+      if (result.error) {
+        console.error("❌ Error consultando Supabase:", result.error);
+        setLoginError("Error de conexión. Por favor intenta de nuevo.");
+        return;
+      }
+      
+      if (!result.data || result.data.length === 0) {
+        setLoginError("No se encontró ninguna consulta con estos datos. Verifica tu nombre y WhatsApp.");
         return;
       }
 
-      console.log("✅ Lead encontrado:", result.data.id);
+      const lead = result.data[0];
+      console.log("✅ Lead encontrado:", lead.id);
       
       // Guardar en localStorage
-      localStorage.setItem("currentLeadId", result.data.id);
-      localStorage.setItem("userName", loginData.name);
+      localStorage.setItem("currentLeadId", lead.id);
+      localStorage.setItem("userName", lead.name);
       
-      setLeadId(result.data.id);
+      setLeadId(lead.id);
+      setFormData(prev => ({ ...prev, name: lead.name, whatsapp: lead.whatsapp }));
       setShowLoginModal(false);
       setCurrentScreen("chat");
     } catch (error: any) {
       console.error("❌ Error en login:", error);
-      setLoginError(`Error: ${error.message}`);
+      setLoginError(`Error: ${error.message || 'Por favor intenta de nuevo'}`);
     }
   };
 

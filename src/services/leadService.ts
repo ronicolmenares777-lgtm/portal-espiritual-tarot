@@ -368,15 +368,15 @@ export const LeadService = {
         .eq("name", name)
         .eq("whatsapp", whatsapp)
         .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .limit(1);
+        .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Error buscando lead:", error);
         return { data: null, error };
       }
 
-      return { data: data && data.length > 0 ? data[0] : null, error: null };
+      // Devolver array como espera el código
+      return { data: data || [], error: null };
     } catch (error: any) {
       console.error("Error en findByNameAndWhatsApp:", error);
       return { data: null, error };
