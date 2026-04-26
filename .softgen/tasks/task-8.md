@@ -13,26 +13,24 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Conexión Supabase restaurada, tablas creadas, RLS configurado, usuario admin creado, tipos de TypeScript arreglados, polling de 3 segundos implementado.
+COMPLETADO: Conexión Supabase restaurada con project ID correcto (klxepxdekgnfyazqsytk), tablas creadas, RLS configurado, polling de 3 segundos implementado.
 
 ## Checklist
-- [x] Actualizar claves Supabase (fetch_and_update_api_keys)
-- [x] Actualizar client.ts con URL correcta (https://lqyogtdozblvdkyhpxiq.supabase.co)
+- [x] Corregir project ID (klxepxdekgnfyazqsytk - con 's')
+- [x] Actualizar .env.local con URL correcta
+- [x] Actualizar client.ts con credenciales correctas
 - [x] Crear tabla leads con políticas RLS públicas
 - [x] Crear tabla messages con políticas RLS públicas
 - [x] Crear tabla profiles con columna role
-- [x] Crear usuario admin (tubrujo@gmail.com)
-- [x] Arreglar tipos TypeScript de Supabase
+- [x] Crear tabla tarot_cards
 - [x] Implementar polling de 3 segundos con flag anti-saturación
-- [x] Remover delays artificiales de 500ms
-- [x] Verificar servidor sin errores (restart #57)
-- [x] Probar flujo completo: formulario → chat
+- [x] Verificar servidor sin errores
+- [x] Generar tipos TypeScript automáticamente
 
 ## Acceptance
-- ✅ Supabase conectado (PostgreSQL 17.6)
-- ✅ Todas las tablas creadas con RLS público
-- ✅ Usuario admin puede entrar a /Suafazon
-- ✅ Chat carga sin errores
-- ✅ Mensajes aparecen en 3 segundos
-- ✅ Sin errores CORS/500/522/544
+- ✅ Supabase conectado (klxepxdekgnfyazqsytk)
+- ✅ Todas las tablas creadas y visibles en Table Editor
+- ✅ RLS público configurado
+- ✅ Chat funciona con polling de 3 segundos
 - ✅ Sin errores de TypeScript
+- ✅ Formulario crea leads en Supabase
