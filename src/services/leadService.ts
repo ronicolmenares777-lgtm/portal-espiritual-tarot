@@ -401,13 +401,11 @@ export async function createLead(
           whatsapp: formData.whatsapp,
           country_code: formData.country_code || "+52",
           problem: formData.problem,
-          card_selected: formData.card_selected || null,
           status: formData.status || "nuevo",
-          ritual_state: formData.ritual_state || "listo",
-          whatsapp_notified: false,
           is_favorite: false,
           notes: formData.notes || null,
           precision_answers: formData.precision_answers || {},
+          answers: formData.answers || {},
         },
       ])
       .select()
