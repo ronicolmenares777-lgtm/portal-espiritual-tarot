@@ -187,6 +187,91 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
     };
   }, [userName, userPhone, userProblem, userCard]);
 
+  useEffect(() => {
+    if (leadId) {
+      const loadMessages = async () => {
+        if (!leadId) return;
+        const currentLeadId = leadId;
+
+        console.log("🔗 Iniciando carga de mensajes para lead:", currentLeadId);
+        
+        try {
+          const initialMessages = await MessageService.getByLeadId(currentLeadId);
+          setMessages(initialMessages);
+          setLastMessageCount(initialMessages.length);
+          console.log(`✅ Mensajes iniciales cargados: ${initialMessages.length}`);
+          
+          // ✅ CRÍTICO: Quitar el estado de carga
+          setIsLoading(false);
+
+          // Marcar como leídos los mensajes del maestro
+          MessageService.markAsRead(currentLeadId, false).catch(console.error);
+        } catch (error) {
+          console.error("❌ Error cargando mensajes:", error);
+          setIsLoading(false); // ✅ Quitar loading incluso si falla
+        }
+
+        // --- POLLING CON PROTECCIÓN CONTRA SATURACIÓN ---
+        let isPolling = false;
+        const pollInterval = setInterval(async () => {
+          // Evitar consultas simultáneas
+          if (isPolling) {
+            console.log("⏭️ Polling saltado - consulta anterior aún en progreso");
+            return;
+          }
+
+          try {
+            isPolling = true;
+            const latestMessages = await MessageService.getByLeadId(currentLeadId);
+            setMessages((prev) => {
+              if (latestMessages.length !== prev.length) {
+                console.log(`🔄 Polling: ${Math.abs(latestMessages.length - prev.length)} cambios detectados`);
+                return latestMessages;
+              }
+              return prev;
+            });
+          } catch (error) {
+            console.error("❌ Error en polling:", error);
+          } finally {
+            isPolling = false;
+          }
+        }, 3000); // 3 segundos para evitar saturación
+
+        // --- SUSCRIPCIÓN REALTIME (backup instantáneo) ---
+        const channel = supabase
+          .channel(`messages:${currentLeadId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'messages',
+              filter: `lead_id=eq.${currentLeadId}`
+            },
+            (payload) => {
+              console.log('🔔 REALTIME: Nuevo mensaje', payload.new);
+              setMessages((prev) => {
+                if (!prev.some(m => m.id === payload.new.id)) {
+                  return [...prev, payload.new as Message];
+                }
+                return prev;
+              });
+            }
+          )
+          .subscribe();
+
+        // Cleanup
+        return () => {
+          console.log("🧹 Limpiando polling y realtime");
+          clearInterval(pollInterval);
+          supabase.removeChannel(channel);
+        };
+      };
+
+      loadMessages();
+    }
+  }, [leadId]);
+
   // Auto-scroll cuando llegan mensajes nuevos
   useEffect(() => {
     if (messages.length > lastMessageCount) {
