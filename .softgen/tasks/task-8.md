@@ -13,24 +13,22 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Perfil duplicado eliminado, precision_answers funcional, leadService arreglado, login profesional, formulario funcionando.
+COMPLETADO: Columna precision_answers verificada en DB, tipos TypeScript regenerados forzadamente, PM2 reiniciado completamente (stop + delete + start).
 
 ## Checklist
 - [x] Corregir project ID (klxepxdekgnfyazqsytk)
 - [x] Crear todas las tablas (leads, messages, profiles, tarot_cards)
 - [x] Eliminar perfil duplicado (solo queda 20cbd892-ea2a-4715-bb7e-22fc8e244887)
-- [x] Verificar columna precision_answers existe
-- [x] Arreglar leadService.ts (eliminar columnas inexistentes)
-- [x] Regenerar tipos TypeScript
-- [x] Rediseñar /Suafazon profesional
-- [x] Verificar servidor sin errores (restart #78)
+- [x] Verificar columna precision_answers existe en DB
+- [x] Regenerar tipos TypeScript (forzado con supabase_generate_types)
+- [x] Verificar database.types.ts contiene precision_answers
+- [x] PM2 restart completo (stop → delete → start)
+- [x] Verificar logs del servidor sin errores
 
 ## Acceptance
 - ✅ Supabase conectado (klxepxdekgnfyazqsytk)
 - ✅ Solo un perfil admin (20cbd892-ea2a-4715-bb7e-22fc8e244887)
-- ✅ Columna precision_answers funcional
-- ✅ leadService usa solo columnas existentes
-- ✅ Formulario crea leads sin errores
-- ✅ Login profesional funcionando
-- ✅ Sin errores de compilación
-- ✅ Servidor funcionando (restart #78)
+- ✅ Columna precision_answers existe en DB (tipo: jsonb)
+- ✅ database.types.ts tiene precision_answers en tipo leads
+- ✅ PM2 reiniciado completamente (nueva instancia)
+- ✅ Formulario debe funcionar sin error de schema cache
