@@ -138,22 +138,31 @@ export default function ChatPage() {
         // Marcar mensajes del usuario como leídos
         MessageService.markAsRead(leadId, false).catch(console.error);
 
-        // --- POLLING ESTABLE (2 SEGUNDOS) ---
-        // Garantiza que los mensajes lleguen al admin
+        // --- POLLING CON PROTECCIÓN CONTRA SATURACIÓN ---
+        let isPolling = false;
         const pollInterval = setInterval(async () => {
+          // Evitar consultas simultáneas
+          if (isPolling) {
+            console.log("⏭️ ADMIN Polling saltado - consulta anterior en progreso");
+            return;
+          }
+
           try {
+            isPolling = true;
             const latestMessages = await MessageService.getByLeadId(leadId);
             setMessages((prev) => {
-              if (latestMessages.length > prev.length) {
-                console.log(`🔄 ADMIN Polling: ${latestMessages.length - prev.length} mensajes nuevos`);
+              if (latestMessages.length !== prev.length) {
+                console.log(`🔄 ADMIN Polling: ${Math.abs(latestMessages.length - prev.length)} cambios`);
                 return latestMessages;
               }
               return prev;
             });
           } catch (error) {
-            console.error("ADMIN Error en polling:", error);
+            console.error("❌ ADMIN Error en polling:", error);
+          } finally {
+            isPolling = false;
           }
-        }, 2000);
+        }, 3000); // 3 segundos para evitar saturación
 
         // --- SUSCRIPCIÓN REALTIME (backup instantáneo) ---
         const channel = supabase
