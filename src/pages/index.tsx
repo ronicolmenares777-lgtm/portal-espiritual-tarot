@@ -107,7 +107,7 @@ export default function Home() {
 
     try {
       setIsSubmitting(true);
-      console.log("📝 Enviando formulario:", formData);
+      console.log("📝 Enviando formulario a Supabase:", formData);
 
       const leadData = {
         name: formData.name,
@@ -121,11 +121,16 @@ export default function Home() {
 
       const result = await LeadService.create(leadData);
       
-      if (result.error || !result.data) {
-        throw new Error(result.error?.message || "No se pudo crear el lead");
+      if (result.error) {
+        console.error("❌ Error Supabase:", result.error);
+        throw new Error(result.error.message || "No se pudo conectar con Supabase");
+      }
+      
+      if (!result.data) {
+        throw new Error("Supabase no devolvió datos");
       }
 
-      console.log("✅ Lead creado con ID:", result.data.id);
+      console.log("✅ Lead creado en Supabase con ID:", result.data.id);
       
       setLeadId(result.data.id);
       setCurrentScreen("loading");
@@ -134,8 +139,14 @@ export default function Home() {
         setCurrentScreen("cards");
       }, 3000);
     } catch (error: any) {
-      console.error("❌ Error creando lead:", error);
-      alert(`Error al enviar el formulario: ${error.message || 'Por favor intenta de nuevo'}`);
+      console.error("❌ Error completo:", error);
+      
+      // Mensaje de error más claro para el usuario
+      if (error.message?.includes("ECONNREFUSED") || error.message?.includes("Failed to fetch")) {
+        alert("Error de conexión con Supabase. Por favor verifica que el proyecto esté activo en supabase.com");
+      } else {
+        alert(`Error: ${error.message || 'Por favor intenta de nuevo'}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
