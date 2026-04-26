@@ -61,18 +61,20 @@ export const MessageService = {
   },
 
   /**
-   * Marcar mensaje como leído
+   * Marcar mensajes como leídos para un lead
    */
-  async markAsRead(messageId: string): Promise<void> {
+  async markAsRead(leadId: string, isFromMaestro: boolean): Promise<void> {
     try {
       const { error } = await supabase
         .from("messages")
         .update({ read_at: new Date().toISOString() })
-        .eq("id", messageId);
+        .eq("lead_id", leadId)
+        .eq("is_from_maestro", isFromMaestro)
+        .is("read_at", null);
 
       if (error) throw error;
     } catch (error) {
-      console.error("Error marcando mensaje como leído:", error);
+      console.error("Error marcando mensajes como leídos:", error);
     }
   },
 
