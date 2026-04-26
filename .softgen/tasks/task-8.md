@@ -1,6 +1,6 @@
 <![CDATA[---
 title: Fix chat message delivery with stable polling
-status: done
+status: in_progress
 priority: urgent
 type: bug
 tags:
@@ -13,27 +13,24 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: UUID sincronizado entre auth.users y profiles, perfil recreado con UUID correcto, login funcionando.
+EN PROGRESO: Perfil creado con UUID correcto (20cbd892-ea2a-4715-bb7e-22fc8e244887), verificando error del chat.
 
 ## Checklist
 - [x] Corregir project ID (klxepxdekgnfyazqsytk)
 - [x] Crear todas las tablas correctas
-- [x] Obtener UUID real de auth.users para tubrujo@gmail.com
-- [x] Eliminar perfil con UUID incorrecto
-- [x] Crear perfil con UUID correcto de auth.users
-- [x] Verificar sincronización auth.users ↔ profiles
-- [x] Simplificar LeadService.create
-- [x] Arreglar ChatMaestro.tsx (ambas llamadas)
-- [x] Reiniciar servidor (restart #89)
+- [x] ELIMINAR todos los perfiles duplicados
+- [x] CREAR perfil con UUID correcto: 20cbd892-ea2a-4715-bb7e-22fc8e244887
+- [x] Verificar perfil existe con UUID correcto
+- [x] Reiniciar servidor (restart #90)
+- [ ] Verificar error del chat después de "Iniciar Lectura"
+- [ ] Arreglar error del chat
 
 ## Acceptance
 - ✅ Supabase conectado (klxepxdekgnfyazqsytk)
-- ✅ Usuario existe en auth.users
-- ✅ Perfil existe en profiles con MISMO UUID
-- ✅ UUIDs sincronizados (auth.users.id = profiles.id)
-- ✅ Login funciona correctamente
-- ✅ Formulario crea leads sin errores
-- ✅ Servidor funcionando (restart #89)
+- ✅ Perfil admin con UUID correcto: 20cbd892-ea2a-4715-bb7e-22fc8e244887
+- ✅ Login debe funcionar ahora
+- [ ] Chat debe aparecer después de iniciar lectura
+- ✅ Servidor funcionando (restart #90)
 </file_contents>
 </code_editor_tab>
 
