@@ -73,21 +73,19 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       if (!currentLeadId) {
         console.warn("⚠️ No se encontró leadId - Creando lead de emergencia...");
         try {
-          const { data: emergencyLead, error } = await LeadService.create({
+          const result = await LeadService.create({
             name: userName || "Usuario",
             whatsapp: userPhone || "0000000000",
             country_code: "+52",
             problem: userProblem || "Consulta desde chat",
             status: "nuevo",
-            selected_cards: userCard ? [userCard] : [],
-            precision_answers: []
           });
           
           if (!isMounted) return;
           
-          if (emergencyLead && !error) {
-            currentLeadId = emergencyLead.id;
-            localStorage.setItem("currentLeadId", emergencyLead.id);
+          if (result && !result.error) {
+            currentLeadId = result.id;
+            localStorage.setItem("currentLeadId", result.id);
             console.log("✅ Lead de emergencia creado:", currentLeadId);
           }
         } catch (err) {

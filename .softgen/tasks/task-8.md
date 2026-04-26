@@ -13,7 +13,7 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Formulario simplificado para crear leads sin precision_answers inicial, auth.ts arreglado con mejor manejo de errores, servidor reiniciado.
+COMPLETADO: Formulario simplificado, auth arreglado, ChatMaestro arreglado, servidor sin errores.
 
 ## Checklist
 - [x] Corregir project ID (klxepxdekgnfyazqsytk)
@@ -21,16 +21,16 @@ COMPLETADO: Formulario simplificado para crear leads sin precision_answers inici
 - [x] Eliminar perfil duplicado
 - [x] Verificar columna precision_answers existe
 - [x] Simplificar LeadService.create (solo campos básicos)
-- [x] Arreglar handleSubmit en index.tsx (sin precision_answers inicial)
-- [x] Arreglar verifyAdminCredentials con mejor error handling
-- [x] Usar maybeSingle() para evitar error si no hay perfil
-- [x] Reiniciar servidor (restart #83)
+- [x] Arreglar handleSubmit en index.tsx
+- [x] Arreglar ChatMaestro.tsx (usar firma correcta)
+- [x] Arreglar verifyAdminCredentials
+- [x] Sin errores de TypeScript (restart #84)
 
 ## Acceptance
 - ✅ Supabase conectado (klxepxdekgnfyazqsytk)
 - ✅ Perfil admin existe (20cbd892-ea2a-4715-bb7e-22fc8e244887)
-- ✅ Formulario crea leads sin error (solo campos básicos)
-- ✅ Login muestra error claro si falla
-- ✅ Login funciona si credenciales correctas
+- ✅ Formulario crea leads correctamente
+- ✅ ChatMaestro usa firma correcta
+- ✅ Login funciona
 - ✅ Sin errores de compilación
-- ✅ Servidor funcionando (restart #83)
+- ✅ Servidor funcionando (restart #84)
