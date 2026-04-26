@@ -38,6 +38,7 @@ export default function Home() {
     problem: "",
   });
   
+  const [leadId, setLeadId] = useState<string | null>(null);
   const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
   const [selectedCardIndex, setSelectedCardIndex] = useState(0);
@@ -102,7 +103,7 @@ export default function Home() {
       const leadData = {
         name: formData.name,
         whatsapp: formData.whatsapp,
-        country_code: formData.country_code,
+        country_code: formData.countryCode,
         problem: formData.problem,
         status: "nuevo" as const,
         ritual_state: "listo" as const,
@@ -122,11 +123,11 @@ export default function Home() {
       localStorage.setItem("userName", formData.name);
       
       setLeadId(result.data.id);
-      setCurrentStep("loading");
+      setCurrentScreen("loading");
       
       // Simular análisis del alma
       setTimeout(() => {
-        setCurrentStep("cards");
+        setCurrentScreen("cards");
       }, 3000);
     } catch (error: any) {
       console.error("❌ Error creando lead:", error);
@@ -154,32 +155,36 @@ export default function Home() {
       country_code: formData.countryCode,
       problem: formData.problem,
       status: "nuevo" as const,
+      ritual_state: "listo" as const,
       selected_cards: selectedCards.map(c => c.name),
-      precision_answers: answers
+      precision_answers: answers,
+      whatsapp_notified: false,
     };
 
     try {
-      // Guardar en Supabase PRIMERO (await para esperar)
-      const { data: newLead, error } = await LeadService.create(leadData);
+      const result = await LeadService.create(leadData);
       
-      if (error) {
-        console.error("⚠️ Error guardando lead:", error);
-        // Continuar de todos modos - el chat creará uno de emergencia
-      } else if (newLead) {
-        console.log("✅ Lead guardado exitosamente:", newLead.id);
-        localStorage.setItem("currentLeadId", newLead.id);
-        console.log("💾 Lead ID guardado en localStorage:", newLead.id);
+      if (result.error || !result.data) {
+        throw new Error(result.error?.message || "Error al guardar los datos");
       }
-    } catch (error) {
-      console.error("⚠️ Error inesperado guardando lead:", error);
-      // Continuar de todos modos - el chat creará uno de emergencia
+
+      console.log("✅ Lead guardado con ID:", result.data.id);
+      
+      // Guardar ID en localStorage
+      localStorage.setItem("currentLeadId", result.data.id);
+      localStorage.setItem("userName", formData.name);
+      
+      setLeadId(result.data.id);
+      setCurrentScreen("warning");
+      
+      // Después de 6 segundos, avanzar al chat
+      setTimeout(() => {
+        setCurrentScreen("chat");
+      }, 6000);
+    } catch (error: any) {
+      console.error("❌ Error guardando lead:", error);
+      alert(`Error al guardar: ${error.message}`);
     }
-    
-    // Pequeño delay para asegurar que localStorage se actualice
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // DESPUÉS cambiar a chat
-    setCurrentScreen("chat");
   };
 
   const handleLogin = async () => {
@@ -281,20 +286,20 @@ export default function Home() {
   const handleInitialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!userForm.name || !userForm.phone || !userForm.problem) {
+    if (!formData.name || !formData.whatsapp || !formData.problem) {
       alert("Por favor completa todos los campos");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      console.log("📝 Enviando formulario:", userForm);
+      console.log("📝 Enviando formulario:", formData);
 
       // Crear lead en Supabase
       const leadData = {
-        name: userForm.name,
-        phone: userForm.phone,
-        problem: userForm.problem,
+        name: formData.name,
+        phone: formData.whatsapp,
+        problem: formData.problem,
         status: "nuevo" as const,
         ritual_state: "listo" as const,
         whatsapp_notified: false,
@@ -310,14 +315,14 @@ export default function Home() {
 
       // Guardar en localStorage
       localStorage.setItem("currentLeadId", createdLead.id);
-      localStorage.setItem("userName", userForm.name);
+      localStorage.setItem("userName", formData.name);
       
-      setCurrentLeadId(createdLead.id);
-      setCurrentStep("loading");
+      setLeadId(createdLead.id);
+      setCurrentScreen("loading");
       
       // Simular análisis del alma
       setTimeout(() => {
-        setCurrentStep("cards");
+        setCurrentScreen("cards");
       }, 3000);
     } catch (error: any) {
       console.error("❌ Error creando lead:", error);
