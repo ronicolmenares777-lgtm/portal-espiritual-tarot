@@ -11,7 +11,7 @@ export const MessageService = {
   /**
    * Obtener todos los mensajes de un lead
    */
-  static async getByLeadId(leadId: string): Promise<Message[]> {
+  async getByLeadId(leadId: string): Promise<Message[]> {
     try {
       console.log("📥 MessageService.getByLeadId:", leadId);
       
@@ -38,7 +38,7 @@ export const MessageService = {
   /**
    * Crear un nuevo mensaje
    */
-  static async create(messageData: Omit<Message, "id" | "created_at" | "read_at">): Promise<Message | null> {
+  async create(messageData: any): Promise<Message | null> {
     try {
       console.log("📤 MessageService.create:", messageData);
       

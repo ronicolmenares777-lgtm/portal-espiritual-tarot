@@ -10,26 +10,8 @@ import { ProfileService } from "@/services/profileService";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ArrowLeft,
-  Send,
-  Mic,
-  Paperclip,
-  Star,
-  Phone,
-  X,
-  Circle,
-  CheckCircle,
-  User,
-  Mail,
-  Save,
-  Sparkles,
-  ImageIcon,
-  MessageCircle,
-  FileText,
-  Download
-} from "lucide-react";
-import Link from "next/link";
+import { Star, ArrowLeft, Phone, User, Settings, Image as ImageIcon, Send, Loader2, MessageSquare, Mic, Paperclip, X, Download, CheckCircle, Save, FileText, Sparkles, Circle } from "lucide-react";
+import { useMobile } from "@/hooks/use-mobile";
 
 type Lead = Database["public"]["Tables"]["leads"]["Row"];
 type Message = Database["public"]["Tables"]["messages"]["Row"];
@@ -64,7 +46,7 @@ export default function ChatPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<{
-    type: "image" | "video" | "audio";
+    type: "image" | "audio";
     url: string;
     file?: File;
   } | null>(null);
@@ -80,6 +62,8 @@ export default function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const isMobile = useMobile();
 
   // Auto-scroll cuando llegan mensajes nuevos
   useEffect(() => {
@@ -655,122 +639,100 @@ export default function ChatPage() {
           {/* Layout del chat */}
           <div className="flex flex-1 overflow-hidden">
             {/* Área de mensajes - siempre visible */}
-            <div className="flex-1 flex flex-col min-w-0 bg-gradient-to-b from-black via-[hsl(260,20%,8%)] to-black">
+            <div className="flex-1 flex flex-col min-w-0 bg-black relative">
+              {/* Overlay oscuro sutil */}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[hsl(260,20%,5%)] to-[hsl(260,30%,8%)] opacity-80 pointer-events-none" />
+              
               {/* Mensajes */}
-              <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 pb-32 md:pb-24">
+              <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 pb-32 md:pb-24 relative z-10">
                 {messages.map((msg) => {
                   const isFromMaestro = msg.is_from_maestro;
                   const isRead = msg.read_at !== null;
 
                   return (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`flex ${isFromMaestro ? "justify-end" : "justify-start"} group`}
-                    >
-                      <div className={`flex gap-3 max-w-[70%] ${isFromMaestro ? "flex-row-reverse" : "flex-row"}`}>
-                        {!isFromMaestro && lead && (
-                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-primary font-semibold">
-                            {lead.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
+                    <div key={msg.id}>
+                      {/* Burbujas de mensajes mejoradas */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex ${isFromMaestro ? "justify-end" : "justify-start"} group`}
+                      >
+                        <div
+                          className={`relative max-w-[85%] md:max-w-[75%] rounded-3xl p-4 md:p-5 shadow-2xl transition-all duration-300 hover:scale-[1.01] ${
+                            isFromMaestro
+                              ? "bg-gradient-to-br from-amber-400 via-gold to-amber-600 text-black shadow-gold/20 border border-amber-500/50 rounded-br-sm"
+                              : "bg-[hsl(260,20%,12%)] border border-gold/20 text-foreground shadow-black/50 rounded-bl-sm"
+                          }`}
+                        >
+                          {/* Avatar para mensajes del usuario */}
+                          {!isFromMaestro && (
+                            <div className="flex items-center gap-3 mb-3 pb-3 border-b border-gold/10">
+                              <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30 shadow-md">
+                                <span className="text-gold font-bold text-sm">{leadData?.name?.charAt(0) || "U"}</span>
+                              </div>
+                              <span className="text-sm font-semibold text-gold tracking-wide">{leadData?.name || "Usuario"}</span>
+                            </div>
+                          )}
 
-                        {isFromMaestro && (
-                          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-gold/30">
-                            <img
-                              src={maestroAvatar}
-                              alt="Maestro"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-
-                        <div className="relative flex-1">
-                          <div
-                            className={`relative max-w-[85%] md:max-w-[75%] rounded-3xl p-4 md:p-5 shadow-2xl transition-all duration-300 hover:scale-[1.01] ${
-                              isFromMaestro
-                                ? "bg-gradient-to-br from-amber-400 via-gold to-amber-600 text-black shadow-gold/60 border border-amber-500/50"
-                                : "bg-gradient-to-br from-[hsl(260,30%,18%)] via-[hsl(260,25%,16%)] to-[hsl(260,30%,14%)] border-2 border-gold/40 text-foreground shadow-gold/30"
-                            }`}
-                          >
-                            {msg.media_url ? (
-                              <div className="space-y-3">
-                                {msg.media_type === "image" && (
-                                  <div className="group/img relative">
-                                    <img 
-                                      src={msg.media_url} 
-                                      alt="Imagen" 
-                                      className="rounded-3xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all duration-300 shadow-xl group-hover/img:shadow-2xl border border-gold/20" 
-                                      onClick={() => setViewingImage(msg.media_url!)} 
-                                    />
-                                    {/* Botón de descarga SOLO en admin */}
-                                    <a
-                                      href={msg.media_url}
-                                      download
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="absolute top-2 right-2 p-2 bg-black/60 hover:bg-black/80 rounded-xl opacity-0 group-hover/img:opacity-100 transition-all duration-300"
-                                      title="Descargar imagen"
-                                    >
-                                      <Download className="w-5 h-5 text-white" />
-                                    </a>
-                                  </div>
-                                )}
-                                {msg.media_type === "video" && (
-                                  <div className="relative group/video">
-                                    <video 
-                                      src={msg.media_url} 
-                                      controls 
-                                      className="rounded-3xl max-w-full h-auto shadow-xl border border-gold/20" 
-                                    />
-                                    {/* Botón de descarga SOLO en admin */}
-                                    <a
-                                      href={msg.media_url}
-                                      download
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="absolute top-2 right-2 p-2 bg-black/60 hover:bg-black/80 rounded-xl opacity-0 group-hover/video:opacity-100 transition-all duration-300"
-                                      title="Descargar video"
-                                    >
-                                      <Download className="w-5 h-5 text-white" />
-                                    </a>
-                                  </div>
-                                )}
-                                {msg.media_type === "audio" && (
-                                  <div className="p-3 bg-background/20 rounded-xl">
-                                    <audio src={msg.media_url} controls className="w-full" />
-                                  </div>
-                                )}
-                                {msg.media_type === "file" && (
+                          {/* Multimedia */}
+                          {msg.media_url ? (
+                            <div className="space-y-3">
+                              {msg.media_type === "image" && (
+                                <div className="group/img relative">
+                                  <img 
+                                    src={msg.media_url} 
+                                    alt="Imagen" 
+                                    className="rounded-2xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all duration-300 shadow-xl group-hover/img:shadow-2xl border border-black/20" 
+                                    onClick={() => setViewingImage(msg.media_url!)} 
+                                  />
+                                  {/* Botón de descarga SOLO en admin */}
                                   <a
                                     href={msg.media_url}
                                     download
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
-                                      isFromMaestro ? "bg-background/20 hover:bg-background/30" : "bg-muted/50 hover:bg-muted/70"
-                                    }`}
+                                    className="absolute top-2 right-2 p-2 bg-black/80 hover:bg-black rounded-xl opacity-0 group-hover/img:opacity-100 transition-all duration-300 border border-gold/30 shadow-lg"
+                                    title="Descargar imagen"
                                   >
-                                    <FileText className="w-6 h-6 flex-shrink-0" />
-                                    <span className="text-sm font-medium flex-1">Archivo adjunto</span>
-                                    <Download className="w-5 h-5 ml-auto animate-bounce" />
+                                    <Download className="w-5 h-5 text-gold" />
                                   </a>
-                                )}
-                              </div>
-                            ) : null}
+                                </div>
+                              )}
+                              {msg.media_type === "audio" && (
+                                <div className={`p-3 rounded-xl shadow-inner ${isFromMaestro ? "bg-black/20" : "bg-black/40"}`}>
+                                  <audio src={msg.media_url} controls className="w-full h-10" />
+                                </div>
+                              )}
+                              {msg.media_type === "file" && (
+                                <a
+                                  href={msg.media_url}
+                                  download
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-300 hover:scale-105 border ${
+                                    isFromMaestro ? "bg-black/10 border-black/20 hover:bg-black/20" : "bg-black/40 border-black/50 hover:bg-black/60"
+                                  }`}
+                                >
+                                  <FileText className="w-6 h-6 flex-shrink-0" />
+                                  <span className="text-sm font-medium flex-1 truncate">Archivo adjunto</span>
+                                  <Download className="w-5 h-5 ml-auto animate-bounce" />
+                                </a>
+                              )}
+                            </div>
+                          ) : null}
 
-                            {/* Texto del mensaje */}
-                            {msg.text && (
-                              <p className={`text-[15px] leading-relaxed whitespace-pre-wrap font-medium ${msg.media_url ? "mt-3" : ""}`}>
-                                {msg.text}
-                              </p>
-                            )}
-                          </div>
+                          {/* Texto del mensaje */}
+                          {msg.text && (
+                            <p className={`text-[15px] leading-relaxed whitespace-pre-wrap ${
+                              isFromMaestro ? "font-medium" : "font-normal text-foreground/90"
+                            } ${msg.media_url ? "mt-3" : ""}`}>
+                              {msg.text}
+                            </p>
+                          )}
 
                           {/* Timestamp, checkmarks y botón eliminar */}
-                          <div className={`flex items-center gap-3 mt-3 px-1 ${isFromMaestro ? "justify-end" : "justify-start"}`}>
-                            <p className="text-xs font-medium tracking-wide text-muted-foreground/70">
+                          <div className={`flex items-center gap-3 mt-3 px-1 ${isFromMaestro ? "justify-end text-black/70" : "justify-start text-muted-foreground/50"}`}>
+                            <p className="text-[11px] font-semibold tracking-wider">
                               {new Date(msg.created_at).toLocaleTimeString("es-MX", {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -779,9 +741,9 @@ export default function ChatPage() {
                             {isFromMaestro && (
                               <div className="flex items-center">
                                 {isRead ? (
-                                  <span className="text-blue-400 text-sm font-bold tracking-tighter leading-none transition-all duration-300 scale-110">✓✓</span>
+                                  <span className="text-blue-700 text-sm font-bold tracking-tighter leading-none transition-all duration-300 scale-110">✓✓</span>
                                 ) : (
-                                  <span className="text-background/60 text-sm font-bold tracking-tighter leading-none">✓</span>
+                                  <span className="text-black/50 text-sm font-bold tracking-tighter leading-none">✓</span>
                                 )}
                               </div>
                             )}
@@ -789,22 +751,22 @@ export default function ChatPage() {
                             {/* Botón eliminar - solo visible al hacer hover */}
                             <button
                               onClick={() => handleDeleteMessage(msg.id)}
-                              className="opacity-0 group-hover:opacity-100 ml-auto p-2 hover:bg-destructive/20 rounded-xl transition-all duration-300 hover:scale-110"
+                              className="opacity-0 group-hover:opacity-100 ml-auto p-1.5 hover:bg-red-500/20 rounded-xl transition-all duration-300 hover:scale-110"
                               title="Eliminar mensaje"
                             >
-                              <X className="w-4 h-4 text-destructive" />
+                              <X className={`w-4 h-4 ${isFromMaestro ? "text-red-700" : "text-red-400"}`} />
                             </button>
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
+                      </motion.div>
+                    </div>
                   );
                 })}
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Input de mensaje */}
-              <div className="border-t-2 border-gold/40 bg-gradient-to-t from-black via-[hsl(260,25%,12%)] to-[hsl(260,20%,10%)] p-3 md:p-4 shadow-[0_-15px_50px_rgba(0,0,0,0.8)]">
+              <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-gold/10 bg-black/90 backdrop-blur-2xl p-2 md:p-4 shadow-[0_-20px_40px_rgba(0,0,0,0.8)]">
                 {/* Preview de multimedia */}
                 <AnimatePresence>
                   {mediaPreview && (
@@ -832,10 +794,10 @@ export default function ChatPage() {
                           )}
                           {mediaPreview.type === "video" && (
                             <div className="relative rounded-xl overflow-hidden border-2 border-gold/20 shadow-lg">
-                              <video
-                                src={mediaPreview.url}
-                                controls
-                                className="w-full max-w-[200px] md:max-w-xs rounded-xl"
+                              <video 
+                                src={mediaPreview.url} 
+                                controls 
+                                className="w-full max-w-[200px] md:max-w-xs rounded-xl" 
                               />
                               <div className="absolute top-2 right-2">
                                 <div className="px-2 py-1 md:px-3 md:py-1.5 bg-black/80 rounded-lg text-[10px] md:text-xs text-gold font-medium border border-gold/30">
@@ -946,7 +908,7 @@ export default function ChatPage() {
                       }}
                       placeholder="Escribe un mensaje sagrado..."
                       rows={1}
-                      className="w-full bg-card/80 backdrop-blur-md border-2 border-gold/30 rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-sm md:text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/50 transition-all resize-none shadow-inner"
+                      className="w-full bg-[hsl(260,20%,12%)] border border-gold/20 rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-sm md:text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none shadow-inner"
                       style={{ minHeight: "48px", maxHeight: "120px" }}
                     />
                   </div>
@@ -957,7 +919,7 @@ export default function ChatPage() {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleSendMessage(messageInput)}
                     disabled={!messageInput.trim() || isSending}
-                    className="p-3 md:p-3.5 bg-gradient-to-br from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-background rounded-xl md:rounded-2xl hover:shadow-xl hover:shadow-gold/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed border-2 border-gold/50 flex-shrink-0 shadow-lg"
+                    className="p-3 md:p-3.5 bg-gradient-to-br from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-black rounded-2xl hover:shadow-lg hover:shadow-gold/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
                   >
                     <Send className="w-5 h-5 md:w-6 md:h-6" />
                   </motion.button>
