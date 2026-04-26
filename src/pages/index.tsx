@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import { Moon, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
+import { supabase } from "@/integrations/supabase/client";
 
 const nombreEjemplos = [
   "María González",
