@@ -1,18 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { verifyAdminCredentials } from "@/middleware/auth";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import CustomCursor from "@/components/CustomCursor";
+import FloatingParticles from "@/components/FloatingParticles";
 
 export default function AdminLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Verificar si ya hay sesión
+    const adminUser = localStorage.getItem("admin_user");
+    if (adminUser) {
+      router.push("/Suafazon/dashboard");
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,93 +57,105 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
-      <div className="w-full max-width-md">
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-serif text-amber-300 mb-2">Portal Admin</h1>
-            <p className="text-purple-200">Acceso al Panel de Control Espiritual</p>
-          </div>
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+      <CustomCursor />
+      <FloatingParticles />
 
-          {error && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-              <p className="text-red-200 text-sm text-center">{error}</p>
-            </div>
-          )}
+      {/* Gradiente de fondo */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-secondary/20" />
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="email" className="text-purple-100">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@tarot.com"
-                required
-                disabled={isLoading}
-                className="mt-2 bg-white/10 border-white/30 text-white placeholder:text-purple-300"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password" className="text-purple-100">
-                Contraseña
-              </Label>
-              <div className="relative mt-2">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  disabled={isLoading}
-                  className="bg-white/10 border-white/30 text-white placeholder:text-purple-300 pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-300 hover:text-purple-100"
-                  disabled={isLoading}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-purple-900 font-semibold py-6 text-lg"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Verificando...
-                </>
-              ) : (
-                "Acceder al Portal"
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-purple-300 text-sm">
-              Solo usuarios autorizados pueden acceder
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          {/* Logo/Título */}
+          <div className="text-center mb-12 animate-fadeIn">
+            <h1 className="font-serif text-5xl md:text-6xl mb-4 tracking-wider text-primary">
+              PORTAL MÍSTICO
+            </h1>
+            <div className="h-px w-32 mx-auto bg-gradient-to-r from-transparent via-primary to-transparent mb-4" />
+            <p className="text-muted-foreground text-sm tracking-widest uppercase">
+              Acceso Espiritual
             </p>
           </div>
-        </div>
 
-        <div className="mt-6 text-center">
-          <a
-            href="/"
-            className="text-purple-200 hover:text-amber-300 text-sm underline"
-          >
-            ← Volver al Portal Espiritual
-          </a>
+          {/* Formulario */}
+          <div className="bg-card/40 backdrop-blur-sm border border-border/50 rounded-lg p-8 shadow-2xl">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Email */}
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-medium text-foreground/80">
+                  Email Espiritual
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-background/50 border border-border/50 rounded-md 
+                           text-foreground placeholder:text-muted-foreground
+                           focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
+                           transition-all duration-300"
+                  placeholder="tu@email.com"
+                />
+              </div>
+
+              {/* Password */}
+              <div className="space-y-2">
+                <label htmlFor="password" className="block text-sm font-medium text-foreground/80">
+                  Contraseña Sagrada
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-background/50 border border-border/50 rounded-md 
+                           text-foreground placeholder:text-muted-foreground
+                           focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
+                           transition-all duration-300"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-md">
+                  <p className="text-sm text-destructive text-center">{error}</p>
+                </div>
+              )}
+
+              {/* Botón */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground
+                         font-medium rounded-md transition-all duration-300
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         shadow-lg hover:shadow-primary/50
+                         tracking-wider uppercase text-sm"
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="animate-spin">⟳</span>
+                    Verificando...
+                  </span>
+                ) : (
+                  "Acceder al Portal"
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Link de regreso */}
+          <div className="text-center mt-8">
+            <a
+              href="/"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors duration-300"
+            >
+              ← Volver al Portal Espiritual
+            </a>
+          </div>
         </div>
       </div>
     </div>
