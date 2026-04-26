@@ -11,47 +11,54 @@ export const MessageService = {
   /**
    * Obtener todos los mensajes de un lead
    */
-  async getByLeadId(leadId: string): Promise<Message[]> {
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("lead_id", leadId)
-      .order("created_at", { ascending: true });
+  static async getByLeadId(leadId: string): Promise<Message[]> {
+    try {
+      console.log("📥 MessageService.getByLeadId:", leadId);
+      
+      // Consulta SIMPLE sin JOINs para evitar timeouts
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("lead_id", leadId)
+        .order("created_at", { ascending: true });
 
-    if (error) {
-      console.error("Error obteniendo mensajes:", error);
-      throw error;
+      if (error) {
+        console.error("❌ Error obteniendo mensajes:", error);
+        throw error;
+      }
+
+      console.log(`✅ Mensajes obtenidos: ${data?.length || 0}`);
+      return data || [];
+    } catch (error) {
+      console.error("❌ Error en getByLeadId:", error);
+      return [];
     }
-
-    return data || [];
   },
 
   /**
    * Crear un nuevo mensaje
    */
-  async create(message: {
-    lead_id: string;
-    text: string;
-    is_from_maestro: boolean;
-    media_url?: string;
-    media_type?: string;
-  }): Promise<Message> {
-    const { data, error } = await supabase
-      .from("messages")
-      .insert([message])
-      .select()
-      .single();
+  static async create(messageData: Omit<Message, "id" | "created_at" | "read_at">): Promise<Message | null> {
+    try {
+      console.log("📤 MessageService.create:", messageData);
+      
+      const { data, error } = await supabase
+        .from("messages")
+        .insert([messageData])
+        .select()
+        .single();
 
-    if (error) {
-      console.error("Error creando mensaje:", error);
-      throw error;
+      if (error) {
+        console.error("❌ Error creando mensaje:", error);
+        throw error;
+      }
+
+      console.log("✅ Mensaje creado:", data?.id);
+      return data;
+    } catch (error) {
+      console.error("❌ Error en create:", error);
+      return null;
     }
-
-    if (!data) {
-      throw new Error("No se pudo crear el mensaje");
-    }
-
-    return data;
   },
 
   /**
