@@ -355,5 +355,31 @@ export const LeadService = {
       listos: data.filter((l) => l.status === "listo").length,
       perdidos: data.filter((l) => l.status === "perdido").length
     };
+  },
+
+  /**
+   * Buscar lead por nombre exacto y WhatsApp exacto
+   */
+  async findByNameAndWhatsApp(name: string, whatsapp: string) {
+    try {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("name", name)
+        .eq("whatsapp", whatsapp)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error("Error buscando lead:", error);
+        return { data: null, error };
+      }
+
+      return { data: data && data.length > 0 ? data[0] : null, error: null };
+    } catch (error: any) {
+      console.error("Error en findByNameAndWhatsApp:", error);
+      return { data: null, error };
+    }
   }
 };

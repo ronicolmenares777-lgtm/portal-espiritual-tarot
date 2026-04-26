@@ -88,6 +88,19 @@ export default function Home() {
     }
   }, [currentScreen]);
 
+  // Verificar si hay un lead guardado en localStorage al cargar
+  useEffect(() => {
+    const savedLeadId = localStorage.getItem("currentLeadId");
+    const savedName = localStorage.getItem("userName");
+    
+    if (savedLeadId && savedName) {
+      console.log("🔄 Recuperando sesión:", { savedLeadId, savedName });
+      setLeadId(savedLeadId);
+      setFormData(prev => ({ ...prev, name: savedName }));
+      setCurrentScreen("chat");
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -199,18 +212,18 @@ export default function Home() {
     try {
       const result = await LeadService.findByNameAndWhatsApp(loginData.name, loginData.whatsapp);
       
-      if (result.error || !result.data || result.data.length === 0) {
+      if (result.error || !result.data) {
         setLoginError("No se encontró ninguna consulta con estos datos");
         return;
       }
 
-      console.log("✅ Lead encontrado:", result.data[0].id);
+      console.log("✅ Lead encontrado:", result.data.id);
       
       // Guardar en localStorage
-      localStorage.setItem("currentLeadId", result.data[0].id);
+      localStorage.setItem("currentLeadId", result.data.id);
       localStorage.setItem("userName", loginData.name);
       
-      setLeadId(result.data[0].id);
+      setLeadId(result.data.id);
       setShowLoginModal(false);
       setCurrentScreen("chat");
     } catch (error: any) {
