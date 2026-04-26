@@ -187,99 +187,35 @@ export default function Home() {
     }
   };
 
-  const handleLogin = async () => {
-    if (!loginData.name.trim() || !loginData.whatsapp.trim()) {
-      setLoginError("Por favor, completa todos los campos");
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+
+    if (!loginData.name || !loginData.whatsapp) {
+      setLoginError("Por favor completa todos los campos");
       return;
     }
 
     try {
-      setLoginError("");
-      console.log("🔍 ===== INICIO DE BÚSQUEDA DE LEAD =====");
-      console.log("📝 Datos ingresados por el usuario:");
-      console.log("   - Nombre:", loginData.name.trim());
-      console.log("   - WhatsApp:", loginData.whatsapp.trim());
-      console.log("   - Código país:", loginData.countryCode);
+      const result = await LeadService.findByNameAndWhatsApp(loginData.name, loginData.whatsapp);
       
-      // Buscar solo leads ACTIVOS (no eliminados)
-      const { data: leads, error } = await LeadService.getActive();
-      
-      if (error) {
-        console.error("❌ Error en Supabase:", error);
-        setLoginError("Error al buscar consulta en la base de datos");
-        return;
-      }
-      
-      console.log("📊 Leads obtenidos de Supabase:", leads?.length || 0);
-      
-      if (!leads || leads.length === 0) {
-        console.log("❌ La base de datos está vacía");
-        setLoginError("No se encontró ninguna consulta. ¿Ya completaste el formulario?");
+      if (result.error || !result.data || result.data.length === 0) {
+        setLoginError("No se encontró ninguna consulta con estos datos");
         return;
       }
 
-      // Mostrar todos los leads para debugging
-      console.log("📋 Leads en la BD:");
-      leads.forEach((lead: any, index: number) => {
-        console.log(`   ${index + 1}. Nombre: "${lead.name}" | WhatsApp: "${lead.whatsapp}"`);
-      });
-
-      // Buscar lead que coincida
-      console.log("🔎 Buscando coincidencia...");
-      const user = leads.find((lead: any) => {
-        const leadName = lead.name?.toLowerCase().trim() || "";
-        const leadPhone = lead.whatsapp?.trim() || "";
-        const inputName = loginData.name.toLowerCase().trim();
-        const inputPhone = loginData.whatsapp.trim();
-        
-        const nameMatch = leadName === inputName;
-        const phoneMatch = leadPhone === inputPhone;
-        
-        if (leadName.includes(inputName.substring(0, 5))) {
-          console.log(`   🔍 Posible coincidencia: "${lead.name}" (${lead.whatsapp})`);
-          console.log(`      - Nombre match: ${nameMatch} | Phone match: ${phoneMatch}`);
-        }
-        
-        return nameMatch && phoneMatch;
-      });
-
-      if (user) {
-        console.log("✅ ¡LEAD ENCONTRADO!");
-        console.log("   - ID:", user.id);
-        console.log("   - Nombre:", user.name);
-        console.log("   - WhatsApp:", user.whatsapp);
-        
-        // Guardar en localStorage
-        const authData = {
-          id: user.id,
-          name: user.name,
-          whatsapp: user.whatsapp,
-          countryCode: user.country_code || loginData.countryCode,
-          problem: user.problem,
-          selectedCard: user.selected_cards?.[0] || null
-        };
-        
-        localStorage.setItem("userAuth", JSON.stringify(authData));
-        localStorage.setItem("currentLeadId", user.id);
-        
-        console.log("💾 Datos guardados en localStorage");
-        console.log("🔄 Redirigiendo a /chat-usuario");
-        
-        // Cerrar modal
-        setShowLoginModal(false);
-        
-        // Redirigir
-        router.push("/chat-usuario");
-      } else {
-        console.log("❌ NO SE ENCONTRÓ COINCIDENCIA");
-        console.log("💡 Verifica que el nombre y WhatsApp sean EXACTAMENTE iguales a los del formulario");
-        setLoginError("No se encontró ninguna consulta con estos datos. Verifica que sean exactos.");
-      }
+      console.log("✅ Lead encontrado:", result.data[0].id);
       
-      console.log("===== FIN DE BÚSQUEDA =====");
-    } catch (error) {
-      console.error("❌ Error inesperado:", error);
-      setLoginError("Error al buscar consulta. Intenta de nuevo.");
+      // Guardar en localStorage
+      localStorage.setItem("currentLeadId", result.data[0].id);
+      localStorage.setItem("userName", loginData.name);
+      
+      setLeadId(result.data[0].id);
+      setShowLoginModal(false);
+      setCurrentScreen("chat");
+    } catch (error: any) {
+      console.error("❌ Error en login:", error);
+      setLoginError(`Error: ${error.message}`);
     }
   };
 
