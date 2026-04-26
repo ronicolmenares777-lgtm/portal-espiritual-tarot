@@ -31,6 +31,10 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [showMediaMenu, setShowMediaMenu] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
