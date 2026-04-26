@@ -105,43 +105,29 @@ export default function ChatPage() {
     return false;
   };
 
-  // Cargar datos iniciales y configurar suscripción realtime
   useEffect(() => {
-    if (!leadId) return;
+    if (leadId) {
+      const loadMessages = async () => {
+        if (!leadId) return;
+        const currentLeadId = leadId;
 
-    let isMounted = true;
-    const channelSubscription: any = null;
-
-    const initializeChat = async () => {
-      console.log("🔄 Iniciando chat del administrador para lead:", leadId);
-
-      try {
-        // Cargar datos del lead
-        const { data: leadData, error: leadError } = await LeadService.getById(leadId);
-        if (leadError) throw leadError;
-        if (!isMounted) return;
+        console.log("🔗 ADMIN Iniciando carga de mensajes para lead:", currentLeadId);
         
-        if (!leadData) {
-          console.error("❌ Lead no encontrado");
-          return;
+        try {
+          const initialMessages = await MessageService.getByLeadId(currentLeadId);
+          setMessages(initialMessages);
+          setLastMessageCount(initialMessages.length);
+          console.log(`✅ ADMIN Mensajes iniciales cargados: ${initialMessages.length}`);
+
+          // Marcar mensajes del usuario como leídos
+          MessageService.markAsRead(currentLeadId, false).catch(console.error);
+        } catch (error) {
+          console.error("❌ ADMIN Error cargando mensajes:", error);
         }
-        setLead(leadData);
-        console.log("✅ Lead cargado:", leadData);
 
-        // Cargar mensajes existentes
-        console.log("🔗 ADMIN Iniciando carga de mensajes para lead:", leadId);
-        const initialMessages = await MessageService.getByLeadId(leadId);
-        setMessages(initialMessages);
-        setLastMessageCount(initialMessages.length);
-        console.log(`✅ ADMIN Mensajes iniciales cargados: ${initialMessages.length}`);
-
-        // Marcar mensajes del usuario como leídos
-        MessageService.markAsRead(leadId, false).catch(console.error);
-
-        // --- POLLING CON PROTECCIÓN CONTRA SATURACIÓN ---
+        // --- SOLO POLLING (3 SEGUNDOS) ---
         let isPolling = false;
         const pollInterval = setInterval(async () => {
-          // Evitar consultas simultáneas
           if (isPolling) {
             console.log("⏭️ ADMIN Polling saltado - consulta anterior en progreso");
             return;
@@ -149,7 +135,7 @@ export default function ChatPage() {
 
           try {
             isPolling = true;
-            const latestMessages = await MessageService.getByLeadId(leadId);
+            const latestMessages = await MessageService.getByLeadId(currentLeadId);
             setMessages((prev) => {
               if (latestMessages.length !== prev.length) {
                 console.log(`🔄 ADMIN Polling: ${Math.abs(latestMessages.length - prev.length)} cambios`);
@@ -162,60 +148,17 @@ export default function ChatPage() {
           } finally {
             isPolling = false;
           }
-        }, 3000); // 3 segundos para evitar saturación
-
-        // --- SUSCRIPCIÓN REALTIME (backup instantáneo) ---
-        const channel = supabase
-          .channel(`admin-messages:${leadId}`)
-          .on(
-            'postgres_changes',
-            {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'messages',
-              filter: `lead_id=eq.${leadId}`
-            },
-            (payload) => {
-              console.log('🔔 ADMIN REALTIME: Nuevo mensaje', payload.new);
-              setMessages((prev) => {
-                if (!prev.some(m => m.id === payload.new.id)) {
-                  return [...prev, payload.new as Message];
-                }
-                return prev;
-              });
-            }
-          )
-          .subscribe();
+        }, 3000);
 
         // Cleanup
         return () => {
-          console.log("🧹 ADMIN Limpiando polling y realtime");
+          console.log("🧹 ADMIN Limpiando polling");
           clearInterval(pollInterval);
-          supabase.removeChannel(channel);
         };
-      } catch (error) {
-        console.error("❌ Error inicializando chat:", error);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
+      };
 
-    initializeChat();
-
-    // Cleanup
-    return () => {
-      isMounted = false;
-      if (channelSubscription) {
-        console.log("🔌 Cerrando suscripción realtime del admin");
-        supabase.removeChannel(channelSubscription);
-      }
-      if (pollingIntervalRef.current) {
-        console.log("🛑 Deteniendo polling de respaldo del admin...");
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
+      loadMessages();
+    }
   }, [leadId]);
 
   const handleSendMessage = async (text?: string) => {

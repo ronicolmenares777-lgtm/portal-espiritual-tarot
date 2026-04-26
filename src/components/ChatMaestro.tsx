@@ -193,6 +193,8 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
 
   useEffect(() => {
     if (leadId) {
+      setIsLoading(true);
+      
       const loadMessages = async () => {
         if (!leadId) return;
         const currentLeadId = leadId;
@@ -204,23 +206,20 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           setMessages(initialMessages);
           setLastMessageCount(initialMessages.length);
           console.log(`✅ Mensajes iniciales cargados: ${initialMessages.length}`);
-          
-          // ✅ CRÍTICO: Quitar el estado de carga
           setIsLoading(false);
 
           // Marcar como leídos los mensajes del maestro
           MessageService.markAsRead(currentLeadId, false).catch(console.error);
         } catch (error) {
           console.error("❌ Error cargando mensajes:", error);
-          setIsLoading(false); // ✅ Quitar loading incluso si falla
+          setIsLoading(false);
         }
 
-        // --- POLLING CON PROTECCIÓN CONTRA SATURACIÓN ---
+        // --- SOLO POLLING (3 SEGUNDOS) ---
         let isPolling = false;
         const pollInterval = setInterval(async () => {
-          // Evitar consultas simultáneas
           if (isPolling) {
-            console.log("⏭️ Polling saltado - consulta anterior aún en progreso");
+            console.log("⏭️ Polling saltado - consulta anterior en progreso");
             return;
           }
 
@@ -239,36 +238,12 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
           } finally {
             isPolling = false;
           }
-        }, 3000); // 3 segundos para evitar saturación
-
-        // --- SUSCRIPCIÓN REALTIME (backup instantáneo) ---
-        const channel = supabase
-          .channel(`messages:${currentLeadId}`)
-          .on(
-            'postgres_changes',
-            {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'messages',
-              filter: `lead_id=eq.${currentLeadId}`
-            },
-            (payload) => {
-              console.log('🔔 REALTIME: Nuevo mensaje', payload.new);
-              setMessages((prev) => {
-                if (!prev.some(m => m.id === payload.new.id)) {
-                  return [...prev, payload.new as Message];
-                }
-                return prev;
-              });
-            }
-          )
-          .subscribe();
+        }, 3000);
 
         // Cleanup
         return () => {
-          console.log("🧹 Limpiando polling y realtime");
+          console.log("🧹 Limpiando polling");
           clearInterval(pollInterval);
-          supabase.removeChannel(channel);
         };
       };
 
