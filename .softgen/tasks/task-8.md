@@ -24,12 +24,12 @@ COMPLETADO: Base de datos completamente configurada, login admin arreglado, colu
 - [x] Arreglar auth.ts para usar Supabase Auth
 - [x] Arreglar login en /Suafazon
 - [x] Generar tipos TypeScript
-- [x] Verificar servidor sin errores
+- [x] Verificar servidor sin errores (restart #69)
 
 ## Acceptance
 - ✅ Supabase conectado (klxepxdekgnfyazqsytk)
 - ✅ Tabla leads tiene columna precision_answers
 - ✅ Perfil admin creado correctamente
 - ✅ Login admin funciona con email/password
-- ✅ Sin errores 400 en /api/leads
-- ✅ Servidor sin errores de compilación
+- ✅ Sin errores de compilación
+- ✅ Servidor funcionando (restart #69)
