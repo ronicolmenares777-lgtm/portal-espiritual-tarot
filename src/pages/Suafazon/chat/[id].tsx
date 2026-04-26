@@ -522,432 +522,393 @@ export default function ChatPage() {
   }
 
   return (
-    <>
-      <SEO
-        title="Chat - Portal Espiritual Admin"
-        description="Conversación con cliente"
-      />
-
-      {/* Cursor personalizado DESHABILITADO en admin */}
-      {/* <CustomCursor /> */}
-      <FloatingParticles />
-
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* Header */}
-        <div className="bg-black border-b border-gold/20 px-2 md:px-6 py-2 md:py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
-              <button
-                onClick={() => router.push("/Suafazon/dashboard")}
-                className="p-1.5 md:p-2 hover:bg-muted/50 rounded-lg transition-colors flex-shrink-0"
-              >
-                <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground hover:text-gold" />
-              </button>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xs md:text-base font-medium text-foreground truncate">
-                  {lead?.name}
-                </h2>
-                <p className="text-[10px] md:text-xs text-muted-foreground truncate">
-                  {lead?.whatsapp}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1 md:gap-3 flex-shrink-0">
-              {/* Botón para mostrar panel lateral en móvil */}
-              <button
-                onClick={() => setShowSidebar(!showSidebar)}
-                className="lg:hidden p-1.5 md:p-2 hover:bg-muted/50 rounded-lg transition-colors"
-              >
-                <User className="w-4 h-4 text-gold" />
-              </button>
-
-              <button
-                onClick={() => setShowProfile(true)}
-                className="flex items-center gap-1 md:gap-3 hover:bg-muted/50 px-1.5 md:px-3 py-1.5 md:py-2 rounded-lg transition-colors"
-              >
-                <span className="text-[10px] md:text-sm hidden sm:block">{profileData.name}</span>
-                <div className="w-6 h-6 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-gold/30">
-                  <img
-                    src={profileData.avatar}
-                    alt="Maestro"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </button>
+    <div className="min-h-screen bg-black flex flex-col">
+      {/* Header elegante */}
+      <div className="bg-gradient-to-r from-black via-[hsl(260,30%,8%)] to-black backdrop-blur-xl border-b border-gold/20 px-3 md:px-6 py-3 md:py-4 shadow-2xl flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+            <button
+              onClick={() => router.push("/Suafazon/dashboard")}
+              className="p-1.5 md:p-2 hover:bg-gold/20 rounded-xl transition-all duration-300 flex-shrink-0 border border-gold/20"
+            >
+              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 text-gold" />
+            </button>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-sm md:text-lg font-serif font-bold text-gold truncate">
+                {lead?.name}
+              </h2>
+              <p className="text-[10px] md:text-xs text-muted-foreground truncate flex items-center gap-1">
+                <Phone className="w-3 h-3 text-green-500" />
+                {lead?.whatsapp}
+              </p>
             </div>
           </div>
+
+          <div className="flex items-center gap-1 md:gap-3 flex-shrink-0">
+            <button
+              onClick={handleFavoriteToggle}
+              className="p-2 hover:bg-gold/20 rounded-xl transition-all duration-300 border border-gold/20"
+            >
+              <Star className={`w-4 h-4 md:w-5 md:h-5 ${lead?.is_favorite ? "fill-gold text-gold" : "text-muted-foreground"}`} />
+            </button>
+
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              className="lg:hidden p-2 hover:bg-gold/20 rounded-xl transition-all duration-300 border border-gold/20"
+            >
+              <User className="w-4 h-4 text-gold" />
+            </button>
+
+            <button
+              onClick={() => setShowProfile(true)}
+              className="flex items-center gap-1 md:gap-3 hover:bg-gold/20 px-2 md:px-3 py-2 rounded-xl transition-all duration-300 border border-gold/20"
+            >
+              <span className="text-[10px] md:text-sm font-medium text-foreground hidden sm:block">{profileData.name}</span>
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-gold/30 ring-2 ring-gold/20">
+                <img
+                  src={profileData.avatar}
+                  alt="Maestro"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </button>
+          </div>
         </div>
+      </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex max-w-7xl w-full mx-auto">
-          {/* Layout del chat */}
-          <div className="flex flex-1 overflow-hidden">
-            {/* Área de mensajes - siempre visible */}
-            <div className="flex-1 flex flex-col min-w-0 bg-black relative">
-              {/* Overlay oscuro sutil */}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[hsl(260,20%,5%)] to-[hsl(260,30%,8%)] opacity-80 pointer-events-none" />
-              
-              {/* Mensajes */}
-              <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 pb-32 md:pb-24 relative z-10">
-                {messages.map((msg) => {
-                  const isFromMaestro = msg.is_from_maestro;
-                  const isRead = msg.read_at !== null;
+      {/* Contenedor principal con flex */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Área de mensajes - SCROLL AUTOMÁTICO */}
+        <div className="flex-1 flex flex-col min-w-0 bg-black relative">
+          {/* Overlay oscuro sutil */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[hsl(260,20%,5%)] to-[hsl(260,30%,8%)] opacity-80 pointer-events-none" />
+          
+          {/* Mensajes con scroll automático */}
+          <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 relative z-10">
+            {messages.map((msg) => {
+              const isFromMaestro = msg.is_from_maestro;
+              const isRead = msg.read_at !== null;
 
-                  return (
-                    <div key={msg.id}>
-                      {/* Burbujas de mensajes mejoradas */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`flex ${isFromMaestro ? "justify-end" : "justify-start"} group`}
-                      >
-                        <div
-                          className={`relative max-w-[85%] md:max-w-[75%] rounded-3xl p-4 md:p-5 shadow-2xl transition-all duration-300 hover:scale-[1.01] ${
-                            isFromMaestro
-                              ? "bg-gradient-to-br from-amber-400 via-gold to-amber-600 text-black shadow-gold/20 border border-amber-500/50 rounded-br-sm"
-                              : "bg-[hsl(260,20%,12%)] border border-gold/20 text-foreground shadow-black/50 rounded-bl-sm"
-                          }`}
-                        >
-                          {/* Avatar para mensajes del usuario */}
-                          {!isFromMaestro && (
-                            <div className="flex items-center gap-3 mb-3 pb-3 border-b border-gold/10">
-                              <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30 shadow-md">
-                                <span className="text-gold font-bold text-sm">{lead?.name?.charAt(0) || "U"}</span>
-                              </div>
-                              <span className="text-sm font-semibold text-gold tracking-wide">{lead?.name || "Usuario"}</span>
-                            </div>
-                          )}
-
-                          {/* Multimedia */}
-                          {msg.media_url ? (
-                            <div className="space-y-3">
-                              {msg.media_type === "image" && (
-                                <div className="group/img relative">
-                                  <img 
-                                    src={msg.media_url} 
-                                    alt="Imagen" 
-                                    className="rounded-2xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all duration-300 shadow-xl group-hover/img:shadow-2xl border border-black/20" 
-                                    onClick={() => setViewingImage(msg.media_url!)} 
-                                  />
-                                  {/* Botón de descarga SOLO en admin */}
-                                  <a
-                                    href={msg.media_url}
-                                    download
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="absolute top-2 right-2 p-2 bg-black/80 hover:bg-black rounded-xl opacity-0 group-hover/img:opacity-100 transition-all duration-300 border border-gold/30 shadow-lg"
-                                    title="Descargar imagen"
-                                  >
-                                    <Download className="w-5 h-5 text-gold" />
-                                  </a>
-                                </div>
-                              )}
-                              {msg.media_type === "audio" && (
-                                <div className="p-3 rounded-xl shadow-inner bg-black/40 border border-gold/20">
-                                  <audio src={msg.media_url} controls className="w-full h-10" />
-                                </div>
-                              )}
-                              {msg.media_type === "file" && (
-                                <a
-                                  href={msg.media_url}
-                                  download
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-300 hover:scale-105 border ${
-                                    isFromMaestro ? "bg-black/10 border-black/20 hover:bg-black/20" : "bg-black/40 border-black/50 hover:bg-black/60"
-                                  }`}
-                                >
-                                  <FileText className="w-6 h-6 flex-shrink-0" />
-                                  <span className="text-sm font-medium flex-1 truncate">Archivo adjunto</span>
-                                  <Download className="w-5 h-5 ml-auto animate-bounce" />
-                                </a>
-                              )}
-                            </div>
-                          ) : null}
-
-                          {/* Texto del mensaje */}
-                          {msg.text && (
-                            <p className={`text-[15px] leading-relaxed whitespace-pre-wrap ${
-                              isFromMaestro ? "font-medium" : "font-normal text-foreground/90"
-                            } ${msg.media_url ? "mt-3" : ""}`}>
-                              {msg.text}
-                            </p>
-                          )}
-
-                          {/* Timestamp, checkmarks y botón eliminar */}
-                          <div className={`flex items-center gap-3 mt-3 px-1 ${isFromMaestro ? "justify-end text-black/70" : "justify-start text-muted-foreground/50"}`}>
-                            <p className="text-[11px] font-semibold tracking-wider">
-                              {new Date(msg.created_at).toLocaleTimeString("es-MX", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </p>
-                            {isFromMaestro && (
-                              <div className="flex items-center">
-                                {isRead ? (
-                                  <span className="text-blue-700 text-sm font-bold tracking-tighter leading-none transition-all duration-300 scale-110">✓✓</span>
-                                ) : (
-                                  <span className="text-black/50 text-sm font-bold tracking-tighter leading-none">✓</span>
-                                )}
-                              </div>
-                            )}
-                            
-                            {/* Botón eliminar - solo visible al hacer hover */}
-                            <button
-                              onClick={() => handleDeleteMessage(msg.id)}
-                              className="opacity-0 group-hover:opacity-100 ml-auto p-1.5 hover:bg-red-500/20 rounded-xl transition-all duration-300 hover:scale-110"
-                              title="Eliminar mensaje"
-                            >
-                              <X className={`w-4 h-4 ${isFromMaestro ? "text-red-700" : "text-red-400"}`} />
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input de mensaje */}
-              <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-gold/10 bg-black/90 backdrop-blur-2xl p-2 md:p-4 shadow-[0_-20px_40px_rgba(0,0,0,0.8)]">
-                {/* Preview de multimedia */}
-                <AnimatePresence>
-                  {mediaPreview && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 20 }}
-                      className="mb-3 md:mb-4 p-3 md:p-4 bg-card/80 backdrop-blur-md rounded-3xl border-2 border-gold/30 shadow-xl"
-                    >
-                      <div className="flex items-start justify-between gap-2 md:gap-4">
-                        <div className="flex-1">
-                          {mediaPreview.type === "image" && (
-                            <div className="relative rounded-xl overflow-hidden border-2 border-gold/20 shadow-lg">
-                              <img
-                                src={mediaPreview.url}
-                                alt="Preview"
-                                className="w-full max-w-[200px] md:max-w-xs rounded-xl"
-                              />
-                              <div className="absolute top-2 right-2">
-                                <div className="px-2 py-1 md:px-3 md:py-1.5 bg-black/80 rounded-lg text-[10px] md:text-xs text-gold font-medium border border-gold/30">
-                                  Imagen
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          {mediaPreview.type === "audio" && (
-                            <div className={`p-3 rounded-xl shadow-inner ${isFromMaestro ? "bg-black/20" : "bg-black/40"}`}>
-                              <audio src={mediaPreview.url} controls className="w-full h-10" />
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          onClick={cancelMediaPreview}
-                          className="p-1.5 md:p-2 hover:bg-red-500/20 rounded-lg transition-colors border border-transparent hover:border-red-500/50"
-                          title="Cancelar"
-                        >
-                          <X className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground hover:text-red-400" />
-                        </button>
-                      </div>
-                      <div className="flex gap-2 mt-3 md:mt-4">
-                        <button
-                          onClick={cancelMediaPreview}
-                          className="flex-1 px-3 py-2 md:px-4 md:py-2.5 rounded-xl border-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-gold/30 transition-all text-xs md:text-sm font-medium"
-                        >
-                          Cancelar
-                        </button>
-                        <button
-                          onClick={handleSendMedia}
-                          className="flex-1 px-3 py-2 md:px-4 md:py-2.5 rounded-xl bg-gradient-to-r from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-black font-medium hover:shadow-lg hover:shadow-gold/50 transition-all text-xs md:text-sm border-2 border-gold/50"
-                        >
-                          Enviar
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Inputs ocultos para archivos */}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFileAttach(e, "image")}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={(e) => handleFileAttach(e, "audio")}
-                  className="hidden"
-                  id="audio-upload"
-                />
-
-                <div className="flex items-end gap-2 md:gap-3">
-                  {/* Botones de adjuntar */}
-                  <div className="flex gap-1 md:gap-2 flex-shrink-0">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => document.getElementById("image-upload")?.click()}
-                      className="p-2.5 md:p-3 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-xl transition-all group border-2 border-gold/20 hover:border-gold/40 shadow-lg hover:shadow-gold/20"
-                      title="Enviar imagen"
-                    >
-                      <ImageIcon className="w-5 h-5 text-gold group-hover:text-amber-300 transition-colors" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={isRecording ? stopRecording : startRecording}
-                      className={`p-2.5 md:p-3 rounded-xl transition-all group border-2 shadow-lg ${
-                        isRecording 
-                          ? "bg-red-500/30 border-red-500/60 shadow-red-500/20" 
-                          : "bg-gradient-to-br from-card to-secondary border-gold/20 hover:border-gold/40 hover:from-gold/20 hover:to-gold/10 hover:shadow-gold/20"
-                      }`}
-                      title={isRecording ? "Detener grabación" : "Grabar audio"}
-                    >
-                      <Mic className={`w-5 h-5 transition-colors ${
-                        isRecording 
-                          ? "text-red-400 animate-pulse" 
-                          : "text-gold group-hover:text-amber-300"
-                      }`} />
-                    </motion.button>
-                  </div>
-
-                  {/* Input de texto */}
-                  <div className="flex-1 min-w-0">
-                    <textarea
-                      value={messageInput}
-                      onChange={(e) => setMessageInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage(messageInput);
-                        }
-                      }}
-                      placeholder="Escribe un mensaje sagrado..."
-                      rows={1}
-                      className="w-full bg-[hsl(260,20%,12%)] border border-gold/20 rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-sm md:text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none shadow-inner"
-                      style={{ minHeight: "48px", maxHeight: "120px" }}
-                    />
-                  </div>
-
-                  {/* Botón enviar */}
-                  <motion.button
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleSendMessage(messageInput)}
-                    disabled={!messageInput.trim() || isSending}
-                    className="p-3 md:p-3.5 bg-gradient-to-br from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-black rounded-2xl hover:shadow-lg hover:shadow-gold/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                  >
-                    <Send className="w-5 h-5 md:w-6 md:h-6" />
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-
-            {/* Panel lateral - Atributos del Alma */}
-            <AnimatePresence>
-              {(showSidebar || !isMobile) && (
+              return (
                 <motion.div
-                  initial={isMobile ? { x: "100%" } : false}
-                  animate={isMobile ? { x: 0 } : {}}
-                  exit={isMobile ? { x: "100%" } : {}}
-                  transition={{ type: "spring", damping: 25 }}
-                  className={`${
-                    isMobile 
-                      ? "fixed inset-0 z-50 bg-[hsl(260,35%,10%)]"
-                      : "w-80 border-l-2 border-gold/20"
-                  } bg-gradient-to-b from-[hsl(260,35%,12%)] to-[hsl(260,40%,10%)] overflow-y-auto`}
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${isFromMaestro ? "justify-end" : "justify-start"} group`}
                 >
-                  {/* Header móvil */}
-                  {isMobile && (
-                    <div className="sticky top-0 bg-gradient-to-r from-secondary/95 to-card/95 backdrop-blur-xl border-b border-gold/20 p-4 flex items-center justify-between z-10">
-                      <h3 className="text-lg font-serif font-bold text-gold">Atributos del Alma</h3>
+                  <div
+                    className={`relative max-w-[85%] md:max-w-[70%] rounded-3xl p-4 md:p-5 shadow-2xl transition-all duration-300 ${
+                      isFromMaestro
+                        ? "bg-gradient-to-br from-amber-400 via-gold to-amber-600 text-black shadow-gold/30 border border-amber-500/50 rounded-br-sm"
+                        : "bg-[hsl(260,20%,14%)] border-2 border-gold/30 text-foreground shadow-black/50 rounded-bl-sm"
+                    }`}
+                  >
+                    {!isFromMaestro && (
+                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gold/10">
+                        <div className="w-7 h-7 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30">
+                          <span className="text-gold font-bold text-xs">{lead?.name?.charAt(0) || "U"}</span>
+                        </div>
+                        <span className="text-xs font-semibold text-gold">{lead?.name}</span>
+                      </div>
+                    )}
+
+                    {msg.media_url ? (
+                      <div className="space-y-2">
+                        {msg.media_type === "image" && (
+                          <div className="group/img relative">
+                            <img 
+                              src={msg.media_url} 
+                              alt="Imagen" 
+                              className="rounded-2xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all shadow-xl border border-black/20" 
+                              onClick={() => setViewingImage(msg.media_url!)} 
+                            />
+                            <a
+                              href={msg.media_url}
+                              download
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="absolute top-2 right-2 p-2 bg-black/80 hover:bg-black rounded-xl opacity-0 group-hover/img:opacity-100 transition-all border border-gold/30"
+                            >
+                              <Download className="w-4 h-4 text-gold" />
+                            </a>
+                          </div>
+                        )}
+                        {msg.media_type === "audio" && (
+                          <div className={`p-2 rounded-xl ${isFromMaestro ? "bg-black/20" : "bg-black/40"}`}>
+                            <audio src={msg.media_url} controls className="w-full h-8" />
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+
+                    {msg.text && (
+                      <p className={`text-sm md:text-[15px] leading-relaxed whitespace-pre-wrap ${
+                        isFromMaestro ? "font-medium" : "font-normal text-foreground/90"
+                      } ${msg.media_url ? "mt-2" : ""}`}>
+                        {msg.text}
+                      </p>
+                    )}
+
+                    <div className={`flex items-center gap-2 mt-2 ${isFromMaestro ? "justify-end text-black/60" : "justify-start text-muted-foreground/50"}`}>
+                      <p className="text-[10px] font-semibold">
+                        {new Date(msg.created_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                      {isFromMaestro && (
+                        <span className={`text-xs font-bold ${isRead ? "text-blue-600" : "text-black/40"}`}>
+                          {isRead ? "✓✓" : "✓"}
+                        </span>
+                      )}
+                      
                       <button
-                        onClick={() => setShowSidebar(false)}
-                        className="p-2 hover:bg-gold/20 rounded-xl transition-all"
+                        onClick={() => handleDeleteMessage(msg.id)}
+                        className="opacity-0 group-hover:opacity-100 ml-auto p-1 hover:bg-red-500/20 rounded-lg transition-all"
                       >
-                        <X className="w-5 h-5 text-gold" />
+                        <X className={`w-3 h-3 ${isFromMaestro ? "text-red-700" : "text-red-400"}`} />
                       </button>
                     </div>
-                  )}
+                  </div>
+                </motion.div>
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </div>
 
-                  <div className="p-4 md:p-6 space-y-6">
-                    {/* Motivo de consulta */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gold uppercase tracking-wider">
-                        Motivo de Consulta
-                      </label>
-                      <div className="p-3 bg-card/50 rounded-xl border border-gold/20">
-                        <p className="text-sm text-foreground/80">{lead?.problem || "No especificado"}</p>
-                      </div>
+          {/* Input de mensaje - FIJO ABAJO */}
+          <div className="border-t border-gold/10 bg-black/95 backdrop-blur-xl p-2 md:p-4 shadow-[0_-20px_40px_rgba(0,0,0,0.8)] relative z-20">
+            {/* Preview de multimedia */}
+            <AnimatePresence>
+              {mediaPreview && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="mb-3 md:mb-4 p-3 md:p-4 bg-card/80 backdrop-blur-md rounded-3xl border-2 border-gold/30 shadow-xl"
+                >
+                  <div className="flex items-start justify-between gap-2 md:gap-4">
+                    <div className="flex-1">
+                      {mediaPreview.type === "image" && (
+                        <div className="relative rounded-xl overflow-hidden border-2 border-gold/20 shadow-lg">
+                          <img
+                            src={mediaPreview.url}
+                            alt="Preview"
+                            className="w-full max-w-[200px] md:max-w-xs rounded-xl"
+                          />
+                          <div className="absolute top-2 right-2">
+                            <div className="px-2 py-1 md:px-3 md:py-1.5 bg-black/80 rounded-lg text-[10px] md:text-xs text-gold font-medium border border-gold/30">
+                              Imagen
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {mediaPreview.type === "audio" && (
+                        <div className="p-3 rounded-xl shadow-inner bg-black/20 border border-gold/20">
+                          <audio src={mediaPreview.url} controls className="w-full h-10" />
+                        </div>
+                      )}
                     </div>
-
-                    {/* Estado del ritual */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gold uppercase tracking-wider">
-                        Estado del Ritual
-                      </label>
-                      <select
-                        value={lead?.status || "nuevo"}
-                        onChange={(e) => handleUpdateLead({ status: e.target.value as any })}
-                        className="w-full px-4 py-2.5 bg-card/50 border border-gold/20 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 text-sm"
-                      >
-                        <option value="nuevo">● Nuevo</option>
-                        <option value="en_conversacion">● En Conversación</option>
-                        <option value="cliente_caliente">● Cliente Caliente</option>
-                        <option value="listo">● Listo</option>
-                        <option value="cerrado">● Cerrado</option>
-                        <option value="perdido">● Perdido</option>
-                      </select>
-                    </div>
-
-                    {/* WhatsApp */}
-                    <div className="space-y-2">
-                      <label className="text-xs text-gold/60 tracking-[0.2em] uppercase">
-                        WhatsApp
-                      </label>
-                      <a
-                        href={`https://wa.me/${lead?.whatsapp}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-3 bg-green-500/10 hover:bg-green-500/20 rounded-xl border border-green-500/30 transition-all text-green-400 text-sm font-medium"
-                      >
-                        <Phone className="w-4 h-4" />
-                        {lead?.whatsapp}
-                      </a>
-                    </div>
-
-                    {/* Notas internas */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gold uppercase tracking-wider">Notas Internas</label>
-                      <textarea
-                        value={lead?.notes || ""}
-                        onChange={(e) => handleUpdateLead({ notes: e.target.value })}
-                        onBlur={handleSaveNotes}
-                        placeholder="Añade anotaciones..."
-                        className="w-full px-4 py-3 bg-card/50 border border-gold/20 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 resize-none text-sm"
-                        rows={4}
-                      />
-                    </div>
-
-                    {/* Botón marcar como listo */}
                     <button
-                      onClick={() => handleUpdateLead({ status: "listo" })}
-                      className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-green-500/30 transition-all flex items-center justify-center gap-2 text-sm"
+                      onClick={cancelMediaPreview}
+                      className="p-1.5 md:p-2 hover:bg-red-500/20 rounded-lg transition-colors border border-transparent hover:border-red-500/50"
+                      title="Cancelar"
                     >
-                      <CheckCircle className="w-5 h-5" />
-                      Marcar como Listo
+                      <X className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground hover:text-red-400" />
+                    </button>
+                  </div>
+                  <div className="flex gap-2 mt-3 md:mt-4">
+                    <button
+                      onClick={cancelMediaPreview}
+                      className="flex-1 px-3 py-2 md:px-4 md:py-2.5 rounded-xl border-2 border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-gold/30 transition-all text-xs md:text-sm font-medium"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSendMedia}
+                      className="flex-1 px-3 py-2 md:px-4 md:py-2.5 rounded-xl bg-gradient-to-r from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-black font-medium hover:shadow-lg hover:shadow-gold/20 transition-all text-xs md:text-sm border-2 border-gold/50"
+                    >
+                      Enviar
                     </button>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Inputs ocultos para archivos */}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFileAttach(e, "image")}
+              className="hidden"
+              id="image-upload"
+            />
+            <input
+              type="file"
+              accept="audio/*"
+              onChange={(e) => handleFileAttach(e, "audio")}
+              className="hidden"
+              id="audio-upload"
+            />
+
+            <div className="flex items-end gap-2 md:gap-3">
+              {/* Botones de adjuntar */}
+              <div className="flex gap-1 md:gap-2 flex-shrink-0">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => document.getElementById("image-upload")?.click()}
+                  className="p-2.5 md:p-3 bg-gradient-to-br from-card to-secondary hover:from-gold/20 hover:to-gold/10 rounded-xl transition-all group border-2 border-gold/20 hover:border-gold/40 shadow-lg hover:shadow-gold/20"
+                  title="Enviar imagen"
+                >
+                  <ImageIcon className="w-5 h-5 text-gold group-hover:text-amber-300 transition-colors" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className={`p-2.5 md:p-3 rounded-xl transition-all group border-2 shadow-lg ${
+                    isRecording 
+                      ? "bg-red-500/30 border-red-500/60 shadow-red-500/20" 
+                      : "bg-gradient-to-br from-card to-secondary border-gold/20 hover:border-gold/40 hover:from-gold/20 hover:to-gold/10 hover:shadow-gold/20"
+                  }`}
+                  title={isRecording ? "Detener grabación" : "Grabar audio"}
+                >
+                  <Mic className={`w-5 h-5 transition-colors ${
+                    isRecording 
+                      ? "text-red-400 animate-pulse" 
+                      : "text-gold group-hover:text-amber-300"
+                  }`} />
+                </motion.button>
+              </div>
+
+              {/* Input de texto */}
+              <div className="flex-1 min-w-0">
+                <textarea
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage(messageInput);
+                    }
+                  }}
+                  placeholder="Escribe un mensaje sagrado..."
+                  rows={1}
+                  className="w-full bg-[hsl(260,20%,12%)] border border-gold/20 rounded-2xl px-4 py-3 md:px-5 md:py-3.5 text-sm md:text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-gold/50 focus:border-gold/50 transition-all resize-none shadow-inner"
+                  style={{ minHeight: "48px", maxHeight: "120px" }}
+                />
+              </div>
+
+              {/* Botón enviar */}
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleSendMessage(messageInput)}
+                disabled={!messageInput.trim() || isSending}
+                className="p-3 md:p-3.5 bg-gradient-to-br from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-black rounded-2xl hover:shadow-lg hover:shadow-gold/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+              >
+                <Send className="w-5 h-5 md:w-6 md:h-6" />
+              </motion.button>
+            </div>
           </div>
         </div>
+
+        {/* Panel lateral - Atributos del Alma */}
+        <AnimatePresence>
+          {(showSidebar || !isMobile) && (
+            <motion.div
+              initial={isMobile ? { x: "100%" } : false}
+              animate={isMobile ? { x: 0 } : {}}
+              exit={isMobile ? { x: "100%" } : {}}
+              transition={{ type: "spring", damping: 25 }}
+              className={`${
+                isMobile 
+                  ? "fixed inset-0 z-50 bg-[hsl(260,35%,10%)]"
+                  : "w-80 border-l-2 border-gold/20"
+              } bg-gradient-to-b from-[hsl(260,35%,12%)] to-[hsl(260,40%,10%)] overflow-y-auto`}
+            >
+              {/* Header móvil */}
+              {isMobile && (
+                <div className="sticky top-0 bg-gradient-to-r from-secondary/95 to-card/95 backdrop-blur-xl border-b border-gold/20 p-4 flex items-center justify-between z-10">
+                  <h3 className="text-lg font-serif font-bold text-gold">Atributos del Alma</h3>
+                  <button
+                    onClick={() => setShowSidebar(false)}
+                    className="p-2 hover:bg-gold/20 rounded-xl transition-all"
+                  >
+                    <X className="w-5 h-5 text-gold" />
+                  </button>
+                </div>
+              )}
+
+              <div className="p-4 md:p-6 space-y-6">
+                {/* Motivo de consulta */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gold uppercase tracking-wider">
+                    Motivo de Consulta
+                  </label>
+                  <div className="p-3 bg-card/50 rounded-xl border border-gold/20">
+                    <p className="text-sm text-foreground/80">{lead?.problem || "No especificado"}</p>
+                  </div>
+                </div>
+
+                {/* Estado del ritual */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gold uppercase tracking-wider">
+                    Estado del Ritual
+                  </label>
+                  <select
+                    value={lead?.status || "nuevo"}
+                    onChange={(e) => handleUpdateLead({ status: e.target.value as any })}
+                    className="w-full px-4 py-2.5 bg-card/50 border border-gold/20 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 text-sm"
+                  >
+                    <option value="nuevo">● Nuevo</option>
+                    <option value="en_conversacion">● En Conversación</option>
+                    <option value="cliente_caliente">● Cliente Caliente</option>
+                    <option value="listo">● Listo</option>
+                    <option value="cerrado">● Cerrado</option>
+                    <option value="perdido">● Perdido</option>
+                  </select>
+                </div>
+
+                {/* WhatsApp */}
+                <div className="space-y-2">
+                  <label className="text-xs text-gold/60 tracking-[0.2em] uppercase">
+                    WhatsApp
+                  </label>
+                  <a
+                    href={`https://wa.me/${lead?.whatsapp}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-3 bg-green-500/10 hover:bg-green-500/20 rounded-xl border border-green-500/30 transition-all text-green-400 text-sm font-medium"
+                  >
+                    <Phone className="w-4 h-4" />
+                    {lead?.whatsapp}
+                  </a>
+                </div>
+
+                {/* Notas internas */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gold uppercase tracking-wider">Notas Internas</label>
+                  <textarea
+                    value={lead?.notes || ""}
+                    onChange={(e) => handleUpdateLead({ notes: e.target.value })}
+                    onBlur={handleSaveNotes}
+                    placeholder="Añade anotaciones..."
+                    className="w-full px-4 py-3 bg-card/50 border border-gold/20 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 resize-none text-sm"
+                    rows={4}
+                  />
+                </div>
+
+                {/* Botón marcar como listo */}
+                <button
+                  onClick={() => handleUpdateLead({ status: "listo" })}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-green-500/30 transition-all flex items-center justify-center gap-2 text-sm"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  Marcar como Listo
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Modal de Perfil del Maestro */}

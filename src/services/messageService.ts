@@ -3,9 +3,9 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 
-export type Message = Tables<"messages">;
+type Message = Database["public"]["Tables"]["messages"]["Row"];
 
 export const MessageService = {
   /**
@@ -15,7 +15,6 @@ export const MessageService = {
     try {
       console.log("📥 MessageService.getByLeadId:", leadId);
       
-      // Consulta SIMPLE sin JOINs para evitar timeouts
       const { data, error } = await supabase
         .from("messages")
         .select("*")
@@ -62,63 +61,18 @@ export const MessageService = {
   },
 
   /**
-   * Suscribirse a nuevos mensajes de un lead
-   * ORDEN CRÍTICO: channel → on → subscribe
+   * Marcar mensaje como leído
    */
-  subscribeToMessages(
-    leadId: string,
-    callback: (message: Message) => void
-  ): any {
-    console.log("🔔 Configurando suscripción realtime para lead:", leadId);
+  async markAsRead(messageId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from("messages")
+        .update({ read_at: new Date().toISOString() })
+        .eq("id", messageId);
 
-    // Paso 1: Crear el canal con nombre único
-    const channelName = `messages:${leadId}:${Date.now()}`;
-    const channel = supabase.channel(channelName);
-
-    console.log("✅ Canal creado:", channelName);
-
-    // Paso 2: Agregar el listener ANTES de subscribe
-    channel.on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "messages",
-        filter: `lead_id=eq.${leadId}`,
-      },
-      (payload) => {
-        console.log("📨 Nuevo mensaje recibido:", payload.new);
-        callback(payload.new as Message);
-      }
-    );
-
-    console.log("✅ Listener agregado");
-
-    // Paso 3: Suscribirse AL FINAL (después de .on)
-    channel.subscribe((status) => {
-      console.log("📡 Estado de suscripción:", status);
-    });
-
-    console.log("✅ Suscripción activada");
-
-    return channel;
-  },
-
-  /**
-   * Marcar mensajes como leídos
-   */
-  async markAsRead(leadId: string, markedByMaestro: boolean = true): Promise<void> {
-    const { error } = await supabase
-      .from("messages")
-      .update({ read_at: new Date().toISOString() })
-      .eq("lead_id", leadId)
-      .eq("is_from_maestro", !markedByMaestro)
-      .is("read_at", null);
-
-    if (error) {
-      console.error("Error marcando mensajes como leídos:", error);
-    } else {
-      console.log("✅ Mensajes marcados como leídos");
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error marcando mensaje como leído:", error);
     }
   },
 
@@ -126,33 +80,16 @@ export const MessageService = {
    * Eliminar un mensaje
    */
   async delete(messageId: string): Promise<void> {
-    const { error } = await supabase
-      .from("messages")
-      .delete()
-      .eq("id", messageId);
+    try {
+      const { error } = await supabase
+        .from("messages")
+        .delete()
+        .eq("id", messageId);
 
-    if (error) {
+      if (error) throw error;
+    } catch (error) {
       console.error("Error eliminando mensaje:", error);
       throw error;
     }
-
-    console.log("✅ Mensaje eliminado:", messageId);
-  },
-
-  /**
-   * Eliminar todos los mensajes de un lead
-   */
-  async deleteByLeadId(leadId: string): Promise<void> {
-    const { error } = await supabase
-      .from("messages")
-      .delete()
-      .eq("lead_id", leadId);
-
-    if (error) {
-      console.error("Error eliminando mensajes del lead:", error);
-      throw error;
-    }
-
-    console.log("✅ Mensajes del lead eliminados:", leadId);
-  },
+  }
 };
