@@ -383,3 +383,45 @@ export const LeadService = {
     }
   }
 };
+
+/**
+ * Crear un nuevo lead en Supabase
+ */
+export async function createLead(
+  formData: Omit<Lead, "id" | "created_at" | "updated_at">
+): Promise<{ success: boolean; lead?: Lead; error?: string }> {
+  try {
+    console.log("📝 Enviando formulario a Supabase:", formData);
+
+    const { data, error } = await supabase
+      .from("leads")
+      .insert([
+        {
+          name: formData.name,
+          whatsapp: formData.whatsapp,
+          country_code: formData.country_code || "+52",
+          problem: formData.problem,
+          card_selected: formData.card_selected || null,
+          status: formData.status || "nuevo",
+          ritual_state: formData.ritual_state || "listo",
+          whatsapp_notified: false,
+          is_favorite: false,
+          notes: formData.notes || null,
+          precision_answers: formData.precision_answers || {},
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("❌ Error creando lead:", error);
+      return { success: false, error: error.message };
+    }
+
+    console.log("✅ Lead creado en Supabase con ID:", data.id);
+    return { success: true, lead: data as Lead };
+  } catch (error: any) {
+    console.error("❌ Error en createLead:", error);
+    return { success: false, error: error.message };
+  }
+}
