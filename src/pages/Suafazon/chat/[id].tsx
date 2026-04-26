@@ -11,7 +11,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ArrowLeft, Phone, User, Settings, Image as ImageIcon, Send, Loader2, MessageSquare, Mic, Paperclip, X, Download, CheckCircle, Save, FileText, Sparkles, Circle } from "lucide-react";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Lead = Database["public"]["Tables"]["leads"]["Row"];
 type Message = Database["public"]["Tables"]["messages"]["Row"];
@@ -50,20 +50,8 @@ export default function ChatPage() {
     url: string;
     file?: File;
   } | null>(null);
-  const [profileData, setProfileData] = useState({
-    name: "Maestro Espiritual",
-    email: "maestro@portal.com",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro",
-    headerText: ""
-  });
-  const [viewingImage, setViewingImage] = useState<string | null>(null);
-  const [lastMessageCount, setLastMessageCount] = useState(0);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
 
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   // Auto-scroll cuando llegan mensajes nuevos
   useEffect(() => {
@@ -668,9 +656,9 @@ export default function ChatPage() {
                           {!isFromMaestro && (
                             <div className="flex items-center gap-3 mb-3 pb-3 border-b border-gold/10">
                               <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30 shadow-md">
-                                <span className="text-gold font-bold text-sm">{leadData?.name?.charAt(0) || "U"}</span>
+                                <span className="text-gold font-bold text-sm">{lead?.name?.charAt(0) || "U"}</span>
                               </div>
-                              <span className="text-sm font-semibold text-gold tracking-wide">{leadData?.name || "Usuario"}</span>
+                              <span className="text-sm font-semibold text-gold tracking-wide">{lead?.name || "Usuario"}</span>
                             </div>
                           )}
 
@@ -788,20 +776,6 @@ export default function ChatPage() {
                               <div className="absolute top-2 right-2">
                                 <div className="px-2 py-1 md:px-3 md:py-1.5 bg-black/80 rounded-lg text-[10px] md:text-xs text-gold font-medium border border-gold/30">
                                   Imagen
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          {mediaPreview.type === "video" && (
-                            <div className="relative rounded-xl overflow-hidden border-2 border-gold/20 shadow-lg">
-                              <video 
-                                src={mediaPreview.url} 
-                                controls 
-                                className="w-full max-w-[200px] md:max-w-xs rounded-xl" 
-                              />
-                              <div className="absolute top-2 right-2">
-                                <div className="px-2 py-1 md:px-3 md:py-1.5 bg-black/80 rounded-lg text-[10px] md:text-xs text-gold font-medium border border-gold/30">
-                                  Video
                                 </div>
                               </div>
                             </div>
