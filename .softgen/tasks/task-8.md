@@ -13,7 +13,7 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Formulario simplificado, auth arreglado, ChatMaestro arreglado, servidor sin errores.
+COMPLETADO: Formulario simplificado, auth arreglado, ChatMaestro arreglado con type guards, servidor sin errores.
 
 ## Checklist
 - [x] Corregir project ID (klxepxdekgnfyazqsytk)
@@ -22,15 +22,15 @@ COMPLETADO: Formulario simplificado, auth arreglado, ChatMaestro arreglado, serv
 - [x] Verificar columna precision_answers existe
 - [x] Simplificar LeadService.create (solo campos básicos)
 - [x] Arreglar handleSubmit en index.tsx
-- [x] Arreglar ChatMaestro.tsx (usar firma correcta)
+- [x] Arreglar ChatMaestro.tsx con type guards
 - [x] Arreglar verifyAdminCredentials
-- [x] Sin errores de TypeScript (restart #84)
+- [x] Sin errores de TypeScript (restart #85)
 
 ## Acceptance
 - ✅ Supabase conectado (klxepxdekgnfyazqsytk)
 - ✅ Perfil admin existe (20cbd892-ea2a-4715-bb7e-22fc8e244887)
 - ✅ Formulario crea leads correctamente
-- ✅ ChatMaestro usa firma correcta
+- ✅ ChatMaestro usa type guards correctos
 - ✅ Login funciona
 - ✅ Sin errores de compilación
-- ✅ Servidor funcionando (restart #84)
+- ✅ Servidor funcionando (restart #85)
