@@ -13,25 +13,25 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Usuario brujotu@gmail.com creado, perfil sincronizado con role ADMIN, servidor reiniciado.
+COMPLETADO: Usuario existente tubrujo@gmail.com actualizado con nueva contraseña Pepe2002, perfil sincronizado con role admin.
 
 ## Checklist
-- [x] Eliminar usuario antiguo (tubrujo@gmail.com)
+- [x] Actualizar contraseña del usuario existente a Pepe2002
+- [x] Confirmar email del usuario
+- [x] Verificar UUID del usuario existente
 - [x] Limpiar tabla profiles
-- [x] Crear nuevo usuario (brujotu@gmail.com con Pepe2002)
-- [x] Crear perfil con UUID del nuevo usuario
-- [x] Actualizar role a 'admin'
-- [x] Verificar sincronización completa
-- [x] RLS deshabilitado
-- [x] Reiniciar servidor (restart #101)
+- [x] Crear perfil admin con UUID del usuario existente
+- [x] Verificar sincronización auth.users ↔ profiles
+- [x] Reiniciar servidor (restart #102)
 
 ## Acceptance
-- ✅ Usuario: brujotu@gmail.com (UUID: a74df420-b1ad-49ad-b2eb-7f842ef0255e)
-- ✅ Password: Pepe2002
+- ✅ Usuario: tubrujo@gmail.com (UUID: 20cbd892-ea2a-4715-bb7e-22fc8e244887)
+- ✅ Nueva contraseña: Pepe2002
+- ✅ Email confirmado
 - ✅ Role: admin
 - ✅ UUIDs sincronizados
 - ✅ Login debe funcionar
-- ✅ Servidor funcionando (restart #101)
+- ✅ Servidor funcionando (restart #102)
 </file_contents>
 </code_editor_tab>
 
