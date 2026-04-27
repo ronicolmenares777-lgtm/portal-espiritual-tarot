@@ -108,7 +108,7 @@ export default function Home() {
 
     try {
       setIsSubmitting(true);
-      console.log("📝 Enviando formulario a Supabase:", formData);
+      console.log("📝 Creando lead en Supabase...");
 
       const { data, error } = await supabase
         .from("leads")
@@ -123,16 +123,13 @@ export default function Home() {
         .single();
       
       if (error) {
-        console.error("❌ Error Supabase:", error);
-        throw new Error(error.message || "No se pudo conectar con Supabase");
+        console.error("❌ Error:", error);
+        alert(`Error: ${error.message}`);
+        setIsSubmitting(false);
+        return;
       }
       
-      if (!data) {
-        throw new Error("Supabase no devolvió datos");
-      }
-
-      console.log("✅ Lead creado en Supabase con ID:", data.id);
-      
+      console.log("✅ Lead creado con ID:", data.id);
       setLeadId(data.id);
       setCurrentScreen("loading");
       
@@ -140,9 +137,8 @@ export default function Home() {
         setCurrentScreen("cards");
       }, 3000);
     } catch (error: any) {
-      console.error("❌ Error completo:", error);
-      alert(`Error: ${error.message || 'Por favor intenta de nuevo'}`);
-    } finally {
+      console.error("❌ Error:", error);
+      alert(`Error: ${error.message || 'Intenta de nuevo'}`);
       setIsSubmitting(false);
     }
   };
