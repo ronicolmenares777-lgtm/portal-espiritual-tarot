@@ -13,22 +13,24 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Password actualizado directamente por UUID, perfil admin creado/actualizado con UPSERT, servidor reiniciado.
+COMPLETADO: Perfil creado para usuario CORRECTO (brujotu@gmail.com con UUID a74df420-b1ad-49ad-b2eb-7f842ef0255e), password actualizado a Pepe2002, UUIDs sincronizados.
 
 ## Checklist
-- [x] Ver todos los usuarios actuales en auth.users
-- [x] Ver todos los perfiles actuales
-- [x] Actualizar password por UUID directo
-- [x] UPSERT perfil admin (INSERT + ON CONFLICT UPDATE)
-- [x] Verificar sincronización final
-- [x] Reiniciar servidor (restart #104)
+- [x] Identificar usuario correcto en auth.users (brujotu@gmail.com)
+- [x] Eliminar perfil con UUID incorrecto
+- [x] Crear perfil admin con UUID CORRECTO
+- [x] Actualizar password a Pepe2002
+- [x] Verificar sincronización auth.users ↔ profiles
+- [x] Reiniciar servidor (restart #105)
 
 ## Acceptance
-- ✅ Usuario: tubrujo@gmail.com (UUID: 20cbd892-ea2a-4715-bb7e-22fc8e244887)
-- ✅ Password actualizado: Pepe2002
-- ✅ Perfil admin creado/actualizado
+- ✅ Usuario: brujotu@gmail.com
+- ✅ UUID sincronizado: a74df420-b1ad-49ad-b2eb-7f842ef0255e
+- ✅ Password: Pepe2002
+- ✅ Role: admin
+- ✅ auth.users.id = profiles.id
 - ✅ Login debe funcionar
-- ✅ Servidor funcionando (restart #104)
+- ✅ Servidor funcionando (restart #105)
 </file_contents>
 </code_editor_tab>
 
