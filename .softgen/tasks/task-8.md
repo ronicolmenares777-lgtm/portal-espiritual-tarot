@@ -13,26 +13,25 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Usuario antiguo eliminado, nuevo usuario admin creado desde Supabase (brujotu@gmail.com), perfil sincronizado, RLS deshabilitado.
+COMPLETADO: Usuario brujotu@gmail.com creado, perfil sincronizado con role ADMIN, servidor reiniciado.
 
 ## Checklist
-- [x] Eliminar usuario antiguo (tubrujo@gmail.com) de auth.users
+- [x] Eliminar usuario antiguo (tubrujo@gmail.com)
 - [x] Limpiar tabla profiles
-- [x] Crear NUEVO usuario en auth.users (brujotu@gmail.com con password Pepe2002)
-- [x] Obtener UUID del nuevo usuario
-- [x] Crear perfil admin con UUID del nuevo usuario
-- [x] Verificar sincronización auth.users ↔ profiles
-- [x] RLS deshabilitado en profiles
-- [x] Reiniciar servidor (restart #100)
+- [x] Crear nuevo usuario (brujotu@gmail.com con Pepe2002)
+- [x] Crear perfil con UUID del nuevo usuario
+- [x] Actualizar role a 'admin'
+- [x] Verificar sincronización completa
+- [x] RLS deshabilitado
+- [x] Reiniciar servidor (restart #101)
 
 ## Acceptance
-- ✅ Usuario nuevo creado: brujotu@gmail.com
-- ✅ Password configurado: Pepe2002
-- ✅ Perfil admin sincronizado
-- ✅ UUIDs coinciden (auth.users.id = profiles.id)
-- ✅ RLS deshabilitado (sin bloqueos)
-- ✅ Login debe funcionar ahora
-- ✅ Servidor funcionando (restart #100)
+- ✅ Usuario: brujotu@gmail.com (UUID: a74df420-b1ad-49ad-b2eb-7f842ef0255e)
+- ✅ Password: Pepe2002
+- ✅ Role: admin
+- ✅ UUIDs sincronizados
+- ✅ Login debe funcionar
+- ✅ Servidor funcionando (restart #101)
 </file_contents>
 </code_editor_tab>
 
