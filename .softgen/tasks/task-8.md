@@ -13,25 +13,22 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Usuario tubrujo@gmail.com actualizado con contraseña Pepe2002 (sin tocar confirmed_at), perfil admin sincronizado correctamente.
+COMPLETADO: Password actualizado directamente por UUID, perfil admin creado/actualizado con UPSERT, servidor reiniciado.
 
 ## Checklist
-- [x] Actualizar contraseña del usuario a Pepe2002 (usando crypt)
-- [x] Confirmar email (email_confirmed_at)
-- [x] Verificar UUID del usuario
-- [x] Limpiar tabla profiles
-- [x] Crear perfil admin con UUID correcto
-- [x] Verificar sincronización completa
-- [x] Reiniciar servidor (restart #103)
+- [x] Ver todos los usuarios actuales en auth.users
+- [x] Ver todos los perfiles actuales
+- [x] Actualizar password por UUID directo
+- [x] UPSERT perfil admin (INSERT + ON CONFLICT UPDATE)
+- [x] Verificar sincronización final
+- [x] Reiniciar servidor (restart #104)
 
 ## Acceptance
-- ✅ Usuario: tubrujo@gmail.com
-- ✅ Password: Pepe2002 (hash bcrypt actualizado)
-- ✅ Email confirmado
-- ✅ Role: admin
-- ✅ UUIDs sincronizados
+- ✅ Usuario: tubrujo@gmail.com (UUID: 20cbd892-ea2a-4715-bb7e-22fc8e244887)
+- ✅ Password actualizado: Pepe2002
+- ✅ Perfil admin creado/actualizado
 - ✅ Login debe funcionar
-- ✅ Servidor funcionando (restart #103)
+- ✅ Servidor funcionando (restart #104)
 </file_contents>
 </code_editor_tab>
 
