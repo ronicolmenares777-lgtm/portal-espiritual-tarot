@@ -1,6 +1,6 @@
 <![CDATA[---
 title: Fix chat message delivery with stable polling
-status: done
+status: in_progress
 priority: urgent
 type: bug
 tags:
@@ -13,27 +13,24 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Perfil sincronizado automáticamente desde auth.users, formulario validado con INSERT de prueba exitoso, servidor reiniciado.
+EN PROGRESO: Verificando usuarios en auth.users, creando perfil con UUID correcto, logging mejorado para debug.
 
 ## Checklist
-- [x] Ver todos los usuarios en auth.users
-- [x] Ver todos los perfiles en profiles
-- [x] Eliminar todos los perfiles duplicados
-- [x] Crear perfil automáticamente desde auth.users
-- [x] Verificar JOIN auth.users ↔ profiles exitoso
-- [x] Verificar columnas de tabla leads
-- [x] Hacer INSERT de prueba en leads (exitoso)
-- [x] Eliminar lead de prueba
-- [x] Simplificar handleSubmit en index.tsx
-- [x] Reiniciar servidor (restart #95)
+- [x] Ver TODOS los usuarios en auth.users
+- [x] Ver TODOS los perfiles actuales
+- [x] Limpiar tabla profiles
+- [x] Crear perfil desde auth.users automáticamente
+- [x] Verificar sincronización
+- [x] Agregar logging detallado en auth.ts
+- [x] Reiniciar servidor (restart #96)
+- [ ] Usuario prueba login y reporta UUID que sale en consola
 
 ## Acceptance
-- ✅ Perfil sincronizado desde auth.users
-- ✅ UUIDs coinciden (auth.users.id = profiles.id)
-- ✅ INSERT de prueba en leads funciona
-- ✅ Formulario simplificado (solo columnas existentes)
-- ✅ Sin errores de compilación
-- ✅ Servidor funcionando (restart #95)
+- ✅ Logging mejorado muestra UUID buscado
+- ✅ Logging muestra si perfil existe o no
+- [ ] Usuario reporta UUID exacto de consola
+- [ ] Crear perfil con UUID correcto
+- ✅ Servidor funcionando (restart #96)
 </file_contents>
 </code_editor_tab>
 

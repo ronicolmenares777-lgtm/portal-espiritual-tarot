@@ -151,7 +151,7 @@ export async function verifyAdminCredentials(
       };
     }
 
-    console.log("✅ Usuario autenticado:", authData.user.id);
+    console.log("✅ Usuario autenticado con UUID:", authData.user.id);
 
     // Obtener el perfil del usuario
     const { data: profile, error: profileError } = await supabase
@@ -159,6 +159,10 @@ export async function verifyAdminCredentials(
       .select("role")
       .eq("id", authData.user.id)
       .maybeSingle();
+
+    console.log("🔍 Buscando perfil para UUID:", authData.user.id);
+    console.log("📊 Perfil encontrado:", profile);
+    console.log("❌ Error de perfil:", profileError);
 
     if (profileError) {
       console.error("❌ Error obteniendo perfil:", profileError);
@@ -170,6 +174,10 @@ export async function verifyAdminCredentials(
 
     if (!profile) {
       console.error("❌ Perfil no encontrado para usuario:", authData.user.id);
+      console.log("💡 SOLUCIÓN: Ir a Supabase → Table Editor → profiles → Insert row:");
+      console.log("   id:", authData.user.id);
+      console.log("   email:", authData.user.email);
+      console.log("   role: admin");
       return {
         success: false,
         error: "Perfil no encontrado. Contacta al administrador.",
