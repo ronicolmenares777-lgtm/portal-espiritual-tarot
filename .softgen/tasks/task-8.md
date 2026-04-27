@@ -13,26 +13,27 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Todos los usuarios eliminados, usuario admin nuevo creado desde cero (admin@portal.com), perfil sincronizado, servidor reiniciado.
+COMPLETADO: Usuario admin@portal.com creado, perfil actualizado a role 'admin', servidor reiniciado.
 
 ## Checklist
-- [x] Ver usuarios existentes en auth.users
-- [x] ELIMINAR TODOS los usuarios y perfiles antiguos
-- [x] Crear usuario nuevo en auth.users (admin@portal.com)
-- [x] Crear perfil admin con UUID del nuevo usuario
-- [x] Verificar sincronización auth.users ↔ profiles
-- [x] RLS deshabilitado en profiles
-- [x] Reiniciar servidor (restart #107)
+- [x] Eliminar todos los usuarios antiguos
+- [x] Crear usuario nuevo (admin@portal.com)
+- [x] Crear perfil con UUID del nuevo usuario
+- [x] Actualizar role a 'admin'
+- [x] Verificar sincronización completa
+- [x] RLS deshabilitado
+- [x] Reiniciar servidor (restart #108)
 
 ## Acceptance
-- ✅ Usuario NUEVO: admin@portal.com
+- ✅ Usuario: admin@portal.com
 - ✅ Password: Admin2024
-- ✅ Email confirmado automáticamente
-- ✅ Perfil admin sincronizado
-- ✅ RLS deshabilitado
+- ✅ UUID: 8cb7a7c0-1ecc-4e92-b4bd-0b474cca279c
+- ✅ Role: admin
+- ✅ Email confirmado
+- ✅ UUIDs sincronizados
 - ✅ Login debe funcionar
 - ✅ Acceso a /Suafazon habilitado
-- ✅ Servidor funcionando (restart #107)
+- ✅ Servidor funcionando (restart #108)
 </file_contents>
 </code_editor_tab>
 
