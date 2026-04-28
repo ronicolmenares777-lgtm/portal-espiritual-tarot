@@ -128,9 +128,9 @@ export async function verifyAdminCredentials(
   password: string
 ): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
   try {
-    console.log("🔐 Intentando login con:", email);
+    console.log("🔐 Verificando credenciales para:", email);
 
-    // Paso 1: Autenticar con Supabase Auth
+    // Intentar login con Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -151,23 +151,32 @@ export async function verifyAdminCredentials(
       };
     }
 
-    console.log("✅ Usuario autenticado - UUID:", authData.user.id);
+    console.log("✅ Usuario autenticado con UUID:", authData.user.id);
 
-    // Paso 2: Buscar perfil en la tabla profiles
+    // Obtener el perfil del usuario
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("*")
+      .select("role")
       .eq("id", authData.user.id)
-      .single();
+      .maybeSingle();
 
+    console.log("🔍 Buscando perfil para UUID:", authData.user.id);
     console.log("📊 Perfil encontrado:", profile);
     console.log("❌ Error de perfil:", profileError);
 
-    if (profileError || !profile) {
-      console.error("❌ Perfil no encontrado para UUID:", authData.user.id);
+    if (profileError) {
+      console.error("❌ Error obteniendo perfil:", profileError);
+      return {
+        success: false,
+        error: "Error obteniendo perfil: " + profileError.message,
+      };
+    }
+
+    if (!profile) {
+      console.error("❌ Perfil no encontrado para usuario:", authData.user.id);
       console.log("💡 SOLUCIÓN: Ir a Supabase → Table Editor → profiles → Insert row:");
       console.log("   id:", authData.user.id);
-      console.log("   email:", email);
+      console.log("   email:", authData.user.email);
       console.log("   role: admin");
       return {
         success: false,
@@ -175,16 +184,16 @@ export async function verifyAdminCredentials(
       };
     }
 
-    // Paso 3: Verificar que sea admin
+    // Verificar que sea admin
     if (profile.role !== "admin") {
-      console.error("❌ Usuario no es admin. Role actual:", profile.role);
+      console.error("❌ Usuario no es admin:", profile.role);
       return {
         success: false,
         error: "Acceso no autorizado. Solo administradores.",
       };
     }
 
-    console.log("✅ Login exitoso como admin");
+    console.log("✅ Login exitoso - Admin verificado");
 
     return {
       success: true,
