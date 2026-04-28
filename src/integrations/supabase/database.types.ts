@@ -18,6 +18,7 @@ export type Database = {
       leads: {
         Row: {
           answers: Json | null
+          cards_selected: string[] | null
           country_code: string | null
           created_at: string | null
           deleted_at: string | null
@@ -26,20 +27,20 @@ export type Database = {
           last_interaction_at: string | null
           name: string
           notes: string | null
-          precision_answers: Json | null
           problem: string
           selected_card_id: string | null
-          selected_cards: string[] | null
           status: string | null
           tags: string[] | null
           tarot_card_image: string | null
           tarot_card_name: string | null
           tarot_interpretation: string | null
           updated_at: string | null
+          user_answers: Json | null
           whatsapp: string
         }
         Insert: {
           answers?: Json | null
+          cards_selected?: string[] | null
           country_code?: string | null
           created_at?: string | null
           deleted_at?: string | null
@@ -48,20 +49,20 @@ export type Database = {
           last_interaction_at?: string | null
           name: string
           notes?: string | null
-          precision_answers?: Json | null
           problem: string
           selected_card_id?: string | null
-          selected_cards?: string[] | null
           status?: string | null
           tags?: string[] | null
           tarot_card_image?: string | null
           tarot_card_name?: string | null
           tarot_interpretation?: string | null
           updated_at?: string | null
+          user_answers?: Json | null
           whatsapp: string
         }
         Update: {
           answers?: Json | null
+          cards_selected?: string[] | null
           country_code?: string | null
           created_at?: string | null
           deleted_at?: string | null
@@ -70,16 +71,15 @@ export type Database = {
           last_interaction_at?: string | null
           name?: string
           notes?: string | null
-          precision_answers?: Json | null
           problem?: string
           selected_card_id?: string | null
-          selected_cards?: string[] | null
           status?: string | null
           tags?: string[] | null
           tarot_card_image?: string | null
           tarot_card_name?: string | null
           tarot_interpretation?: string | null
           updated_at?: string | null
+          user_answers?: Json | null
           whatsapp?: string
         }
         Relationships: []

@@ -162,8 +162,8 @@ export default function Home() {
 
     try {
       const updateData = {
-        selected_cards: selectedCards.map(card => card.name),
-        precision_answers: answers,
+        cards_selected: selectedCards.map(card => card.name),
+        user_answers: answers,
       };
 
       console.log("📝 Actualizando lead con:", updateData);
