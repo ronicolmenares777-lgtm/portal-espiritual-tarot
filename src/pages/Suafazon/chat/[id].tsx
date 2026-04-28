@@ -236,14 +236,14 @@ export default function ChatPage() {
     if (!id || typeof id !== "string") return;
 
     try {
-      const createdMessage = await MessageService.create({
-        lead_id: id,
-        text,
-        is_from_maestro: true,
+      const savedMessage = await MessageService.create({
+        lead_id: id as string,
+        content: newMessage,
+        user_id: maestroId,
       });
 
-      if (createdMessage) {
-        setMessages((prev) => [...prev, createdMessage]);
+      if (savedMessage) {
+        setMessages((prev) => [...prev, savedMessage]);
       }
     } catch (error) {
       console.error("Error enviando respuesta rápida:", error);
