@@ -29,7 +29,7 @@ export type Database = {
           precision_answers: Json | null
           problem: string
           selected_card_id: string | null
-          selected_cards: Json | null
+          selected_cards: string[] | null
           status: string | null
           tags: string[] | null
           tarot_card_image: string | null
@@ -51,7 +51,7 @@ export type Database = {
           precision_answers?: Json | null
           problem: string
           selected_card_id?: string | null
-          selected_cards?: Json | null
+          selected_cards?: string[] | null
           status?: string | null
           tags?: string[] | null
           tarot_card_image?: string | null
@@ -73,7 +73,7 @@ export type Database = {
           precision_answers?: Json | null
           problem?: string
           selected_card_id?: string | null
-          selected_cards?: Json | null
+          selected_cards?: string[] | null
           status?: string | null
           tags?: string[] | null
           tarot_card_image?: string | null

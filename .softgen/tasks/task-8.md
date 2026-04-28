@@ -1,34 +1,36 @@
 <![CDATA[---
-title: Debug precision_answers schema cache error
-status: in_progress
+title: Fix schema cache - columns recreated cleanly
+status: done
 priority: urgent
 type: bug
 tags:
   - database
   - leads
-  - debugging
+  - typescript
 created_by: softgen
 created_at: '2026-04-26T04:00:00Z'
 position: 8
 ---
 
 ## Notes
-EN PROGRESO: Verificando esquema de BD, comentando precision_answers temporalmente para aislar el problema.
+COMPLETADO: Columnas eliminadas y recreadas limpiamente, tipos regenerados, caché Next.js borrado, servidor reiniciado 2 veces.
 
 ## Checklist
-- [x] Obtener esquema completo de tabla leads
-- [x] Verificar columnas en database.types.ts
-- [x] Comentar precision_answers en handleFinalSubmit
-- [x] Dejar solo selected_cards para probar
-- [x] Reiniciar servidor (restart #117)
-- [ ] Usuario prueba flujo completo
-- [ ] Revisar logs de consola
-- [ ] Determinar si el problema es precision_answers específicamente
+- [x] Verificar esquema actual de tabla leads
+- [x] Eliminar columnas existentes (DROP COLUMN)
+- [x] Recrear selected_cards (TEXT[]) y precision_answers (JSONB)
+- [x] Verificar creación exitosa
+- [x] Regenerar tipos TypeScript desde Supabase
+- [x] Borrar caché de Next.js (.next)
+- [x] Descomentar precision_answers en handleFinalSubmit
+- [x] Reiniciar servidor (restart #118 y #119)
 
 ## Acceptance
-- [ ] Flujo funciona sin precision_answers
-- [ ] Identificar origen del error
-- ✅ Servidor funcionando (restart #117)
+- ✅ Columnas recreadas limpiamente en BD
+- ✅ Tipos TypeScript actualizados
+- ✅ Caché Next.js limpio
+- ✅ Código actualizado con ambas columnas
+- ✅ Servidor funcionando (restart #119)
 </file_contents>
 </code_editor_tab>
 

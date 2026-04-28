@@ -161,10 +161,9 @@ export default function Home() {
     }
 
     try {
-      // TEMPORAL: Solo actualizar selected_cards primero para verificar
       const updateData = {
         selected_cards: selectedCards.map(card => card.name),
-        // precision_answers: answers, // COMENTADO TEMPORALMENTE
+        precision_answers: answers,
       };
 
       console.log("📝 Actualizando lead con:", updateData);
