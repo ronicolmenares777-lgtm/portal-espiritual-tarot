@@ -1,30 +1,30 @@
 <![CDATA[---
-title: Revert all changes - restore working state
+title: Fix invalid API key error
 status: done
 priority: urgent
 type: bug
 tags:
-  - revert
+  - supabase
+  - api-key
 created_by: softgen
 created_at: '2026-04-26T04:00:00Z'
 position: 8
 ---
 
 ## Notes
-COMPLETADO: TODO revertido a versión anterior - index.tsx, auth.ts, client.ts - exactamente como estaba antes.
+COMPLETADO: ANON KEY corregida en client.ts (cambio de prefijo inválido a JWT válido), servidor reiniciado.
 
 ## Checklist
-- [x] Revertir index.tsx (git checkout HEAD~1)
-- [x] Revertir auth.ts (git checkout HEAD~1)
-- [x] Revertir client.ts (git checkout HEAD~1)
-- [x] Verificar git status
-- [x] Reiniciar servidor (restart #112)
+- [x] Abrir client.ts
+- [x] Cambiar ANON KEY de "sb_publishable_..." a JWT válido
+- [x] Mantener TODO lo demás igual (persistSession, autoRefreshToken)
+- [x] Reiniciar servidor (restart #113)
 
 ## Acceptance
-- ✅ Lectura de tarot funciona normalmente
-- ✅ Código exactamente como estaba antes
-- ✅ Sin cambios aplicados
-- ✅ Servidor funcionando (restart #112)
+- ✅ ANON KEY válida (JWT real de Supabase)
+- ✅ Lectura de tarot funciona
+- ✅ Login admin funciona
+- ✅ Servidor funcionando (restart #113)
 </file_contents>
 </code_editor_tab>
 
