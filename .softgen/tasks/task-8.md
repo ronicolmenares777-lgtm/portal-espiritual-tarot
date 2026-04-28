@@ -1,30 +1,30 @@
 <![CDATA[---
-title: Fix admin login - solo ANON KEY
+title: Revert all changes - restore working state
 status: done
 priority: urgent
 type: bug
 tags:
-  - auth
-  - admin
+  - revert
 created_by: softgen
 created_at: '2026-04-26T04:00:00Z'
 position: 8
 ---
 
 ## Notes
-COMPLETADO: Código revertido - solo se cambió ANON KEY en client.ts, TODO lo demás vuelve a como estaba antes.
+COMPLETADO: TODO revertido a versión anterior - index.tsx, auth.ts, client.ts - exactamente como estaba antes.
 
 ## Checklist
-- [x] Revertir index.tsx a versión anterior (git checkout)
-- [x] Revertir auth.ts a versión anterior (git checkout)
-- [x] Solo mantener ANON KEY válida en client.ts
-- [x] Reiniciar servidor (restart #111)
+- [x] Revertir index.tsx (git checkout HEAD~1)
+- [x] Revertir auth.ts (git checkout HEAD~1)
+- [x] Revertir client.ts (git checkout HEAD~1)
+- [x] Verificar git status
+- [x] Reiniciar servidor (restart #112)
 
 ## Acceptance
-- ✅ index.tsx como estaba (lectura de tarot funciona)
-- ✅ auth.ts como estaba
-- ✅ Solo ANON KEY corregida
-- ✅ Servidor funcionando (restart #111)
+- ✅ Lectura de tarot funciona normalmente
+- ✅ Código exactamente como estaba antes
+- ✅ Sin cambios aplicados
+- ✅ Servidor funcionando (restart #112)
 </file_contents>
 </code_editor_tab>
 
