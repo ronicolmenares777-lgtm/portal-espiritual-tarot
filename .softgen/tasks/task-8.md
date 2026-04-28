@@ -1,32 +1,34 @@
 <![CDATA[---
-title: Fix missing columns in leads table - types regenerated
-status: done
+title: Debug precision_answers schema cache error
+status: in_progress
 priority: urgent
 type: bug
 tags:
   - database
   - leads
-  - typescript
+  - debugging
 created_by: softgen
 created_at: '2026-04-26T04:00:00Z'
 position: 8
 ---
 
 ## Notes
-COMPLETADO: Columnas agregadas a BD + tipos TypeScript regenerados, servidor reiniciado.
+EN PROGRESO: Verificando esquema de BD, comentando precision_answers temporalmente para aislar el problema.
 
 ## Checklist
-- [x] Agregar columnas selected_cards y precision_answers a tabla leads
-- [x] Regenerar tipos TypeScript desde esquema de Supabase
-- [x] Verificar que database.types.ts contiene las nuevas columnas
-- [x] Reiniciar servidor (restart #116)
+- [x] Obtener esquema completo de tabla leads
+- [x] Verificar columnas en database.types.ts
+- [x] Comentar precision_answers en handleFinalSubmit
+- [x] Dejar solo selected_cards para probar
+- [x] Reiniciar servidor (restart #117)
+- [ ] Usuario prueba flujo completo
+- [ ] Revisar logs de consola
+- [ ] Determinar si el problema es precision_answers específicamente
 
 ## Acceptance
-- ✅ Columnas existen en base de datos
-- ✅ Tipos TypeScript actualizados
-- ✅ database.types.ts incluye precision_answers y selected_cards
-- ✅ Error "schema cache" resuelto
-- ✅ Servidor funcionando (restart #116)
+- [ ] Flujo funciona sin precision_answers
+- [ ] Identificar origen del error
+- ✅ Servidor funcionando (restart #117)
 </file_contents>
 </code_editor_tab>
 

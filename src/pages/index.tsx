@@ -152,35 +152,43 @@ export default function Home() {
   };
 
   const handleFinalSubmit = async () => {
-    console.log("📝 Actualizando lead en Supabase...");
+    console.log("📝 Guardando respuestas de precisión...");
     
     if (!leadId) {
-      console.error("❌ No hay leadId para actualizar");
+      console.error("❌ Error: No hay leadId");
+      setCurrentScreen("warning");
       return;
     }
 
     try {
-      const updates = {
-        selected_cards: selectedCards.map(c => c.name),
-        precision_answers: answers,
+      // TEMPORAL: Solo actualizar selected_cards primero para verificar
+      const updateData = {
+        selected_cards: selectedCards.map(card => card.name),
+        // precision_answers: answers, // COMENTADO TEMPORALMENTE
       };
 
-      const result = await LeadService.update(leadId, updates);
+      console.log("📝 Actualizando lead con:", updateData);
+
+      const { data, error } = await supabase
+        .from("leads")
+        .update(updateData)
+        .eq("id", leadId)
+        .select()
+        .single();
       
-      if (result.error || !result.data) {
-        throw new Error(result.error?.message || "Error al actualizar datos");
+      console.log("Resultado actualización:", { data, error });
+
+      if (error) {
+        console.error("❌ Error actualizando lead:", error);
+        throw new Error(error.message);
       }
 
-      console.log("✅ Lead actualizado en Supabase");
-      
+      console.log("✅ Lead actualizado exitosamente");
       setCurrentScreen("warning");
-      
-      setTimeout(() => {
-        setCurrentScreen("chat");
-      }, 6000);
     } catch (error: any) {
-      console.error("❌ Error actualizando lead:", error);
-      alert(`Error: ${error.message}`);
+      console.error("❌ Error en handleFinalSubmit:", error);
+      // Continuar de todas formas al warning
+      setCurrentScreen("warning");
     }
   };
 
