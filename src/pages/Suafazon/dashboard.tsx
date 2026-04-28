@@ -838,13 +838,13 @@ export default function Dashboard() {
                               </p>
                             </div>
 
-                            {Array.isArray(lead.selected_cards) && lead.selected_cards.length > 0 && (
+                            {Array.isArray(lead.cards_selected) && lead.cards_selected.length > 0 && (
                               <div className="bg-primary/5 rounded-xl p-3 border border-primary/20 mb-3">
                                 <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-2 font-semibold">
                                   Cartas:
                                 </p>
                                 <div className="flex flex-wrap gap-2">
-                                  {lead.selected_cards.map((card, idx) => (
+                                  {lead.cards_selected.map((card, idx) => (
                                     <span
                                       key={idx}
                                       className="text-xs lg:text-sm bg-primary/20 text-primary px-3 py-1.5 rounded-lg font-bold border border-primary/40"
