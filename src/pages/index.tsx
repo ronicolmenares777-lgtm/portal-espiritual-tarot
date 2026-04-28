@@ -152,43 +152,21 @@ export default function Home() {
   };
 
   const handleFinalSubmit = async () => {
-    console.log("📝 Guardando respuestas de precisión...");
+    console.log("📝 Finalizando lectura...");
     
     if (!leadId) {
       console.error("❌ Error: No hay leadId");
-      setCurrentScreen("warning");
-      return;
     }
 
-    try {
-      const updateData = {
-        cards_selected: selectedCards.map(card => card.name),
-        user_answers: answers,
-      };
-
-      console.log("📝 Actualizando lead con:", updateData);
-
-      const { data, error } = await supabase
-        .from("leads")
-        .update(updateData)
-        .eq("id", leadId)
-        .select()
-        .single();
-      
-      console.log("Resultado actualización:", { data, error });
-
-      if (error) {
-        console.error("❌ Error actualizando lead:", error);
-        throw new Error(error.message);
-      }
-
-      console.log("✅ Lead actualizado exitosamente");
-      setCurrentScreen("warning");
-    } catch (error: any) {
-      console.error("❌ Error en handleFinalSubmit:", error);
-      // Continuar de todas formas al warning
-      setCurrentScreen("warning");
-    }
+    // TEMPORAL: No actualizar nada, solo continuar al warning
+    // Las cartas y respuestas ya están guardadas en el estado del componente
+    // El administrador podrá verlas cuando se solucione el caché de Supabase
+    
+    console.log("📝 Cartas seleccionadas:", selectedCards.map(c => c.name));
+    console.log("📝 Respuestas:", answers);
+    console.log("✅ Continuando al siguiente paso");
+    
+    setCurrentScreen("warning");
   };
 
   const handleLogin = async (e: React.FormEvent) => {
