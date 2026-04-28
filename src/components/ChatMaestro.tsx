@@ -43,146 +43,84 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
     scrollToBottom();
   }, [messages]);
 
-  // Cargar datos y suscribirse a Supabase - VERSIÓN CORREGIDA
+  // Cargar datos y suscribirse a Supabase - VERSIÓN SIMPLIFICADA
   useEffect(() => {
-    let isMounted = true;
-    const channelSubscription: ReturnType<typeof supabase.channel> | null = null;
-
     const loadData = async () => {
       console.log("🔄 ChatMaestro: Iniciando...");
       
-      // Intentar obtener leadId del localStorage (máximo 6 intentos = 3 segundos)
-      let attempts = 0;
-      let currentLeadId = null;
+      // Obtener leadId del localStorage
+      const currentLeadId = localStorage.getItem("currentLeadId");
       
-      while (!currentLeadId && attempts < 6) {
-        currentLeadId = localStorage.getItem("currentLeadId");
-        if (currentLeadId) break;
-        
-        console.log(`⏳ Intento ${attempts + 1}/6 - Esperando leadId...`);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        if (!isMounted) return;
-        attempts++;
-      }
-      
-      // Si después de 3 segundos no hay leadId, crear uno de emergencia
       if (!currentLeadId) {
-        console.warn("⚠️ No se encontró leadId - Creando lead de emergencia...");
-        try {
-          const result = await LeadService.create({
-            name: userName || "Usuario Anónimo",
-            whatsapp: "0000000000",
-            country_code: "+52",
-            problem: userProblem || "Consulta desde chat",
-            status: "nuevo",
-          });
-          
-          if (!isMounted) return;
-          
-          if (result.error || !result.data) {
-            console.error("Error creando lead de emergencia:", result.error);
-            return;
-          }
-
-          // Type narrowing: ahora sabemos que result.data existe
-          currentLeadId = result.data.id;
-          localStorage.setItem("currentLeadId", result.data.id);
-          console.log("✅ Lead de emergencia creado:", currentLeadId);
-        } catch (err) {
-          console.error("❌ Error creando lead de emergencia:", err);
-          if (!isMounted) return;
-        }
+        console.error("❌ No se encontró leadId en localStorage");
+        setIsReady(true); // Mostrar chat vacío en lugar de quedarse cargando
+        return;
       }
       
-      if (currentLeadId) {
-        console.log("✅ Lead ID obtenido:", currentLeadId);
-        setLeadId(currentLeadId);
+      console.log("✅ Lead ID obtenido:", currentLeadId);
+      setLeadId(currentLeadId);
 
-        // Cargar mensajes existentes
-        const messagesData = await MessageService.getByLeadId(currentLeadId);
-        if (!isMounted) return;
-        
-        console.log("✅ Mensajes cargados:", messagesData.length);
-        setMessages(messagesData);
+      // Cargar mensajes existentes
+      const messagesData = await MessageService.getByLeadId(currentLeadId);
+      console.log("✅ Mensajes cargados:", messagesData.length);
+      setMessages(messagesData);
 
-        // Marcar como leídos los mensajes del maestro
-        MessageService.markAsRead(currentLeadId, false).catch(console.error);
+      // Marcar como leídos (bypass del caché)
+      MessageService.markAsRead(currentLeadId, false).catch(console.error);
 
-        // --- POLLING ESTABLE (2 SEGUNDOS) ---
-        // Garantiza que los mensajes lleguen incluso si los websockets fallan
-        const pollInterval = setInterval(async () => {
-          try {
-            const latestMessages = await MessageService.getByLeadId(currentLeadId);
+      // Polling simple cada 3 segundos
+      const pollInterval = setInterval(async () => {
+        try {
+          const latestMessages = await MessageService.getByLeadId(currentLeadId);
+          if (latestMessages.length > messages.length) {
+            console.log(`🔄 Nuevos mensajes: ${latestMessages.length - messages.length}`);
+            setMessages(latestMessages);
+          }
+        } catch (error) {
+          console.error("Error en polling:", error);
+        }
+      }, 3000);
+
+      // Suscripción realtime
+      const channel = supabase
+        .channel(`messages:${currentLeadId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `lead_id=eq.${currentLeadId}`
+          },
+          (payload) => {
+            console.log('🔔 Nuevo mensaje realtime:', payload.new);
             setMessages((prev) => {
-              if (latestMessages.length > prev.length) {
-                console.log(`🔄 Polling: ${latestMessages.length - prev.length} mensajes nuevos`);
-                return latestMessages;
+              if (!prev.some(m => m.id === payload.new.id)) {
+                return [...prev, payload.new as Message];
               }
               return prev;
             });
-          } catch (error) {
-            console.error("Error en polling:", error);
           }
-        }, 2000);
+        )
+        .subscribe();
 
-        // --- SUSCRIPCIÓN REALTIME (backup instantáneo) ---
-        const channel = supabase
-          .channel(`messages:${currentLeadId}`)
-          .on(
-            'postgres_changes',
-            {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'messages',
-              filter: `lead_id=eq.${currentLeadId}`
-            },
-            (payload) => {
-              console.log('🔔 REALTIME: Nuevo mensaje', payload.new);
-              setMessages((prev) => {
-                if (!prev.some(m => m.id === payload.new.id)) {
-                  return [...prev, payload.new as Message];
-                }
-                return prev;
-              });
-            }
-          )
-          .subscribe();
-
-        // Cleanup
-        return () => {
-          console.log("🧹 Limpiando polling y realtime");
-          clearInterval(pollInterval);
-          supabase.removeChannel(channel);
-        };
-
-        // Cargar avatar del maestro desde el perfil
-        const { data: profiles } = await ProfileService.getAll();
-        if (!isMounted) return;
-        
-        if (profiles && profiles.length > 0) {
-          const maestro = profiles[0];
-          if (maestro.avatar_url) {
-            setMaestroAvatar(maestro.avatar_url);
-          }
-        }
+      // Cargar avatar del maestro
+      const { data: profiles } = await ProfileService.getAll();
+      if (profiles && profiles.length > 0 && profiles[0].avatar_url) {
+        setMaestroAvatar(profiles[0].avatar_url);
       }
 
-      if (isMounted) {
-        setIsReady(true);
-      }
+      setIsReady(true);
+
+      // Cleanup
+      return () => {
+        clearInterval(pollInterval);
+        supabase.removeChannel(channel);
+      };
     };
 
     loadData();
-
-    // Cleanup: cancelar suscripción al desmontar
-    return () => {
-      isMounted = false;
-      if (channelSubscription) {
-        console.log("🔌 Cancelando suscripción realtime...");
-        supabase.removeChannel(channelSubscription);
-      }
-    };
-  }, [userName, userPhone, userProblem, userCard]);
+  }, []);
 
   // Auto-scroll cuando llegan mensajes nuevos
   useEffect(() => {
