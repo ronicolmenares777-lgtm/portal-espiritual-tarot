@@ -1,28 +1,25 @@
 ---
-title: Workaround PostgREST cache issue
+title: Fix navigation from warning screen to chat
 status: done
 priority: urgent
 type: bug
 tags:
-  - database
-  - supabase
-  - workaround
+  - navigation
+  - chat
+  - ux
 created_by: softgen
 created_at: '2026-04-26T04:00:00Z'
 position: 8
 ---
 
 ## Notes
-WORKAROUND TEMPORAL: PostgREST cache completamente atascado. Solución: Desactivar actualización de cards_selected y user_answers hasta que el caché se limpie. El lead inicial se guarda correctamente con nombre, WhatsApp y problema.
+COMPLETADO: Agregada navegación correcta desde WarningMessage al chat usando router.push("/chat-usuario")
 
 ## Checklist
-- [x] Verificar que columnas existen en BD (SÍ existen)
-- [x] Simplificar handleFinalSubmit para evitar UPDATE
-- [x] Permitir que flujo continúe sin errores
-- [x] Reiniciar servidor (restart #122)
+- [x] Verificar callback onContinue en WarningMessage
+- [x] Agregar router.push al chat en index.tsx
+- [x] Reiniciar servidor (restart #123)
 
 ## Acceptance
-- ✅ Flujo completa sin errores de schema cache
-- ✅ Lead inicial se guarda (nombre, WhatsApp, problema)
-- ⚠️ Cards y respuestas se pierden (temporal hasta fix de caché)
-- ✅ Usuario puede llegar al ChatMaestro
+- ✅ WarningMessage navega al chat al completar
+- ✅ Servidor funcionando (restart #123)

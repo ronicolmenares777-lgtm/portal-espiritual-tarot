@@ -458,7 +458,12 @@ export default function Home() {
         )}
 
         {currentScreen === "warning" && (
-          <WarningMessage onContinue={handleFinalSubmit} />
+          <WarningMessage 
+            onContinue={() => {
+              console.log("✅ Navegando al chat...");
+              router.push("/chat-usuario");
+            }} 
+          />
         )}
 
         {currentScreen === "chat" && (
