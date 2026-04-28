@@ -461,6 +461,9 @@ export default function Home() {
           <WarningMessage 
             onContinue={() => {
               console.log("✅ Navegando al chat...");
+              if (leadId) {
+                localStorage.setItem("currentLeadId", leadId);
+              }
               router.push("/chat-usuario");
             }} 
           />

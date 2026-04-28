@@ -1,78 +1,54 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { ChatMaestro } from "@/components/ChatMaestro";
 import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
-import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageService } from "@/services/messageService";
 
-export default function ChatUsuario() {
+export default function ChatUsuarioPage() {
   const router = useRouter();
   const [userAuth, setUserAuth] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Obtener datos del usuario del localStorage
-    const authData = localStorage.getItem("userAuth");
-    if (!authData) {
-      console.log("⚠️ No hay datos de autenticación - Redirigiendo al inicio");
-      router.replace("/");
-      return;
-    }
-
-    const user = JSON.parse(authData);
-    console.log("✅ Usuario autenticado:", user);
-    setUserAuth(user);
-
-    // Cargar mensajes del lead
-    const loadMessages = async () => {
-      try {
-        const data = await MessageService.getByLeadId(user.id);
-        
-        console.log("✅ Mensajes cargados:", data?.length || 0);
-        setMessages(data || []);
-      } catch (err) {
-        console.error("Error en loadMessages:", err);
-      } finally {
-        setLoading(false);
+    const loadUserData = async () => {
+      // Obtener lead_id de localStorage (guardado en index.tsx)
+      const storedLeadId = localStorage.getItem("currentLeadId");
+      
+      if (!storedLeadId) {
+        console.error("❌ No hay lead ID guardado");
+        router.push("/");
+        return;
       }
+
+      console.log("🔍 Cargando datos del lead:", storedLeadId);
+
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("id", storedLeadId)
+        .single();
+
+      console.log("Resultado:", { data, error });
+
+      if (error || !data) {
+        console.error("❌ Error cargando lead:", error);
+        router.push("/");
+        return;
+      }
+
+      setUserAuth(data);
+      setLoading(false);
     };
 
-    loadMessages();
-
-    // Suscribirse a nuevos mensajes
-    const channel = supabase
-      .channel(`messages-${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "messages",
-          filter: `lead_id=eq.${user.id}`,
-        },
-        () => {
-          console.log("🔄 Nuevo mensaje recibido - Recargando...");
-          loadMessages();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
+    loadUserData();
   }, [router]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-14 w-14 border-b-3 border-primary mb-4"></div>
-          <p className="text-muted-foreground">Cargando chat...</p>
-        </div>
+        <div className="text-gold text-xl">Conectando con el maestro...</div>
       </div>
     );
   }
