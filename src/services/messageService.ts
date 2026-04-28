@@ -19,18 +19,36 @@ export class MessageService {
     return data || [];
   }
 
-  static async create(messageData: InsertMessage) {
-    const { data, error } = await supabase
-      .from("messages")
-      .insert(messageData)
-      .select()
-      .single();
+  static async create(data: {
+    lead_id: string;
+    content: string;
+    user_id?: string;
+    attachment_url?: string;
+  }): Promise<Message | null> {
+    try {
+      const { data: message, error } = await supabase
+        .from("messages")
+        .insert({
+          lead_id: data.lead_id,
+          content: data.content,
+          user_id: data.user_id || null,
+          attachment_url: data.attachment_url || null,
+          // is_from_maestro se establece automáticamente con un trigger
+        })
+        .select()
+        .single();
 
-    if (error) {
-      console.error("✉️ Error creando mensaje:", error);
-      throw error;
+      if (error) {
+        console.error("✉️ Error creando mensaje:", error);
+        return null;
+      }
+
+      console.log("✅ Mensaje creado:", message);
+      return message;
+    } catch (error) {
+      console.error("✉️ Error en create:", error);
+      return null;
     }
-    return data;
   }
 
   static async markAsRead(leadId: string, isFromMaestro: boolean) {

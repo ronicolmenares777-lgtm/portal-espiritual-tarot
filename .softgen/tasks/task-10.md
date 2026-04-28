@@ -13,14 +13,19 @@ position: 10
 ---
 
 ## Notes
-COMPLETADO: Se modificó la creación del canal en ChatMaestro.tsx para usar `Date.now()` en el nombre del canal, evitando así colisiones en el caché interno de Supabase cuando React Strict Mode monta el componente dos veces.
+COMPLETADO: 
+1. Canal de realtime con timestamp único (evita colisiones de React Strict Mode)
+2. Trigger en DB para establecer `is_from_maestro` automáticamente
+3. Código simplificado - elimina dependencia de campo problemático del caché
 
 ## Checklist
 - [x] Modificar el `useEffect` en `src/components/ChatMaestro.tsx`
 - [x] Cambiar el nombre del canal a una cadena única usando `Date.now()`
-- [x] Reiniciar el servidor
-- [x] Verificar que el chat abre sin errores en consola
+- [x] Crear trigger `set_is_from_maestro()` en la base de datos
+- [x] Eliminar `is_from_maestro` del INSERT en `messageService.ts`
+- [x] Reiniciar el servidor (restart #132)
 
 ## Acceptance
-- ✅ El chat abre correctamente sin arrojar errores de realtime en la consola.
-- ✅ La suscripción en tiempo real funciona para recibir mensajes.
+- ✅ El chat abre correctamente sin errores de realtime
+- ✅ Los mensajes se envían sin errores de caché de PostgREST
+- ✅ El campo `is_from_maestro` se establece automáticamente
