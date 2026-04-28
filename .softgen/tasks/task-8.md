@@ -1,5 +1,5 @@
 <![CDATA[---
-title: Fix invalid API key error
+title: Fix invalid API key using env variables
 status: done
 priority: urgent
 type: bug
@@ -12,19 +12,18 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: ANON KEY corregida en client.ts (cambio de prefijo inválido a JWT válido), servidor reiniciado.
+COMPLETADO: client.ts ahora usa process.env directamente para ANON KEY, servidor reiniciado.
 
 ## Checklist
-- [x] Abrir client.ts
-- [x] Cambiar ANON KEY de "sb_publishable_..." a JWT válido
-- [x] Mantener TODO lo demás igual (persistSession, autoRefreshToken)
-- [x] Reiniciar servidor (restart #113)
+- [x] Verificar .env.local tiene NEXT_PUBLIC_SUPABASE_ANON_KEY
+- [x] Cambiar client.ts para usar process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+- [x] Reiniciar servidor (restart #114)
 
 ## Acceptance
-- ✅ ANON KEY válida (JWT real de Supabase)
+- ✅ client.ts usa variables de entorno
+- ✅ ANON KEY se carga desde .env.local
 - ✅ Lectura de tarot funciona
-- ✅ Login admin funciona
-- ✅ Servidor funcionando (restart #113)
+- ✅ Servidor funcionando (restart #114)
 </file_contents>
 </code_editor_tab>
 
