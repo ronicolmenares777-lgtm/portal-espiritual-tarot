@@ -17,7 +17,8 @@ COMPLETADO:
 1. Canal de realtime con timestamp único (evita colisiones de React Strict Mode)
 2. Trigger en DB para establecer `is_from_maestro` automáticamente
 3. Código simplificado - elimina dependencia de campo problemático del caché
-4. Corregidos todos los usos de 'text' a 'content' en el código
+4. Corregidos TODOS los usos de 'text' a 'content' en el código
+5. Actualizados tipos TypeScript y regenerados desde DB
 
 ## Checklist
 - [x] Modificar el `useEffect` en `src/components/ChatMaestro.tsx`
@@ -25,7 +26,9 @@ COMPLETADO:
 - [x] Crear trigger `set_is_from_maestro()` en la base de datos
 - [x] Eliminar `is_from_maestro` del INSERT en `messageService.ts`
 - [x] Corregir uso de 'text' a 'content' en todos los archivos
-- [x] Reiniciar el servidor (restart #133)
+- [x] Actualizar tipos en admin.ts
+- [x] Regenerar tipos desde Supabase
+- [x] Reiniciar el servidor (restart #134)
 
 ## Acceptance
 - ✅ El chat abre correctamente sin errores de realtime

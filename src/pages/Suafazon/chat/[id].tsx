@@ -161,45 +161,24 @@ export default function ChatPage() {
     }
   }, [leadId]);
 
-  const handleSendMessage = async (text?: string) => {
-    const messageText = text || messageInput;
-    if (!messageText.trim() || !leadId || isSending) return;
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || !id) return;
 
     try {
-      setIsSending(true);
-      console.log("📤 ADMIN Enviando mensaje:", messageText);
-
-      const messageData = {
-        lead_id: leadId,
-        text: messageText.trim(),
-        is_from_maestro: true,
-      };
-
-      const createdMessage = await MessageService.create(messageData);
+      const session = await supabase.auth.getSession();
+      const maestroId = session?.data?.session?.user?.id;
       
-      if (!createdMessage) {
-        throw new Error("No se pudo crear el mensaje");
-      }
-
-      console.log("✅ ADMIN Mensaje guardado:", createdMessage.id);
-
-      // Añadir mensaje al estado local
-      setMessages((prev) => {
-        if (prev.some(m => m.id === createdMessage.id)) {
-          return prev;
-        }
-        return [...prev, createdMessage];
+      const newMsg = await MessageService.create({
+        lead_id: id as string,
+        content: inputMessage,
+        user_id: maestroId,
       });
 
-      setMessageInput("");
-      setShowQuickResponses(false);
-      
-      console.log("🎉 ADMIN Mensaje enviado exitosamente");
-    } catch (error: any) {
-      console.error("❌ ADMIN Error enviando mensaje:", error);
-      alert(`Error enviando el mensaje: ${error.message || 'Intenta de nuevo'}`);
-    } finally {
-      setIsSending(false);
+      if (newMsg) {
+        setInputMessage("");
+      }
+    } catch (error) {
+      console.error("Error enviando mensaje:", error);
     }
   };
 
@@ -239,7 +218,7 @@ export default function ChatPage() {
       const savedMessage = await MessageService.create({
         lead_id: id as string,
         content: newMessage,
-        user_id: maestroId,
+        user_id: session?.user?.id,
       });
 
       if (savedMessage) {
@@ -424,10 +403,9 @@ export default function ChatPage() {
     try {
       const createdMessage = await MessageService.create({
         lead_id: lead.id,
-        text: "",
+        content: "",
         media_url: mediaPreview.url,
         media_type: mediaPreview.type,
-        is_from_maestro: true
       });
 
       if (createdMessage) {
@@ -761,7 +739,7 @@ export default function ChatPage() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
-                      handleSendMessage(messageInput);
+                      handleSendMessage();
                     }
                   }}
                   placeholder="Escribe un mensaje..."
@@ -775,7 +753,7 @@ export default function ChatPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => handleSendMessage(messageInput)}
+                onClick={handleSendMessage}
                 disabled={!messageInput.trim() || isSending}
                 className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-gold via-amber-500 to-amber-600 hover:from-amber-500 hover:to-gold text-black rounded-xl hover:shadow-md hover:shadow-gold/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
               >

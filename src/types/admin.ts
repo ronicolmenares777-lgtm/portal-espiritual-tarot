@@ -45,3 +45,14 @@ export interface AdminStats {
     perdido: number;
   };
 }
+
+export type Message = {
+  id: string;
+  lead_id: string;
+  content: string;
+  is_from_maestro: boolean;
+  media_url?: string | null;
+  media_type?: string | null;
+  created_at: string;
+  read_at?: string | null;
+};
