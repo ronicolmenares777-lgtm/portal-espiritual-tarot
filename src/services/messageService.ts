@@ -1,57 +1,51 @@
-/**
- * Servicio para gestión de Mensajes en Supabase
- */
-
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 
-export type Message = Tables<"messages">;
+export type Message = Database["public"]["Tables"]["messages"]["Row"];
+type InsertMessage = Database["public"]["Tables"]["messages"]["Insert"];
 
 export class MessageService {
-  static async getLeadMessages(leadId: string) {
+  static async getByLeadId(leadId: string) {
     const { data, error } = await supabase
       .from("messages")
       .select("*")
       .eq("lead_id", leadId)
       .order("created_at", { ascending: true });
 
-    console.log("📬 Mensajes obtenidos:", { data, error });
-    return { data: data || [], error };
+    if (error) {
+      console.error("📬 Error obteniendo mensajes:", error);
+      throw error;
+    }
+    return data || [];
   }
 
-  static async sendMessage(leadId: string, content: string, isFromUser: boolean) {
+  static async create(messageData: InsertMessage) {
     const { data, error } = await supabase
       .from("messages")
-      .insert({
-        lead_id: leadId,
-        content,
-        is_from_user: isFromUser,
-      })
+      .insert(messageData)
       .select()
       .single();
 
-    console.log("✉️ Mensaje enviado:", { data, error });
-    return { data, error };
+    if (error) {
+      console.error("✉️ Error creando mensaje:", error);
+      throw error;
+    }
+    return data;
   }
 
-  static subscribeToMessages(leadId: string, callback: (message: Message) => void) {
-    const channel = supabase
-      .channel(`messages:${leadId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `lead_id=eq.${leadId}`,
-        },
-        (payload) => {
-          console.log("📨 Nuevo mensaje recibido:", payload.new);
-          callback(payload.new as Message);
-        }
-      )
-      .subscribe();
+  static async markAsRead(leadId: string, isFromMaestro: boolean) {
+    const { data, error } = await supabase
+      .from("messages")
+      .update({ read_at: new Date().toISOString() })
+      .eq("lead_id", leadId)
+      .eq("is_from_maestro", isFromMaestro)
+      .is("read_at", null)
+      .select();
 
-    return channel;
+    if (error) {
+      console.error("👀 Error marcando como leído:", error);
+      throw error;
+    }
+    return data;
   }
 }
