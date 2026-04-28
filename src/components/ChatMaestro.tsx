@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Loader2, Sparkles, Paperclip, Image, Video, Mic, FileText, Download, X } from "lucide-react";
+import { Send, Loader2, Sparkles, Paperclip, Image, Mic, FileText, Download, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { MessageService } from "@/services/messageService";
@@ -28,16 +28,10 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
-  const [lastMessageCount, setLastMessageCount] = useState(0);
   const [showMediaMenu, setShowMediaMenu] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -108,7 +102,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         
         console.log("✅ Mensajes cargados:", messagesData.length);
         setMessages(messagesData);
-        setLastMessageCount(messagesData.length);
 
         // Marcar como leídos los mensajes del maestro
         MessageService.markAsRead(currentLeadId, false).catch(console.error);
@@ -186,10 +179,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         console.log("🔌 Cancelando suscripción realtime...");
         supabase.removeChannel(channelSubscription);
       }
-      if (pollingIntervalRef.current) {
-        console.log("🛑 Deteniendo polling de respaldo...");
-        clearInterval(pollingIntervalRef.current);
-      }
     };
   }, [userName, userPhone, userProblem, userCard]);
 
@@ -206,7 +195,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         try {
           const initialMessages = await MessageService.getByLeadId(currentLeadId);
           setMessages(initialMessages);
-          setLastMessageCount(initialMessages.length);
           console.log(`✅ Mensajes iniciales cargados: ${initialMessages.length}`);
           setIsLoading(false);
 
