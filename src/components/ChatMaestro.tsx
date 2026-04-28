@@ -23,7 +23,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
   const [newMessage, setNewMessage] = useState("");
   const [leadId, setLeadId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [maestroAvatar, setMaestroAvatar] = useState("/api/placeholder/40/40");
+  const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -81,9 +81,10 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         }
       }, 3000);
 
-      // Suscripción realtime
+      // Suscripción realtime con nombre único para evitar colisiones
+      const channelName = `messages_${currentLeadId}_${Date.now()}`;
       const channel = supabase
-        .channel(`messages:${currentLeadId}`)
+        .channel(channelName)
         .on(
           'postgres_changes',
           {

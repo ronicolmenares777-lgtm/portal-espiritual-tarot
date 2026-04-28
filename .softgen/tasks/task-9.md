@@ -18,17 +18,22 @@ COMPLETADO:
 2. Imports y variables no utilizadas eliminadas
 3. useEffect de carga simplificado radicalmente - eliminados reintentos complejos y lógica de emergencia
 4. Polling estable cada 3 segundos + realtime como backup
+5. Corregido orden de realtime channel (.on antes de .subscribe)
+6. Avatar por defecto cambiado a Dicebear válido
 
 ## Checklist
 - [x] Modificar `markAsRead` en `src/services/messageService.ts` para bypass temporal
 - [x] Limpiar imports no utilizados en `src/components/ChatMaestro.tsx`
 - [x] Eliminar variables de estado no utilizadas
 - [x] Simplificar useEffect de carga (eliminar reintentos y leads de emergencia)
-- [x] Reiniciar servidor (restart #127)
+- [x] Corregir orden de realtime channel
+- [x] Cambiar avatar placeholder a uno válido
+- [x] Reiniciar servidor (restart #128)
 
 ## Acceptance
 - ✅ El chat abre inmediatamente sin bloqueos
 - ✅ No hay errores PGRST en la consola relacionados con `read_at`
 - ✅ Código del chat limpio y optimizado
 - ✅ Lógica de carga simplificada
-- ✅ Servidor funcionando (restart #127)
+- ✅ Sin errores de realtime
+- ✅ Servidor funcionando (restart #128)
