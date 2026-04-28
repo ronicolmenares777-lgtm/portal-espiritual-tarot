@@ -95,7 +95,7 @@ export default function ChatUsuario() {
           userName={userAuth.name}
           userPhone={userAuth.country_code + userAuth.whatsapp}
           userProblem={userAuth.problem}
-          userCard={userAuth.selected_cards?.[0] || ""}
+          userCard={userAuth.cards_selected?.[0] || ""}
         />
       </div>
     </>

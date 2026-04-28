@@ -13,15 +13,20 @@ position: 8
 ---
 
 ## Notes
-COMPLETADO: Supabase se atascó con PGRST204 para precision_answers. Solución: Renombrar las columnas (cards_selected, user_answers) para evadir el caché roto.
+COMPLETADO: Renombradas columnas precision_answers → user_answers, selected_cards → cards_selected para evadir caché de Supabase. Todo el código actualizado.
 
 ## Checklist
-- [x] DROP old columns
-- [x] ADD new columns with different names
-- [x] NOTIFY pgrst, 'reload schema'
-- [x] Update index.tsx with new column names
-- [x] Regenerate Types
-- [x] Restart PM2
+- [x] DROP columnas antiguas
+- [x] ADD columnas nuevas (cards_selected, user_answers)
+- [x] NOTIFY pgrst reload schema
+- [x] Actualizar index.tsx
+- [x] Actualizar dashboard.tsx
+- [x] Actualizar chat-usuario.tsx
+- [x] Regenerar tipos TypeScript
+- [x] Reiniciar servidor (restart #121)
 
 ## Acceptance
-- ✅ PGRST204 evadido mediante cache busting.
+- ✅ Columnas renombradas en BD
+- ✅ Todo el código actualizado
+- ✅ Sin errores de compilación
+- ✅ Servidor funcionando (restart #121)
