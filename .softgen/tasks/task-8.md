@@ -1,5 +1,5 @@
 ---
-title: Fix chat navigation and message service
+title: Fix chat navigation and restore messageService
 status: done
 priority: urgent
 type: bug
@@ -14,19 +14,19 @@ position: 8
 
 ## Notes
 COMPLETADO: 
-1. Corregido messageService para usar solo columnas existentes (lead_id, content, is_from_user, created_at)
-2. Simplificado chat-usuario para usar localStorage en vez de query params
-3. Guardado leadId en localStorage antes de navegar
+1. messageService.ts restaurado con métodos getByLeadId, create, markAsRead
+2. localStorage guarda leadId antes de navegar al chat
+3. chat-usuario.tsx carga lead desde localStorage
+4. Servidor reiniciado (restart #125)
 
 ## Checklist
-- [x] Verificar esquema real de tabla messages
-- [x] Eliminar referencias a columnas inexistentes (res_lat, etc)
-- [x] Simplificar messageService
-- [x] Usar localStorage para pasar leadId al chat
-- [x] Reiniciar servidor (restart #124)
+- [x] Restaurar messageService.ts completo
+- [x] Guardar leadId en localStorage
+- [x] Cargar lead en chat-usuario
+- [x] Reiniciar servidor
 
 ## Acceptance
-- ✅ Chat se abre sin errores PGRST
-- ✅ Mensajes se cargan correctamente
-- ✅ Navegación funciona
-- ✅ Servidor funcionando (restart #124)
+- ✅ messageService restaurado
+- ✅ Sin errores de compilación
+- ✅ Servidor funcionando (restart #125)
+- [ ] Usuario prueba flujo completo al chat
