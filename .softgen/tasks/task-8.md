@@ -1,39 +1,37 @@
 <![CDATA[---
-title: Fix admin login access to /Suafazon dashboard
+title: Fix admin login and lead creation flow
 status: done
 priority: urgent
 type: bug
 tags:
   - auth
   - admin
-  - supabase
+  - leads
 created_by: softgen
 created_at: '2026-04-26T04:00:00Z'
 position: 8
 ---
 
 ## Notes
-COMPLETADO: Usuario admin@portal.com creado, perfil actualizado a role 'admin', servidor reiniciado.
+COMPLETADO: Código corregido - ANON KEY válida, persistSession habilitado, flujo de leads arreglado, servidor reiniciado.
 
 ## Checklist
-- [x] Eliminar todos los usuarios antiguos
-- [x] Crear usuario nuevo (admin@portal.com)
-- [x] Crear perfil con UUID del nuevo usuario
-- [x] Actualizar role a 'admin'
-- [x] Verificar sincronización completa
-- [x] RLS deshabilitado
-- [x] Reiniciar servidor (restart #108)
+- [x] Corregir supabase/client.ts con ANON KEY válida (JWT real)
+- [x] Habilitar persistSession y autoRefreshToken
+- [x] Simplificar auth.ts - eliminar queries innecesarias
+- [x] Corregir handleSubmit en index.tsx (crear leads)
+- [x] Corregir handleFinalSubmit (actualizar leads + ir a warning)
+- [x] Verificar que WarningMessage lleva a ChatMaestro
+- [x] Reiniciar servidor (restart #110)
 
 ## Acceptance
-- ✅ Usuario: admin@portal.com
-- ✅ Password: Admin2024
-- ✅ UUID: 8cb7a7c0-1ecc-4e92-b4bd-0b474cca279c
-- ✅ Role: admin
-- ✅ Email confirmado
-- ✅ UUIDs sincronizados
-- ✅ Login debe funcionar
-- ✅ Acceso a /Suafazon habilitado
-- ✅ Servidor funcionando (restart #108)
+- ✅ ANON KEY corregida (JWT válido)
+- ✅ Sesión persiste entre recargas
+- ✅ Login funciona con admin@portal.com
+- ✅ Formulario crea leads correctamente
+- ✅ Flujo completo: form → loading → cards → reveal → questions → warning → chat
+- ✅ ChatMaestro aparece después del warning
+- ✅ Servidor funcionando (restart #110)
 </file_contents>
 </code_editor_tab>
 

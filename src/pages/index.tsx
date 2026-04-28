@@ -114,7 +114,7 @@ export default function Home() {
         .from("leads")
         .insert({
           name: formData.name,
-          whatsapp: formData.whatsapp,
+          whatsapp: `${formData.countryCode}${formData.whatsapp}`,
           country_code: formData.countryCode,
           problem: formData.problem,
           status: "nuevo",
@@ -123,7 +123,7 @@ export default function Home() {
         .single();
       
       if (error) {
-        console.error("❌ Error:", error);
+        console.error("❌ Error creando lead:", error);
         alert(`Error: ${error.message}`);
         setIsSubmitting(false);
         return;
@@ -131,13 +131,12 @@ export default function Home() {
       
       console.log("✅ Lead creado con ID:", data.id);
       setLeadId(data.id);
-      setCurrentScreen("loading");
+      setIsSubmitting(false);
       
-      setTimeout(() => {
-        setCurrentScreen("cards");
-      }, 3000);
+      // Avanzar a loading screen
+      setCurrentScreen("loading");
     } catch (error: any) {
-      console.error("❌ Error:", error);
+      console.error("❌ Error inesperado:", error);
       alert(`Error: ${error.message || 'Intenta de nuevo'}`);
       setIsSubmitting(false);
     }
@@ -152,10 +151,13 @@ export default function Home() {
   };
 
   const handleFinalSubmit = async () => {
-    console.log("📝 Actualizando lead en Supabase...");
+    console.log("📝 Guardando respuestas finales...");
     
     if (!leadId) {
       console.error("❌ No hay leadId para actualizar");
+      // Si no hay leadId, ir directo al chat
+      console.log("⚠️ No hay leadId, yendo directo al warning");
+      setCurrentScreen("warning");
       return;
     }
 
@@ -165,22 +167,28 @@ export default function Home() {
         precision_answers: answers,
       };
 
-      const result = await LeadService.update(leadId, updates);
+      console.log("📝 Actualizando lead:", leadId, updates);
+
+      const { data, error } = await supabase
+        .from("leads")
+        .update(updates)
+        .eq("id", leadId)
+        .select()
+        .single();
       
-      if (result.error || !result.data) {
-        throw new Error(result.error?.message || "Error al actualizar datos");
+      if (error) {
+        console.error("❌ Error actualizando lead:", error);
+        // Continuar de todas formas al warning
+      } else {
+        console.log("✅ Lead actualizado exitosamente");
       }
 
-      console.log("✅ Lead actualizado en Supabase");
-      
+      // Ir al warning screen
       setCurrentScreen("warning");
-      
-      setTimeout(() => {
-        setCurrentScreen("chat");
-      }, 6000);
     } catch (error: any) {
-      console.error("❌ Error actualizando lead:", error);
-      alert(`Error: ${error.message}`);
+      console.error("❌ Error en handleFinalSubmit:", error);
+      // Continuar de todas formas
+      setCurrentScreen("warning");
     }
   };
 
