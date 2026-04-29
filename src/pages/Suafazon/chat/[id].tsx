@@ -35,7 +35,7 @@ export default function ChatPage() {
 
   const [lead, setLead] = useState<Lead | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState("");
+  const [inputMessage, setInputMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
@@ -165,12 +165,12 @@ export default function ChatPage() {
     if (!inputMessage.trim() || !id) return;
 
     try {
-      const session = await supabase.auth.getSession();
-      const maestroId = session?.data?.session?.user?.id;
+      const { data: { session } } = await supabase.auth.getSession();
+      const maestroId = session?.user?.id;
       
       const newMsg = await MessageService.create({
         lead_id: id as string,
-        content: inputMessage,
+        text: inputMessage,
         user_id: maestroId,
       });
 
@@ -211,18 +211,21 @@ export default function ChatPage() {
     }
   };
 
-  const handleQuickResponse = async (text: string) => {
-    if (!id || typeof id !== "string") return;
+  const handleQuickReply = async (message: string) => {
+    if (!id) return;
 
     try {
-      const savedMessage = await MessageService.create({
+      const { data: { session } } = await supabase.auth.getSession();
+      const maestroId = session?.user?.id;
+
+      const quickReply = await MessageService.create({
         lead_id: id as string,
-        content: newMessage,
-        user_id: session?.user?.id,
+        text: message,
+        user_id: maestroId,
       });
 
-      if (savedMessage) {
-        setMessages((prev) => [...prev, savedMessage]);
+      if (quickReply) {
+        setMessages((prev) => [...prev, quickReply]);
       }
     } catch (error) {
       console.error("Error enviando respuesta rápida:", error);
@@ -403,9 +406,8 @@ export default function ChatPage() {
     try {
       const createdMessage = await MessageService.create({
         lead_id: lead.id,
-        content: "",
+        text: "",
         media_url: mediaPreview.url,
-        media_type: mediaPreview.type,
       });
 
       if (createdMessage) {

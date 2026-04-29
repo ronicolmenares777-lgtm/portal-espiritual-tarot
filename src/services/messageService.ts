@@ -21,20 +21,19 @@ export class MessageService {
 
   static async create(data: {
     lead_id: string;
-    content: string;
+    text: string;
     user_id?: string;
-    attachment_url?: string;
+    media_url?: string;
   }): Promise<Message | null> {
     try {
       const { data: message, error } = await supabase
         .from("messages")
-        .insert({
+        .insert([{
           lead_id: data.lead_id,
-          content: data.content,
+          text: data.text,
           user_id: data.user_id || null,
-          attachment_url: data.attachment_url || null,
-          // is_from_maestro se establece automáticamente con un trigger
-        })
+          media_url: data.media_url || null,
+        }])
         .select()
         .single();
 

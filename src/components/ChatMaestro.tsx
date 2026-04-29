@@ -137,7 +137,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
     try {
       const message = await MessageService.create({
         lead_id: leadId,
-        content: newMessage,
+        text: newMessage,
       });
 
       if (message) {
