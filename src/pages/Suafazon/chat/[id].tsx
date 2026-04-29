@@ -165,13 +165,9 @@ export default function ChatPage() {
     if (!inputMessage.trim() || !id) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const maestroId = session?.user?.id;
-      
       const newMsg = await MessageService.create({
         lead_id: id as string,
         text: inputMessage,
-        user_id: maestroId,
       });
 
       if (newMsg) {
@@ -215,13 +211,9 @@ export default function ChatPage() {
     if (!id) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const maestroId = session?.user?.id;
-
       const quickReply = await MessageService.create({
         lead_id: id as string,
         text: message,
-        user_id: maestroId,
       });
 
       if (quickReply) {

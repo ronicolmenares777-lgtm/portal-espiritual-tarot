@@ -22,7 +22,6 @@ export class MessageService {
   static async create(data: {
     lead_id: string;
     text: string;
-    user_id?: string;
     media_url?: string;
   }): Promise<Message | null> {
     try {
@@ -31,7 +30,6 @@ export class MessageService {
         .insert([{
           lead_id: data.lead_id,
           text: data.text,
-          user_id: data.user_id || null,
           media_url: data.media_url || null,
         }])
         .select()
