@@ -398,8 +398,7 @@ export default function ChatPage() {
     try {
       const createdMessage = await MessageService.create({
         lead_id: lead.id,
-        text: "",
-        media_url: mediaPreview.url,
+        text: `[${mediaPreview.type}]`,
       });
 
       if (createdMessage) {
