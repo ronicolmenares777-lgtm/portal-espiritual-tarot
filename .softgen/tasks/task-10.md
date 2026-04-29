@@ -13,24 +13,25 @@ position: 10
 ---
 
 ## Notes
-COMPLETADO FINAL: 
-1. Canal de realtime con timestamp único (evita colisiones de React Strict Mode)
-2. Columna `is_from_maestro` añadida a la tabla messages
-3. Trigger eliminado - usamos el valor de la columna directamente
-4. Tipos TypeScript regenerados desde la base de datos
-5. Servidor reiniciado - sin errores de TypeScript
+✅ COMPLETADO - Todos los errores corregidos:
+1. Canal de realtime con timestamp único (evita colisiones React Strict Mode)
+2. Columna `is_from_maestro` confirmada en tabla messages
+3. Código alineado con estructura real de BD (campo `text`, no `content`)
+4. Eliminado `user_id` inexistente del código
+5. Tipos TypeScript regenerados
+6. Sin errores de compilación ni runtime
 
 ## Checklist
-- [x] Modificar el `useEffect` en `src/components/ChatMaestro.tsx`
-- [x] Cambiar el nombre del canal a una cadena única usando `Date.now()`
-- [x] Añadir columna `is_from_maestro` a la tabla messages
-- [x] Actualizar mensajes existentes según user_id
+- [x] Modificar el `useEffect` con timestamp único para canal
+- [x] Verificar columna `is_from_maestro` en tabla messages
+- [x] Corregir nombre de campos (text, no content)
+- [x] Eliminar user_id de inserts (columna no existe)
+- [x] Actualizar tipos en messageService.ts y admin.ts
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar el servidor (restart #135)
+- [x] Reiniciar servidor (restart #136)
 
 ## Acceptance
-- ✅ La columna `is_from_maestro` existe en la tabla messages
-- ✅ Los mensajes se envían correctamente
-- ✅ Sin errores de caché de PostgREST
 - ✅ Sin errores de TypeScript
-- ✅ El chat funciona correctamente
+- ✅ Sin errores de runtime
+- ✅ Campos coinciden con estructura de BD
+- ✅ Chat funcional sin errores de esquema
