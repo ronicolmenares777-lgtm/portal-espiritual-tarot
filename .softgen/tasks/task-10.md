@@ -24,7 +24,8 @@ position: 10
 8. Scroll automático implementado en ambos chats
 9. Agregadas todas las variables de estado faltantes (profileData, viewingImage, lastMessageCount)
 10. Corregidos errores de propiedad 'file' en mediaPreview
-11. Sin errores de compilación ni runtime
+11. Archivo completamente reescrito para eliminar errores residuales
+12. Sin errores de compilación ni runtime
 
 ## Checklist
 - [x] Modificar el `useEffect` con timestamp único para canal
@@ -36,9 +37,10 @@ position: 10
 - [x] Implementar scroll automático con useRef + useEffect
 - [x] Agregar variables de estado faltantes (profileData, viewingImage, lastMessageCount)
 - [x] Corregir uso de propiedad 'file' en handleImageSelect y handleVideoSelect
+- [x] Reescribir archivo completo eliminando errores residuales
 - [x] Actualizar tipos en messageService.ts y admin.ts
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #143)
+- [x] Reiniciar servidor (restart #144)
 
 ## Acceptance
 - ✅ Sin errores de TypeScript
