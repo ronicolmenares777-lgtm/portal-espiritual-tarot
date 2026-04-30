@@ -32,7 +32,7 @@ position: 10
 16. Diseño del selector de país mejorado
 17. Eliminado .single() de los inserts (causaba error "Cannot coerce to JSON object")
 18. Cambiado .single() por .maybeSingle() en carga de leads
-19. Estado lead agregado a ChatMaestro (faltaba setLead)
+19. Estado lead agregado a ChatMaestro con importación de tipo
 20. Sin errores de compilación ni runtime
 
 ## Checklist
@@ -52,9 +52,9 @@ position: 10
 - [x] Mejorar diseño del selector de país
 - [x] Eliminar .single() de inserts para evitar error de coerción
 - [x] Usar .maybeSingle() en carga de leads (permite 0 resultados)
-- [x] Agregar estado lead faltante en ChatMaestro
+- [x] Agregar estado lead e importar tipo Lead desde admin.ts
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #157)
+- [x] Reiniciar servidor (restart #158)
 
 ## Acceptance
 - ✅ Sin errores de TypeScript
@@ -66,4 +66,4 @@ position: 10
 - ✅ Scroll automático hacia abajo al recibir mensajes
 - ✅ Validación de WhatsApp según país funcionando
 - ✅ Chat carga sin error "Cannot coerce"
-- ✅ Estado lead correctamente definido
+- ✅ Tipo Lead correctamente importado

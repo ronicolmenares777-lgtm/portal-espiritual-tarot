@@ -8,6 +8,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { MessageService } from "@/services/messageService";
 import { LeadService } from "@/services/leadService";
 import { ProfileService } from "@/services/profileService";
+import type { Lead } from "@/types/admin";
 
 type Message = Database["public"]["Tables"]["messages"]["Row"];
 
