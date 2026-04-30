@@ -45,7 +45,7 @@ export default function ChatPage() {
   }, [messages]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || typeof id !== 'string') return;
 
     const fetchData = async () => {
       try {
@@ -101,14 +101,14 @@ export default function ChatPage() {
   }, [id]);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || !id) return;
+    if (!inputMessage.trim() || !id || typeof id !== 'string') return;
 
     try {
       const { data, error } = await supabase
         .from("messages")
         .insert([
           {
-            lead_id: id as string,
+            lead_id: id,
             text: inputMessage,
           },
         ])
@@ -124,14 +124,14 @@ export default function ChatPage() {
   };
 
   const handleQuickReply = async (message: string) => {
-    if (!id) return;
+    if (!id || typeof id !== 'string') return;
 
     try {
       const { data, error } = await supabase
         .from("messages")
         .insert([
           {
-            lead_id: id as string,
+            lead_id: id,
             text: message,
           },
         ])
@@ -265,36 +265,28 @@ export default function ChatPage() {
                   </p>
                   <p className="text-sm">{lead.problem}</p>
                 </div>
-                <Badge variant={lead.status === "pending" ? "secondary" : "default"}>
-                  {lead.status === "pending" ? "Pendiente" : "Atendido"}
+                <Badge variant={lead.status === "nuevo" ? "secondary" : "default"}>
+                  {lead.status}
                 </Badge>
               </div>
-              {lead.card_selected && (
+              {lead.cards_selected && lead.cards_selected.length > 0 && (
                 <div>
                   <p className="font-semibold text-sm text-muted-foreground">
-                    Carta Seleccionada:
+                    Cartas Seleccionadas:
                   </p>
-                  <p className="text-sm">{lead.card_selected}</p>
+                  <p className="text-sm">{lead.cards_selected.join(", ")}</p>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                {lead.answer_1 && (
+              {lead.answers && (
+                <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="font-semibold text-muted-foreground">
-                      Respuesta 1:
+                      Respuestas:
                     </p>
-                    <p>{lead.answer_1}</p>
+                    <p>{JSON.stringify(lead.answers)}</p>
                   </div>
-                )}
-                {lead.answer_2 && (
-                  <div>
-                    <p className="font-semibold text-muted-foreground">
-                      Respuesta 2:
-                    </p>
-                    <p>{lead.answer_2}</p>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </Card>
 

@@ -22,10 +22,9 @@ position: 10
 6. Eliminado `media_type` del código (columna NO existe)
 7. Tipos TypeScript regenerados
 8. Scroll automático implementado en ambos chats
-9. Agregadas todas las variables de estado faltantes (profileData, viewingImage, lastMessageCount)
-10. Corregidos errores de propiedad 'file' en mediaPreview
-11. Archivo completamente reescrito para eliminar errores residuales
-12. Sin errores de compilación ni runtime
+9. Tipo Lead corregido para coincidir con estructura de BD
+10. Casts de id a string agregados
+11. Sin errores de compilación ni runtime
 
 ## Checklist
 - [x] Modificar el `useEffect` con timestamp único para canal
@@ -35,12 +34,11 @@ position: 10
 - [x] Restaurar media_url en el código (columna sí existe)
 - [x] Eliminar media_type (columna no existe)
 - [x] Implementar scroll automático con useRef + useEffect
-- [x] Agregar variables de estado faltantes (profileData, viewingImage, lastMessageCount)
-- [x] Corregir uso de propiedad 'file' en handleImageSelect y handleVideoSelect
-- [x] Reescribir archivo completo eliminando errores residuales
+- [x] Corregir tipo Lead en admin.ts
+- [x] Agregar casts de id a string
 - [x] Actualizar tipos en messageService.ts y admin.ts
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #144)
+- [x] Reiniciar servidor (restart #145)
 
 ## Acceptance
 - ✅ Sin errores de TypeScript
