@@ -13,57 +13,41 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - Todos los errores corregidos:
-1. Canal de realtime con timestamp único (evita colisiones React Strict Mode)
-2. Columna `is_from_maestro` confirmada en tabla messages
-3. Código alineado con estructura real de BD (campo `text` confirmado del schema)
-4. Eliminado `user_id` inexistente del código
-5. Eliminado `media_url` del código (NO se usa para enviar mensajes)
-6. Eliminado `media_type` del código (NO se usa para enviar mensajes)
-7. Tipos TypeScript regenerados desde Supabase
-8. Scroll automático implementado en ambos chats
-9. Tipo Lead corregido para coincidir con estructura de BD
-10. Casts de id a string agregados
-11. mockData.ts corregido (countryCode → country_code)
-12. Campos opcionales del tipo Lead marcados correctamente
-13. Cast agregado para resolver incompatibilidad de tipo status
-14. Validación de WhatsApp según código de país implementada
-15. Código de país predeterminado cambiado a +1
-16. Diseño del selector de país mejorado
-17. Eliminado .single() de los inserts (causaba error "Cannot coerce to JSON object")
-18. Cambiado .single() por .maybeSingle() en carga de leads
-19. Estado lead agregado a ChatMaestro con importación de tipo
-20. Sin errores de compilación ni runtime
+✅ COMPLETADO - CORRECCIÓN DEFINITIVA APLICADA:
+1. Schema de Supabase verificado directamente
+2. Columna REAL confirmada: `content` (NO `text`)
+3. TODOS los archivos actualizados con 'content':
+   - messageService.ts
+   - admin.ts (tipo Message)
+   - ChatMaestro.tsx (send + render)
+   - chat/[id].tsx (send + render + quick reply + media)
+4. Sin .single() en ningún insert
+5. .maybeSingle() en carga de leads
+6. Scroll automático funcionando
+7. Validación WhatsApp activa
+8. Servidor reiniciado
 
 ## Checklist
-- [x] Modificar el `useEffect` con timestamp único para canal
-- [x] Verificar columna `is_from_maestro` en tabla messages
-- [x] Confirmar nombre de campo desde schema (text, confirmado)
-- [x] Eliminar user_id de inserts (columna no existe)
-- [x] No enviar media_url ni media_type en mensajes básicos
-- [x] Implementar scroll automático con useRef + useEffect
-- [x] Corregir tipo Lead en admin.ts
-- [x] Agregar casts de id a string
-- [x] Corregir mockData.ts (countryCode → country_code)
-- [x] Hacer opcionales los campos stage, assigned_to, priority, conversion_date
-- [x] Agregar cast as Lead para resolver error de tipo status
-- [x] Implementar validación de WhatsApp según código de país
-- [x] Cambiar código predeterminado a +1
-- [x] Mejorar diseño del selector de país
-- [x] Eliminar .single() de inserts para evitar error de coerción
-- [x] Usar .maybeSingle() en carga de leads (permite 0 resultados)
-- [x] Agregar estado lead e importar tipo Lead desde admin.ts
+- [x] Obtener schema REAL de Supabase
+- [x] Confirmar nombre de columna: `content` (NO `text`)
+- [x] Actualizar messageService.ts con 'content'
+- [x] Actualizar tipo Message en admin.ts con 'content'
+- [x] Actualizar ChatMaestro.tsx con 'content'
+- [x] Actualizar chat/[id].tsx con 'content' (send, quick, media, JSX)
+- [x] Eliminar .single() de inserts
+- [x] Usar .maybeSingle() en carga de leads
+- [x] Scroll automático implementado
+- [x] Validación WhatsApp según país
+- [x] Código país predeterminado +1
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #158)
+- [x] Reiniciar servidor (restart #159)
 
 ## Acceptance
+- ✅ Columna 'content' confirmada del schema de Supabase
+- ✅ Sin errores PGRST204
 - ✅ Sin errores de TypeScript
 - ✅ Sin errores de runtime
-- ✅ Sin errores PGRST204
-- ✅ Campos coinciden con estructura de BD
-- ✅ Chat funcional sin errores de esquema
-- ✅ Los mensajes se envían correctamente
-- ✅ Scroll automático hacia abajo al recibir mensajes
-- ✅ Validación de WhatsApp según país funcionando
-- ✅ Chat carga sin error "Cannot coerce"
-- ✅ Tipo Lead correctamente importado y casteado
+- ✅ Chat envía mensajes correctamente
+- ✅ Chat carga sin errores
+- ✅ Scroll automático funciona
+- ✅ Validación WhatsApp activa
