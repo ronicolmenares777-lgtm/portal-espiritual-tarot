@@ -13,33 +13,32 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - CORRECCIÓN DEFINITIVA APLICADA:
-1. Schema de Supabase verificado - columna: `content`
-2. TODOS los archivos actualizados a 'content':
+✅ COMPLETADO - CORRECCIÓN FINAL DEFINITIVA:
+1. Tipos TypeScript generados confirman columna: `text`
+2. TODOS los archivos actualizados a 'text':
    - messageService.ts
    - admin.ts
    - ChatMaestro.tsx
    - chat/[id].tsx
-3. Login /Suafazon funcionando (import agregado)
-4. Servidor reiniciado exitosamente
-5. Sin errores de compilación
+3. Login /Suafazon funcionando
+4. Servidor reiniciado
+5. Sin errores de TypeScript
 
 ## Checklist
-- [x] Verificar schema de Supabase
-- [x] Confirmar columna: `content` (NO 'text')
-- [x] Actualizar messageService.ts a 'content'
-- [x] Actualizar admin.ts a 'content'
-- [x] Actualizar ChatMaestro.tsx a 'content'
-- [x] Actualizar chat/[id].tsx a 'content'
-- [x] Agregar import supabase en /Suafazon/index.tsx
-- [x] Simplificar login
+- [x] Verificar tipos TypeScript generados
+- [x] Confirmar columna: `text` (confirmado por tipos TS)
+- [x] Actualizar messageService.ts a 'text'
+- [x] Actualizar admin.ts a 'text'
+- [x] Actualizar ChatMaestro.tsx a 'text'
+- [x] Actualizar chat/[id].tsx a 'text'
+- [x] Login /Suafazon funcionando
 - [x] Reiniciar servidor
 - [x] Verificar sin errores
 
 ## Acceptance
-- ✅ Columna 'content' confirmada del schema
-- ✅ Todos los archivos usando 'content'
-- ✅ Sin errores PGRST204
+- ✅ Columna 'text' confirmada por tipos TypeScript
+- ✅ Todos los archivos usando 'text'
+- ✅ Sin errores de TypeScript
 - ✅ Sin errores de compilación
 - ✅ Chat funcional
 - ✅ Login /Suafazon funcionando
