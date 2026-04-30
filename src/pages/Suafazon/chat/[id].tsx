@@ -171,6 +171,7 @@ export default function ChatPage() {
             lead_id: lead.id,
             text: "",
             media_url: mediaPreview.url,
+            media_type: mediaPreview.type,
           },
         ])
         .select()
