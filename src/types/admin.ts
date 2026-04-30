@@ -9,15 +9,15 @@ export type Lead = {
   cards_selected: string[];
   answers: any;
   status: "nuevo" | "enConversacion" | "clienteCaliente" | "cerrado" | "perdido" | "listo";
-  stage: string;
+  stage?: string;
   last_interaction_at: string;
   notes: string;
   is_favorite: boolean;
   created_at: string;
   deleted_at: string | null;
-  assigned_to: string | null;
-  priority: string | null;
-  conversion_date: string | null;
+  assigned_to?: string | null;
+  priority?: string | null;
+  conversion_date?: string | null;
   tags: string[];
 };
 

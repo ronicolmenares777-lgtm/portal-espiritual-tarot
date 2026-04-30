@@ -24,7 +24,9 @@ position: 10
 8. Scroll automático implementado en ambos chats
 9. Tipo Lead corregido para coincidir con estructura de BD
 10. Casts de id a string agregados
-11. Sin errores de compilación ni runtime
+11. mockData.ts corregido (countryCode → country_code)
+12. Campos opcionales del tipo Lead marcados correctamente
+13. Sin errores de compilación ni runtime
 
 ## Checklist
 - [x] Modificar el `useEffect` con timestamp único para canal
@@ -36,9 +38,11 @@ position: 10
 - [x] Implementar scroll automático con useRef + useEffect
 - [x] Corregir tipo Lead en admin.ts
 - [x] Agregar casts de id a string
+- [x] Corregir mockData.ts (countryCode → country_code)
+- [x] Hacer opcionales los campos stage, assigned_to, priority, conversion_date
 - [x] Actualizar tipos en messageService.ts y admin.ts
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #145)
+- [x] Reiniciar servidor (restart #146)
 
 ## Acceptance
 - ✅ Sin errores de TypeScript
