@@ -24,20 +24,20 @@ export class MessageService {
     text: string;
   }): Promise<Message | null> {
     try {
-      const { data: message, error } = await supabase
+      const { data: messages, error } = await supabase
         .from("messages")
         .insert([{
           lead_id: data.lead_id,
           text: data.text,
         }])
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error("✉️ Error creando mensaje:", error);
         return null;
       }
 
+      const message = messages?.[0] || null;
       console.log("✅ Mensaje creado:", message);
       return message;
     } catch (error) {

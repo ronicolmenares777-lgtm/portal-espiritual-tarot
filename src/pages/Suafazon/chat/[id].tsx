@@ -104,7 +104,7 @@ export default function ChatPage() {
     if (!inputMessage.trim() || !id || typeof id !== 'string') return;
 
     try {
-      const { data, error } = await supabase
+      const { data: messages, error } = await supabase
         .from("messages")
         .insert([
           {
@@ -112,10 +112,12 @@ export default function ChatPage() {
             text: inputMessage,
           },
         ])
-        .select()
-        .single();
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error enviando mensaje:", error);
+        return;
+      }
 
       setInputMessage("");
     } catch (error) {
@@ -127,7 +129,7 @@ export default function ChatPage() {
     if (!id || typeof id !== 'string') return;
 
     try {
-      const { data, error } = await supabase
+      const { data: messages, error } = await supabase
         .from("messages")
         .insert([
           {
@@ -135,10 +137,11 @@ export default function ChatPage() {
             text: message,
           },
         ])
-        .select()
-        .single();
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error enviando respuesta rápida:", error);
+      }
     } catch (error) {
       console.error("Error enviando respuesta rápida:", error);
     }
@@ -164,7 +167,7 @@ export default function ChatPage() {
     if (!mediaPreview || !lead) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: messages, error } = await supabase
         .from("messages")
         .insert([
           {
@@ -172,10 +175,12 @@ export default function ChatPage() {
             text: mediaPreview.type === "image" ? "[Imagen adjunta]" : "[Video adjunto]",
           },
         ])
-        .select()
-        .single();
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error enviando media:", error);
+        return;
+      }
 
       setMediaPreview(null);
     } catch (error) {
