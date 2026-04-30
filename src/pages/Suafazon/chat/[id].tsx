@@ -297,43 +297,36 @@ export default function ChatPage() {
                 message.is_from_maestro ? "justify-end" : "justify-start"
               }`}
             >
-              <div
-                className={`max-w-[70%] rounded-lg p-3 ${
-                  message.is_from_maestro
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
-                }`}
-              >
-                {message.media_url && (
-                  <div className="mb-2">
-                    {message.media_url.includes("image") ? (
-                      <img
-                        src={message.media_url}
-                        alt="Imagen enviada"
-                        className="rounded max-w-full h-auto"
-                      />
-                    ) : (
-                      <video
-                        src={message.media_url}
-                        controls
-                        className="rounded max-w-full h-auto"
-                      />
-                    )}
-                  </div>
+              <div className="flex gap-3">
+                {!message.is_from_maestro && profileData?.avatar_url && (
+                  <img
+                    src={profileData.avatar_url}
+                    alt="Avatar"
+                    className="w-8 h-8 rounded-full"
+                  />
                 )}
-                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                <p
-                  className={`text-xs mt-1 ${
+                <div
+                  className={`rounded-2xl px-4 py-2 max-w-[80%] ${
                     message.is_from_maestro
-                      ? "text-primary-foreground/70"
-                      : "text-muted-foreground"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
                   }`}
                 >
-                  {new Date(message.created_at).toLocaleTimeString("es-ES", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+                  <p className="text-sm">{message.text}</p>
+                  <p className="text-xs opacity-70 mt-1">
+                    {new Date(message.created_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                {message.is_from_maestro && profileData?.avatar_url && (
+                  <img
+                    src={profileData.avatar_url}
+                    alt="Avatar maestro"
+                    className="w-8 h-8 rounded-full"
+                  />
+                )}
               </div>
             </div>
           ))}
