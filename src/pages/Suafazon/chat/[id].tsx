@@ -337,6 +337,28 @@ export default function ChatPage() {
     reader.readAsDataURL(file);
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setMediaPreview({
+        url,
+        type: file.type.startsWith("image/") ? "image" : "video",
+      });
+    }
+  };
+
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setMediaPreview({
+        url,
+        type: "video",
+      });
+    }
+  };
+
   // Iniciar grabación de audio
   const startRecording = async () => {
     try {
