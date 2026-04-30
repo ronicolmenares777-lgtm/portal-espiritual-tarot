@@ -55,7 +55,7 @@ export interface AdminStats {
 export type Message = {
   id: string;
   lead_id: string;
-  text: string;
+  content: string;
   is_from_maestro: boolean;
   is_user: boolean;
   created_at: string;
