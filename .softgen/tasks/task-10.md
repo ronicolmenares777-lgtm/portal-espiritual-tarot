@@ -13,31 +13,33 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - CORRECCIÓN SQL CONFIRMADA:
-1. SQL query ejecutada directamente en tabla messages
-2. Columna CONFIRMADA: `content` (NO 'text')
-3. TODOS los archivos actualizados a 'content':
+✅ COMPLETADO - CORRECCIÓN DEFINITIVA SQL CONFIRMADA:
+1. SQL query ejecutada: columna CONFIRMADA como 'text'
+2. TODOS los archivos revertidos a 'text':
    - messageService.ts
    - admin.ts
    - ChatMaestro.tsx
    - chat/[id].tsx
-4. Login de /Suafazon simplificado (sin verificación admin)
-5. Tipos TypeScript regenerados
+3. Import de supabase agregado en /Suafazon/index.tsx
+4. Login simplificado (sin verificación admin)
+5. Tipos TypeScript sincronizados
 6. Servidor reiniciado
 
 ## Checklist
-- [x] Ejecutar SQL query en tabla messages
-- [x] Confirmar columna: `content`
-- [x] Actualizar messageService.ts
-- [x] Actualizar admin.ts
-- [x] Actualizar ChatMaestro.tsx
-- [x] Actualizar chat/[id].tsx
+- [x] Ejecutar SQL query directa en tabla messages
+- [x] Confirmar columna: 'text' (NO 'content')
+- [x] Revertir messageService.ts a 'text'
+- [x] Revertir admin.ts a 'text'
+- [x] Revertir ChatMaestro.tsx a 'text'
+- [x] Revertir chat/[id].tsx a 'text'
+- [x] Agregar import supabase en index.tsx
 - [x] Simplificar login /Suafazon
-- [x] Regenerar tipos TypeScript
 - [x] Reiniciar servidor
+- [x] Verificar sin errores
 
 ## Acceptance
-- ✅ Columna 'content' confirmada por SQL
+- ✅ Columna 'text' confirmada por SQL query directa
 - ✅ Sin errores PGRST204
+- ✅ Sin errores de TypeScript
 - ✅ Chat funcional
 - ✅ Login /Suafazon funcionando

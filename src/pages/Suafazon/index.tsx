@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { verifyAdminCredentials } from "@/middleware/auth";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminLogin() {
   const router = useRouter();
