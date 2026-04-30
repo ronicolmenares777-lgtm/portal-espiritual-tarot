@@ -22,8 +22,6 @@ export class MessageService {
   static async create(data: {
     lead_id: string;
     text: string;
-    media_url?: string;
-    media_type?: string;
   }): Promise<Message | null> {
     try {
       const { data: message, error } = await supabase
@@ -31,8 +29,6 @@ export class MessageService {
         .insert([{
           lead_id: data.lead_id,
           text: data.text,
-          media_url: data.media_url || null,
-          media_type: data.media_type || null,
         }])
         .select()
         .single();

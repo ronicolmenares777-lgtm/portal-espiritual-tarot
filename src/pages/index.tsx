@@ -16,6 +16,7 @@ import { Moon, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
 
 const nombreEjemplos = [
   "María González",
@@ -34,7 +35,7 @@ export default function Home() {
   
   const [formData, setFormData] = useState({
     name: "",
-    countryCode: "+1",
+    countryCode: "+52",
     whatsapp: "",
     problem: "",
   });
@@ -59,6 +60,54 @@ export default function Home() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+
+  // Validación de longitud de número según código de país
+  const getPhoneLength = (countryCode: string) => {
+    const lengths: { [key: string]: { min: number; max: number } } = {
+      "+1": { min: 10, max: 10 },    // USA/Canadá
+      "+52": { min: 10, max: 10 },   // México
+      "+34": { min: 9, max: 9 },     // España
+      "+54": { min: 10, max: 10 },   // Argentina
+      "+56": { min: 9, max: 9 },     // Chile
+      "+57": { min: 10, max: 10 },   // Colombia
+      "+58": { min: 10, max: 10 },   // Venezuela
+      "+51": { min: 9, max: 9 },     // Perú
+      "+593": { min: 9, max: 9 },    // Ecuador
+      "+507": { min: 8, max: 8 },    // Panamá
+      "+506": { min: 8, max: 8 },    // Costa Rica
+      "+503": { min: 8, max: 8 },    // El Salvador
+      "+502": { min: 8, max: 8 },    // Guatemala
+      "+504": { min: 8, max: 8 },    // Honduras
+      "+505": { min: 8, max: 8 },    // Nicaragua
+      "+591": { min: 8, max: 8 },    // Bolivia
+      "+598": { min: 8, max: 8 },    // Uruguay
+      "+595": { min: 9, max: 9 },    // Paraguay
+    };
+    return lengths[countryCode] || { min: 8, max: 15 };
+  };
+
+  const validateWhatsApp = (phone: string, countryCode: string) => {
+    const { min, max } = getPhoneLength(countryCode);
+    const cleanPhone = phone.replace(/\D/g, "");
+    
+    if (cleanPhone.length < min) {
+      return `El número debe tener ${min} dígitos`;
+    }
+    if (cleanPhone.length > max) {
+      return `El número debe tener ${max} dígitos`;
+    }
+    return "";
+  };
+
+  const handleWhatsAppChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ""); // Solo números
+    const { max } = getPhoneLength(formData.countryCode);
+    
+    if (value.length <= max) {
+      setFormData({ ...formData, whatsapp: value });
+      setFormErrors({ ...formErrors, whatsapp: "" });
+    }
+  };
 
   useEffect(() => {
     console.log("🔄 Pantalla actual:", currentScreen);
@@ -100,47 +149,21 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.name || !formData.whatsapp || !formData.problem) {
-      alert("Por favor completa todos los campos");
+
+    // Validaciones
+    const errors = {
+      name: formData.name.trim() === "" ? "El nombre es requerido" : "",
+      whatsapp: validateWhatsApp(formData.whatsapp, formData.countryCode),
+      problem: formData.problem.trim() === "" ? "Describe tu problema" : "",
+    };
+
+    setFormErrors(errors);
+
+    if (errors.name || errors.whatsapp || errors.problem) {
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      console.log("📝 Creando lead en Supabase...");
-
-      const { data, error } = await supabase
-        .from("leads")
-        .insert({
-          name: formData.name,
-          whatsapp: formData.whatsapp,
-          country_code: formData.countryCode,
-          problem: formData.problem,
-          status: "nuevo",
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("❌ Error:", error);
-        alert(`Error: ${error.message}`);
-        setIsSubmitting(false);
-        return;
-      }
-      
-      console.log("✅ Lead creado con ID:", data.id);
-      setLeadId(data.id);
-      setCurrentScreen("loading");
-      
-      setTimeout(() => {
-        setCurrentScreen("cards");
-      }, 3000);
-    } catch (error: any) {
-      console.error("❌ Error:", error);
-      alert(`Error: ${error.message || 'Intenta de nuevo'}`);
-      setIsSubmitting(false);
-    }
+    setCurrentScreen("loading");
   };
 
   const handleCardSelected = (card: TarotCard, cardIndex: number) => {
@@ -353,14 +376,17 @@ export default function Home() {
                           <option value="+51">🇵🇪 +51</option>
                           <option value="+56">🇨🇱 +56</option>
                         </select>
-                        <input
+                        <Input
                           type="tel"
-                          placeholder="Tu número de WhatsApp"
+                          placeholder="Número de WhatsApp"
                           value={formData.whatsapp}
-                          onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") })}
-                          className="flex-1 bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all text-base"
+                          onChange={handleWhatsAppChange}
+                          className="bg-card/50 border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50"
                           required
                         />
+                        {formErrors.whatsapp && (
+                          <p className="text-sm text-red-400 mt-1">{formErrors.whatsapp}</p>
+                        )}
                       </div>
                     </div>
 

@@ -169,9 +169,7 @@ export default function ChatPage() {
         .insert([
           {
             lead_id: lead.id,
-            text: "",
-            media_url: mediaPreview.url,
-            media_type: mediaPreview.type,
+            text: mediaPreview.type === "image" ? "[Imagen adjunta]" : "[Video adjunto]",
           },
         ])
         .select()
