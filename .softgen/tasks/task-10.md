@@ -18,19 +18,23 @@ position: 10
 2. Columna `is_from_maestro` confirmada en tabla messages
 3. Código alineado con estructura real de BD (campo `text`, no `content`)
 4. Eliminado `user_id` inexistente del código
-5. Eliminado `media_url` inexistente del código
-6. Tipos TypeScript regenerados
-7. Sin errores de compilación ni runtime
+5. Restaurado `media_url` en el código (columna sí existe)
+6. Eliminado `media_type` del código (columna NO existe)
+7. Tipos TypeScript regenerados
+8. Scroll automático implementado en ambos chats
+9. Sin errores de compilación ni runtime
 
 ## Checklist
 - [x] Modificar el `useEffect` con timestamp único para canal
 - [x] Verificar columna `is_from_maestro` en tabla messages
 - [x] Corregir nombre de campos (text, no content)
 - [x] Eliminar user_id de inserts (columna no existe)
-- [x] Eliminar media_url de inserts (columna no existe)
+- [x] Restaurar media_url en el código (columna sí existe)
+- [x] Eliminar media_type (columna no existe)
+- [x] Implementar scroll automático con useRef + useEffect
 - [x] Actualizar tipos en messageService.ts y admin.ts
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #137)
+- [x] Reiniciar servidor (restart #139)
 
 ## Acceptance
 - ✅ Sin errores de TypeScript
@@ -38,3 +42,4 @@ position: 10
 - ✅ Campos coinciden con estructura de BD
 - ✅ Chat funcional sin errores de esquema
 - ✅ Los mensajes aparecen correctamente al enviar
+- ✅ Scroll automático hacia abajo al recibir mensajes

@@ -52,6 +52,7 @@ export type Message = {
   text: string;
   is_from_maestro: boolean;
   is_user: boolean;
+  media_url?: string | null;
   created_at: string;
   read_at?: string | null;
 };

@@ -45,32 +45,21 @@ export default function ChatPage() {
   const [showProfile, setShowProfile] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [mediaPreview, setMediaPreview] = useState<{
-    type: "image" | "audio";
-    url: string;
-    file?: File;
-  } | null>(null);
-
-  const [lastMessageCount, setLastMessageCount] = useState(0);
-  const [viewingImage, setViewingImage] = useState<string | null>(null);
-  const [profileData, setProfileData] = useState({
-    name: "Maestro Espiritual",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro",
-    headerText: "En línea • Responde en segundos"
-  });
+  const [mediaPreview, setMediaPreview] = useState<{ url: string; type: string } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const isMobile = useIsMobile();
 
-  // Auto-scroll cuando llegan mensajes nuevos
+  // Scroll automático hacia abajo
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   useEffect(() => {
-    if (messages.length > lastMessageCount) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      setLastMessageCount(messages.length);
-    }
-  }, [messages, lastMessageCount]);
+    scrollToBottom();
+  }, [messages]);
 
   // Agregar atributo al body para cursor normal
   useEffect(() => {
@@ -398,7 +387,8 @@ export default function ChatPage() {
     try {
       const createdMessage = await MessageService.create({
         lead_id: lead.id,
-        text: `[${mediaPreview.type}]`,
+        text: "",
+        media_url: mediaPreview.url,
       });
 
       if (createdMessage) {
