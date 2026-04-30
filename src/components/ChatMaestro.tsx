@@ -21,6 +21,7 @@ interface ChatMaestroProps {
 export function ChatMaestro({ userName, userPhone, userProblem, userCard }: ChatMaestroProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [lead, setLead] = useState<Lead | null>(null);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [maestroAvatar, setMaestroAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=maestro");
