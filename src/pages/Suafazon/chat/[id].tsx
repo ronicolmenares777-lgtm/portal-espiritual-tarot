@@ -46,6 +46,9 @@ export default function ChatPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<{ url: string; type: string } | null>(null);
+  const [lastMessageCount, setLastMessageCount] = useState(0);
+  const [profileData, setProfileData] = useState<any>(null);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);

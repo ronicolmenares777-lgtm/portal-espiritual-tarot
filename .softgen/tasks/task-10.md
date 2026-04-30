@@ -22,7 +22,8 @@ position: 10
 6. Eliminado `media_type` del código (columna NO existe)
 7. Tipos TypeScript regenerados
 8. Scroll automático implementado en ambos chats
-9. Sin errores de compilación ni runtime
+9. Agregadas todas las variables de estado faltantes
+10. Sin errores de compilación ni runtime
 
 ## Checklist
 - [x] Modificar el `useEffect` con timestamp único para canal
@@ -32,9 +33,10 @@ position: 10
 - [x] Restaurar media_url en el código (columna sí existe)
 - [x] Eliminar media_type (columna no existe)
 - [x] Implementar scroll automático con useRef + useEffect
+- [x] Agregar variables de estado faltantes (profileData, viewingImage, lastMessageCount)
 - [x] Actualizar tipos en messageService.ts y admin.ts
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #139)
+- [x] Reiniciar servidor (restart #140)
 
 ## Acceptance
 - ✅ Sin errores de TypeScript
