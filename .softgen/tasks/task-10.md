@@ -22,7 +22,7 @@ position: 10
 6. Eliminado `media_type` del código (columna NO existe)
 7. Tipos TypeScript regenerados
 8. Scroll automático implementado en ambos chats
-9. Agregadas todas las variables de estado faltantes
+9. Agregadas todas las variables de estado faltantes (profileData, viewingImage, lastMessageCount)
 10. Corregidos errores de propiedad 'file' en mediaPreview
 11. Sin errores de compilación ni runtime
 
@@ -38,7 +38,7 @@ position: 10
 - [x] Corregir uso de propiedad 'file' en handleImageSelect y handleVideoSelect
 - [x] Actualizar tipos en messageService.ts y admin.ts
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #142)
+- [x] Reiniciar servidor (restart #143)
 
 ## Acceptance
 - ✅ Sin errores de TypeScript

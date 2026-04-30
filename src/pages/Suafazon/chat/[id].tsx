@@ -337,19 +337,21 @@ export default function ChatPage() {
     reader.readAsDataURL(file);
   };
 
+  // Función para seleccionar imagen
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setMediaPreview({ url, type: "image" });
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      const objectUrl = URL.createObjectURL(selectedFile);
+      setMediaPreview({ url: objectUrl, type: "image" });
     }
   };
 
+  // Función para seleccionar video
   const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setMediaPreview({ url, type: "video" });
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      const objectUrl = URL.createObjectURL(selectedFile);
+      setMediaPreview({ url: objectUrl, type: "video" });
     }
   };
 
