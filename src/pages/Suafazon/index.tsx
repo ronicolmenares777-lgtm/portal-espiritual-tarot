@@ -26,37 +26,24 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
-      console.log("🔐 Intentando login con:", credentials.email);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-      const result = await verifyAdminCredentials(
-        credentials.email,
-        credentials.password
-      );
-
-      console.log("📊 Resultado del login:", result);
-
-      if (!result.success) {
-        setError(result.error || "Credenciales inválidas");
+      if (signInError) {
+        setError("Email o contraseña incorrectos");
         setIsLoading(false);
         return;
       }
 
-      if (!result.user) {
-        setError("Error del servidor");
-        setIsLoading(false);
-        return;
+      if (data.user) {
+        // Redirigir directamente al dashboard
+        router.push("/Suafazon/dashboard");
       }
-
-      console.log("✅ Login exitoso, guardando usuario:", result.user);
-
-      localStorage.setItem("admin_user", JSON.stringify(result.user));
-
-      setTimeout(() => {
-        window.location.href = "/Suafazon/dashboard";
-      }, 500);
-    } catch (error: any) {
-      console.error("❌ Error en handleLogin:", error);
-      setError(error.message || "Error al iniciar sesión");
+    } catch (error) {
+      console.error("Error en login:", error);
+      setError("Error al iniciar sesión. Por favor intenta de nuevo.");
       setIsLoading(false);
     }
   };

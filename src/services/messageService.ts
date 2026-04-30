@@ -21,14 +21,14 @@ export class MessageService {
 
   static async create(data: {
     lead_id: string;
-    text: string;
+    content: string;
   }): Promise<Message | null> {
     try {
       const { data: messages, error } = await supabase
         .from("messages")
         .insert([{
           lead_id: data.lead_id,
-          text: data.text,
+          content: data.content,
         }])
         .select();
 

@@ -221,7 +221,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
     try {
       const createdMessage = await MessageService.create({
         lead_id: leadId,
-        text: newMessage,
+        content: newMessage,
       });
 
       if (createdMessage) {
@@ -389,7 +389,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                         : "bg-muted"
                     }`}
                   >
-                    <p className="text-sm">{message.text}</p>
+                    <p className="text-sm">{message.content}</p>
                     <p className="text-xs opacity-70 mt-1">
                       {new Date(message.created_at).toLocaleTimeString("es-ES", {
                         hour: "2-digit",
