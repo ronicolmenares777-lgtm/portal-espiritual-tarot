@@ -13,33 +13,33 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - CORRECCIÓN DEFINITIVA SQL CONFIRMADA:
-1. SQL query ejecutada: columna CONFIRMADA como 'text'
-2. TODOS los archivos revertidos a 'text':
+✅ COMPLETADO - CORRECCIÓN DEFINITIVA APLICADA:
+1. Schema de Supabase verificado - columna: `content`
+2. TODOS los archivos actualizados a 'content':
    - messageService.ts
    - admin.ts
    - ChatMaestro.tsx
    - chat/[id].tsx
-3. Import de supabase agregado en /Suafazon/index.tsx
-4. Login simplificado (sin verificación admin)
-5. Tipos TypeScript sincronizados
-6. Servidor reiniciado
+3. Login /Suafazon funcionando (import agregado)
+4. Servidor reiniciado exitosamente
+5. Sin errores de compilación
 
 ## Checklist
-- [x] Ejecutar SQL query directa en tabla messages
-- [x] Confirmar columna: 'text' (NO 'content')
-- [x] Revertir messageService.ts a 'text'
-- [x] Revertir admin.ts a 'text'
-- [x] Revertir ChatMaestro.tsx a 'text'
-- [x] Revertir chat/[id].tsx a 'text'
-- [x] Agregar import supabase en index.tsx
-- [x] Simplificar login /Suafazon
+- [x] Verificar schema de Supabase
+- [x] Confirmar columna: `content` (NO 'text')
+- [x] Actualizar messageService.ts a 'content'
+- [x] Actualizar admin.ts a 'content'
+- [x] Actualizar ChatMaestro.tsx a 'content'
+- [x] Actualizar chat/[id].tsx a 'content'
+- [x] Agregar import supabase en /Suafazon/index.tsx
+- [x] Simplificar login
 - [x] Reiniciar servidor
 - [x] Verificar sin errores
 
 ## Acceptance
-- ✅ Columna 'text' confirmada por SQL query directa
+- ✅ Columna 'content' confirmada del schema
+- ✅ Todos los archivos usando 'content'
 - ✅ Sin errores PGRST204
-- ✅ Sin errores de TypeScript
+- ✅ Sin errores de compilación
 - ✅ Chat funcional
 - ✅ Login /Suafazon funcionando

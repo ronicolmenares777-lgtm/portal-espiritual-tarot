@@ -109,7 +109,7 @@ export default function ChatPage() {
         .insert([
           {
             lead_id: id,
-            text: inputMessage,
+            content: inputMessage,
           },
         ])
         .select();
@@ -134,7 +134,7 @@ export default function ChatPage() {
         .insert([
           {
             lead_id: id,
-            text: message,
+            content: message,
           },
         ])
         .select();
@@ -172,7 +172,7 @@ export default function ChatPage() {
         .insert([
           {
             lead_id: lead.id,
-            text: mediaPreview.type === "image" ? "[Imagen adjunta]" : "[Video adjunto]",
+            content: mediaPreview.type === "image" ? "[Imagen adjunta]" : "[Video adjunto]",
           },
         ])
         .select();
@@ -317,7 +317,7 @@ export default function ChatPage() {
                       : "bg-muted"
                   }`}
                 >
-                  <p className="text-sm">{message.text}</p>
+                  <p className="text-sm">{message.content}</p>
                   <p className="text-xs opacity-70 mt-1">
                     {new Date(message.created_at).toLocaleTimeString([], {
                       hour: "2-digit",
