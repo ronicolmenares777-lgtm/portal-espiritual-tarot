@@ -66,4 +66,4 @@ position: 10
 - ✅ Scroll automático hacia abajo al recibir mensajes
 - ✅ Validación de WhatsApp según país funcionando
 - ✅ Chat carga sin error "Cannot coerce"
-- ✅ Tipo Lead correctamente importado
+- ✅ Tipo Lead correctamente importado y casteado

@@ -149,7 +149,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
         console.error("Error cargando lead:", error);
       } else {
         console.log("Lead cargado:", data);
-        setLead(data);
+        setLead(data as Lead);
       }
     };
 
