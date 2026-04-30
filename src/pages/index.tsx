@@ -35,7 +35,7 @@ export default function Home() {
   
   const [formData, setFormData] = useState({
     name: "",
-    countryCode: "+52",
+    countryCode: "+1",
     whatsapp: "",
     problem: "",
   });
@@ -355,35 +355,43 @@ export default function Home() {
                         <span className="text-gold">✦</span>
                         WhatsApp
                       </label>
-                      <div className="flex gap-3">
-                        <select
-                          value={formData.countryCode}
-                          onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
-                          className="w-28 bg-secondary/30 border-2 border-gold/30 rounded-xl px-3 py-3 text-foreground font-medium focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all appearance-none cursor-pointer text-base"
-                          style={{
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FAD636'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                            backgroundRepeat: 'no-repeat',
-                            backgroundPosition: 'right 0.5rem center',
-                            backgroundSize: '1.5em 1.5em',
-                            paddingRight: '2.5rem'
-                          }}
-                        >
-                          <option value="+1">🇺🇸 +1</option>
-                          <option value="+52">🇲🇽 +52</option>
-                          <option value="+34">🇪🇸 +34</option>
-                          <option value="+54">🇦🇷 +54</option>
-                          <option value="+57">🇨🇴 +57</option>
-                          <option value="+51">🇵🇪 +51</option>
-                          <option value="+56">🇨🇱 +56</option>
-                        </select>
-                        <Input
-                          type="tel"
-                          placeholder="Número de WhatsApp"
-                          value={formData.whatsapp}
-                          onChange={handleWhatsAppChange}
-                          className="bg-card/50 border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50"
-                          required
-                        />
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <select
+                            value={formData.countryCode}
+                            onChange={(e) =>
+                              setFormData({ ...formData, countryCode: e.target.value, whatsapp: "" })
+                            }
+                            className="bg-card/50 border border-border/50 text-foreground rounded-md px-3 py-2 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          >
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+52">🇲🇽 +52</option>
+                            <option value="+34">🇪🇸 +34</option>
+                            <option value="+54">🇦🇷 +54</option>
+                            <option value="+56">🇨🇱 +56</option>
+                            <option value="+57">🇨🇴 +57</option>
+                            <option value="+58">🇻🇪 +58</option>
+                            <option value="+51">🇵🇪 +51</option>
+                            <option value="+593">🇪🇨 +593</option>
+                            <option value="+507">🇵🇦 +507</option>
+                            <option value="+506">🇨🇷 +506</option>
+                            <option value="+503">🇸🇻 +503</option>
+                            <option value="+502">🇬🇹 +502</option>
+                            <option value="+504">🇭🇳 +504</option>
+                            <option value="+505">🇳🇮 +505</option>
+                            <option value="+591">🇧🇴 +591</option>
+                            <option value="+598">🇺🇾 +598</option>
+                            <option value="+595">🇵🇾 +595</option>
+                          </select>
+                          <Input
+                            type="tel"
+                            placeholder="Número de WhatsApp"
+                            value={formData.whatsapp}
+                            onChange={handleWhatsAppChange}
+                            className="flex-1 bg-card/50 border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50"
+                            required
+                          />
+                        </div>
                         {formErrors.whatsapp && (
                           <p className="text-sm text-red-400 mt-1">{formErrors.whatsapp}</p>
                         )}

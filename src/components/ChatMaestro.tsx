@@ -132,20 +132,20 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
   }, [messages, lastMessageCount]);
 
   const handleSendMessage = async () => {
-    if ((!newMessage.trim() && !selectedFile) || !leadId) return;
+    if (!newMessage.trim() || !leadId) return;
 
     try {
-      const message = await MessageService.create({
+      const createdMessage = await MessageService.create({
         lead_id: leadId,
-        text: newMessage,
+        content: newMessage,
       });
 
-      if (message) {
-        setMessages([...messages, message]);
+      if (createdMessage) {
+        setMessages((prev) => [...prev, createdMessage]);
         setNewMessage("");
       }
     } catch (error) {
-      console.error("❌ Error enviando mensaje:", error);
+      console.error("Error enviando mensaje:", error);
     }
   };
 
@@ -298,8 +298,22 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                   )}
 
                   {/* Texto */}
-                  {message.text && (
-                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap font-medium">{message.text}</p>
+                  {message.content && (
+                    <div
+                      className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                        message.is_from_maestro
+                          ? "bg-primary text-primary-foreground ml-auto"
+                          : "bg-muted"
+                      }`}
+                    >
+                      <p className="text-sm">{message.content}</p>
+                      <p className="text-xs opacity-70 mt-1">
+                        {new Date(message.created_at).toLocaleTimeString("es-ES", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
                   )}
 
                   <div className={`flex items-center justify-end gap-2 mt-2 ${message.is_from_maestro ? "text-muted-foreground/70" : "text-background/80"}`}>
