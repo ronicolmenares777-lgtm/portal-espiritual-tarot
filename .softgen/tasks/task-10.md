@@ -13,37 +13,38 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - CORRECCIÓN DEFINITIVA APLICADA:
+✅ COMPLETADO - CORRECCIÓN FINAL DEFINITIVA:
 1. Schema de Supabase verificado directamente
-2. Columna REAL confirmada: `content` (NO `text`)
-3. TODOS los archivos actualizados con 'content':
+2. Columna REAL confirmada: `text` (NO `content`)
+3. TODOS los archivos revertidos a 'text':
    - messageService.ts
    - admin.ts (tipo Message)
    - ChatMaestro.tsx (send + render)
    - chat/[id].tsx (send + render + quick reply + media)
 4. Sin .single() en ningún insert
 5. .maybeSingle() en carga de leads
-6. Scroll automático funcionando
-7. Validación WhatsApp activa
-8. Servidor reiniciado
+6. Tipos TypeScript regenerados desde Supabase
+7. Scroll automático funcionando
+8. Validación WhatsApp activa
+9. Servidor reiniciado
 
 ## Checklist
 - [x] Obtener schema REAL de Supabase
-- [x] Confirmar nombre de columna: `content` (NO `text`)
-- [x] Actualizar messageService.ts con 'content'
-- [x] Actualizar tipo Message en admin.ts con 'content'
-- [x] Actualizar ChatMaestro.tsx con 'content'
-- [x] Actualizar chat/[id].tsx con 'content' (send, quick, media, JSX)
+- [x] Confirmar nombre de columna: `text` (confirmado del schema)
+- [x] Actualizar messageService.ts con 'text'
+- [x] Actualizar tipo Message en admin.ts con 'text'
+- [x] Actualizar ChatMaestro.tsx con 'text'
+- [x] Actualizar chat/[id].tsx con 'text' (send, quick, media, JSX)
 - [x] Eliminar .single() de inserts
 - [x] Usar .maybeSingle() en carga de leads
 - [x] Scroll automático implementado
 - [x] Validación WhatsApp según país
 - [x] Código país predeterminado +1
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #159)
+- [x] Reiniciar servidor (restart #160)
 
 ## Acceptance
-- ✅ Columna 'content' confirmada del schema de Supabase
+- ✅ Columna 'text' confirmada del schema de Supabase
 - ✅ Sin errores PGRST204
 - ✅ Sin errores de TypeScript
 - ✅ Sin errores de runtime
