@@ -57,7 +57,7 @@ export default function ChatPage() {
           .single();
 
         if (leadError) throw leadError;
-        setLead(leadData);
+        setLead(leadData as Lead);
 
         // Fetch messages
         const { data: messagesData, error: messagesError } = await supabase

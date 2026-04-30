@@ -26,7 +26,8 @@ position: 10
 10. Casts de id a string agregados
 11. mockData.ts corregido (countryCode → country_code)
 12. Campos opcionales del tipo Lead marcados correctamente
-13. Sin errores de compilación ni runtime
+13. Cast agregado para resolver incompatibilidad de tipo status
+14. Sin errores de compilación ni runtime
 
 ## Checklist
 - [x] Modificar el `useEffect` con timestamp único para canal
@@ -40,9 +41,10 @@ position: 10
 - [x] Agregar casts de id a string
 - [x] Corregir mockData.ts (countryCode → country_code)
 - [x] Hacer opcionales los campos stage, assigned_to, priority, conversion_date
+- [x] Agregar cast as Lead para resolver error de tipo status
 - [x] Actualizar tipos en messageService.ts y admin.ts
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #146)
+- [x] Reiniciar servidor (restart #147)
 
 ## Acceptance
 - ✅ Sin errores de TypeScript
