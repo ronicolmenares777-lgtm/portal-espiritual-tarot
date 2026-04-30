@@ -38,7 +38,7 @@ position: 10
 - [x] Corregir uso de propiedad 'file' en handleImageSelect y handleVideoSelect
 - [x] Actualizar tipos en messageService.ts y admin.ts
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #141)
+- [x] Reiniciar servidor (restart #142)
 
 ## Acceptance
 - ✅ Sin errores de TypeScript

@@ -341,10 +341,7 @@ export default function ChatPage() {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      setMediaPreview({
-        url,
-        type: file.type.startsWith("image/") ? "image" : "video",
-      });
+      setMediaPreview({ url, type: "image" });
     }
   };
 
@@ -352,10 +349,7 @@ export default function ChatPage() {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      setMediaPreview({
-        url,
-        type: "video",
-      });
+      setMediaPreview({ url, type: "video" });
     }
   };
 
