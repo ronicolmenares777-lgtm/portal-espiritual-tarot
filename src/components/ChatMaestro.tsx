@@ -131,6 +131,88 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
     }
   }, [messages, lastMessageCount]);
 
+  // Cargar lead
+  useEffect(() => {
+    if (!leadId) return;
+
+    const fetchLead = async () => {
+      console.log("Cargando lead:", leadId);
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("id", leadId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error cargando lead:", error);
+      } else {
+        console.log("Lead cargado:", data);
+        setLead(data);
+      }
+    };
+
+    fetchLead();
+  }, [leadId]);
+
+  // Cargar mensajes
+  useEffect(() => {
+    if (!leadId) return;
+
+    const fetchMessages = async () => {
+      console.log("Cargando mensajes para lead:", leadId);
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("lead_id", leadId)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error cargando mensajes:", error);
+      } else {
+        console.log("Mensajes cargados:", data);
+        setMessages(data || []);
+      }
+    };
+
+    fetchMessages();
+  }, [leadId]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!leadId) return;
+
+    const timestamp = Date.now();
+    const channelName = `messages:${leadId}:${timestamp}`;
+
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `lead_id=eq.${leadId}`,
+        },
+        (payload) => {
+          console.log("Nuevo mensaje recibido:", payload);
+          setMessages((prev) => [...prev, payload.new as Message]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [leadId]);
+
+  // Scroll automático
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !leadId) return;
 

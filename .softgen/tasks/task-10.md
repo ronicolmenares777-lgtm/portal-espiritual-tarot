@@ -31,7 +31,8 @@ position: 10
 15. Código de país predeterminado cambiado a +1
 16. Diseño del selector de país mejorado
 17. Eliminado .single() de los inserts (causaba error "Cannot coerce to JSON object")
-18. Sin errores de compilación ni runtime
+18. Cambiado .single() por .maybeSingle() en carga de leads
+19. Sin errores de compilación ni runtime
 
 ## Checklist
 - [x] Modificar el `useEffect` con timestamp único para canal
@@ -49,8 +50,9 @@ position: 10
 - [x] Cambiar código predeterminado a +1
 - [x] Mejorar diseño del selector de país
 - [x] Eliminar .single() de inserts para evitar error de coerción
+- [x] Usar .maybeSingle() en carga de leads (permite 0 resultados)
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #155)
+- [x] Reiniciar servidor (restart #156)
 
 ## Acceptance
 - ✅ Sin errores de TypeScript
@@ -61,3 +63,4 @@ position: 10
 - ✅ Los mensajes se envían correctamente
 - ✅ Scroll automático hacia abajo al recibir mensajes
 - ✅ Validación de WhatsApp según país funcionando
+- ✅ Chat carga sin error "Cannot coerce"
