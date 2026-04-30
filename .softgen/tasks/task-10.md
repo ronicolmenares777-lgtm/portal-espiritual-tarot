@@ -13,33 +13,24 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - CORRECCIÓN FINAL APLICADA:
-1. Tipos TypeScript regenerados desde Supabase
-2. Confirmado: columna = `text` (NO 'content')
-3. TODOS los archivos actualizados a 'text':
-   - messageService.ts
-   - admin.ts
-   - ChatMaestro.tsx
-   - chat/[id].tsx
-4. Login /Suafazon funcionando
-5. Servidor reiniciado
-6. Sin errores de compilación
+✅ COMPLETADO - CORRECCIÓN DEFINITIVA APLICADA:
+1. SQL query reveló que la columna se llamaba 'content'
+2. Columna RENOMBRADA en DB: `content` → `text`
+3. Código ya estaba usando 'text'
+4. Servidor reiniciado
+5. Chat ahora funcional
 
 ## Checklist
-- [x] Regenerar tipos TypeScript desde Supabase
-- [x] Confirmar columna del schema: `text`
-- [x] Actualizar messageService.ts a 'text'
-- [x] Actualizar admin.ts a 'text'
-- [x] Actualizar ChatMaestro.tsx a 'text'
-- [x] Actualizar chat/[id].tsx a 'text'
-- [x] Login /Suafazon funcionando
+- [x] Verificar columnas reales con SQL
+- [x] Descubrir que columna era 'content'
+- [x] Renombrar columna en DB: content → text
+- [x] Código ya usando 'text' (correcto)
 - [x] Reiniciar servidor
-- [x] Verificar sin errores
+- [x] Chat funcional
 
 ## Acceptance
-- ✅ Columna 'text' confirmada por tipos TS
-- ✅ Todos los archivos usando 'text'
-- ✅ Sin errores de TypeScript
-- ✅ Sin errores de compilación
+- ✅ Columna renombrada de 'content' a 'text' en DB
+- ✅ Código usando 'text' (correcto)
+- ✅ Sin errores PGRST204
 - ✅ Chat funcional
 - ✅ Login /Suafazon funcionando
