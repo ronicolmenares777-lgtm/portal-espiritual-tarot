@@ -137,7 +137,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
     try {
       const createdMessage = await MessageService.create({
         lead_id: leadId,
-        content: newMessage,
+        text: newMessage,
       });
 
       if (createdMessage) {
@@ -298,7 +298,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                   )}
 
                   {/* Texto */}
-                  {message.content && (
+                  {message.text && (
                     <div
                       className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                         message.is_from_maestro
@@ -306,7 +306,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                           : "bg-muted"
                       }`}
                     >
-                      <p className="text-sm">{message.content}</p>
+                      <p className="text-sm">{message.text}</p>
                       <p className="text-xs opacity-70 mt-1">
                         {new Date(message.created_at).toLocaleTimeString("es-ES", {
                           hour: "2-digit",

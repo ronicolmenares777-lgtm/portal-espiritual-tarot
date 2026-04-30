@@ -16,43 +16,39 @@ position: 10
 ✅ COMPLETADO - Todos los errores corregidos:
 1. Canal de realtime con timestamp único (evita colisiones React Strict Mode)
 2. Columna `is_from_maestro` confirmada en tabla messages
-3. Código alineado con estructura real de BD (campo `content`, no `text`)
+3. Código alineado con estructura real de BD (campo `text` confirmado del schema)
 4. Eliminado `user_id` inexistente del código
-5. Eliminado `media_url` definitivamente del código (columna NO existe)
-6. Eliminado `media_type` definitivamente del código (columna NO existe)
-7. Tipos TypeScript regenerados
+5. Eliminado `media_url` del código (NO se usa para enviar mensajes)
+6. Eliminado `media_type` del código (NO se usa para enviar mensajes)
+7. Tipos TypeScript regenerados desde Supabase
 8. Scroll automático implementado en ambos chats
 9. Tipo Lead corregido para coincidir con estructura de BD
 10. Casts de id a string agregados
 11. mockData.ts corregido (countryCode → country_code)
 12. Campos opcionales del tipo Lead marcados correctamente
 13. Cast agregado para resolver incompatibilidad de tipo status
-14. Eliminado código JSX que renderizaba media_url y media_type
-15. Validación de WhatsApp según código de país implementada
-16. Código de país predeterminado cambiado a +1
-17. Diseño del selector de país mejorado
-18. Sin errores de compilación ni runtime
+14. Validación de WhatsApp según código de país implementada
+15. Código de país predeterminado cambiado a +1
+16. Diseño del selector de país mejorado
+17. Sin errores de compilación ni runtime
 
 ## Checklist
 - [x] Modificar el `useEffect` con timestamp único para canal
 - [x] Verificar columna `is_from_maestro` en tabla messages
-- [x] Corregir nombre de campos (content, no text)
+- [x] Confirmar nombre de campo desde schema (text, confirmado)
 - [x] Eliminar user_id de inserts (columna no existe)
-- [x] Eliminar media_url definitivamente (columna NO existe)
-- [x] Eliminar media_type definitivamente (columna NO existe)
+- [x] No enviar media_url ni media_type en mensajes básicos
 - [x] Implementar scroll automático con useRef + useEffect
 - [x] Corregir tipo Lead en admin.ts
 - [x] Agregar casts de id a string
 - [x] Corregir mockData.ts (countryCode → country_code)
 - [x] Hacer opcionales los campos stage, assigned_to, priority, conversion_date
 - [x] Agregar cast as Lead para resolver error de tipo status
-- [x] Eliminar código JSX que renderiza media_url y media_type
 - [x] Implementar validación de WhatsApp según código de país
 - [x] Cambiar código predeterminado a +1
 - [x] Mejorar diseño del selector de país
-- [x] Actualizar tipos en messageService.ts y admin.ts
 - [x] Regenerar tipos desde Supabase
-- [x] Reiniciar servidor (restart #153)
+- [x] Reiniciar servidor (restart #154)
 
 ## Acceptance
 - ✅ Sin errores de TypeScript
