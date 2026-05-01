@@ -91,6 +91,8 @@ export type Database = {
           is_from_maestro: boolean
           is_read: boolean | null
           lead_id: string
+          media_type: string | null
+          media_url: string | null
           text: string
         }
         Insert: {
@@ -99,6 +101,8 @@ export type Database = {
           is_from_maestro?: boolean
           is_read?: boolean | null
           lead_id: string
+          media_type?: string | null
+          media_url?: string | null
           text: string
         }
         Update: {
@@ -107,6 +111,8 @@ export type Database = {
           is_from_maestro?: boolean
           is_read?: boolean | null
           lead_id?: string
+          media_type?: string | null
+          media_url?: string | null
           text?: string
         }
         Relationships: [

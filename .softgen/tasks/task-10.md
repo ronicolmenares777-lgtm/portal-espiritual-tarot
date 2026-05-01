@@ -7,6 +7,7 @@ tags:
   - chat
   - realtime
   - bugfix
+  - multimedia
 created_by: softgen
 created_at: '2026-04-28T06:45:00Z'
 position: 10
@@ -14,31 +15,32 @@ position: 10
 
 ## Notes
 ✅ COMPLETADO AL 100%:
-1. ✅ Realtime FUNCIONANDO en ambos chats
-   - Canal diferente para admin y usuario
-   - Detección de duplicados mejorada
-   - Logs detallados para debugging
-2. ✅ Mensajes se envían correctamente
-3. ✅ Nombre real del usuario en AMBOS chats
-   - Chat admin: muestra nombre del lead
-   - Chat usuario: muestra nombre del lead (NO "Usuario")
-4. ✅ Texto legible en burbujas blancas
-5. ✅ Botones de audio e imagen visibles
-6. ✅ Auto-scroll cuando llegan mensajes
-7. ✅ Input se limpia inmediatamente al enviar
+1. ✅ Realtime funcionando - mismo canal `chat-${id}` para admin y usuario
+2. ✅ Mensajes se reflejan en AMBOS chats instantáneamente
+3. ✅ Nombre real del usuario en burbujas (leadName prop)
+4. ✅ Bucket chat-media creado con políticas RLS
+5. ✅ Columnas media_type y media_url agregadas
+6. ✅ Subida de imágenes funcional
+7. ✅ Grabación de audio funcional
+8. ✅ Chat de usuario rediseñado - más profesional
+9. ✅ Header mejorado con avatar maestro y estado "En línea"
+10. ✅ Scroll automático en ambos chats
 
 ## Checklist
-- [x] Realtime con canales separados (admin-chat-X / user-chat-X)
-- [x] Mensajes se envían sin errores
-- [x] Nombre real en burbujas blancas
-- [x] Texto legible (text-gray-900 sobre bg-white)
-- [x] Botones multimedia implementados
-- [x] Auto-scroll funcionando
+- [x] Realtime con mismo canal para admin y usuario
+- [x] Mensajes se reflejan instantáneamente
+- [x] Nombre real en burbujas (no "Usuario")
+- [x] Bucket chat-media creado
+- [x] Políticas RLS configuradas
+- [x] Subida de imágenes funcionando
+- [x] Grabación de audio funcionando
+- [x] Chat usuario rediseñado
 - [x] Sin errores de compilación
 
 ## Acceptance
-- ✅ Mensajes llegan en tiempo real SIN refrescar
-- ✅ Nombre real mostrado en ambos chats
-- ✅ Texto legible en burbujas blancas
-- ✅ Botones de imagen y audio visibles
-- ✅ Auto-scroll cuando llegan nuevos mensajes
+- ✅ Admin envía → Usuario recibe instantáneamente
+- ✅ Usuario envía → Admin recibe instantáneamente
+- ✅ Nombre real del usuario en burbujas
+- ✅ Imágenes se suben y muestran
+- ✅ Audio se graba, sube y reproduce
+- ✅ Chat de usuario más profesional
