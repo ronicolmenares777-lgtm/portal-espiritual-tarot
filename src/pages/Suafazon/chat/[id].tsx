@@ -34,6 +34,7 @@ export default function AdminChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const typingChannelRef = useRef<any>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollToBottom = () => {
@@ -96,8 +97,13 @@ export default function AdminChatPage() {
 
     loadMessages();
 
+    // Canal de presencia para typing indicator
+    const presenceChannel = supabase.channel(`presence:${lead.id}`);
+    presenceChannel.subscribe();
+    typingChannelRef.current = presenceChannel;
+
     // Suscripción en tiempo real para mensajes
-    const channel = supabase
+    const messagesChannel = supabase
       .channel(`messages:${lead.id}`)
       .on(
         "postgres_changes",
@@ -136,7 +142,8 @@ export default function AdminChatPage() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(presenceChannel);
+      supabase.removeChannel(messagesChannel);
     };
   }, [lead]);
 
@@ -149,43 +156,17 @@ export default function AdminChatPage() {
   };
 
   // Enviar presencia de escritura
-  const handleTyping = (text: string) => {
-    setNewMessage(text);
-
-    if (!isTyping && text.length > 0) {
-      setIsTyping(true);
-      const channel = supabase.channel(`chat-${leadId}`);
-      channel.track({ typing: true, user: "admin" });
+  const handleTyping = (typing: boolean) => {
+    if (typingChannelRef.current) {
+      typingChannelRef.current.track({ typing, user: "admin" });
     }
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false);
-      const channel = supabase.channel(`chat-${leadId}`);
-      channel.track({ typing: false, user: "admin" });
-    }, 2000);
   };
 
-  const sendMessage = async () => {
+  const handleSendMessage = async () => {
     if (!newMessage.trim() || !lead) return;
 
-    const tempMessage: Message = {
-      id: `temp-${Date.now()}`,
-      lead_id: lead.id,
-      text: newMessage.trim(),
-      is_from_maestro: true,
-      is_read: false,
-      media_type: null,
-      media_url: null,
-      created_at: new Date().toISOString(),
-    };
-
-    setMessages((prev) => [...prev, tempMessage]);
-    setNewMessage("");
-    setIsTyping(false);
+    setSending(true);
+    handleTyping(false);
     
     const channel = supabase.channel(`chat-${leadId}`);
     channel.track({ typing: false, user: "admin" });
@@ -493,11 +474,11 @@ export default function AdminChatPage() {
           <Input
             value={newMessage}
             onChange={(e) => handleTyping(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
             placeholder="Escribe un mensaje..."
             className="flex-1"
           />
-          <Button onClick={sendMessage} disabled={!newMessage.trim()}>
+          <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
             <Send className="h-5 w-5" />
           </Button>
         </div>
