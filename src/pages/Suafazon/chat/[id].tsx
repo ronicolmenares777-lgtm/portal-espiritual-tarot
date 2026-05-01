@@ -77,36 +77,43 @@ export default function AdminChatPage() {
 
   // Suscripción Realtime - Mensajes
   useEffect(() => {
-    if (!leadId) return;
+    if (!lead) return;
 
-    console.log("🔌 [ADMIN] Configurando realtime para chat:", leadId);
+    const loadMessages = async () => {
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("lead_id", lead.id)
+        .order("created_at", { ascending: true });
 
+      if (data) {
+        setMessages(data);
+      }
+      setLoading(false);
+    };
+
+    loadMessages();
+
+    // Suscripción en tiempo real para mensajes
     const channel = supabase
-      .channel(`chat-${leadId}`)
+      .channel(`messages:${lead.id}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "messages",
-          filter: `lead_id=eq.${leadId}`,
+          filter: `lead_id=eq.${lead.id}`,
         },
         (payload) => {
-          console.log("📨 [ADMIN] Nuevo mensaje:", payload.new);
-          const newMsg = payload.new as Message;
-          
+          const newMsg = payload.new as Tables<"messages">;
           setMessages((prev) => {
-            const exists = prev.some((m) => m.id === newMsg.id);
-            if (exists) return prev;
+            // Evitar duplicados
+            if (prev.some(m => m.id === newMsg.id)) {
+              return prev;
+            }
             return [...prev, newMsg];
           });
-          
-          setTimeout(scrollToBottom, 100);
-
-          // Marcar como leído si es del usuario
-          if (!newMsg.is_from_maestro) {
-            markAsRead(newMsg.id);
-          }
         }
       )
       .on(
@@ -115,30 +122,21 @@ export default function AdminChatPage() {
           event: "UPDATE",
           schema: "public",
           table: "messages",
-          filter: `lead_id=eq.${leadId}`,
+          filter: `lead_id=eq.${lead.id}`,
         },
         (payload) => {
-          const updatedMsg = payload.new as Message;
+          const updatedMsg = payload.new as Tables<"messages">;
           setMessages((prev) =>
             prev.map((m) => (m.id === updatedMsg.id ? updatedMsg : m))
           );
         }
       )
-      .on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState();
-        const userPresence = state[`user-${leadId}`];
-        const presenceData = userPresence?.[0] as any;
-        setUserTyping(presenceData?.typing === true);
-      })
-      .subscribe((status) => {
-        console.log("🔔 [ADMIN] Estado realtime:", status);
-      });
+      .subscribe();
 
     return () => {
-      console.log("🔌 [ADMIN] Limpiando suscripción");
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, [leadId]);
+  }, [lead]);
 
   // Marcar mensajes como leídos
   const markAsRead = async (messageId: string) => {

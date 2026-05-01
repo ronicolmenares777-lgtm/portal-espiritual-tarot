@@ -13,7 +13,7 @@ import { LeadService } from "@/services/leadService";
 import type { TarotCard } from "@/lib/tarotCards";
 import { useState, useEffect } from "react";
 import { Moon, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";

@@ -83,7 +83,6 @@ export default function Dashboard() {
   });
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [deletedLeads, setDeletedLeads] = useState<any[]>([]);
-  const [showDeletedModal, setShowDeletedModal] = useState(false);
 
   // Funciones de selección
   const toggleSelectLead = (leadId: string) => {
