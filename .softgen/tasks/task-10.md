@@ -21,7 +21,7 @@ position: 10
 3. ✅ Doble check azul cuando el mensaje sea leído
 4. ✅ Categoría favoritos con estrella (no corazón)
 5. ✅ Filtro de favoritos en dashboard
-6. ✅ Selector de clasificación ELIMINADO (se usan los filtros del dashboard)
+6. ✅ Selector de clasificación con categorías correctas (Nuevo, En Chat, Caliente, Listo, Cerrado, Perdido)
 7. ✅ Fondo negro en chat de usuario
 8. ✅ Nombre real en burbujas
 9. ✅ Multimedia funcional
@@ -32,9 +32,8 @@ position: 10
 - [x] Doble check azul para mensajes leídos
 - [x] Estrella de favoritos en chat de admin
 - [x] Filtro de favoritos en dashboard
-- [x] Selector Hot/Warm/Cold ELIMINADO
-- [x] Botones Hot/Warm/Cold ELIMINADOS del dashboard
-- [x] Solo estrella de favoritos en header del chat
+- [x] Selector de clasificación con categorías correctas
+- [x] Clasificación se actualiza en tiempo real
 - [x] Sin errores de compilación
 
 ## Acceptance
@@ -42,5 +41,5 @@ position: 10
 - ✅ Mensajes leídos muestran doble check azul
 - ✅ Click en estrella marca/desmarca favorito
 - ✅ Filtro de favoritos funciona en dashboard
-- ✅ NO hay selector de clasificación en el chat
-- ✅ Filtros originales del dashboard intactos
+- ✅ Selector de clasificación con 6 categorías (Nuevo, En Chat, Caliente, Listo, Cerrado, Perdido)
+- ✅ Clasificación se actualiza al seleccionar en el dropdown

@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Send, ImageIcon, Mic, Loader2, Star, Check, CheckCheck } from "lucide-react";
 import { motion } from "framer-motion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Lead = Tables<"leads">;
 type Message = Tables<"messages">;
@@ -308,16 +315,25 @@ export default function AdminChatPage() {
   const toggleFavorite = async () => {
     if (!lead) return;
 
-    const newFavoriteState = !lead.is_favorite;
+    const newFavoriteStatus = !lead.is_favorite;
 
-    const { error } = await supabase
+    setLead({ ...lead, is_favorite: newFavoriteStatus });
+
+    await supabase
       .from("leads")
-      .update({ is_favorite: newFavoriteState })
+      .update({ is_favorite: newFavoriteStatus })
       .eq("id", lead.id);
+  };
 
-    if (!error) {
-      setLead({ ...lead, is_favorite: newFavoriteState });
-    }
+  const updateClassification = async (value: string) => {
+    if (!lead) return;
+
+    setLead({ ...lead, classification: value });
+
+    await supabase
+      .from("leads")
+      .update({ classification: value })
+      .eq("id", lead.id);
   };
 
   if (!lead) {
@@ -353,6 +369,22 @@ export default function AdminChatPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Select
+            value={lead.classification || "nuevo"}
+            onValueChange={updateClassification}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Clasificar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nuevo">🆕 Nuevo</SelectItem>
+              <SelectItem value="en_chat">💬 En Chat</SelectItem>
+              <SelectItem value="caliente">🔥 Caliente</SelectItem>
+              <SelectItem value="listo">✅ Listo</SelectItem>
+              <SelectItem value="cerrado">🔒 Cerrado</SelectItem>
+              <SelectItem value="perdido">❌ Perdido</SelectItem>
+            </SelectContent>
+          </Select>
           <Button
             variant="ghost"
             size="icon"
