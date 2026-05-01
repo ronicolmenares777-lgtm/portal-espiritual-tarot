@@ -1,27 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
-export type Message = Database["public"]["Tables"]["messages"]["Row"];
-type InsertMessage = Database["public"]["Tables"]["messages"]["Insert"];
+type Message = Database["public"]["Tables"]["messages"]["Row"];
 
 export class MessageService {
-  static async getByLeadId(leadId: string) {
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("lead_id", leadId)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("📬 Error obteniendo mensajes:", error);
-      throw error;
-    }
-    return data || [];
-  }
-
   static async create(data: {
     lead_id: string;
     text: string;
+    is_from_maestro?: boolean;
   }): Promise<Message | null> {
     try {
       const { data: messages, error } = await supabase
@@ -29,6 +15,7 @@ export class MessageService {
         .insert([{
           lead_id: data.lead_id,
           text: data.text,
+          is_from_maestro: data.is_from_maestro || false,
         }])
         .select();
 
@@ -46,10 +33,23 @@ export class MessageService {
     }
   }
 
-  static async markAsRead(leadId: string, isFromMaestro: boolean) {
-    // WORKAROUND TEMPORAL: El caché de PostgREST no reconoce read_at
-    // Retornamos silenciosamente sin hacer el update para evitar el error PGRST204
-    console.log("👀 markAsRead bypass (caché workaround) - leadId:", leadId);
-    return [];
+  static async getByLeadId(leadId: string): Promise<Message[]> {
+    try {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("lead_id", leadId)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("✉️ Error obteniendo mensajes:", error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error("✉️ Error en getByLeadId:", error);
+      return [];
+    }
   }
 }

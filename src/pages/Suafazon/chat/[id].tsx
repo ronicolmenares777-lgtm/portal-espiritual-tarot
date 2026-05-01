@@ -110,6 +110,7 @@ export default function ChatPage() {
           {
             lead_id: id,
             text: inputMessage,
+            is_from_maestro: true,
           },
         ])
         .select();
@@ -135,6 +136,7 @@ export default function ChatPage() {
           {
             lead_id: id,
             text: message,
+            is_from_maestro: true,
           },
         ])
         .select();
@@ -173,6 +175,7 @@ export default function ChatPage() {
           {
             lead_id: lead.id,
             text: mediaPreview.type === "image" ? "[Imagen adjunta]" : "[Video adjunto]",
+            is_from_maestro: true,
           },
         ])
         .select();

@@ -67,9 +67,6 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       console.log("✅ Mensajes cargados:", messagesData.length);
       setMessages(messagesData);
 
-      // Marcar como leídos (bypass del caché)
-      MessageService.markAsRead(currentLeadId, false).catch(console.error);
-
       // Polling simple cada 3 segundos
       const pollInterval = setInterval(async () => {
         try {
@@ -222,6 +219,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       const createdMessage = await MessageService.create({
         lead_id: leadId,
         text: newMessage,
+        is_from_maestro: false,
       });
 
       if (createdMessage) {

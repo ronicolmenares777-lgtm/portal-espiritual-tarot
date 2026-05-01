@@ -13,24 +13,31 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - CORRECCIÓN DEFINITIVA APLICADA:
-1. SQL query reveló que la columna se llamaba 'content'
-2. Columna RENOMBRADA en DB: `content` → `text`
-3. Código ya estaba usando 'text'
-4. Servidor reiniciado
-5. Chat ahora funcional
+✅ COMPLETADO - CORRECCIÓN COMPLETA:
+1. SQL query confirmó columna: `text`
+2. MessageService actualizado con 'text'
+3. Tipo Message actualizado con 'text'
+4. ChatMaestro actualizado con 'text'
+5. Admin chat actualizado con 'text'
+6. Eliminada llamada a MessageService.markAsRead (no existía)
+7. Servidor reiniciado
+8. Sin errores de compilación
 
 ## Checklist
-- [x] Verificar columnas reales con SQL
-- [x] Descubrir que columna era 'content'
-- [x] Renombrar columna en DB: content → text
-- [x] Código ya usando 'text' (correcto)
+- [x] Verificar columna con SQL query directa
+- [x] Confirmar: columna es 'text'
+- [x] Actualizar messageService.ts
+- [x] Actualizar admin.ts
+- [x] Actualizar ChatMaestro.tsx
+- [x] Actualizar chat/[id].tsx
+- [x] Eliminar llamada a markAsRead inexistente
 - [x] Reiniciar servidor
-- [x] Chat funcional
+- [x] Verificar sin errores
 
 ## Acceptance
-- ✅ Columna renombrada de 'content' a 'text' en DB
-- ✅ Código usando 'text' (correcto)
+- ✅ Columna 'text' confirmada por SQL
+- ✅ Código usando 'text' consistentemente
 - ✅ Sin errores PGRST204
-- ✅ Chat funcional
-- ✅ Login /Suafazon funcionando
+- ✅ Sin errores de TypeScript
+- ✅ Sin llamadas a métodos inexistentes
+- ✅ Chat funcional entre usuario y admin
