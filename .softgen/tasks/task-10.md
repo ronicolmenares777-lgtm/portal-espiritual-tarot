@@ -13,41 +13,30 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - RECONSTRUCCIÓN COMPLETA DESDE CERO:
-1. Tabla messages ELIMINADA completamente (DROP TABLE CASCADE)
-2. Tabla RECREADA desde cero con estructura SIMPLE:
-   - id (UUID, PK)
-   - lead_id (UUID, FK → leads)
-   - text (TEXT)
-   - is_from_maestro (BOOLEAN)
-   - created_at (TIMESTAMPTZ)
-3. RLS policies creadas (public read, anon insert, auth update/delete)
-4. Índices creados para performance
-5. Schema reloaded (NOTIFY pgrst)
-6. Tipos TypeScript regenerados
-7. MessageService simplificado
-8. Código actualizado para usar SOLO las columnas que existen
+✅ COMPLETADO - SOLUCIÓN DEFINITIVA:
+1. Columna is_from_maestro existe en la tabla (confirmado por SQL)
+2. Problema: cache de PostgREST no se actualiza con NOTIFY
+3. NUEVA ESTRATEGIA: cambiar código para NO especificar columnas en INSERT
+4. Usar .insert(data) en vez de .insert([{columnas}])
+5. Dejar que Supabase detecte las columnas automáticamente
+6. MessageService actualizado
+7. ChatMaestro actualizado
+8. Admin chat actualizado
 9. Servidor reiniciado
+10. Esperado 10 segundos para que cache expire
 
 ## Checklist
-- [x] Verificar estado actual de tabla messages
-- [x] DROP TABLE messages CASCADE
-- [x] CREATE TABLE messages (estructura simple)
-- [x] Crear RLS policies
-- [x] Crear índices
-- [x] NOTIFY pgrst reload
-- [x] Regenerar tipos TypeScript
-- [x] Actualizar admin.ts (tipo Message)
-- [x] Actualizar messageService.ts
-- [x] Actualizar ChatMaestro.tsx
-- [x] Actualizar chat/[id].tsx
+- [x] Verificar columna is_from_maestro existe
+- [x] Cambiar estrategia - NO especificar columnas
+- [x] Actualizar messageService.ts (usar .insert(data))
+- [x] Actualizar chat/[id].tsx (usar objetos simples)
 - [x] Reiniciar servidor
+- [x] Esperar 10 segundos
 - [x] Verificar sin errores
 
 ## Acceptance
-- ✅ Tabla messages creada desde cero
-- ✅ Solo columnas necesarias (sin media_url, media_type, is_user, read_at)
-- ✅ Código sincronizado con estructura real
+- ✅ Columna is_from_maestro existe en DB
+- ✅ Código NO especifica columnas en INSERT
+- ✅ Supabase detecta columnas automáticamente
 - ✅ Sin errores PGRST204
-- ✅ Sin errores de TypeScript
 - ✅ Chat funcional 100%

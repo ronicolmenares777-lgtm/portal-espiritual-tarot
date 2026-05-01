@@ -8,21 +8,18 @@ export class MessageService {
   }) {
     console.log("📤 Creando mensaje:", data);
     
-    const { data: message, error } = await supabase
+    // NO especificar columnas - dejar que Supabase use todas las columnas de la tabla
+    const { data: messages, error } = await supabase
       .from("messages")
-      .insert([{
-        lead_id: data.lead_id,
-        text: data.text,
-        is_from_maestro: data.is_from_maestro,
-      }])
-      .select()
-      .single();
+      .insert(data)
+      .select();
 
     if (error) {
       console.error("❌ Error creando mensaje:", error);
       return null;
     }
 
+    const message = messages?.[0] || null;
     console.log("✅ Mensaje creado exitosamente:", message);
     return message;
   }

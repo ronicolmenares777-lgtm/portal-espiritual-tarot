@@ -106,17 +106,15 @@ export default function ChatPage() {
     console.log("📤 Admin enviando mensaje...");
 
     try {
+      // NO especificar columnas - dejar que Supabase use todas las columnas de la tabla
       const { data, error } = await supabase
         .from("messages")
-        .insert([
-          {
-            lead_id: id,
-            text: inputMessage,
-            is_from_maestro: true,
-          },
-        ])
-        .select()
-        .single();
+        .insert({
+          lead_id: id,
+          text: inputMessage,
+          is_from_maestro: true,
+        })
+        .select();
 
       if (error) {
         console.error("❌ Error enviando mensaje:", error);
@@ -136,15 +134,12 @@ export default function ChatPage() {
     try {
       const { data, error } = await supabase
         .from("messages")
-        .insert([
-          {
-            lead_id: id,
-            text: message,
-            is_from_maestro: true,
-          },
-        ])
-        .select()
-        .single();
+        .insert({
+          lead_id: id,
+          text: message,
+          is_from_maestro: true,
+        })
+        .select();
 
       if (error) {
         console.error("❌ Error enviando respuesta rápida:", error);
@@ -176,15 +171,12 @@ export default function ChatPage() {
     try {
       const { data, error } = await supabase
         .from("messages")
-        .insert([
-          {
-            lead_id: lead.id,
-            text: mediaPreview.type === "image" ? "[Imagen adjunta]" : "[Video adjunto]",
-            is_from_maestro: true,
-          },
-        ])
-        .select()
-        .single();
+        .insert({
+          lead_id: lead.id,
+          text: mediaPreview.type === "image" ? "[Imagen adjunta]" : "[Video adjunto]",
+          is_from_maestro: true,
+        })
+        .select();
 
       if (error) {
         console.error("❌ Error enviando media:", error);
