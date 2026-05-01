@@ -23,10 +23,12 @@ export default function AdminChatPage() {
   const { id } = router.query;
   const leadId = typeof id === "string" ? id : "";
   const [lead, setLead] = useState<Lead | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Tables<"messages">[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [recording, setRecording] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [userTyping, setUserTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -213,7 +215,7 @@ export default function AdminChatPage() {
       return;
     }
 
-    setIsUploading(true);
+    setUploading(true);
 
     try {
       const fileName = `${Date.now()}-${file.name}`;
@@ -240,7 +242,7 @@ export default function AdminChatPage() {
       console.error("❌ Error subiendo imagen:", error);
       alert("Error al subir imagen");
     } finally {
-      setIsUploading(false);
+      setUploading(false);
     }
   };
 
@@ -262,7 +264,7 @@ export default function AdminChatPage() {
       };
 
       mediaRecorder.start();
-      setIsRecording(true);
+      setRecording(true);
     } catch (error) {
       console.error("❌ Error grabando:", error);
       alert("No se pudo acceder al micrófono");
@@ -270,16 +272,16 @@ export default function AdminChatPage() {
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && recording) {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
+      setRecording(false);
     }
   };
 
   const uploadAudio = async (blob: Blob) => {
     if (!lead) return;
 
-    setIsUploading(true);
+    setUploading(true);
 
     try {
       const fileName = `audio-${Date.now()}.webm`;
@@ -306,7 +308,7 @@ export default function AdminChatPage() {
       console.error("❌ Error subiendo audio:", error);
       alert("Error al subir audio");
     } finally {
-      setIsUploading(false);
+      setUploading(false);
     }
   };
 
@@ -470,9 +472,9 @@ export default function AdminChatPage() {
             variant="ghost"
             size="icon"
             onClick={() => document.getElementById("image-upload")?.click()}
-            disabled={isUploading}
+            disabled={uploading}
           >
-            {isUploading ? (
+            {uploading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <ImageIcon className="h-5 w-5" />
@@ -484,9 +486,9 @@ export default function AdminChatPage() {
             onMouseDown={startRecording}
             onMouseUp={stopRecording}
             onMouseLeave={stopRecording}
-            disabled={isUploading}
+            disabled={uploading}
           >
-            <Mic className={`h-5 w-5 ${isRecording ? "text-red-500" : ""}`} />
+            <Mic className={`h-5 w-5 ${recording ? "text-red-500" : ""}`} />
           </Button>
           <Input
             value={newMessage}

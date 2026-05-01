@@ -89,8 +89,8 @@ export default function ChatUsuario() {
 
     const { error } = await supabase.from("messages").insert({
       lead_id: leadId,
-      content: messageText,
-      sender_type: "user",
+      text: messageText,
+      is_from_maestro: false,
     });
 
     if (error) {
@@ -133,16 +133,16 @@ export default function ChatUsuario() {
             key={message.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`flex ${message.sender_type === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex ${!message.is_from_maestro ? "justify-end" : "justify-start"}`}
           >
             <div
               className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                message.sender_type === "user"
+                !message.is_from_maestro
                   ? "bg-primary text-black"
                   : "bg-purple-900/30 text-foreground border border-primary/20"
               }`}
             >
-              <p className="text-sm">{message.content}</p>
+              <p className="text-sm">{message.text}</p>
               <span className="text-xs opacity-70 mt-1 block">
                 {new Date(message.created_at).toLocaleTimeString("es-MX", {
                   hour: "2-digit",
