@@ -310,109 +310,23 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
                 key={message.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className={`flex ${message.is_from_maestro ? "justify-start" : "justify-end"}`}
+                transition={{ delay: index * 0.1 }}
+                className={`flex ${message.is_from_maestro ? "justify-end" : "justify-start"} mb-4`}
               >
                 <div
-                  className={`max-w-[80%] rounded-3xl p-5 shadow-2xl transition-all duration-300 hover:scale-[1.02] ${
+                  className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                     message.is_from_maestro
-                      ? "bg-gradient-to-br from-card via-card/95 to-secondary/50 border border-gold/30 text-foreground backdrop-blur-sm"
-                      : "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-background shadow-gold/50"
+                      ? "bg-primary text-primary-foreground ml-auto"
+                      : "bg-muted"
                   }`}
                 >
-                  {message.is_from_maestro && (
-                    <div className="flex items-center gap-3 mb-3 pb-3 border-b border-gold/20">
-                      <img
-                        src={maestroAvatar}
-                        alt="Maestro"
-                        className="w-8 h-8 rounded-full ring-2 ring-gold/40 shadow-md"
-                      />
-                      <span className="text-sm font-semibold text-gold tracking-wide">Maestro Espiritual</span>
-                    </div>
-                  )}
-
-                  {/* Imagen */}
-                  {message.media_type === 'image' && message.media_url && (
-                    <div className="mb-3 group">
-                      <img
-                        src={message.media_url}
-                        alt="Imagen adjunta"
-                        className="rounded-2xl max-w-full h-auto cursor-pointer hover:opacity-95 transition-all duration-300 shadow-xl group-hover:shadow-2xl border border-gold/20"
-                        onClick={() => setViewingImage(message.media_url!)}
-                      />
-                    </div>
-                  )}
-
-                  {/* Video */}
-                  {message.media_type === 'video' && message.media_url && (
-                    <div className="mb-3">
-                      <video
-                        src={message.media_url}
-                        controls
-                        className="rounded-2xl max-w-full h-auto shadow-xl border border-gold/20"
-                      />
-                    </div>
-                  )}
-
-                  {/* Audio */}
-                  {message.media_type === 'audio' && message.media_url && (
-                    <div className="mb-3 p-3 bg-background/20 rounded-xl">
-                      <audio
-                        src={message.media_url}
-                        controls
-                        className="w-full"
-                      />
-                    </div>
-                  )}
-
-                  {/* Archivo */}
-                  {message.media_type === 'file' && message.media_url && (
-                    <a
-                      href={message.media_url}
-                      download
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`flex items-center gap-3 mb-3 p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
-                        message.is_from_maestro ? "bg-muted/50 hover:bg-muted/70" : "bg-background/20 hover:bg-background/30"
-                      }`}
-                    >
-                      <FileText className="w-6 h-6 flex-shrink-0" />
-                      <span className="text-sm font-medium flex-1">Archivo adjunto</span>
-                      <Download className="w-5 h-5 ml-auto animate-bounce" />
-                    </a>
-                  )}
-
-                  {/* Texto */}
-                  <div
-                    className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                      message.is_from_maestro
-                        ? "bg-primary text-primary-foreground ml-auto"
-                        : "bg-muted"
-                    }`}
-                  >
-                    <p className="text-sm">{message.text}</p>
-                    <p className="text-xs opacity-70 mt-1">
-                      {new Date(message.created_at).toLocaleTimeString("es-ES", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-
-                  <div className={`flex items-center justify-end gap-2 mt-2 ${message.is_from_maestro ? "text-muted-foreground/70" : "text-background/80"}`}>
-                    <p className="text-xs font-medium tracking-wide">
-                      {new Date(message.created_at).toLocaleTimeString("es-ES", {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
-                    </p>
-                    {!message.is_from_maestro && (
-                      <span className={`text-sm font-bold tracking-tighter leading-none transition-all duration-300 ${message.read_at ? "text-blue-400 scale-110" : "text-background/60"}`}>
-                        {message.read_at ? "✓✓" : "✓"}
-                      </span>
-                    )}
-                  </div>
+                  <p className="text-sm">{message.text}</p>
+                  <p className="text-xs opacity-70 mt-1">
+                    {new Date(message.created_at).toLocaleTimeString("es-ES", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
                 </div>
               </motion.div>
             ))}

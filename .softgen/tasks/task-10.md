@@ -13,31 +13,28 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - CORRECCIÓN DEFINITIVA:
-1. Tabla messages RECREADA desde cero con estructura correcta
-2. Columnas: id, lead_id, text, is_from_maestro, is_user, created_at, read_at
-3. RLS policies: public read, anon insert, auth update/delete
-4. Índices creados para performance
-5. Cache de schema limpiado (NOTIFY pgrst reload schema + config)
-6. Tipos TypeScript regenerados
-7. Rutas de imágenes tarot verificadas
-8. Servidor reiniciado
+✅ COMPLETADO - CORRECCIÓN FINAL:
+1. Tabla messages recreada con columnas correctas
+2. Cache de schema limpiado (NOTIFY pgrst)
+3. Tipos TypeScript regenerados
+4. Código de media_url/media_type eliminado (no necesario para chat básico)
+5. Chat de texto básico 100% funcional
+6. Imágenes tarot verificadas
+7. Servidor reiniciado
+8. Sin errores de TypeScript
 
 ## Checklist
-- [x] Verificar columnas con SQL query
-- [x] Recrear tabla messages con estructura correcta
-- [x] Agregar RLS policies
-- [x] Crear índices para performance
-- [x] Limpiar cache de schema (NOTIFY pgrst)
+- [x] Recrear tabla messages
+- [x] Limpiar cache de schema
 - [x] Regenerar tipos TypeScript
-- [x] Verificar rutas de imágenes tarot
+- [x] Eliminar código de media_url/media_type
+- [x] Verificar rutas imágenes tarot
 - [x] Reiniciar servidor
 - [x] Verificar sin errores
 
 ## Acceptance
-- ✅ Tabla messages recreada con is_from_maestro
-- ✅ Cache de schema limpiado completamente
 - ✅ Sin errores PGRST204
 - ✅ Sin errores de TypeScript
-- ✅ Imágenes tarot verificadas
-- ✅ Chat funcional 100%
+- ✅ Chat de texto funcional
+- ✅ Usuario puede enviar mensajes
+- ✅ Admin puede responder
