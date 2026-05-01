@@ -17,7 +17,7 @@ position: 10
 1. Error PGRST204 resuelto con SQL manual
 2. Chat funcional al 100%
 3. Admin login configurado:
-   - Usuario: templogaleano@gmail.com
+   - Usuario: tubrujo@gmail.com
    - Contraseña: Pepe2002
    - Email SIN confirmar (recibirá email de confirmación)
    - Perfil con role = 'admin'
@@ -28,7 +28,7 @@ position: 10
 ## Checklist
 - [x] SQL manual ejecutado para tabla messages
 - [x] Chat usuario funcional
-- [x] Usuario actualizado a templogaleano@gmail.com
+- [x] Usuario configurado: tubrujo@gmail.com
 - [x] Perfil admin con role = 'admin'
 - [x] Contraseña: Pepe2002
 - [x] Email sin confirmar (esperando confirmación)
