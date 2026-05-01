@@ -217,60 +217,61 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0a0a]">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-border/20 bg-background/40 backdrop-blur-sm">
+    <div className="flex flex-col h-screen bg-background">
+      {/* Header fijo */}
+      <div className="sticky top-0 z-10 bg-card border-b border-border p-4 flex items-center gap-3 shadow-sm">
         <Avatar className="h-10 w-10">
           <AvatarFallback className="bg-primary/20 text-primary">
             <Sparkles className="h-5 w-5" />
           </AvatarFallback>
         </Avatar>
-        <div>
-          <h2 className="font-semibold text-foreground">Maestro Espiritual</h2>
-          <p className="text-xs text-primary">En línea</p>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-semibold text-foreground truncate">Maestro Espiritual</h2>
+          <p className="text-xs text-muted-foreground">En línea</p>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Área de mensajes con scroll */}
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex gap-2 ${msg.is_from_maestro ? "justify-start" : "justify-end"}`}
+            className={`flex gap-2 ${msg.is_from_maestro ? "justify-end" : "justify-start"}`}
           >
-            {msg.is_from_maestro && (
-              <Avatar className="h-8 w-8 mt-1">
-                <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                  <Sparkles className="h-4 w-4" />
+            {!msg.is_from_maestro && (
+              <Avatar className="h-7 w-7 sm:h-8 sm:w-8 mt-1 flex-shrink-0">
+                <AvatarFallback className="bg-accent/20 text-accent text-xs">
+                  <User className="h-3 w-3 sm:h-4 sm:w-4" />
                 </AvatarFallback>
               </Avatar>
             )}
             <div
-              className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+              className={`max-w-[75%] sm:max-w-[70%] rounded-2xl px-3 py-2 sm:px-4 sm:py-2 ${
                 msg.is_from_maestro
-                  ? "bg-card text-card-foreground"
-                  : "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-card-foreground border border-border"
               }`}
             >
               {msg.media_type === "image" && msg.media_url && (
                 <img
                   src={msg.media_url}
                   alt="Imagen"
-                  className="rounded-lg mb-2 max-w-full"
+                  className="rounded-lg mb-2 max-w-full h-auto"
+                  loading="lazy"
                 />
               )}
               {msg.media_type === "audio" && msg.media_url && (
-                <audio controls className="mb-2 max-w-full">
+                <audio controls className="mb-2 w-full max-w-xs">
                   <source src={msg.media_url} type="audio/webm" />
                 </audio>
               )}
-              {msg.text && <p className="text-sm break-words">{msg.text}</p>}
+              {msg.text && <p className="text-sm break-words whitespace-pre-wrap">{msg.text}</p>}
               <p className="text-[10px] mt-1 opacity-70">{formatTime(msg.created_at)}</p>
             </div>
-            {!msg.is_from_maestro && (
-              <Avatar className="h-8 w-8 mt-1">
-                <AvatarFallback className="bg-accent/20 text-accent text-xs">
-                  <User className="h-4 w-4" />
+            {msg.is_from_maestro && (
+              <Avatar className="h-7 w-7 sm:h-8 sm:w-8 mt-1 flex-shrink-0">
+                <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                  <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
                 </AvatarFallback>
               </Avatar>
             )}
@@ -279,60 +280,63 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSendMessage();
-        }}
-        className="p-4 border-t border-border/20 bg-background/40 backdrop-blur-sm"
-      >
-        <div className="flex gap-2">
+      {/* Input área fija en la parte inferior */}
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        handleSendMessage();
+      }} className="sticky bottom-0 bg-card border-t border-border p-3 sm:p-4">
+        <div className="flex items-center gap-2">
           <input
-            ref={fileInputRef}
             type="file"
-            accept="image/*"
+            ref={fileInputRef}
             onChange={handleFileUpload}
+            accept="image/*"
             className="hidden"
           />
           <Button
             type="button"
-            size="icon"
             variant="ghost"
+            size="icon"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="text-primary hover:text-primary/80"
+            className="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10"
           >
-            <Upload className="h-5 w-5" />
+            <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
+          
           <Button
             type="button"
-            size="icon"
             variant="ghost"
-            onClick={recording ? stopRecording : startRecording}
+            size="icon"
+            onMouseDown={startRecording}
+            onMouseUp={stopRecording}
+            onTouchStart={startRecording}
+            onTouchEnd={stopRecording}
             disabled={uploading}
-            className={recording ? "text-destructive" : "text-primary hover:text-primary/80"}
+            className="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10"
           >
-            {recording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            <Mic className={`h-4 w-4 sm:h-5 sm:w-5 ${recording ? "text-destructive animate-pulse" : ""}`} />
           </Button>
+
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Escribe un mensaje..."
+            className="flex-1 text-sm sm:text-base"
             disabled={sending || uploading}
-            className="flex-1 bg-background border-border"
           />
+          
           <Button
             type="submit"
             size="icon"
-            disabled={sending || uploading || !newMessage.trim()}
-            className="bg-primary hover:bg-primary/80"
+            disabled={sending || !newMessage.trim()}
+            className="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10"
           >
             {sending ? (
-              <Sparkles className="h-5 w-5 animate-spin" />
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
             ) : (
-              <Send className="h-5 w-5" />
+              <Send className="h-4 w-4 sm:h-5 sm:w-5" />
             )}
           </Button>
         </div>
