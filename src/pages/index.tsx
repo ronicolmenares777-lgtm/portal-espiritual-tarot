@@ -163,7 +163,38 @@ export default function Home() {
       return;
     }
 
-    setCurrentScreen("loading");
+    setIsSubmitting(true);
+
+    try {
+      // Crear el lead en Supabase
+      console.log("📝 Creando lead en Supabase...");
+      const result = await LeadService.create({
+        name: formData.name,
+        whatsapp: formData.whatsapp,
+        country_code: formData.countryCode,
+        problem: formData.problem,
+        status: "nuevo"
+      });
+
+      if (result.error) {
+        console.error("❌ Error creando lead:", result.error);
+        setFormErrors({ ...formErrors, problem: "Error al guardar. Intenta de nuevo." });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (result.data) {
+        console.log("✅ Lead creado con ID:", result.data.id);
+        setLeadId(result.data.id);
+        localStorage.setItem("currentLeadId", result.data.id);
+        setCurrentScreen("loading");
+      }
+    } catch (error: any) {
+      console.error("❌ Error en handleSubmit:", error);
+      setFormErrors({ ...formErrors, problem: "Error de conexión. Intenta de nuevo." });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCardSelected = (card: TarotCard, cardIndex: number) => {
@@ -179,11 +210,27 @@ export default function Home() {
     
     if (!leadId) {
       console.error("❌ Error: No hay leadId");
+      setCurrentScreen("warning");
+      return;
     }
 
-    // TEMPORAL: No actualizar nada, solo continuar al warning
-    // Las cartas y respuestas ya están guardadas en el estado del componente
-    // El administrador podrá verlas cuando se solucione el caché de Supabase
+    try {
+      // Actualizar el lead con las cartas seleccionadas y respuestas
+      console.log("📝 Actualizando lead con cartas y respuestas...");
+      const result = await LeadService.update(leadId, {
+        cards_selected: selectedCards.map(c => c.name),
+        user_answers: answers.length > 0 ? { answers } : undefined,
+        status: "enConversacion"
+      });
+
+      if (result.error) {
+        console.error("❌ Error actualizando lead:", result.error);
+      } else {
+        console.log("✅ Lead actualizado exitosamente");
+      }
+    } catch (error: any) {
+      console.error("❌ Error en handleFinalSubmit:", error);
+    }
     
     console.log("📝 Cartas seleccionadas:", selectedCards.map(c => c.name));
     console.log("📝 Respuestas:", answers);
@@ -417,7 +464,7 @@ export default function Home() {
                     {/* Botón de envío */}
                     <motion.button
                       type="submit"
-                      disabled={!formData.name || !formData.whatsapp || !formData.problem}
+                      disabled={!formData.name || !formData.whatsapp || !formData.problem || isSubmitting}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="w-full relative group overflow-hidden rounded-xl py-3.5 font-bold text-lg tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-gold/30 hover:shadow-2xl hover:shadow-gold/50"
@@ -425,7 +472,7 @@ export default function Home() {
                       <div className="absolute inset-0 bg-gradient-to-r from-gold via-accent to-gold transition-all group-hover:scale-105" />
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <span className="relative text-background flex items-center justify-center gap-3">
-                        <span>Iniciar Mi Lectura</span>
+                        <span>{isSubmitting ? "Guardando..." : "Iniciar Mi Lectura"}</span>
                       </span>
                     </motion.button>
                   </form>
