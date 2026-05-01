@@ -60,6 +60,7 @@ export default function ChatUsuario() {
       }
 
       if (data) {
+        console.log(`📨 Mensajes cargados: ${data.length}`);
         setMessages(data);
       }
     };
