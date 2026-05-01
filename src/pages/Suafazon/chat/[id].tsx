@@ -1,52 +1,53 @@
 import { useRouter } from "next/router";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Lead, LeadStatus } from "@/types/admin";
+import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  ArrowLeft,
-  Send,
-  Star,
-  Phone,
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { 
+  ArrowLeft, 
+  Send, 
+  Star, 
+  StarOff, 
   ImageIcon,
   Mic,
-  StopCircle,
   Loader2,
+  Play,
+  Pause
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
-interface Message {
-  id: string;
-  lead_id: string;
-  text?: string;
-  media_type?: string;
-  media_url?: string;
-  is_from_maestro: boolean;
-  created_at: string;
-}
+type Lead = Tables<"leads">;
+type Message = Tables<"messages">;
 
 export default function ChatPage() {
   const router = useRouter();
   const { id } = router.query;
+  const { toast } = useToast();
+
   const [lead, setLead] = useState<Lead | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isRecording, setIsRecording] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-scroll
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -55,51 +56,45 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
-  // Load lead and messages
+  // Cargar datos y suscribirse a realtime
   useEffect(() => {
     if (!id || typeof id !== "string") return;
 
+    let mounted = true;
+
     const loadData = async () => {
       try {
+        // Cargar lead
         const { data: leadData, error: leadError } = await supabase
           .from("leads")
           .select("*")
           .eq("id", id)
           .single();
 
-        if (leadError) {
-          console.error("❌ Error cargando lead:", leadError);
-          return;
-        }
+        if (leadError) throw leadError;
+        if (mounted && leadData) setLead(leadData);
 
-        if (leadData) {
-          setLead(leadData as Lead);
-        }
-
+        // Cargar mensajes
         const { data: messagesData, error: messagesError } = await supabase
           .from("messages")
           .select("*")
           .eq("lead_id", id)
           .order("created_at", { ascending: true });
 
-        if (messagesError) {
-          console.error("❌ Error cargando mensajes:", messagesError);
-          return;
-        }
-
-        if (messagesData) {
-          setMessages(messagesData as Message[]);
-        }
+        if (messagesError) throw messagesError;
+        if (mounted && messagesData) setMessages(messagesData);
       } catch (error) {
-        console.error("❌ Error en loadData:", error);
+        console.error("❌ Error cargando datos:", error);
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     };
 
     loadData();
 
-    // Realtime subscription - mismo canal para admin y usuario
+    // Suscripción realtime - UN SOLO CANAL COMPARTIDO
+    console.log("📡 [ADMIN] Configurando suscripción realtime para chat:", id);
+    
     const channel = supabase
       .channel(`chat-${id}`)
       .on(
@@ -111,74 +106,98 @@ export default function ChatPage() {
           filter: `lead_id=eq.${id}`,
         },
         (payload) => {
-          console.log("📨 [ADMIN] Nuevo mensaje:", payload.new);
+          console.log("📨 [ADMIN] Nuevo mensaje recibido:", payload.new);
           const newMsg = payload.new as Message;
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === newMsg.id)) {
-              return prev;
-            }
-            return [...prev, newMsg];
-          });
+          
+          if (mounted) {
+            setMessages((prev) => {
+              // Evitar duplicados
+              if (prev.some(m => m.id === newMsg.id)) {
+                console.log("⚠️ [ADMIN] Mensaje duplicado ignorado");
+                return prev;
+              }
+              console.log("✅ [ADMIN] Mensaje agregado al estado");
+              return [...prev, newMsg];
+            });
+          }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("📡 [ADMIN] Estado de suscripción:", status);
+      });
 
     return () => {
+      console.log("🔌 [ADMIN] Limpiando suscripción");
+      mounted = false;
       supabase.removeChannel(channel);
     };
   }, [id]);
 
+  // Enviar mensaje de texto
   const sendMessage = async () => {
-    if (!newMessage.trim() || !lead) return;
+    if (!newMessage.trim() || !lead || isSending) return;
+
+    setIsSending(true);
+    const tempMessage = newMessage.trim();
+    setNewMessage(""); // Limpiar input inmediatamente
 
     try {
-      const tempMsg: Message = {
-        id: `temp-${Date.now()}`,
-        lead_id: lead.id,
-        text: newMessage.trim(),
-        is_from_maestro: true,
-        created_at: new Date().toISOString(),
-      };
+      const { error } = await supabase
+        .from("messages")
+        .insert({
+          lead_id: lead.id,
+          text: tempMessage,
+          is_from_maestro: true,
+        });
 
-      setMessages((prev) => [...prev, tempMsg]);
-      const messageText = newMessage.trim();
-      setNewMessage("");
-
-      const { error } = await supabase.from("messages").insert({
-        lead_id: lead.id,
-        text: messageText,
-        is_from_maestro: true,
-      });
-
-      if (error) {
-        console.error("❌ Error enviando mensaje:", error);
-        setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
-      }
+      if (error) throw error;
+      console.log("✅ [ADMIN] Mensaje enviado");
     } catch (error) {
-      console.error("❌ Error en sendMessage:", error);
+      console.error("❌ [ADMIN] Error enviando mensaje:", error);
+      setNewMessage(tempMessage); // Restaurar mensaje si falla
+      toast({
+        title: "Error",
+        description: "No se pudo enviar el mensaje",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSending(false);
     }
   };
 
+  // Subir imagen
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !lead) return;
 
+    // Validar tipo
     if (!file.type.startsWith("image/")) {
-      alert("Solo se permiten imágenes");
+      toast({
+        title: "Error",
+        description: "Solo se permiten imágenes",
+        variant: "destructive",
+      });
       return;
     }
 
+    // Validar tamaño (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("La imagen es muy grande. Máximo 5MB");
+      toast({
+        title: "Error",
+        description: "La imagen es muy grande (máximo 5MB)",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsUploading(true);
 
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${lead.id}-${Date.now()}.${fileExt}`;
-      const filePath = `images/${fileName}`;
+      // Subir a Supabase Storage
+      const fileName = `${Date.now()}-${file.name}`;
+      const filePath = `${lead.id}/${fileName}`;
+
+      console.log("📤 [ADMIN] Subiendo imagen:", filePath);
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("chat-media")
@@ -188,37 +207,48 @@ export default function ChatPage() {
         });
 
       if (uploadError) {
-        console.error("❌ Error subiendo imagen:", uploadError);
-        alert("Error al subir la imagen");
-        return;
+        console.error("❌ [ADMIN] Error subiendo imagen:", uploadError);
+        throw uploadError;
       }
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("chat-media").getPublicUrl(filePath);
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from("chat-media")
+        .getPublicUrl(filePath);
 
-      const { error: insertError } = await supabase.from("messages").insert({
-        lead_id: lead.id,
-        media_type: "image",
-        media_url: publicUrl,
-        is_from_maestro: true,
+      console.log("✅ [ADMIN] Imagen subida:", publicUrl);
+
+      // Guardar mensaje con imagen
+      const { error: messageError } = await supabase
+        .from("messages")
+        .insert({
+          lead_id: lead.id,
+          text: null,
+          media_type: "image",
+          media_url: publicUrl,
+          is_from_maestro: true,
+        });
+
+      if (messageError) throw messageError;
+
+      toast({
+        title: "Imagen enviada",
+        description: "La imagen se ha enviado correctamente",
       });
-
-      if (insertError) {
-        console.error("❌ Error enviando imagen:", insertError);
-        alert("Error al enviar la imagen");
-      }
-    } catch (error) {
-      console.error("❌ Error en handleImageUpload:", error);
-      alert("Error al procesar la imagen");
+    } catch (error: any) {
+      console.error("❌ [ADMIN] Error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo enviar la imagen",
+        variant: "destructive",
+      });
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
+  // Grabar audio
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -226,25 +256,28 @@ export default function ChatPage() {
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
         }
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: "audio/webm",
-        });
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         await uploadAudio(audioBlob);
-        stream.getTracks().forEach((track) => track.stop());
+        stream.getTracks().forEach(track => track.stop());
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      console.log("🎤 [ADMIN] Grabando audio...");
     } catch (error) {
-      console.error("❌ Error iniciando grabación:", error);
-      alert("Error al acceder al micrófono");
+      console.error("❌ [ADMIN] Error grabando:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo acceder al micrófono",
+        variant: "destructive",
+      });
     }
   };
 
@@ -252,6 +285,7 @@ export default function ChatPage() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      console.log("⏹️ [ADMIN] Grabación detenida");
     }
   };
 
@@ -261,66 +295,55 @@ export default function ChatPage() {
     setIsUploading(true);
 
     try {
-      const fileName = `${lead.id}-${Date.now()}.webm`;
-      const filePath = `audio/${fileName}`;
+      const fileName = `audio-${Date.now()}.webm`;
+      const filePath = `${lead.id}/${fileName}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      console.log("📤 [ADMIN] Subiendo audio:", filePath);
+
+      const { error: uploadError } = await supabase.storage
         .from("chat-media")
         .upload(filePath, audioBlob, {
-          contentType: "audio/webm",
           cacheControl: "3600",
           upsert: false,
         });
 
-      if (uploadError) {
-        console.error("❌ Error subiendo audio:", uploadError);
-        alert("Error al subir el audio");
-        return;
-      }
+      if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("chat-media").getPublicUrl(filePath);
+      const { data: { publicUrl } } = supabase.storage
+        .from("chat-media")
+        .getPublicUrl(filePath);
 
-      const { error: insertError } = await supabase.from("messages").insert({
-        lead_id: lead.id,
-        media_type: "audio",
-        media_url: publicUrl,
-        is_from_maestro: true,
+      console.log("✅ [ADMIN] Audio subido:", publicUrl);
+
+      const { error: messageError } = await supabase
+        .from("messages")
+        .insert({
+          lead_id: lead.id,
+          text: null,
+          media_type: "audio",
+          media_url: publicUrl,
+          is_from_maestro: true,
+        });
+
+      if (messageError) throw messageError;
+
+      toast({
+        title: "Audio enviado",
+        description: "El audio se ha enviado correctamente",
       });
-
-      if (insertError) {
-        console.error("❌ Error enviando audio:", insertError);
-        alert("Error al enviar el audio");
-      }
-    } catch (error) {
-      console.error("❌ Error en uploadAudio:", error);
-      alert("Error al procesar el audio");
+    } catch (error: any) {
+      console.error("❌ [ADMIN] Error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo enviar el audio",
+        variant: "destructive",
+      });
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!lead) return;
-
-    try {
-      const { error } = await supabase
-        .from("leads")
-        .update({ status: newStatus as LeadStatus })
-        .eq("id", lead.id);
-
-      if (error) {
-        console.error("❌ Error actualizando estado:", error);
-        return;
-      }
-
-      setLead({ ...lead, status: newStatus as LeadStatus });
-    } catch (error) {
-      console.error("❌ Error en handleStatusChange:", error);
-    }
-  };
-
+  // Toggle favorito
   const toggleFavorite = async () => {
     if (!lead) return;
 
@@ -330,34 +353,36 @@ export default function ChatPage() {
         .update({ is_favorite: !lead.is_favorite })
         .eq("id", lead.id);
 
-      if (error) {
-        console.error("❌ Error actualizando favorito:", error);
-        return;
-      }
+      if (error) throw error;
 
       setLead({ ...lead, is_favorite: !lead.is_favorite });
     } catch (error) {
-      console.error("❌ Error en toggleFavorite:", error);
+      console.error("Error:", error);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    const colors: { [key: string]: string } = {
-      nuevo: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-      enConversacion: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-      clienteCaliente:
-        "bg-orange-500/10 text-orange-500 border-orange-500/20",
-      listo: "bg-green-500/10 text-green-500 border-green-500/20",
-      cerrado: "bg-gray-500/10 text-gray-500 border-gray-500/20",
-      perdido: "bg-red-500/10 text-red-500 border-red-500/20",
-    };
-    return colors[status] || colors.nuevo;
+  // Actualizar clasificación
+  const updateClassification = async (classification: Lead["classification"]) => {
+    if (!lead) return;
+
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .update({ classification })
+        .eq("id", lead.id);
+
+      if (error) throw error;
+
+      setLead({ ...lead, classification });
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-foreground">Cargando chat...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -370,226 +395,235 @@ export default function ChatPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-background flex flex-col">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-gold/10 via-gold/5 to-transparent backdrop-blur-md border-b border-gold/20 px-4 py-3">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push("/Suafazon/dashboard")}
-              className="flex-shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+  const getClassificationColor = (classification: Lead["classification"]) => {
+    switch (classification) {
+      case "hot": return "bg-red-500 hover:bg-red-600";
+      case "warm": return "bg-orange-500 hover:bg-orange-600";
+      case "cold": return "bg-blue-500 hover:bg-blue-600";
+      default: return "bg-gray-500 hover:bg-gray-600";
+    }
+  };
 
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="relative flex-shrink-0">
+  const getClassificationLabel = (classification: Lead["classification"]) => {
+    switch (classification) {
+      case "hot": return "Caliente 🔥";
+      case "warm": return "Tibio 🟠";
+      case "cold": return "Frío 🧊";
+      default: return "Sin clasificar";
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+      {/* Header sticky */}
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 backdrop-blur-md border-b border-primary/20 shadow-lg">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            {/* Volver + Avatar + Info */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/Suafazon/dashboard")}
+                className="hover:bg-primary/10"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+
+              <div className="relative">
                 <div className="absolute inset-0 bg-gold/20 rounded-full blur-md" />
-                <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-gold to-amber-600 flex items-center justify-center text-white font-bold ring-2 ring-gold/30">
-                  {lead.name.charAt(0).toUpperCase()}
-                </div>
+                <Avatar className="relative h-12 w-12 ring-2 ring-gold/50">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${lead.name}`} />
+                  <AvatarFallback className="bg-primary/20 text-primary font-bold">
+                    {lead.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
               </div>
 
-              <div className="min-w-0 flex-1">
-                <h2 className="font-bold text-foreground truncate">
-                  {lead.name}
-                </h2>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Phone className="h-3 w-3 flex-shrink-0" />
-                  <span className="truncate">
-                    {lead.country_code} {lead.whatsapp}
-                  </span>
-                </div>
+              <div className="flex flex-col">
+                <h2 className="font-bold text-foreground text-lg">{lead.name}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {lead.country_code} {lead.whatsapp}
+                </p>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Select value={lead.status} onValueChange={handleStatusChange}>
-              <SelectTrigger
-                className={`w-auto gap-2 text-xs font-medium border ${getStatusColor(
-                  lead.status
-                )}`}
+            {/* Clasificación + Favorito */}
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`${getClassificationColor(lead.classification)} text-white border-0`}
+                  >
+                    {getClassificationLabel(lead.classification)}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => updateClassification("hot")}>
+                    🔥 Caliente
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => updateClassification("warm")}>
+                    🟠 Tibio
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => updateClassification("cold")}>
+                    🧊 Frío
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => updateClassification(null)}>
+                    ❌ Sin clasificar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleFavorite}
+                className="hover:bg-primary/10"
               >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nuevo">🆕 Nuevo</SelectItem>
-                <SelectItem value="enConversacion">💬 En Conversación</SelectItem>
-                <SelectItem value="clienteCaliente">🔥 Caliente</SelectItem>
-                <SelectItem value="listo">✅ Listo</SelectItem>
-                <SelectItem value="cerrado">🔒 Cerrado</SelectItem>
-                <SelectItem value="perdido">❌ Perdido</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleFavorite}
-              className="flex-shrink-0"
-            >
-              <Star
-                className={`h-5 w-5 ${
-                  lead.is_favorite
-                    ? "fill-gold text-gold"
-                    : "text-muted-foreground"
-                }`}
-              />
-            </Button>
+                {lead.is_favorite ? (
+                  <Star className="h-5 w-5 fill-gold text-gold" />
+                ) : (
+                  <StarOff className="h-5 w-5 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <AnimatePresence>
-            {messages.map((message) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex ${
-                  message.is_from_maestro ? "justify-start" : "justify-end"
-                } mb-4`}
-              >
+      {/* Área de mensajes */}
+      <div className="max-w-4xl mx-auto px-4 py-6 h-[calc(100vh-180px)] overflow-y-auto">
+        <div className="space-y-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${
+                message.is_from_maestro ? "justify-start" : "justify-end"
+              }`}
+            >
+              <div className={`flex gap-3 max-w-[75%] ${
+                message.is_from_maestro ? "" : "flex-row-reverse"
+              }`}>
+                {/* Avatar solo para maestro */}
+                {message.is_from_maestro && (
+                  <Avatar className="h-10 w-10 ring-2 ring-gold/50">
+                    <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=maestro" />
+                    <AvatarFallback className="bg-gold/20 text-gold">M</AvatarFallback>
+                  </Avatar>
+                )}
+
+                {/* Burbuja */}
                 <div
-                  className={`flex gap-3 max-w-[75%] ${
-                    message.is_from_maestro ? "" : "flex-row-reverse"
+                  className={`rounded-2xl px-4 py-3 shadow-md ${
+                    message.is_from_maestro
+                      ? "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-white"
+                      : "bg-white/90 text-gray-900"
                   }`}
                 >
-                  {message.is_from_maestro && (
-                    <div className="relative flex-shrink-0">
-                      <div className="absolute inset-0 bg-gold/20 rounded-full blur-md" />
-                      <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-gold to-amber-600 flex items-center justify-center text-white font-bold ring-2 ring-gold/30">
-                        ✨
-                      </div>
-                    </div>
+                  {!message.is_from_maestro && (
+                    <p className="text-xs font-semibold mb-1 text-gray-700">
+                      {lead.name}
+                    </p>
                   )}
 
-                  <div
-                    className={`rounded-2xl px-4 py-3 shadow-md ${
-                      message.is_from_maestro
-                        ? "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-white shadow-gold/30"
-                        : "bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm"
-                    }`}
-                  >
-                    {!message.is_from_maestro && (
-                      <p className="text-xs font-semibold mb-1 text-gray-700">
-                        {lead.name}
-                      </p>
-                    )}
-                    {message.is_from_maestro && (
-                      <p className="text-xs font-bold mb-1 opacity-90">
-                        Maestro Espiritual ✨
-                      </p>
-                    )}
+                  {/* Texto */}
+                  {message.text && (
+                    <p className="text-sm leading-relaxed">{message.text}</p>
+                  )}
 
-                    {message.media_type === "image" && message.media_url && (
-                      <img
-                        src={message.media_url}
-                        alt="Imagen enviada"
-                        className="rounded-lg max-w-full h-auto mb-2 cursor-pointer"
-                        onClick={() => window.open(message.media_url, "_blank")}
-                      />
-                    )}
+                  {/* Imagen */}
+                  {message.media_type === "image" && message.media_url && (
+                    <img 
+                      src={message.media_url} 
+                      alt="Imagen"
+                      className="rounded-lg max-w-full h-auto mt-2"
+                    />
+                  )}
 
-                    {message.media_type === "audio" && message.media_url && (
-                      <audio controls className="max-w-full">
-                        <source src={message.media_url} type="audio/webm" />
-                        Tu navegador no soporta audio.
-                      </audio>
-                    )}
+                  {/* Audio */}
+                  {message.media_type === "audio" && message.media_url && (
+                    <audio controls className="mt-2 w-full">
+                      <source src={message.media_url} type="audio/webm" />
+                    </audio>
+                  )}
 
-                    {message.text && (
-                      <p className="text-sm leading-relaxed">{message.text}</p>
-                    )}
-
-                    <p
-                      className={`text-xs mt-1.5 ${
-                        message.is_from_maestro
-                          ? "opacity-80"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      {new Date(message.created_at).toLocaleTimeString(
-                        "es-ES",
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }
-                      )}
-                    </p>
-                  </div>
+                  <p className={`text-xs mt-1.5 ${
+                    message.is_from_maestro ? "opacity-80" : "text-gray-600"
+                  }`}>
+                    {new Date(message.created_at).toLocaleTimeString("es-ES", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
                 </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+              </div>
+            </div>
+          ))}
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input */}
-      <div className="sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent backdrop-blur-sm border-t border-border/50 p-4">
-        <div className="max-w-4xl mx-auto flex items-center gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
-          />
+      {/* Input área */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-primary/20 shadow-lg">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="flex-shrink-0"
-          >
-            {isUploading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <ImageIcon className="h-5 w-5" />
-            )}
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="hover:bg-primary/10"
+            >
+              {isUploading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <ImageIcon className="h-5 w-5" />
+              )}
+            </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={isRecording ? stopRecording : startRecording}
-            disabled={isUploading}
-            className={`flex-shrink-0 ${
-              isRecording ? "text-red-500 animate-pulse" : ""
-            }`}
-          >
-            {isRecording ? (
-              <StopCircle className="h-5 w-5" />
-            ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={startRecording}
+              onMouseUp={stopRecording}
+              onMouseLeave={stopRecording}
+              disabled={isUploading}
+              className={`hover:bg-primary/10 ${isRecording ? "bg-red-500 text-white" : ""}`}
+            >
               <Mic className="h-5 w-5" />
-            )}
-          </Button>
+            </Button>
 
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Escribe un mensaje..."
-            className="flex-1"
-            disabled={isUploading}
-          />
+            <Input
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+              placeholder="Escribe un mensaje..."
+              className="flex-1 bg-background/50"
+              disabled={isSending}
+            />
 
-          <Button
-            onClick={sendMessage}
-            disabled={!newMessage.trim() || isUploading}
-            className="flex-shrink-0 bg-gradient-to-r from-gold to-amber-600 hover:from-gold/90 hover:to-amber-600/90"
-          >
-            <Send className="h-5 w-5" />
-          </Button>
+            <Button
+              onClick={sendMessage}
+              disabled={!newMessage.trim() || isSending}
+              className="bg-gradient-to-r from-gold to-amber-600 hover:from-amber-600 hover:to-gold text-white"
+            >
+              {isSending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Send className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
