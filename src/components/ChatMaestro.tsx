@@ -139,7 +139,7 @@ export function ChatMaestro({ leadId, leadName }: ChatMaestroProps) {
     };
   }, [leadId]);
 
-  const handleSendMessage = async () => {
+  const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
     try {
@@ -149,7 +149,6 @@ export function ChatMaestro({ leadId, leadName }: ChatMaestroProps) {
           lead_id: leadId,
           text: newMessage.trim(),
           is_from_maestro: false,
-          is_read: false,
         })
         .select()
         .single();
@@ -159,10 +158,12 @@ export function ChatMaestro({ leadId, leadName }: ChatMaestroProps) {
         return;
       }
 
-      console.log("✅ Mensaje enviado:", data);
-      setNewMessage("");
+      if (data) {
+        console.log("✅ Mensaje enviado:", data);
+        setNewMessage("");
+      }
     } catch (error) {
-      console.error("❌ Error en handleSendMessage:", error);
+      console.error("❌ Error en sendMessage:", error);
     }
   };
 
@@ -214,24 +215,23 @@ export function ChatMaestro({ leadId, leadName }: ChatMaestroProps) {
                 key={message.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
                 className={`flex ${
                   message.is_from_maestro ? "justify-start" : "justify-end"
-                }`}
+                } mb-4`}
               >
                 <div
-                  className={`flex gap-3 max-w-[80%] sm:max-w-[75%] ${
+                  className={`flex gap-3 max-w-[75%] ${
                     message.is_from_maestro ? "" : "flex-row-reverse"
                   }`}
                 >
-                  {/* Avatar (solo para maestro) */}
+                  {/* Avatar */}
                   {message.is_from_maestro && (
                     <div className="relative flex-shrink-0">
                       <div className="absolute inset-0 bg-gold/20 rounded-full blur-md" />
                       <img
                         src={maestroAvatar}
                         alt="Maestro"
-                        className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full ring-2 ring-gold/50 shadow-lg"
+                        className="relative w-10 h-10 rounded-full ring-2 ring-gold/50 shadow-lg"
                       />
                     </div>
                   )}
@@ -241,40 +241,30 @@ export function ChatMaestro({ leadId, leadName }: ChatMaestroProps) {
                     className={`rounded-2xl px-4 py-3 shadow-md ${
                       message.is_from_maestro
                         ? "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-white shadow-gold/30"
-                        : "bg-white text-foreground shadow-gray-200"
+                        : "bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm"
                     }`}
                   >
-                    {message.is_from_maestro ? (
-                      <p className="text-xs font-bold mb-1 opacity-90">
-                        Maestro Espiritual ✨
-                      </p>
-                    ) : (
-                      <p className="text-xs font-bold mb-1 text-primary">
+                    {!message.is_from_maestro && (
+                      <p className="text-xs font-semibold mb-1 text-gray-700">
                         {leadName}
                       </p>
                     )}
-                    <p className="text-sm leading-relaxed">{message.text}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <p
-                        className={`text-xs ${
-                          message.is_from_maestro ? "opacity-80" : "opacity-70"
-                        }`}
-                      >
-                        {new Date(message.created_at).toLocaleTimeString("es-ES", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                    {message.is_from_maestro && (
+                      <p className="text-xs font-bold mb-1 opacity-90">
+                        Maestro Espiritual ✨
                       </p>
-                      {!message.is_from_maestro && (
-                        <div className="text-xs opacity-70">
-                          {message.is_read ? (
-                            <CheckCheck className="h-3 w-3" />
-                          ) : (
-                            <Check className="h-3 w-3" />
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    )}
+                    <p className="text-sm leading-relaxed">{message.text}</p>
+                    <p
+                      className={`text-xs mt-1.5 ${
+                        message.is_from_maestro ? "opacity-80" : "text-gray-600"
+                      }`}
+                    >
+                      {new Date(message.created_at).toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
                   </div>
                 </div>
               </motion.div>
@@ -295,12 +285,12 @@ export function ChatMaestro({ leadId, leadName }: ChatMaestroProps) {
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Escribe tu mensaje..."
               className="flex-1 bg-background/60 border-border/60 focus:border-gold focus:ring-gold/30 text-sm sm:text-base rounded-xl"
             />
             <Button
-              onClick={handleSendMessage}
+              onClick={sendMessage}
               disabled={!newMessage.trim()}
               className="bg-gradient-to-r from-gold to-accent hover:from-accent hover:to-gold text-background font-bold transition-all shadow-lg shadow-gold/40 hover:shadow-xl hover:shadow-gold/60 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl px-4 sm:px-6"
             >

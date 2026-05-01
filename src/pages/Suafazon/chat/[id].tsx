@@ -179,16 +179,15 @@ export default function AdminChatPage() {
   }, [id]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !id || typeof id !== "string") return;
+    if (!newMessage.trim() || !lead) return;
 
     try {
       const { data, error } = await supabase
         .from("messages")
         .insert({
-          lead_id: id,
+          lead_id: lead.id,
           text: newMessage.trim(),
           is_from_maestro: true,
-          is_read: false,
         })
         .select()
         .single();
@@ -198,8 +197,10 @@ export default function AdminChatPage() {
         return;
       }
 
-      console.log("✅ Mensaje enviado:", data);
-      setNewMessage("");
+      if (data) {
+        console.log("✅ Mensaje enviado:", data);
+        setNewMessage("");
+      }
     } catch (error) {
       console.error("❌ Error en handleSendMessage:", error);
     }
@@ -400,40 +401,30 @@ export default function AdminChatPage() {
                 className={`rounded-2xl px-4 py-3 shadow-md ${
                   message.is_from_maestro
                     ? "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-white shadow-gold/30"
-                    : "bg-white text-foreground shadow-gray-200"
+                    : "bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm"
                 }`}
               >
-                {message.is_from_maestro ? (
-                  <p className="text-xs font-bold mb-1 opacity-90">
-                    Maestro Espiritual ✨
-                  </p>
-                ) : (
-                  <p className="text-xs font-bold mb-1 text-primary">
+                {!message.is_from_maestro && (
+                  <p className="text-xs font-semibold mb-1 text-gray-700">
                     {lead.name}
                   </p>
                 )}
-                <p className="text-sm leading-relaxed">{message.text}</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <p
-                    className={`text-xs ${
-                      message.is_from_maestro ? "opacity-80" : "opacity-70"
-                    }`}
-                  >
-                    {new Date(message.created_at).toLocaleTimeString("es-ES", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                {message.is_from_maestro && (
+                  <p className="text-xs font-bold mb-1 opacity-90">
+                    Maestro Espiritual ✨
                   </p>
-                  {message.is_from_maestro && (
-                    <div className="text-xs opacity-80">
-                      {message.is_read ? (
-                        <CheckCheck className="h-3 w-3" />
-                      ) : (
-                        <Check className="h-3 w-3" />
-                      )}
-                    </div>
-                  )}
-                </div>
+                )}
+                <p className="text-sm leading-relaxed">{message.text}</p>
+                <p
+                  className={`text-xs mt-1.5 flex items-center gap-1 ${
+                    message.is_from_maestro ? "opacity-80" : "text-gray-600"
+                  }`}
+                >
+                  {new Date(message.created_at).toLocaleTimeString("es-ES", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
             </div>
           </motion.div>
