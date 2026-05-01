@@ -19,9 +19,13 @@ position: 10
 3. Admin login configurado:
    - Usuario: brujildo@brujo.com
    - Contraseña: Pepe2002
-   - Email confirmado
+   - Email confirmado en DB
    - Perfil con role = 'admin'
-   - Listo para login
+4. Supabase Auth Config actualizada:
+   - enable_confirmations: false
+   - mailer_autoconfirm: true
+   - disable_signup: false
+5. Usuario con email_verified: true en metadata
 
 ## Checklist
 - [x] SQL manual ejecutado para tabla messages
@@ -29,9 +33,10 @@ position: 10
 - [x] Usuario brujildo@brujo.com creado y confirmado
 - [x] Perfil admin con role = 'admin'
 - [x] Contraseña: Pepe2002
-- [x] RLS policies de profiles arregladas
+- [x] Supabase Auth config actualizada
+- [x] Email verification deshabilitada
 
 ## Acceptance
 - ✅ Chat funcional sin PGRST204
-- ✅ Usuario admin puede hacer login
+- ✅ Supabase Auth no requiere email confirmation
 - ✅ Login funcional con brujildo@brujo.com / Pepe2002
