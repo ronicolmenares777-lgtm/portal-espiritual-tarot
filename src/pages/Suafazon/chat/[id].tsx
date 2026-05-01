@@ -48,7 +48,7 @@ export default function AdminChat() {
 
   // Load lead and messages
   useEffect(() => {
-    if (!id) return;
+    if (!id || typeof id !== "string") return;
 
     const loadData = async () => {
       try {
