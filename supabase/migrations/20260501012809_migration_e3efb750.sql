@@ -1,0 +1,1 @@
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_from_maestro BOOLEAN DEFAULT false NOT NULL;

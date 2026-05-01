@@ -104,6 +104,7 @@ export default function ChatPage() {
     if (!inputMessage.trim() || !id || typeof id !== 'string') return;
 
     try {
+      console.log("📤 Enviando mensaje del admin...");
       const { data: messages, error } = await supabase
         .from("messages")
         .insert([
@@ -116,13 +117,14 @@ export default function ChatPage() {
         .select();
 
       if (error) {
-        console.error("Error enviando mensaje:", error);
+        console.error("❌ Error enviando mensaje:", error);
         return;
       }
 
+      console.log("✅ Mensaje del admin enviado:", messages?.[0]);
       setInputMessage("");
     } catch (error) {
-      console.error("Error enviando mensaje:", error);
+      console.error("❌ Error enviando mensaje:", error);
     }
   };
 
@@ -142,10 +144,10 @@ export default function ChatPage() {
         .select();
 
       if (error) {
-        console.error("Error enviando respuesta rápida:", error);
+        console.error("❌ Error enviando respuesta rápida:", error);
       }
     } catch (error) {
-      console.error("Error enviando respuesta rápida:", error);
+      console.error("❌ Error enviando respuesta rápida:", error);
     }
   };
 
@@ -181,13 +183,13 @@ export default function ChatPage() {
         .select();
 
       if (error) {
-        console.error("Error enviando media:", error);
+        console.error("❌ Error enviando media:", error);
         return;
       }
 
       setMediaPreview(null);
     } catch (error) {
-      console.error("Error enviando media:", error);
+      console.error("❌ Error enviando media:", error);
     }
   };
 

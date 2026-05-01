@@ -14,30 +14,31 @@ position: 10
 
 ## Notes
 ✅ COMPLETADO - CORRECCIÓN COMPLETA:
-1. SQL query confirmó columna: `text`
-2. MessageService actualizado con 'text'
-3. Tipo Message actualizado con 'text'
-4. ChatMaestro actualizado con 'text'
-5. Admin chat actualizado con 'text'
-6. Eliminada llamada a MessageService.markAsRead (no existía)
-7. Servidor reiniciado
-8. Sin errores de compilación
+1. Schema verificado - columna 'is_from_maestro' NO existía
+2. Columna 'is_from_maestro' agregada a tabla messages
+3. Cache de schema de Supabase limpiado (NOTIFY pgrst, 'reload schema')
+4. Tipos TypeScript regenerados
+5. MessageService actualizado
+6. ChatMaestro actualizado (is_from_maestro: false)
+7. Admin chat actualizado (is_from_maestro: true)
+8. Servidor reiniciado
+9. Sin errores de compilación
 
 ## Checklist
-- [x] Verificar columna con SQL query directa
-- [x] Confirmar: columna es 'text'
+- [x] Verificar schema de tabla messages
+- [x] Agregar columna is_from_maestro BOOLEAN DEFAULT false
+- [x] Limpiar cache de schema (NOTIFY pgrst)
+- [x] Regenerar tipos TypeScript
 - [x] Actualizar messageService.ts
-- [x] Actualizar admin.ts
 - [x] Actualizar ChatMaestro.tsx
 - [x] Actualizar chat/[id].tsx
-- [x] Eliminar llamada a markAsRead inexistente
 - [x] Reiniciar servidor
 - [x] Verificar sin errores
 
 ## Acceptance
-- ✅ Columna 'text' confirmada por SQL
-- ✅ Código usando 'text' consistentemente
+- ✅ Columna 'is_from_maestro' existe en tabla messages
+- ✅ Cache de schema limpiado
 - ✅ Sin errores PGRST204
 - ✅ Sin errores de TypeScript
-- ✅ Sin llamadas a métodos inexistentes
-- ✅ Chat funcional entre usuario y admin
+- ✅ Chat funcional - usuario puede enviar mensajes
+- ✅ Admin puede responder mensajes

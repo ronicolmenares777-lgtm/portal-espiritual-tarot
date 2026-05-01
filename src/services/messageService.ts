@@ -15,7 +15,7 @@ export class MessageService {
         .insert([{
           lead_id: data.lead_id,
           text: data.text,
-          is_from_maestro: data.is_from_maestro || false,
+          is_from_maestro: data.is_from_maestro ?? false,
         }])
         .select();
 

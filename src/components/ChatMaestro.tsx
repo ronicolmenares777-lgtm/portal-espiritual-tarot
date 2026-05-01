@@ -216,6 +216,7 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
     if (!newMessage.trim() || !leadId) return;
 
     try {
+      console.log("📤 Enviando mensaje del usuario...");
       const createdMessage = await MessageService.create({
         lead_id: leadId,
         text: newMessage,
@@ -223,11 +224,14 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       });
 
       if (createdMessage) {
+        console.log("✅ Mensaje del usuario enviado:", createdMessage);
         setMessages((prev) => [...prev, createdMessage]);
         setNewMessage("");
+      } else {
+        console.error("❌ No se pudo crear el mensaje");
       }
     } catch (error) {
-      console.error("Error enviando mensaje:", error);
+      console.error("❌ Error enviando mensaje:", error);
     }
   };
 
