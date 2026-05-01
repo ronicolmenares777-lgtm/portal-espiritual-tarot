@@ -311,28 +311,49 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       <div className="flex-1 overflow-y-auto p-3 md:p-4 pb-32 md:pb-40">
         <div className="max-w-4xl mx-auto space-y-4">
           <AnimatePresence>
-            {messages.map((message, index) => (
+            {messages.map((message) => (
               <motion.div
                 key={message.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`flex ${message.is_from_maestro ? "justify-end" : "justify-start"} mb-4`}
+                className={`flex ${
+                  message.is_from_maestro ? "justify-start" : "justify-end"
+                } mb-4`}
               >
-                <div
-                  className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                    message.is_from_maestro
-                      ? "bg-primary text-primary-foreground ml-auto"
-                      : "bg-muted"
-                  }`}
-                >
-                  <p className="text-sm">{message.text}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {new Date(message.created_at).toLocaleTimeString("es-ES", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+                <div className={`flex gap-3 max-w-[75%] ${message.is_from_maestro ? "" : "flex-row-reverse"}`}>
+                  {/* Avatar */}
+                  {message.is_from_maestro && (
+                    <div className="relative flex-shrink-0">
+                      <div className="absolute inset-0 bg-gold/20 rounded-full blur-md" />
+                      <img
+                        src={maestroAvatar}
+                        alt="Maestro"
+                        className="relative w-10 h-10 rounded-full ring-2 ring-gold/50 shadow-lg"
+                      />
+                    </div>
+                  )}
+
+                  {/* Message Bubble */}
+                  <div
+                    className={`rounded-2xl px-4 py-3 shadow-md ${
+                      message.is_from_maestro
+                        ? "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-white shadow-gold/30"
+                        : "bg-muted/80 backdrop-blur-sm"
+                    }`}
+                  >
+                    {message.is_from_maestro && (
+                      <p className="text-xs font-bold mb-1 opacity-90">
+                        Maestro Espiritual ✨
+                      </p>
+                    )}
+                    <p className="text-sm leading-relaxed">{message.text}</p>
+                    <p className={`text-xs mt-1.5 ${message.is_from_maestro ? "opacity-80" : "opacity-70"}`}>
+                      {new Date(message.created_at).toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
                 </div>
               </motion.div>
             ))}
