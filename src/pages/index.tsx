@@ -553,7 +553,6 @@ export default function Home() {
         {currentScreen === "chat" && (
           <ChatMaestro 
             leadId={leadId!} 
-            leadName={formData.name}
           />
         )}
       </div>
