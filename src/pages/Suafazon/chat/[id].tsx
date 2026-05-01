@@ -1,12 +1,13 @@
 import { useRouter } from "next/router";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
+import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { ArrowLeft, Send, Star, Phone, MessageCircle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -14,33 +15,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  ArrowLeft,
-  Send,
-  Phone,
-  Video,
-  MoreVertical,
-  Image as ImageIcon,
-  Paperclip,
-  Smile,
-  X,
-  Play,
-  Star,
-  StarOff,
-} from "lucide-react";
-import Link from "next/link";
-import type { Lead, Message } from "@/types/admin";
-import { motion } from "framer-motion";
+import type { Lead, LeadStatus } from "@/types/admin";
 
-export default function ChatPage() {
+type Message = Database["public"]["Tables"]["messages"]["Row"];
+
+export default function AdminChatPage() {
   const router = useRouter();
   const { id } = router.query;
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [lead, setLead] = useState<Lead | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [profileData, setProfileData] = useState<any>(null);
+  const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -50,58 +37,57 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
+  // Cargar lead y mensajes
   useEffect(() => {
-    if (!id || typeof id !== 'string') return;
+    if (!id || typeof id !== "string") return;
 
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
-        console.log("🔍 Cargando datos para lead:", id);
-
-        // Fetch lead
+        // Cargar lead
         const { data: leadData, error: leadError } = await supabase
           .from("leads")
           .select("*")
           .eq("id", id)
           .single();
 
-        if (leadError) throw leadError;
-        console.log("✅ Lead cargado:", leadData);
+        if (leadError) {
+          console.error("❌ Error cargando lead:", leadError);
+          return;
+        }
+
         setLead(leadData as Lead);
 
-        // Fetch messages
+        // Cargar mensajes
         const { data: messagesData, error: messagesError } = await supabase
           .from("messages")
           .select("*")
           .eq("lead_id", id)
           .order("created_at", { ascending: true });
 
-        if (messagesError) throw messagesError;
-        console.log("✅ Mensajes cargados:", messagesData?.length || 0);
-        setMessages(messagesData || []);
-
-        // Fetch profile data for avatar
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("*")
-          .limit(1)
-          .single();
-        
-        if (profiles) {
-          setProfileData(profiles);
+        if (messagesError) {
+          console.error("❌ Error cargando mensajes:", messagesError);
+          return;
         }
+
+        setMessages(messagesData || []);
       } catch (error) {
-        console.error("❌ Error cargando datos:", error);
+        console.error("❌ Error en loadData:", error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    fetchData();
+    loadData();
+  }, [id]);
 
-    // Suscripción a nuevos mensajes
-    const channelName = `admin-messages-${id}-${Date.now()}`;
+  // SUSCRIPCIÓN REALTIME
+  useEffect(() => {
+    if (!id || typeof id !== "string") return;
+
+    console.log("🔔 Configurando suscripción realtime para lead:", id);
+
     const channel = supabase
-      .channel(channelName)
+      .channel(`messages:${id}`)
       .on(
         "postgres_changes",
         {
@@ -111,62 +97,42 @@ export default function ChatPage() {
           filter: `lead_id=eq.${id}`,
         },
         (payload) => {
-          console.log("🔔 Nuevo mensaje recibido en admin:", payload.new);
-          setMessages((current) => [...current, payload.new as Message]);
+          console.log("📨 Nuevo mensaje recibido:", payload.new);
+          setMessages((prev) => [...prev, payload.new as Message]);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("🔔 Estado de suscripción:", status);
+      });
 
     return () => {
+      console.log("🔌 Desconectando suscripción realtime");
       supabase.removeChannel(channel);
     };
   }, [id]);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || !id || typeof id !== 'string') return;
+    if (!newMessage.trim() || !id || typeof id !== "string" || sending) return;
 
-    console.log("📤 Admin enviando mensaje...");
+    setSending(true);
 
     try {
-      const { data, error } = await supabase
-        .from("messages")
-        .insert({
-          lead_id: id,
-          text: inputMessage,
-          is_from_maestro: true,
-        })
-        .select();
+      const { error } = await supabase.from("messages").insert({
+        lead_id: id,
+        text: newMessage.trim(),
+        is_from_maestro: true,
+      });
 
       if (error) {
         console.error("❌ Error enviando mensaje:", error);
         return;
       }
 
-      console.log("✅ Mensaje del admin enviado:", data);
-      setInputMessage("");
+      setNewMessage("");
     } catch (error) {
       console.error("❌ Error en handleSendMessage:", error);
-    }
-  };
-
-  const handleQuickReply = async (message: string) => {
-    if (!id || typeof id !== 'string') return;
-
-    try {
-      const { error } = await supabase
-        .from("messages")
-        .insert({
-          lead_id: id,
-          text: message,
-          is_from_maestro: true,
-        })
-        .select();
-
-      if (error) {
-        console.error("❌ Error enviando respuesta rápida:", error);
-      }
-    } catch (error) {
-      console.error("❌ Error en handleQuickReply:", error);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -206,17 +172,40 @@ export default function ChatPage() {
       }
 
       setLead({ ...lead, is_favorite: !lead.is_favorite });
-      console.log("✅ Favorito actualizado");
     } catch (error) {
       console.error("❌ Error en handleToggleFavorite:", error);
     }
   };
 
-  if (isLoading) {
+  const getStatusLabel = (status: string) => {
+    const labels: { [key: string]: string } = {
+      nuevo: "🆕 Nuevo",
+      enConversacion: "💬 En Conversación",
+      clienteCaliente: "🔥 Caliente",
+      listo: "✅ Listo",
+      cerrado: "🔒 Cerrado",
+      perdido: "❌ Perdido",
+    };
+    return labels[status] || status;
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors: { [key: string]: string } = {
+      nuevo: "bg-blue-500/10 text-blue-500 border-blue-500/30",
+      enConversacion: "bg-amber-500/10 text-amber-500 border-amber-500/30",
+      clienteCaliente: "bg-orange-500/10 text-orange-500 border-orange-500/30",
+      listo: "bg-green-500/10 text-green-500 border-green-500/30",
+      cerrado: "bg-gray-500/10 text-gray-500 border-gray-500/30",
+      perdido: "bg-red-500/10 text-red-500 border-red-500/30",
+    };
+    return colors[status] || colors.nuevo;
+  };
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">Cargando chat...</p>
         </div>
       </div>
@@ -225,76 +214,69 @@ export default function ChatPage() {
 
   if (!lead) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">Lead no encontrado</p>
-          <Button asChild>
-            <Link href="/Suafazon/dashboard">Volver al Dashboard</Link>
+          <p className="text-muted-foreground mb-4">Lead no encontrado</p>
+          <Button onClick={() => router.push("/Suafazon/dashboard")}>
+            Volver al Dashboard
           </Button>
         </div>
       </div>
     );
   }
 
-  const quickReplies = [
-    "Gracias por tu consulta, ¿en qué puedo ayudarte?",
-    "Entiendo tu situación, déjame guiarte.",
-    "¿Puedes darme más detalles sobre tu problema?",
-    "Estoy aquí para ayudarte en tu camino espiritual.",
-  ];
-
-  const getStatusColor = (status: string) => {
-    const colors: { [key: string]: string } = {
-      nuevo: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-      enConversacion: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-      clienteCaliente: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-      listo: "bg-green-500/10 text-green-500 border-green-500/20",
-      cerrado: "bg-gray-500/10 text-gray-500 border-gray-500/20",
-      perdido: "bg-red-500/10 text-red-500 border-red-500/20",
-    };
-    return colors[status] || colors.nuevo;
-  };
-
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-gradient-to-r from-card via-card/95 to-card backdrop-blur-sm">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/Suafazon/dashboard">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-background flex flex-col">
+      {/* Header - Mobile Responsive */}
+      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-border/50 shadow-lg">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between gap-3">
+            {/* Back Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/Suafazon/dashboard")}
+              className="flex-shrink-0 hover:bg-primary/10"
+            >
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <Avatar className="ring-2 ring-primary/20">
-              <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                {lead.name?.charAt(0).toUpperCase() || "?"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-lg">{lead.name}</h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleToggleFavorite}
-                  className="h-6 w-6"
-                >
-                  {lead.is_favorite ? (
-                    <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                  ) : (
-                    <StarOff className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
+
+            {/* User Info */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Avatar className="h-10 w-10 sm:h-12 sm:w-12 ring-2 ring-gold/30 flex-shrink-0">
+                <AvatarFallback className="bg-gradient-to-br from-gold/20 to-amber-500/20 text-gold font-bold">
+                  {lead.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-bold text-base sm:text-lg truncate">{lead.name}</h2>
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                  <Phone className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="truncate">{lead.whatsapp}</span>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {lead.country_code} {lead.whatsapp}
-              </p>
+            </div>
+
+            {/* Actions - Mobile Responsive */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleToggleFavorite}
+                className={lead.is_favorite ? "text-gold" : ""}
+              >
+                <Star
+                  className="h-5 w-5"
+                  fill={lead.is_favorite ? "currentColor" : "none"}
+                />
+              </Button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Status & Problem - Mobile Responsive */}
+          <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <Select value={lead.status} onValueChange={handleStatusChange}>
-              <SelectTrigger className={`w-[160px] border ${getStatusColor(lead.status)}`}>
+              <SelectTrigger className="w-full sm:w-[220px] border-border/50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -306,83 +288,63 @@ export default function ChatPage() {
                 <SelectItem value="perdido">❌ Perdido</SelectItem>
               </SelectContent>
             </Select>
+
+            <div className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-muted/30 border border-border/30">
+              <p className="text-xs text-muted-foreground mb-0.5">Problema:</p>
+              <p className="text-sm line-clamp-2">{lead.problem}</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4 bg-gradient-to-b from-background to-muted/20">
-        <div className="space-y-4 max-w-4xl mx-auto">
-          {/* Lead Info Card */}
-          <Card className="p-4 bg-card/50 backdrop-blur-sm border-primary/20">
-            <div className="space-y-2">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold text-sm text-muted-foreground">
-                    Problema:
-                  </p>
-                  <p className="text-sm">{lead.problem}</p>
-                </div>
-              </div>
-              {lead.cards_selected && lead.cards_selected.length > 0 && (
-                <div>
-                  <p className="font-semibold text-sm text-muted-foreground">
-                    Cartas Seleccionadas:
-                  </p>
-                  <p className="text-sm">{lead.cards_selected.join(", ")}</p>
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Messages */}
+      {/* Messages Area - Mobile Responsive */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message) => (
             <motion.div
               key={message.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className={`flex ${
-                message.is_from_maestro ? "justify-end" : "justify-start"
+                message.is_from_maestro ? "justify-start" : "justify-end"
               }`}
             >
-              <div className={`flex gap-3 max-w-[70%] ${message.is_from_maestro ? "flex-row-reverse" : ""}`}>
-                {/* Avatar */}
-                {message.is_from_maestro ? (
-                  profileData?.avatar_url ? (
-                    <img
-                      src={profileData.avatar_url}
-                      alt="Maestro"
-                      className="w-10 h-10 rounded-full ring-2 ring-primary/30 shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold to-amber-600 flex items-center justify-center ring-2 ring-gold/30 shadow-lg">
-                      <span className="text-white font-bold text-sm">M</span>
-                    </div>
-                  )
-                ) : (
-                  <Avatar className="w-10 h-10">
-                    <AvatarFallback className="bg-muted">
-                      {lead.name?.charAt(0).toUpperCase() || "U"}
+              <div
+                className={`flex gap-2 sm:gap-3 max-w-[85%] sm:max-w-[75%] ${
+                  message.is_from_maestro ? "" : "flex-row-reverse"
+                }`}
+              >
+                {/* Avatar - Only for maestro */}
+                {message.is_from_maestro && (
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-gold/40 flex-shrink-0">
+                    <AvatarFallback className="bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-white text-xs sm:text-sm font-bold">
+                      ME
                     </AvatarFallback>
                   </Avatar>
                 )}
 
                 {/* Message Bubble */}
                 <div
-                  className={`rounded-2xl px-4 py-3 shadow-md ${
+                  className={`rounded-2xl px-3 sm:px-4 py-2 sm:py-3 shadow-md ${
                     message.is_from_maestro
-                      ? "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-white"
-                      : "bg-muted/80 backdrop-blur-sm"
+                      ? "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-white shadow-gold/20"
+                      : "bg-card border border-border/50 shadow-sm"
                   }`}
                 >
                   {message.is_from_maestro && (
-                    <p className="text-xs font-semibold mb-1 opacity-90">
-                      Maestro Espiritual
+                    <p className="text-[10px] sm:text-xs font-bold mb-1 opacity-90">
+                      Tú (Admin) ✨
                     </p>
                   )}
-                  <p className="text-sm">{message.text}</p>
-                  <p className={`text-xs mt-1 ${message.is_from_maestro ? "opacity-80" : "opacity-70"}`}>
-                    {new Date(message.created_at).toLocaleTimeString([], {
+                  <p className="text-sm sm:text-base leading-relaxed break-words">
+                    {message.text}
+                  </p>
+                  <p
+                    className={`text-[10px] sm:text-xs mt-1.5 ${
+                      message.is_from_maestro ? "opacity-80" : "opacity-60"
+                    }`}
+                  >
+                    {new Date(message.created_at).toLocaleTimeString("es-ES", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
@@ -393,38 +355,29 @@ export default function ChatPage() {
           ))}
           <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
-
-      {/* Quick Replies */}
-      <div className="border-t p-2 bg-card/50 backdrop-blur-sm">
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {quickReplies.map((reply, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickReply(reply)}
-              className="whitespace-nowrap flex-shrink-0 hover:bg-primary/10"
-            >
-              {reply}
-            </Button>
-          ))}
-        </div>
       </div>
 
-      {/* Input Area */}
-      <div className="border-t p-4 bg-card backdrop-blur-sm">
-        <div className="flex items-center gap-2 max-w-4xl mx-auto">
-          <Input
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="Escribe un mensaje..."
-            className="flex-1 bg-background/50"
-          />
-          <Button onClick={handleSendMessage} size="icon" className="bg-gradient-to-br from-gold to-amber-600 hover:from-amber-600 hover:to-gold">
-            <Send className="h-5 w-5" />
-          </Button>
+      {/* Input Area - Mobile Responsive */}
+      <div className="sticky bottom-0 bg-card/95 backdrop-blur-xl border-t border-border/50 shadow-lg">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex gap-2 sm:gap-3">
+            <Input
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+              placeholder="Escribe un mensaje..."
+              className="flex-1 bg-background/50 border-border/50 focus:border-gold/50 text-sm sm:text-base"
+              disabled={sending}
+            />
+            <Button
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim() || sending}
+              className="bg-gradient-to-r from-gold via-amber-500 to-amber-600 hover:from-amber-600 hover:via-gold hover:to-amber-500 text-white shadow-lg shadow-gold/30 flex-shrink-0"
+              size="icon"
+            >
+              <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
