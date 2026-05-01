@@ -21,6 +21,9 @@ position: 10
    - Contraseña: Pepe2002#
    - Perfil creado con role = 'admin'
    - Código actualizado para usar role en lugar de is_admin
+4. RLS policies de profiles arregladas:
+   - Política "public_read_profiles" permite lectura a todos
+   - Necesario para que el login pueda verificar el role
 
 ## Checklist
 - [x] SQL manual ejecutado para tabla messages
@@ -28,11 +31,13 @@ position: 10
 - [x] Usuario admin creado en auth.users
 - [x] Perfil admin creado con role = 'admin'
 - [x] Código actualizado (index.tsx y auth.ts)
+- [x] RLS policies de profiles arregladas
 - [x] Servidor reiniciado
 - [x] Verificación sin errores
 
 ## Acceptance
 - ✅ Chat funcional sin PGRST204
 - ✅ Usuario admin puede hacer login
+- ✅ RLS policies permiten lectura de profiles
 - ✅ Redirección a dashboard funcional
 - ✅ Sin errores de TypeScript
