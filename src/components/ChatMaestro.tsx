@@ -110,7 +110,8 @@ export function ChatMaestro({ leadId, leadName }: ChatMaestroProps) {
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
         const adminPresence = state[`admin-${leadId}`];
-        setMaestroTyping(adminPresence?.[0]?.typing === true);
+        const presenceData = adminPresence?.[0] as any;
+        setMaestroTyping(presenceData?.typing === true);
       })
       .subscribe((status) => {
         console.log("🔔 [USER] Estado realtime:", status);

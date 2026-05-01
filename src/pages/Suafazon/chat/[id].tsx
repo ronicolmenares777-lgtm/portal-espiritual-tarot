@@ -121,7 +121,8 @@ export default function AdminChatPage() {
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
         const userPresence = state[`user-${leadId}`];
-        setUserTyping(userPresence?.[0]?.typing === true);
+        const presenceData = userPresence?.[0] as any;
+        setUserTyping(presenceData?.typing === true);
       })
       .subscribe((status) => {
         console.log("🔔 [ADMIN] Estado realtime:", status);
