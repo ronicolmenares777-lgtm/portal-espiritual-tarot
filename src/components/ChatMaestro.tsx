@@ -101,36 +101,49 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
     const file = e.target.files?.[0];
     if (!file || !leadId) return;
 
+    console.log("📤 [USUARIO] Intentando subir archivo:", file.name, file.type, file.size);
     setUploading(true);
-    console.log("📎 [USUARIO] Subiendo archivo:", file.name);
 
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${leadId}/${Date.now()}.${fileExt}`;
+    try {
+      const fileName = `${leadId}/${Date.now()}.${file.name.split(".").pop()}`;
+      console.log("📂 [USUARIO] Nombre del archivo en storage:", fileName);
+      console.log("🪣 [USUARIO] Bucket: chat-media");
+      
+      const { data, error } = await supabase.storage
+        .from("chat-media")
+        .upload(fileName, file);
 
-    const { error: uploadError } = await supabase.storage
-      .from("chat-media")
-      .upload(fileName, file);
+      console.log("📊 [USUARIO] Resultado del upload:", { data, error });
 
-    if (uploadError) {
-      console.error("❌ [USUARIO] Error subiendo archivo:", uploadError);
-      setUploading(false);
-      return;
-    }
+      if (error) {
+        console.error("❌ [USUARIO] Error subiendo archivo:", error);
+        setUploading(false);
+        return;
+      }
 
-    const { data } = supabase.storage.from("chat-media").getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase.storage
+        .from("chat-media")
+        .getPublicUrl(fileName);
 
-    const { error: insertError } = await supabase.from("messages").insert({
-      lead_id: leadId,
-      text: file.type.startsWith("image/") ? "" : file.name,
-      is_from_maestro: false,
-      media_url: data.publicUrl,
-      media_type: file.type.startsWith("image/") ? "image" : "file",
-    });
+      console.log("🔗 [USUARIO] URL pública:", publicUrl);
 
-    if (insertError) {
-      console.error("❌ [USUARIO] Error guardando mensaje multimedia:", insertError);
-    } else {
-      console.log("✅ [USUARIO] Archivo enviado exitosamente");
+      const mediaType = file.type.startsWith("image/") ? "image" : "audio";
+      console.log("🎨 [USUARIO] Tipo de media:", mediaType);
+
+      const { error: dbError } = await supabase.from("messages").insert({
+        lead_id: leadId,
+        media_url: publicUrl,
+        media_type: mediaType,
+        is_from_maestro: false,
+      });
+
+      if (dbError) {
+        console.error("❌ [USUARIO] Error insertando mensaje:", dbError);
+      } else {
+        console.log("✅ [USUARIO] Mensaje multimedia enviado exitosamente");
+      }
+    } catch (err) {
+      console.error("❌ [USUARIO] Error capturado:", err);
     }
 
     setUploading(false);

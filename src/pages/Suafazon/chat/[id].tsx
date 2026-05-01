@@ -37,6 +37,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll
   useEffect(() => {
@@ -135,40 +136,59 @@ export default function ChatPage() {
     });
   };
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file || !lead) return;
 
+    console.log("📤 [ADMIN] Intentando subir archivo:", file.name, file.type, file.size);
     setUploading(true);
 
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${lead.id}/${Date.now()}.${fileExt}`;
+    try {
+      const fileName = `${lead.id}/${Date.now()}.${file.name.split(".").pop()}`;
+      console.log("📂 [ADMIN] Nombre del archivo en storage:", fileName);
+      console.log("🪣 [ADMIN] Bucket: chat-media");
+      
+      const { data, error } = await supabase.storage
+        .from("chat-media")
+        .upload(fileName, file);
 
-    const { data, error } = await supabase.storage
-      .from("chat-media")
-      .upload(fileName, file);
+      console.log("📊 [ADMIN] Resultado del upload:", { data, error });
 
-    if (error) {
-      console.error("Error uploading file:", error);
-      setUploading(false);
-      return;
+      if (error) {
+        console.error("❌ [ADMIN] Error subiendo archivo:", error);
+        setUploading(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("chat-media")
+        .getPublicUrl(fileName);
+
+      console.log("🔗 [ADMIN] URL pública:", publicUrl);
+
+      const mediaType = file.type.startsWith("image/") ? "image" : "audio";
+      console.log("🎨 [ADMIN] Tipo de media:", mediaType);
+
+      const { error: dbError } = await supabase.from("messages").insert({
+        lead_id: lead.id,
+        media_url: publicUrl,
+        media_type: mediaType,
+        is_from_maestro: true,
+      });
+
+      if (dbError) {
+        console.error("❌ [ADMIN] Error insertando mensaje:", dbError);
+      } else {
+        console.log("✅ [ADMIN] Mensaje multimedia enviado exitosamente");
+      }
+    } catch (err) {
+      console.error("❌ [ADMIN] Error capturado:", err);
     }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("chat-media").getPublicUrl(fileName);
-
-    await supabase.from("messages").insert({
-      lead_id: lead.id,
-      text: file.type.startsWith("image/") ? "📷 Imagen" : "📎 Archivo",
-      media_url: publicUrl,
-      media_type: file.type.startsWith("image/") ? "image" : "file",
-      is_from_maestro: true,
-    });
-
     setUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const startRecording = async () => {
@@ -379,6 +399,7 @@ export default function ChatPage() {
             id="file-upload"
             className="hidden"
             accept="image/*,video/*,.pdf,.doc,.docx"
+            ref={fileInputRef}
             onChange={handleFileUpload}
           />
           <Button
