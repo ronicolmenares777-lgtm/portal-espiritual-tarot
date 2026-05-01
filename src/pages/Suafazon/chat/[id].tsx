@@ -128,6 +128,13 @@ export default function ChatPage() {
     }
   };
 
+  const formatTime = (date: string) => {
+    return new Date(date).toLocaleTimeString("es-MX", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
