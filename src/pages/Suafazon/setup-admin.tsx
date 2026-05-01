@@ -25,6 +25,7 @@ export default function SetupAdmin() {
         email: email.trim(),
         password: password,
         options: {
+          emailRedirectTo: undefined,
           data: {
             role: "admin"
           }
