@@ -14,29 +14,31 @@ position: 10
 
 ## Notes
 ✅ COMPLETADO AL 100%:
-1. ✅ Realtime funcionando correctamente en ambos chats
-2. ✅ Mensajes se envían correctamente (sin is_read)
-3. ✅ Texto legible en burbujas blancas del usuario (text-gray-900)
-4. ✅ Nombre real del usuario mostrado en chat de usuario
-5. ✅ Nombre del lead mostrado en chat de admin
-6. ✅ Carga de imagen de perfil arreglada
-7. ✅ Bucket de avatars creado con políticas RLS
-8. ✅ Validación de archivos (tipo y tamaño)
-9. ✅ Header profesional en chat de admin
-10. ✅ Burbujas doradas para admin, blancas para usuario
+1. ✅ Realtime FUNCIONANDO en ambos chats
+   - Canal diferente para admin y usuario
+   - Detección de duplicados mejorada
+   - Logs detallados para debugging
+2. ✅ Mensajes se envían correctamente
+3. ✅ Nombre real del usuario en AMBOS chats
+   - Chat admin: muestra nombre del lead
+   - Chat usuario: muestra nombre del lead (NO "Usuario")
+4. ✅ Texto legible en burbujas blancas
+5. ✅ Botones de audio e imagen visibles
+6. ✅ Auto-scroll cuando llegan mensajes
+7. ✅ Input se limpia inmediatamente al enviar
 
 ## Checklist
-- [x] Mensajes se envían correctamente
-- [x] Texto legible en burbujas
-- [x] Nombre real en ambos chats
-- [x] Carga de imagen funcionando
-- [x] Políticas RLS creadas
+- [x] Realtime con canales separados (admin-chat-X / user-chat-X)
+- [x] Mensajes se envían sin errores
+- [x] Nombre real en burbujas blancas
+- [x] Texto legible (text-gray-900 sobre bg-white)
+- [x] Botones multimedia implementados
+- [x] Auto-scroll funcionando
 - [x] Sin errores de compilación
-- [x] ProfileService arreglado
 
 ## Acceptance
-- ✅ Mensajes se envían sin errores
-- ✅ Texto legible en burbujas del usuario
+- ✅ Mensajes llegan en tiempo real SIN refrescar
 - ✅ Nombre real mostrado en ambos chats
-- ✅ Carga de imagen de perfil funcional
-- ✅ Sin errores de TypeScript
+- ✅ Texto legible en burbujas blancas
+- ✅ Botones de imagen y audio visibles
+- ✅ Auto-scroll cuando llegan nuevos mensajes

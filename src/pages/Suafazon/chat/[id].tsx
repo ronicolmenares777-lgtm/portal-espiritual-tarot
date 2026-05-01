@@ -1,8 +1,17 @@
 import { useRouter } from "next/router";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Lead } from "@/types/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { 
+  ArrowLeft, 
+  Send, 
+  Star,
+  Image as ImageIcon,
+  Mic
+} from "lucide-react";
+import { motion } from "framer-motion";
 import {
   Select,
   SelectContent,
@@ -10,28 +19,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  ArrowLeft,
-  Send,
-  Star,
-  ImageIcon,
-  Mic,
-  Check,
-  CheckCheck,
-} from "lucide-react";
-import { motion } from "framer-motion";
-import type { Lead } from "@/types/admin";
 
 interface Message {
   id: string;
   lead_id: string;
   text: string;
   is_from_maestro: boolean;
-  is_read: boolean;
   created_at: string;
 }
 
-export default function AdminChatPage() {
+export default function ChatPage() {
   const router = useRouter();
   const { id } = router.query;
   const [lead, setLead] = useState<Lead | null>(null);
@@ -39,11 +36,10 @@ export default function AdminChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const maestroAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=maestro&backgroundColor=fbbf24";
+  const maestroAvatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=Maestro";
 
-  // Auto-scroll to bottom
+  // Auto-scroll
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -72,7 +68,6 @@ export default function AdminChatPage() {
 
         if (leadData) {
           setLead(leadData as Lead);
-          console.log("✅ Lead cargado:", leadData.name);
         }
 
         // Cargar mensajes
@@ -89,16 +84,6 @@ export default function AdminChatPage() {
 
         if (messagesData) {
           setMessages(messagesData as Message[]);
-          console.log("✅ Mensajes cargados:", messagesData.length);
-          
-          // Marcar mensajes del usuario como leídos
-          const userMessages = messagesData.filter(m => !m.is_from_maestro && !m.is_read);
-          if (userMessages.length > 0) {
-            await supabase
-              .from("messages")
-              .update({ is_read: true })
-              .in("id", userMessages.map(m => m.id));
-          }
         }
       } catch (error) {
         console.error("❌ Error en loadData:", error);
@@ -108,14 +93,8 @@ export default function AdminChatPage() {
     };
 
     loadData();
-  }, [id]);
 
-  // Realtime subscription - FIXED
-  useEffect(() => {
-    if (!id || typeof id !== "string") return;
-
-    console.log("📡 [ADMIN] Configurando suscripción realtime para lead:", id);
-    
+    // Suscripción realtime
     const channel = supabase
       .channel(`admin-chat-${id}`)
       .on(
@@ -127,82 +106,62 @@ export default function AdminChatPage() {
           filter: `lead_id=eq.${id}`,
         },
         (payload) => {
-          console.log("📨 [ADMIN] Nuevo mensaje recibido via realtime:", payload);
+          console.log("📨 [ADMIN] Nuevo mensaje recibido:", payload);
           const newMsg = payload.new as Message;
           
-          setMessages((prev) => {
-            // Verificar si el mensaje ya existe
-            const exists = prev.some(m => m.id === newMsg.id);
+          setMessages((current) => {
+            // Evitar duplicados
+            const exists = current.some(m => m.id === newMsg.id);
             if (exists) {
-              console.log("⚠️ [ADMIN] Mensaje duplicado ignorado:", newMsg.id);
-              return prev;
+              console.log("⚠️ [ADMIN] Mensaje duplicado ignorado");
+              return current;
             }
-            console.log("✅ [ADMIN] Nuevo mensaje agregado:", newMsg.text);
-            
-            // Si el mensaje es del usuario, marcarlo como leído
-            if (!newMsg.is_from_maestro) {
-              supabase
-                .from("messages")
-                .update({ is_read: true })
-                .eq("id", newMsg.id)
-                .then(() => console.log("✅ Mensaje marcado como leído"));
-            }
-            
-            return [...prev, newMsg];
+            console.log("✅ [ADMIN] Agregando nuevo mensaje");
+            return [...current, newMsg];
           });
         }
       )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "messages",
-          filter: `lead_id=eq.${id}`,
-        },
-        (payload) => {
-          console.log("🔄 [ADMIN] Mensaje actualizado:", payload);
-          const updatedMsg = payload.new as Message;
-          setMessages((prev) =>
-            prev.map((m) => (m.id === updatedMsg.id ? updatedMsg : m))
-          );
-        }
-      )
       .subscribe((status) => {
-        console.log("📡 [ADMIN] Estado de suscripción realtime:", status);
+        console.log("📡 [ADMIN] Estado realtime:", status);
       });
 
     return () => {
-      console.log("🔌 [ADMIN] Desconectando suscripción realtime");
+      console.log("🔌 [ADMIN] Desconectando realtime");
       supabase.removeChannel(channel);
     };
   }, [id]);
 
-  const handleSendMessage = async () => {
+  const sendMessage = async () => {
     if (!newMessage.trim() || !lead) return;
 
     try {
-      const { data, error } = await supabase
+      const messageText = newMessage.trim();
+      setNewMessage(""); // Limpiar input inmediatamente
+
+      const { error } = await supabase
         .from("messages")
         .insert({
           lead_id: lead.id,
-          text: newMessage.trim(),
+          text: messageText,
           is_from_maestro: true,
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
-        console.error("❌ Error enviando mensaje:", error);
+        console.error("❌ [ADMIN] Error enviando mensaje:", error);
+        setNewMessage(messageText); // Restaurar mensaje si hay error
         return;
       }
 
-      if (data) {
-        console.log("✅ Mensaje enviado:", data);
-        setNewMessage("");
-      }
+      console.log("✅ [ADMIN] Mensaje enviado");
     } catch (error) {
-      console.error("❌ Error en handleSendMessage:", error);
+      console.error("❌ [ADMIN] Error en sendMessage:", error);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
@@ -221,13 +180,12 @@ export default function AdminChatPage() {
       }
 
       setLead({ ...lead, status: newStatus as Lead["status"] });
-      console.log("✅ Estado actualizado:", newStatus);
     } catch (error) {
       console.error("❌ Error en handleStatusChange:", error);
     }
   };
 
-  const handleToggleFavorite = async () => {
+  const toggleFavorite = async () => {
     if (!lead) return;
 
     try {
@@ -242,9 +200,8 @@ export default function AdminChatPage() {
       }
 
       setLead({ ...lead, is_favorite: !lead.is_favorite });
-      console.log("✅ Favorito actualizado:", !lead.is_favorite);
     } catch (error) {
-      console.error("❌ Error en handleToggleFavorite:", error);
+      console.error("❌ Error en toggleFavorite:", error);
     }
   };
 
@@ -260,22 +217,10 @@ export default function AdminChatPage() {
     return colors[status] || colors.nuevo;
   };
 
-  const getStatusLabel = (status: string) => {
-    const labels: { [key: string]: string } = {
-      nuevo: "🆕 Nuevo",
-      enConversacion: "💬 En Conversación",
-      clienteCaliente: "🔥 Caliente",
-      listo: "✅ Listo",
-      cerrado: "🔒 Cerrado",
-      perdido: "❌ Perdido",
-    };
-    return labels[status] || labels.nuevo;
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-foreground">Cargando chat...</div>
+        <p className="text-foreground">Cargando...</p>
       </div>
     );
   }
@@ -283,193 +228,171 @@ export default function AdminChatPage() {
   if (!lead) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-foreground">Lead no encontrado</div>
+        <p className="text-foreground">Lead no encontrado</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex flex-col">
-      {/* Header Profesional */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-primary/90 via-accent/80 to-primary/90 backdrop-blur-lg border-b border-gold/20 shadow-2xl shadow-gold/20">
-        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
-          <div className="flex items-center gap-3 sm:gap-4">
-            {/* Botón Volver */}
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-gold/20 via-accent/20 to-gold/20 border-b border-gold/20 p-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
             <Button
-              onClick={() => router.push("/Suafazon/dashboard")}
               variant="ghost"
-              size="sm"
-              className="text-background hover:bg-white/20 transition-all shrink-0"
+              size="icon"
+              onClick={() => router.push("/Suafazon/dashboard")}
+              className="flex-shrink-0 hover:bg-gold/10"
             >
-              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              <ArrowLeft className="h-5 w-5" />
             </Button>
 
-            {/* Avatar y Info del Lead */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="relative shrink-0">
-                <div className="absolute inset-0 bg-white/30 rounded-full blur-md" />
-                <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm ring-2 ring-white/50 shadow-lg flex items-center justify-center text-lg sm:text-xl font-bold text-background">
+              <div className="relative flex-shrink-0">
+                <div className="absolute inset-0 bg-gold/20 rounded-full blur-md" />
+                <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-gold to-accent flex items-center justify-center text-white font-bold text-lg shadow-lg">
                   {lead.name.charAt(0).toUpperCase()}
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-base sm:text-lg font-bold text-background truncate">
+                <h1 className="font-bold text-lg text-foreground truncate">
                   {lead.name}
                 </h1>
-                <p className="text-xs sm:text-sm text-background/80 truncate">
+                <p className="text-sm text-muted-foreground">
                   {new Date(lead.created_at).toLocaleDateString("es-ES", {
                     day: "numeric",
                     month: "short",
-                    year: "numeric",
                   })}
                 </p>
               </div>
             </div>
+          </div>
 
-            {/* Controles */}
-            <div className="flex items-center gap-2 shrink-0">
-              {/* Clasificación */}
-              <Select value={lead.status} onValueChange={handleStatusChange}>
-                <SelectTrigger
-                  className={`w-auto min-w-[120px] sm:min-w-[140px] text-xs sm:text-sm border ${getStatusColor(
-                    lead.status
-                  )}`}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="nuevo">🆕 Nuevo</SelectItem>
-                  <SelectItem value="enConversacion">💬 En Conversación</SelectItem>
-                  <SelectItem value="clienteCaliente">🔥 Caliente</SelectItem>
-                  <SelectItem value="listo">✅ Listo</SelectItem>
-                  <SelectItem value="cerrado">🔒 Cerrado</SelectItem>
-                  <SelectItem value="perdido">❌ Perdido</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Select value={lead.status} onValueChange={handleStatusChange}>
+              <SelectTrigger className={`w-auto border ${getStatusColor(lead.status)}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nuevo">🆕 Nuevo</SelectItem>
+                <SelectItem value="enConversacion">💬 En Conversación</SelectItem>
+                <SelectItem value="clienteCaliente">🔥 Caliente</SelectItem>
+                <SelectItem value="listo">✅ Listo</SelectItem>
+                <SelectItem value="cerrado">🔒 Cerrado</SelectItem>
+                <SelectItem value="perdido">❌ Perdido</SelectItem>
+              </SelectContent>
+            </Select>
 
-              {/* Favorito */}
-              <Button
-                onClick={handleToggleFavorite}
-                variant="ghost"
-                size="sm"
-                className="text-background hover:bg-white/20 transition-all shrink-0"
-              >
-                <Star
-                  className={`h-4 w-4 sm:h-5 sm:w-5 ${
-                    lead.is_favorite ? "fill-background" : ""
-                  }`}
-                />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleFavorite}
+              className={lead.is_favorite ? "text-gold" : "text-muted-foreground"}
+            >
+              <Star className={`h-5 w-5 ${lead.is_favorite ? "fill-gold" : ""}`} />
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Messages Area */}
-      <div
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-6 space-y-4"
-      >
-        {messages.map((message) => (
-          <motion.div
-            key={message.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex ${
-              message.is_from_maestro ? "justify-start" : "justify-end"
-            }`}
-          >
-            <div
-              className={`flex gap-3 max-w-[75%] ${
-                message.is_from_maestro ? "" : "flex-row-reverse"
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {messages.map((message) => (
+            <motion.div
+              key={message.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex ${
+                message.is_from_maestro ? "justify-start" : "justify-end"
               }`}
             >
-              {/* Avatar */}
-              {message.is_from_maestro && (
-                <div className="relative flex-shrink-0">
-                  <div className="absolute inset-0 bg-gold/20 rounded-full blur-md" />
-                  <img
-                    src={maestroAvatar}
-                    alt="Maestro"
-                    className="relative w-10 h-10 rounded-full ring-2 ring-gold/50 shadow-lg"
-                  />
-                </div>
-              )}
-
-              {/* Message Bubble */}
               <div
-                className={`rounded-2xl px-4 py-3 shadow-md ${
-                  message.is_from_maestro
-                    ? "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-white shadow-gold/30"
-                    : "bg-white/90 backdrop-blur-sm text-gray-900 shadow-sm"
+                className={`flex gap-3 max-w-[75%] ${
+                  message.is_from_maestro ? "" : "flex-row-reverse"
                 }`}
               >
-                {!message.is_from_maestro && (
-                  <p className="text-xs font-semibold mb-1 text-gray-700">
-                    {lead.name}
-                  </p>
-                )}
                 {message.is_from_maestro && (
-                  <p className="text-xs font-bold mb-1 opacity-90">
-                    Maestro Espiritual ✨
-                  </p>
+                  <div className="relative flex-shrink-0">
+                    <div className="absolute inset-0 bg-gold/20 rounded-full blur-md" />
+                    <img
+                      src={maestroAvatar}
+                      alt="Maestro"
+                      className="relative w-10 h-10 rounded-full ring-2 ring-gold/50 shadow-lg"
+                    />
+                  </div>
                 )}
-                <p className="text-sm leading-relaxed">{message.text}</p>
-                <p
-                  className={`text-xs mt-1.5 flex items-center gap-1 ${
-                    message.is_from_maestro ? "opacity-80" : "text-gray-600"
+
+                <div
+                  className={`rounded-2xl px-4 py-3 shadow-md ${
+                    message.is_from_maestro
+                      ? "bg-gradient-to-br from-gold via-amber-500 to-amber-600 text-white shadow-gold/30"
+                      : "bg-white text-gray-900 shadow-sm"
                   }`}
                 >
-                  {new Date(message.created_at).toLocaleTimeString("es-ES", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+                  {!message.is_from_maestro && (
+                    <p className="text-xs font-semibold mb-1 text-gray-700">
+                      {lead.name}
+                    </p>
+                  )}
+                  {message.is_from_maestro && (
+                    <p className="text-xs font-bold mb-1 opacity-90">
+                      Maestro Espiritual ✨
+                    </p>
+                  )}
+                  <p className="text-sm leading-relaxed">{message.text}</p>
+                  <p
+                    className={`text-xs mt-1.5 ${
+                      message.is_from_maestro ? "opacity-80" : "text-gray-600"
+                    }`}
+                  >
+                    {new Date(message.created_at).toLocaleTimeString("es-ES", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
-        <div ref={messagesEndRef} />
+            </motion.div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Input Area */}
-      <div className="sticky bottom-0 bg-gradient-to-r from-secondary/80 via-card/80 to-secondary/80 backdrop-blur-lg border-t border-border/50 shadow-2xl">
-        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Botones Multimedia */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-gold hover:bg-gold/10 transition-all shrink-0"
-            >
-              <ImageIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-gold hover:bg-gold/10 transition-all shrink-0"
-            >
-              <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-
-            {/* Input */}
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              placeholder="Escribe un mensaje..."
-              className="flex-1 bg-background/50 border-border/50 focus:border-gold focus:ring-gold/20 text-sm sm:text-base"
-            />
-
-            {/* Send Button */}
-            <Button
-              onClick={handleSendMessage}
-              disabled={!newMessage.trim()}
-              className="bg-gradient-to-r from-gold to-accent hover:from-accent hover:to-gold text-background font-bold transition-all shadow-lg shadow-gold/30 hover:shadow-xl hover:shadow-gold/50 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-            >
-              <Send className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-          </div>
+      {/* Input */}
+      <div className="border-t border-border bg-card p-4">
+        <div className="max-w-4xl mx-auto flex gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground"
+            title="Enviar imagen"
+          >
+            <ImageIcon className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground"
+            title="Enviar audio"
+          >
+            <Mic className="h-5 w-5" />
+          </Button>
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Escribe un mensaje..."
+            className="flex-1"
+          />
+          <Button
+            onClick={sendMessage}
+            disabled={!newMessage.trim()}
+            className="flex-shrink-0 bg-gradient-to-r from-gold to-accent hover:from-gold/90 hover:to-accent/90"
+          >
+            <Send className="h-5 w-5" />
+          </Button>
         </div>
       </div>
     </div>
