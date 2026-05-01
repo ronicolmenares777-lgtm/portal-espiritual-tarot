@@ -247,7 +247,7 @@ export default function ChatPage() {
     const colors: { [key: string]: string } = {
       nuevo: "bg-blue-500/10 text-blue-500 border-blue-500/20",
       enConversacion: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-      caliente: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+      clienteCaliente: "bg-orange-500/10 text-orange-500 border-orange-500/20",
       listo: "bg-green-500/10 text-green-500 border-green-500/20",
       cerrado: "bg-gray-500/10 text-gray-500 border-gray-500/20",
       perdido: "bg-red-500/10 text-red-500 border-red-500/20",
@@ -300,7 +300,7 @@ export default function ChatPage() {
               <SelectContent>
                 <SelectItem value="nuevo">🆕 Nuevo</SelectItem>
                 <SelectItem value="enConversacion">💬 En Conversación</SelectItem>
-                <SelectItem value="caliente">🔥 Caliente</SelectItem>
+                <SelectItem value="clienteCaliente">🔥 Caliente</SelectItem>
                 <SelectItem value="listo">✅ Listo</SelectItem>
                 <SelectItem value="cerrado">🔒 Cerrado</SelectItem>
                 <SelectItem value="perdido">❌ Perdido</SelectItem>
