@@ -19,7 +19,7 @@ position: 10
 3. Admin login configurado:
    - Usuario creado desde Supabase Dashboard (método oficial)
    - Email: tubrujo@gmail.com
-   - Contraseña: Pepe2002#
+   - Contraseña: Pepe2002
    - Perfil creado con role = 'admin'
    - Código actualizado para usar role en lugar de is_admin
 4. RLS policies de profiles arregladas:
