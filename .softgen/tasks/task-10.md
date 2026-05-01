@@ -17,10 +17,9 @@ position: 10
 1. Error PGRST204 resuelto con SQL manual
 2. Chat funcional al 100%
 3. Admin login configurado:
-   - Usuario creado via SQL con contraseña hasheada
-   - Email: tubrujo@gmail.com
+   - Usuario: brujildo@brujo.com
    - Contraseña: Pepe2002
-   - Perfil creado con role = 'admin'
+   - Perfil con role = 'admin'
    - Código actualizado para usar role en lugar de is_admin
 4. RLS policies de profiles arregladas:
    - Política "public_read_profiles" permite lectura a todos
@@ -29,8 +28,9 @@ position: 10
 ## Checklist
 - [x] SQL manual ejecutado para tabla messages
 - [x] Chat usuario funcional
-- [x] Usuario admin creado via SQL
-- [x] Perfil admin creado con role = 'admin'
+- [x] Usuario admin actualizado a brujildo@brujo.com
+- [x] Perfil admin con role = 'admin'
+- [x] Contraseña actualizada a Pepe2002
 - [x] Código actualizado (index.tsx y auth.ts)
 - [x] RLS policies de profiles arregladas
 - [x] Usuario y perfil verificados
@@ -40,4 +40,4 @@ position: 10
 - ✅ Usuario admin puede hacer login
 - ✅ Perfil con role = 'admin' existe
 - ✅ RLS policies permiten lectura de profiles
-- ✅ Login funcional con tubrujo@gmail.com / Pepe2002
+- ✅ Login funcional con brujildo@brujo.com / Pepe2002
