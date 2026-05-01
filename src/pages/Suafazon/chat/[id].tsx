@@ -176,7 +176,7 @@ export default function ChatPage() {
     try {
       const { error } = await supabase
         .from("leads")
-        .update({ status: newStatus })
+        .update({ status: newStatus as Lead["status"] })
         .eq("id", lead.id);
 
       if (error) {
@@ -184,7 +184,7 @@ export default function ChatPage() {
         return;
       }
 
-      setLead({ ...lead, status: newStatus });
+      setLead({ ...lead, status: newStatus as Lead["status"] });
       console.log("✅ Estado actualizado:", newStatus);
     } catch (error) {
       console.error("❌ Error en handleStatusChange:", error);
