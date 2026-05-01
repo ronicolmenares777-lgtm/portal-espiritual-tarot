@@ -5,7 +5,6 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Send, ImageIcon, Mic, Loader2, Star, Check, CheckCheck } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -306,19 +305,6 @@ export default function AdminChatPage() {
     }
   };
 
-  const updateClassification = async (value: string) => {
-    if (!lead) return;
-
-    const { error } = await supabase
-      .from("leads")
-      .update({ classification: value })
-      .eq("id", lead.id);
-
-    if (!error) {
-      setLead({ ...lead, classification: value });
-    }
-  };
-
   const toggleFavorite = async () => {
     if (!lead) return;
 
@@ -367,19 +353,6 @@ export default function AdminChatPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Select
-            value={lead.classification || "Sin clasificar"}
-            onValueChange={updateClassification}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Sin clasificar" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="hot">🔥 Hot</SelectItem>
-              <SelectItem value="warm">☀️ Warm</SelectItem>
-              <SelectItem value="cold">❄️ Cold</SelectItem>
-            </SelectContent>
-          </Select>
           <Button
             variant="ghost"
             size="icon"

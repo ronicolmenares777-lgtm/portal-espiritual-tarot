@@ -68,7 +68,6 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<"leads" | "listo" | "papelera">("leads");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [classificationFilter, setClassificationFilter] = useState<string | null>(null);
   const [favoriteFilter, setFavoriteFilter] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -204,13 +203,9 @@ export default function Dashboard() {
       lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lead.whatsapp.includes(searchTerm);
     
-    const matchesClassification = classificationFilter
-      ? lead.classification === classificationFilter
-      : true;
-    
     const matchesFavorite = favoriteFilter ? lead.is_favorite === true : true;
 
-    return matchesSearch && matchesClassification && matchesFavorite;
+    return matchesSearch && matchesFavorite;
   });
 
   // Logs para debugging
@@ -503,30 +498,6 @@ export default function Dashboard() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant={classificationFilter === null ? "default" : "outline"}
-                      onClick={() => setClassificationFilter(null)}
-                    >
-                      Todos
-                    </Button>
-                    <Button
-                      variant={classificationFilter === "hot" ? "default" : "outline"}
-                      onClick={() => setClassificationFilter("hot")}
-                    >
-                      🔥 Hot
-                    </Button>
-                    <Button
-                      variant={classificationFilter === "warm" ? "default" : "outline"}
-                      onClick={() => setClassificationFilter("warm")}
-                    >
-                      ☀️ Warm
-                    </Button>
-                    <Button
-                      variant={classificationFilter === "cold" ? "default" : "outline"}
-                      onClick={() => setClassificationFilter("cold")}
-                    >
-                      ❄️ Cold
-                    </Button>
                     <Button
                       variant={favoriteFilter ? "default" : "outline"}
                       onClick={() => setFavoriteFilter(!favoriteFilter)}
