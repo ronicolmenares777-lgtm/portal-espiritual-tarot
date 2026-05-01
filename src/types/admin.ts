@@ -1,25 +1,26 @@
 // Tipos para el panel de administración
 
-export type Lead = {
+export type LeadStatus =
+  | "nuevo"
+  | "enConversacion"
+  | "clienteCaliente"
+  | "listo"
+  | "cerrado"
+  | "perdido";
+
+export interface Lead {
   id: string;
   name: string;
   whatsapp: string;
   country_code: string;
   problem: string;
-  cards_selected: string[];
-  answers: any;
-  status: "nuevo" | "enConversacion" | "clienteCaliente" | "cerrado" | "perdido" | "listo";
-  stage?: string;
-  last_interaction_at: string;
-  notes: string;
+  status: LeadStatus;
+  cards_selected?: string[];
+  user_answers?: any;
   is_favorite: boolean;
   created_at: string;
-  deleted_at: string | null;
-  assigned_to?: string | null;
-  priority?: string | null;
-  conversion_date?: string | null;
-  tags: string[];
-};
+  updated_at?: string;
+}
 
 export interface ChatMessage {
   id: string;
