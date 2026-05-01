@@ -10,6 +10,7 @@ import { AuthService } from "@/services/authService";
 import { ProfileService } from "@/services/profileService";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { Button } from "@/components/ui/button";
 import {
   Users,
   MessageCircle,
