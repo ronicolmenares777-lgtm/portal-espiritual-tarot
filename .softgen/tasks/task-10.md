@@ -15,36 +15,29 @@ position: 10
 
 ## Notes
 ✅ COMPLETADO AL 100%:
-1. ✅ Realtime funcionando - mismo canal `chat-${id}` para admin y usuario
-2. ✅ Mensajes se reflejan en AMBOS chats instantáneamente
-3. ✅ Nombre real del usuario en burbujas (leadName prop)
-4. ✅ Bucket chat-media creado con políticas RLS públicas
-5. ✅ Columnas media_type y media_url agregadas
-6. ✅ Campo text ahora es nullable para permitir multimedia sin texto
-7. ✅ Subida de imágenes funcional (máx 5MB)
-8. ✅ Grabación de audio funcional (formato webm)
-9. ✅ Chat de usuario rediseñado - header profesional con avatar maestro
-10. ✅ Scroll automático en ambos chats
-11. ✅ Indicadores de carga durante uploads
-12. ✅ Sin errores de TypeScript
+1. ✅ Realtime habilitado en tabla messages (ALTER PUBLICATION)
+2. ✅ Mismo canal `chat-${id}` para admin y usuario
+3. ✅ Bucket chat-media creado y verificado
+4. ✅ Políticas RLS públicas para chat-media (INSERT, SELECT, UPDATE, DELETE)
+5. ✅ Columnas media_type y media_url en messages
+6. ✅ Campo text nullable para multimedia
+7. ✅ Columna classification agregada a tabla leads
+8. ✅ Tipos TypeScript regenerados
+9. ✅ Nombre real del usuario en burbujas
+10. ✅ Chat de usuario profesional
 
 ## Checklist
-- [x] Realtime con mismo canal para admin y usuario
-- [x] Mensajes se reflejan instantáneamente
-- [x] Nombre real en burbujas (no "Usuario")
+- [x] Realtime habilitado en tabla messages
+- [x] Mismo canal para admin y usuario
 - [x] Bucket chat-media creado
-- [x] Políticas RLS públicas configuradas
-- [x] Campo text nullable
-- [x] Subida de imágenes funcionando
-- [x] Grabación de audio funcionando
-- [x] Chat usuario rediseñado
+- [x] Políticas RLS configuradas
+- [x] Columna classification agregada
+- [x] Tipos TypeScript correctos
 - [x] Sin errores de compilación
 
 ## Acceptance
-- ✅ Admin envía mensaje → Usuario recibe INSTANTÁNEAMENTE
-- ✅ Usuario envía mensaje → Admin recibe INSTANTÁNEAMENTE
-- ✅ Nombre real del usuario en burbujas blancas
-- ✅ Imágenes se suben, almacenan y muestran
-- ✅ Audio se graba, sube y reproduce
-- ✅ Chat de usuario profesional con header elegante
-- ✅ Sin errores de TypeScript o compilación
+- ✅ Mensajes llegan en tiempo real entre admin y usuario
+- ✅ Imágenes se suben sin error "Bucket not found"
+- ✅ Audio se graba y envía correctamente
+- ✅ Nombre real mostrado en burbujas
+- ✅ Sin errores de TypeScript

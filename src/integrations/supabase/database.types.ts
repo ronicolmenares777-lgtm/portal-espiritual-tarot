@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export type Json =
   | string
   | number
@@ -19,6 +19,7 @@ export type Database = {
         Row: {
           answers: Json | null
           cards_selected: string[] | null
+          classification: string | null
           country_code: string | null
           created_at: string | null
           deleted_at: string | null
@@ -41,6 +42,7 @@ export type Database = {
         Insert: {
           answers?: Json | null
           cards_selected?: string[] | null
+          classification?: string | null
           country_code?: string | null
           created_at?: string | null
           deleted_at?: string | null
@@ -63,6 +65,7 @@ export type Database = {
         Update: {
           answers?: Json | null
           cards_selected?: string[] | null
+          classification?: string | null
           country_code?: string | null
           created_at?: string | null
           deleted_at?: string | null
