@@ -89,6 +89,7 @@ export type Database = {
           created_at: string
           id: string
           is_from_maestro: boolean
+          is_read: boolean | null
           lead_id: string
           text: string
         }
@@ -96,6 +97,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_from_maestro?: boolean
+          is_read?: boolean | null
           lead_id: string
           text: string
         }
@@ -103,6 +105,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_from_maestro?: boolean
+          is_read?: boolean | null
           lead_id?: string
           text?: string
         }
