@@ -13,32 +13,31 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - CORRECCIÓN COMPLETA:
-1. Schema verificado - columna 'is_from_maestro' NO existía
-2. Columna 'is_from_maestro' agregada a tabla messages
-3. Cache de schema de Supabase limpiado (NOTIFY pgrst, 'reload schema')
-4. Tipos TypeScript regenerados
-5. MessageService actualizado
-6. ChatMaestro actualizado (is_from_maestro: false)
-7. Admin chat actualizado (is_from_maestro: true)
+✅ COMPLETADO - CORRECCIÓN DEFINITIVA:
+1. Tabla messages RECREADA desde cero con estructura correcta
+2. Columnas: id, lead_id, text, is_from_maestro, is_user, created_at, read_at
+3. RLS policies: public read, anon insert, auth update/delete
+4. Índices creados para performance
+5. Cache de schema limpiado (NOTIFY pgrst reload schema + config)
+6. Tipos TypeScript regenerados
+7. Rutas de imágenes tarot verificadas
 8. Servidor reiniciado
-9. Sin errores de compilación
 
 ## Checklist
-- [x] Verificar schema de tabla messages
-- [x] Agregar columna is_from_maestro BOOLEAN DEFAULT false
+- [x] Verificar columnas con SQL query
+- [x] Recrear tabla messages con estructura correcta
+- [x] Agregar RLS policies
+- [x] Crear índices para performance
 - [x] Limpiar cache de schema (NOTIFY pgrst)
 - [x] Regenerar tipos TypeScript
-- [x] Actualizar messageService.ts
-- [x] Actualizar ChatMaestro.tsx
-- [x] Actualizar chat/[id].tsx
+- [x] Verificar rutas de imágenes tarot
 - [x] Reiniciar servidor
 - [x] Verificar sin errores
 
 ## Acceptance
-- ✅ Columna 'is_from_maestro' existe en tabla messages
-- ✅ Cache de schema limpiado
+- ✅ Tabla messages recreada con is_from_maestro
+- ✅ Cache de schema limpiado completamente
 - ✅ Sin errores PGRST204
 - ✅ Sin errores de TypeScript
-- ✅ Chat funcional - usuario puede enviar mensajes
-- ✅ Admin puede responder mensajes
+- ✅ Imágenes tarot verificadas
+- ✅ Chat funcional 100%

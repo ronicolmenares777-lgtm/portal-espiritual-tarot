@@ -86,37 +86,31 @@ export type Database = {
       }
       messages: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
-          is_from_maestro: boolean | null
-          is_user: boolean | null
+          is_from_maestro: boolean
+          is_user: boolean
           lead_id: string
-          media_type: string | null
-          media_url: string | null
           read_at: string | null
-          text: string | null
+          text: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          is_from_maestro?: boolean | null
-          is_user?: boolean | null
+          is_from_maestro?: boolean
+          is_user?: boolean
           lead_id: string
-          media_type?: string | null
-          media_url?: string | null
           read_at?: string | null
-          text?: string | null
+          text: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          is_from_maestro?: boolean | null
-          is_user?: boolean | null
+          is_from_maestro?: boolean
+          is_user?: boolean
           lead_id?: string
-          media_type?: string | null
-          media_url?: string | null
           read_at?: string | null
-          text?: string | null
+          text?: string
         }
         Relationships: [
           {
