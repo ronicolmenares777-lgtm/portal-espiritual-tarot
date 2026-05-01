@@ -17,7 +17,7 @@ position: 10
 1. Error PGRST204 resuelto con SQL manual
 2. Chat funcional al 100%
 3. Admin login configurado:
-   - Usuario creado desde Supabase Dashboard (método oficial)
+   - Usuario creado via SQL con contraseña hasheada
    - Email: tubrujo@gmail.com
    - Contraseña: Pepe2002
    - Perfil creado con role = 'admin'
@@ -29,7 +29,7 @@ position: 10
 ## Checklist
 - [x] SQL manual ejecutado para tabla messages
 - [x] Chat usuario funcional
-- [x] Usuario admin creado desde Dashboard
+- [x] Usuario admin creado via SQL
 - [x] Perfil admin creado con role = 'admin'
 - [x] Código actualizado (index.tsx y auth.ts)
 - [x] RLS policies de profiles arregladas
@@ -37,7 +37,7 @@ position: 10
 
 ## Acceptance
 - ✅ Chat funcional sin PGRST204
-- ✅ Usuario admin creado correctamente
+- ✅ Usuario admin puede hacer login
 - ✅ Perfil con role = 'admin' existe
 - ✅ RLS policies permiten lectura de profiles
-- ✅ Listo para login
+- ✅ Login funcional con tubrujo@gmail.com / Pepe2002
