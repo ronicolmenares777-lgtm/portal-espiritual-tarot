@@ -44,7 +44,7 @@ export default function ChatPage() {
 
   // Cargar lead
   useEffect(() => {
-    if (!id) return;
+    if (!id || typeof id !== "string") return;
 
     const loadLead = async () => {
       const { data } = await supabase

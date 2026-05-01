@@ -24,7 +24,7 @@ export default function ChatUsuario() {
 
   // Cargar lead
   useEffect(() => {
-    if (!leadId) return;
+    if (!leadId || typeof leadId !== "string") return;
 
     const loadLead = async () => {
       const { data } = await supabase
@@ -43,7 +43,7 @@ export default function ChatUsuario() {
 
   // Sistema de POLLING - actualiza mensajes cada 2 segundos
   useEffect(() => {
-    if (!leadId) return;
+    if (!leadId || typeof leadId !== "string") return;
 
     console.log("🔄 Iniciando polling de mensajes cada 2 segundos");
 
@@ -77,7 +77,7 @@ export default function ChatUsuario() {
   }, [leadId]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !leadId) return;
+    if (!newMessage.trim() || !leadId || typeof leadId !== "string") return;
 
     setSending(true);
     const messageText = newMessage;
@@ -86,7 +86,7 @@ export default function ChatUsuario() {
     console.log("📤 Enviando mensaje del usuario");
 
     const { error } = await supabase.from("messages").insert({
-      lead_id: leadId as string,
+      lead_id: leadId,
       text: messageText,
       is_from_maestro: false,
     });
