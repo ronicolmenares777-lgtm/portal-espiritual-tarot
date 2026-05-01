@@ -103,61 +103,71 @@ export const ProfileService = {
   /**
    * Subir avatar del usuario actual
    */
-  async uploadAvatar(file: File) {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user?.id;
+  static async uploadAvatar(file: File) {
+    try {
+      // Validar tipo de archivo
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        return { 
+          data: null, 
+          error: { message: 'Tipo de archivo no permitido. Usa JPG, PNG, WebP o GIF' } 
+        };
+      }
 
-    if (!userId) {
-      return { data: null, error: { message: "No hay sesión activa" } };
-    }
+      // Validar tamaño (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        return { 
+          data: null, 
+          error: { message: 'El archivo es muy grande. Máximo 2MB' } 
+        };
+      }
 
-    // Validar tipo de archivo
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-    if (!validTypes.includes(file.type)) {
-      return { data: null, error: { message: "Tipo de archivo no válido. Use JPG, PNG, WebP o GIF" } };
-    }
+      const { session } = await AuthService.getSession();
+      if (!session?.user) {
+        return { data: null, error: { message: 'No autenticado' } };
+      }
 
-    // Validar tamaño (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      return { data: null, error: { message: "El archivo es muy grande. Máximo 2MB" } };
-    }
+      // Generar nombre único
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
 
-    // Generar nombre único
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}/avatar-${Date.now()}.${fileExt}`;
+      console.log('📤 Subiendo avatar:', filePath);
 
-    // Subir archivo
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: true
+      // Subir archivo
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error('❌ Error subiendo archivo:', uploadError);
+        return { data: null, error: uploadError };
+      }
+
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      console.log('✅ Avatar subido:', publicUrl);
+
+      // Actualizar perfil con nueva URL
+      const { error: updateError } = await this.update({
+        avatar_url: publicUrl
       });
 
-    if (uploadError) {
-      console.error("Error subiendo avatar:", uploadError);
-      return { data: null, error: uploadError };
+      if (updateError) {
+        console.error('❌ Error actualizando perfil:', updateError);
+        return { data: null, error: updateError };
+      }
+
+      return { data: { url: publicUrl }, error: null };
+    } catch (error: any) {
+      console.error('❌ Error en uploadAvatar:', error);
+      return { data: null, error };
     }
-
-    // Obtener URL pública
-    const { data: urlData } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
-
-    // Actualizar perfil con nueva URL
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .update({ avatar_url: urlData.publicUrl })
-      .eq("id", userId)
-      .select()
-      .single();
-
-    if (profileError) {
-      console.error("Error actualizando perfil:", profileError);
-      return { data: null, error: profileError };
-    }
-
-    console.log("✅ Avatar subido:", urlData.publicUrl);
-    return { data: { url: urlData.publicUrl, profile: profileData }, error: null };
   }
 };
