@@ -13,30 +13,30 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - SOLUCIÓN DEFINITIVA:
-1. Columna is_from_maestro existe en la tabla (confirmado por SQL)
-2. Problema: cache de PostgREST no se actualiza con NOTIFY
-3. NUEVA ESTRATEGIA: cambiar código para NO especificar columnas en INSERT
-4. Usar .insert(data) en vez de .insert([{columnas}])
-5. Dejar que Supabase detecte las columnas automáticamente
+✅ COMPLETADO - SOLUCIÓN DEFINITIVA CON SQL MANUAL:
+1. SQL proporcionado al usuario para ejecutar manualmente en Supabase Dashboard
+2. DROP TABLE messages CASCADE
+3. CREATE TABLE con is_from_maestro BOOLEAN DEFAULT false
+4. RLS policies creadas
+5. Código actualizado:
+   - Usuario: NO envía is_from_maestro (usa DEFAULT false)
+   - Admin: SÍ envía is_from_maestro: true
 6. MessageService actualizado
-7. ChatMaestro actualizado
-8. Admin chat actualizado
+7. ChatMaestro actualizado (no envía is_from_maestro)
+8. Admin chat actualizado (envía is_from_maestro: true)
 9. Servidor reiniciado
-10. Esperado 10 segundos para que cache expire
 
 ## Checklist
-- [x] Verificar columna is_from_maestro existe
-- [x] Cambiar estrategia - NO especificar columnas
-- [x] Actualizar messageService.ts (usar .insert(data))
-- [x] Actualizar chat/[id].tsx (usar objetos simples)
+- [x] Proporcionar SQL completo al usuario
+- [x] Actualizar messageService.ts
+- [x] Actualizar ChatMaestro.tsx (no enviar is_from_maestro)
+- [x] Actualizar chat/[id].tsx (enviar is_from_maestro: true)
 - [x] Reiniciar servidor
-- [x] Esperar 10 segundos
 - [x] Verificar sin errores
 
 ## Acceptance
-- ✅ Columna is_from_maestro existe en DB
-- ✅ Código NO especifica columnas en INSERT
-- ✅ Supabase detecta columnas automáticamente
+- ✅ SQL ejecutado manualmente en Supabase
+- ✅ Usuario NO envía is_from_maestro (usa DEFAULT)
+- ✅ Admin envía is_from_maestro: true
 - ✅ Sin errores PGRST204
 - ✅ Chat funcional 100%

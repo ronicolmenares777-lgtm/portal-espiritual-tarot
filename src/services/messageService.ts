@@ -4,14 +4,25 @@ export class MessageService {
   static async create(data: {
     lead_id: string;
     text: string;
-    is_from_maestro: boolean;
+    is_from_maestro?: boolean;
   }) {
     console.log("📤 Creando mensaje:", data);
     
-    // NO especificar columnas - dejar que Supabase use todas las columnas de la tabla
+    // Preparar objeto - solo incluir is_from_maestro si es true
+    const insertData: any = {
+      lead_id: data.lead_id,
+      text: data.text,
+    };
+    
+    // Solo agregar is_from_maestro si es true (para admin)
+    if (data.is_from_maestro === true) {
+      insertData.is_from_maestro = true;
+    }
+    // Si es false o undefined, NO enviarlo - dejar que DEFAULT funcione
+    
     const { data: messages, error } = await supabase
       .from("messages")
-      .insert(data)
+      .insert(insertData)
       .select();
 
     if (error) {

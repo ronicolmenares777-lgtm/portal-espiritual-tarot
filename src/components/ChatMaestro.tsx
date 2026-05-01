@@ -218,15 +218,15 @@ export function ChatMaestro({ userName, userPhone, userProblem, userCard }: Chat
       return;
     }
 
-    console.log("📤 Preparando envío de mensaje...");
+    console.log("📤 Preparando envío de mensaje del usuario...");
     console.log("Lead ID:", leadId);
     console.log("Mensaje:", newMessage);
 
     try {
+      // NO enviar is_from_maestro - dejar que DEFAULT (false) funcione
       const createdMessage = await MessageService.create({
         lead_id: leadId,
         text: newMessage,
-        is_from_maestro: false,
       });
 
       if (createdMessage) {
