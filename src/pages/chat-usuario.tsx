@@ -1,83 +1,60 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { ChatMaestro } from "@/components/ChatMaestro";
-import { SEO } from "@/components/SEO";
-import { CustomCursor } from "@/components/CustomCursor";
-import { FloatingParticles } from "@/components/FloatingParticles";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function ChatUsuarioPage() {
   const router = useRouter();
-  const [userAuth, setUserAuth] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [leadName, setLeadName] = useState<string>("Usuario");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadUserData = async () => {
-      // Obtener lead_id de localStorage (guardado en index.tsx)
-      const storedLeadId = localStorage.getItem("currentLeadId");
+    // Obtener leadId del localStorage o URL
+    const storedLeadId = localStorage.getItem("currentLeadId");
+    const urlLeadId = router.query.leadId as string;
+
+    const finalLeadId = urlLeadId || storedLeadId;
+
+    if (finalLeadId) {
+      setLeadId(finalLeadId);
       
-      if (!storedLeadId) {
-        console.error("❌ No hay lead ID guardado");
-        router.push("/");
-        return;
+      // Intentar obtener el nombre del localStorage
+      const storedName = localStorage.getItem("userName");
+      if (storedName) {
+        setLeadName(storedName);
       }
+    }
 
-      console.log("🔍 Cargando datos del lead:", storedLeadId);
+    setIsLoading(false);
+  }, [router.query]);
 
-      const { data, error } = await supabase
-        .from("leads")
-        .select("*")
-        .eq("id", storedLeadId)
-        .single();
-
-      console.log("Resultado:", { data, error });
-
-      if (error || !data) {
-        console.error("❌ Error cargando lead:", error);
-        router.push("/");
-        return;
-      }
-
-      setUserAuth(data);
-      setLoading(false);
-    };
-
-    loadUserData();
-  }, [router]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-gold text-xl">Conectando con el maestro...</div>
+        <div className="text-gold animate-pulse">Cargando chat...</div>
       </div>
     );
   }
 
-  if (!userAuth) {
-    return null;
+  if (!leadId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-foreground mb-4">No se encontró información de la consulta</p>
+          <button
+            onClick={() => router.push("/")}
+            className="text-gold hover:underline"
+          >
+            Volver al inicio
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <>
-      <SEO 
-        title="Tu Consulta Espiritual"
-        description="Continúa tu conversación con el maestro espiritual"
-      />
-      <CustomCursor />
-      <FloatingParticles />
-
-      <div className="min-h-screen">
-        {leadId ? (
-          <ChatMaestro 
-            leadId={leadId} 
-            leadName={userName || "Usuario"}
-          />
-        ) : (
-          <div className="min-h-screen bg-background flex items-center justify-center">
-            <p className="text-foreground">No se encontró información de la consulta</p>
-          </div>
-        )}
-      </div>
-    </>
+    <div className="min-h-screen">
+      <ChatMaestro leadId={leadId} leadName={leadName} />
+    </div>
   );
 }
