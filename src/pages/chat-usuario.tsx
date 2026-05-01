@@ -66,13 +66,17 @@ export default function ChatUsuarioPage() {
       <CustomCursor />
       <FloatingParticles />
 
-      <div className="min-h-screen bg-background">
-        <ChatMaestro
-          userName={userAuth.name}
-          userPhone={userAuth.country_code + userAuth.whatsapp}
-          userProblem={userAuth.problem}
-          userCard={userAuth.cards_selected?.[0] || ""}
-        />
+      <div className="min-h-screen">
+        {leadId ? (
+          <ChatMaestro 
+            leadId={leadId} 
+            leadName={userName || "Usuario"}
+          />
+        ) : (
+          <div className="min-h-screen bg-background flex items-center justify-center">
+            <p className="text-foreground">No se encontró información de la consulta</p>
+          </div>
+        )}
       </div>
     </>
   );

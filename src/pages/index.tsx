@@ -551,11 +551,9 @@ export default function Home() {
         )}
 
         {currentScreen === "chat" && (
-          <ChatMaestro
-            userName={formData.name}
-            userPhone={formData.whatsapp}
-            userProblem={formData.problem}
-            userCard={selectedCard?.name}
+          <ChatMaestro 
+            leadId={leadId!} 
+            leadName={formData.name}
           />
         )}
       </div>
