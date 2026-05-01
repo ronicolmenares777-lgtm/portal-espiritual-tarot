@@ -91,6 +91,7 @@ export function ChatMaestro({ leadId, leadName }: ChatMaestroProps) {
       lead_id: leadId,
       text: newMessage.trim(),
       is_from_maestro: false,
+      is_read: false,
       media_type: null,
       media_url: null,
       created_at: new Date().toISOString(),

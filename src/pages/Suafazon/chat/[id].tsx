@@ -13,6 +13,7 @@ type Lead = Tables<"leads">;
 export default function AdminChatPage() {
   const router = useRouter();
   const { id } = router.query;
+  const leadId = typeof id === "string" ? id : "";
   const [lead, setLead] = useState<Lead | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -28,30 +29,30 @@ export default function AdminChatPage() {
 
   // Cargar lead
   useEffect(() => {
-    if (!id) return;
+    if (!leadId) return;
 
     const fetchLead = async () => {
       const { data } = await supabase
         .from("leads")
         .select("*")
-        .eq("id", id)
+        .eq("id", leadId)
         .single();
 
       if (data) setLead(data);
     };
 
     fetchLead();
-  }, [id]);
+  }, [leadId]);
 
   // Cargar mensajes iniciales
   useEffect(() => {
-    if (!id) return;
+    if (!leadId) return;
 
     const fetchMessages = async () => {
       const { data } = await supabase
         .from("messages")
         .select("*")
-        .eq("lead_id", id)
+        .eq("lead_id", leadId)
         .order("created_at", { ascending: true });
 
       if (data) {
@@ -61,23 +62,23 @@ export default function AdminChatPage() {
     };
 
     fetchMessages();
-  }, [id]);
+  }, [leadId]);
 
   // Suscripción Realtime - SIMPLIFICADA
   useEffect(() => {
-    if (!id) return;
+    if (!leadId) return;
 
-    console.log("🔌 [ADMIN] Configurando realtime para chat:", id);
+    console.log("🔌 [ADMIN] Configurando realtime para chat:", leadId);
 
     const channel = supabase
-      .channel(`chat-${id}`)
+      .channel(`chat-${leadId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "messages",
-          filter: `lead_id=eq.${id}`,
+          filter: `lead_id=eq.${leadId}`,
         },
         (payload) => {
           console.log("📨 [ADMIN] Nuevo mensaje:", payload.new);
@@ -100,7 +101,7 @@ export default function AdminChatPage() {
       console.log("🔌 [ADMIN] Limpiando suscripción");
       channel.unsubscribe();
     };
-  }, [id]);
+  }, [leadId]);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !lead) return;
@@ -110,6 +111,7 @@ export default function AdminChatPage() {
       lead_id: lead.id,
       text: newMessage.trim(),
       is_from_maestro: true,
+      is_read: false,
       media_type: null,
       media_url: null,
       created_at: new Date().toISOString(),
