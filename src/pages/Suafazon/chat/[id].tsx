@@ -104,7 +104,7 @@ export default function ChatPage() {
     const messageText = newMessage;
     setNewMessage("");
 
-    console.log("📤 Enviando mensaje del maestro");
+    console.log("📤 Enviando mensaje del admin");
 
     const { error } = await supabase.from("messages").insert({
       lead_id: lead.id,
@@ -113,13 +113,18 @@ export default function ChatPage() {
     });
 
     if (error) {
-      console.error("❌ Error enviando mensaje:", error);
+      console.error("Error sending message:", error);
       setNewMessage(messageText);
-    } else {
-      console.log("✅ Mensaje enviado exitosamente");
     }
 
     setSending(false);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
   const handleFileUpload = async (
@@ -383,6 +388,7 @@ export default function ChatPage() {
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
             placeholder="Escribe un mensaje..."
             className="flex-1 bg-background border-border"
           />
