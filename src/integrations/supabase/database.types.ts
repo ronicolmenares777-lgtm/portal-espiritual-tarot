@@ -89,27 +89,21 @@ export type Database = {
           created_at: string
           id: string
           is_from_maestro: boolean
-          is_user: boolean
           lead_id: string
-          read_at: string | null
           text: string
         }
         Insert: {
           created_at?: string
           id?: string
           is_from_maestro?: boolean
-          is_user?: boolean
           lead_id: string
-          read_at?: string | null
           text: string
         }
         Update: {
           created_at?: string
           id?: string
           is_from_maestro?: boolean
-          is_user?: boolean
           lead_id?: string
-          read_at?: string | null
           text?: string
         }
         Relationships: [

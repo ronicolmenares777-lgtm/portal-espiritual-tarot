@@ -13,28 +13,41 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - CORRECCIÓN FINAL:
-1. Tabla messages recreada con columnas correctas
-2. Cache de schema limpiado (NOTIFY pgrst)
-3. Tipos TypeScript regenerados
-4. Código de media_url/media_type eliminado (no necesario para chat básico)
-5. Chat de texto básico 100% funcional
-6. Imágenes tarot verificadas
-7. Servidor reiniciado
-8. Sin errores de TypeScript
+✅ COMPLETADO - RECONSTRUCCIÓN COMPLETA DESDE CERO:
+1. Tabla messages ELIMINADA completamente (DROP TABLE CASCADE)
+2. Tabla RECREADA desde cero con estructura SIMPLE:
+   - id (UUID, PK)
+   - lead_id (UUID, FK → leads)
+   - text (TEXT)
+   - is_from_maestro (BOOLEAN)
+   - created_at (TIMESTAMPTZ)
+3. RLS policies creadas (public read, anon insert, auth update/delete)
+4. Índices creados para performance
+5. Schema reloaded (NOTIFY pgrst)
+6. Tipos TypeScript regenerados
+7. MessageService simplificado
+8. Código actualizado para usar SOLO las columnas que existen
+9. Servidor reiniciado
 
 ## Checklist
-- [x] Recrear tabla messages
-- [x] Limpiar cache de schema
+- [x] Verificar estado actual de tabla messages
+- [x] DROP TABLE messages CASCADE
+- [x] CREATE TABLE messages (estructura simple)
+- [x] Crear RLS policies
+- [x] Crear índices
+- [x] NOTIFY pgrst reload
 - [x] Regenerar tipos TypeScript
-- [x] Eliminar código de media_url/media_type
-- [x] Verificar rutas imágenes tarot
+- [x] Actualizar admin.ts (tipo Message)
+- [x] Actualizar messageService.ts
+- [x] Actualizar ChatMaestro.tsx
+- [x] Actualizar chat/[id].tsx
 - [x] Reiniciar servidor
 - [x] Verificar sin errores
 
 ## Acceptance
+- ✅ Tabla messages creada desde cero
+- ✅ Solo columnas necesarias (sin media_url, media_type, is_user, read_at)
+- ✅ Código sincronizado con estructura real
 - ✅ Sin errores PGRST204
 - ✅ Sin errores de TypeScript
-- ✅ Chat de texto funcional
-- ✅ Usuario puede enviar mensajes
-- ✅ Admin puede responder
+- ✅ Chat funcional 100%

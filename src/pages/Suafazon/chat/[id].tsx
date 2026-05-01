@@ -103,9 +103,10 @@ export default function ChatPage() {
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !id || typeof id !== 'string') return;
 
+    console.log("📤 Admin enviando mensaje...");
+
     try {
-      console.log("📤 Enviando mensaje del admin...");
-      const { data: messages, error } = await supabase
+      const { data, error } = await supabase
         .from("messages")
         .insert([
           {
@@ -114,17 +115,18 @@ export default function ChatPage() {
             is_from_maestro: true,
           },
         ])
-        .select();
+        .select()
+        .single();
 
       if (error) {
         console.error("❌ Error enviando mensaje:", error);
         return;
       }
 
-      console.log("✅ Mensaje del admin enviado:", messages?.[0]);
+      console.log("✅ Mensaje del admin enviado:", data);
       setInputMessage("");
     } catch (error) {
-      console.error("❌ Error enviando mensaje:", error);
+      console.error("❌ Error en handleSendMessage:", error);
     }
   };
 
@@ -132,7 +134,7 @@ export default function ChatPage() {
     if (!id || typeof id !== 'string') return;
 
     try {
-      const { data: messages, error } = await supabase
+      const { data, error } = await supabase
         .from("messages")
         .insert([
           {
@@ -141,13 +143,14 @@ export default function ChatPage() {
             is_from_maestro: true,
           },
         ])
-        .select();
+        .select()
+        .single();
 
       if (error) {
         console.error("❌ Error enviando respuesta rápida:", error);
       }
     } catch (error) {
-      console.error("❌ Error enviando respuesta rápida:", error);
+      console.error("❌ Error en handleQuickReply:", error);
     }
   };
 
@@ -171,7 +174,7 @@ export default function ChatPage() {
     if (!mediaPreview || !lead) return;
 
     try {
-      const { data: messages, error } = await supabase
+      const { data, error } = await supabase
         .from("messages")
         .insert([
           {
@@ -180,7 +183,8 @@ export default function ChatPage() {
             is_from_maestro: true,
           },
         ])
-        .select();
+        .select()
+        .single();
 
       if (error) {
         console.error("❌ Error enviando media:", error);
@@ -189,7 +193,7 @@ export default function ChatPage() {
 
       setMediaPreview(null);
     } catch (error) {
-      console.error("❌ Error enviando media:", error);
+      console.error("❌ Error en handleMediaSend:", error);
     }
   };
 

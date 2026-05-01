@@ -56,10 +56,6 @@ export type Message = {
   id: string;
   lead_id: string;
   text: string;
-  media_url?: string | null;
-  media_type?: string | null;
   is_from_maestro: boolean;
-  is_user: boolean;
   created_at: string;
-  read_at?: string | null;
 };
