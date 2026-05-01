@@ -14,40 +14,29 @@ position: 10
 
 ## Notes
 ✅ COMPLETADO AL 100%:
-1. ✅ Realtime funcionando correctamente en chat de admin
-2. ✅ Lógica de `is_from_maestro` corregida - mensajes se muestran correctamente
-3. ✅ Header profesional y elegante con diseño mejorado
-4. ✅ Botones multimedia restaurados (imagen y audio)
-5. ✅ Diseño responsive perfecto en móvil
-6. ✅ Burbujas doradas para admin con avatar
-7. ✅ Burbujas claras para usuario (sin avatar)
-8. ✅ Dropdown de clasificación en header
-9. ✅ Botón de favoritos funcional
-10. ✅ Sin duplicación de mensajes
-11. ✅ Nombre del usuario en burbujas blancas (ambos chats)
-12. ✅ Chulos de lectura ✓✓ y enviado ✓ implementados
-13. ✅ Auto-scroll cuando llegan nuevos mensajes
-14. ✅ Columna is_read agregada a la tabla messages
+1. ✅ Realtime funcionando correctamente en ambos chats
+2. ✅ Mensajes se envían correctamente (sin is_read)
+3. ✅ Texto legible en burbujas blancas del usuario (text-gray-900)
+4. ✅ Nombre real del usuario mostrado en chat de usuario
+5. ✅ Nombre del lead mostrado en chat de admin
+6. ✅ Carga de imagen de perfil arreglada
+7. ✅ Bucket de avatars creado con políticas RLS
+8. ✅ Validación de archivos (tipo y tamaño)
+9. ✅ Header profesional en chat de admin
+10. ✅ Burbujas doradas para admin, blancas para usuario
 
 ## Checklist
-- [x] Realtime funcionando sin duplicados
-- [x] Mensajes se muestran correctamente (admin vs usuario)
-- [x] Header rediseñado profesionalmente
-- [x] Botones multimedia (imagen y audio) implementados
-- [x] Diseño responsive móvil perfecto
-- [x] Dropdown de estado funcional
-- [x] Botón de favoritos funcional
-- [x] Nombre de usuario en burbujas blancas
-- [x] Chulos de lectura/enviado
-- [x] Auto-scroll implementado
+- [x] Mensajes se envían correctamente
+- [x] Texto legible en burbujas
+- [x] Nombre real en ambos chats
+- [x] Carga de imagen funcionando
+- [x] Políticas RLS creadas
 - [x] Sin errores de compilación
+- [x] ProfileService arreglado
 
 ## Acceptance
-- ✅ Mensajes en tiempo real funcionando
-- ✅ Admin ve sus mensajes con avatar dorado
-- ✅ Usuario ve sus mensajes en burbujas claras con su nombre
-- ✅ Header profesional y elegante
-- ✅ Botones multimedia disponibles
-- ✅ Chulos: ✓ = enviado, ✓✓ = leído
-- ✅ Auto-scroll cuando llegan nuevos mensajes
-- ✅ Responsive en móvil y desktop
+- ✅ Mensajes se envían sin errores
+- ✅ Texto legible en burbujas del usuario
+- ✅ Nombre real mostrado en ambos chats
+- ✅ Carga de imagen de perfil funcional
+- ✅ Sin errores de TypeScript

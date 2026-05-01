@@ -1,108 +1,94 @@
-/**
- * Servicio para gestión de Perfil de Maestro en Supabase
- */
-
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
 
-type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
+type Profile = Tables<"profiles">;
 
-export const ProfileService = {
-  /**
-   * Obtener perfil del usuario autenticado
-   */
-  async getCurrent() {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user?.id;
+export class ProfileService {
+  static async get() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        return { data: null, error: { message: "No autenticado" } };
+      }
 
-    if (!userId) {
-      return { data: null, error: { message: "No hay sesión activa" } };
-    }
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+      if (error) {
+        console.error("❌ Error obteniendo perfil:", error);
+        return { data: null, error };
+      }
 
-    if (error) {
-      console.error("Error obteniendo perfil:", error);
+      return { data, error: null };
+    } catch (error: any) {
+      console.error("❌ Error en get profile:", error);
       return { data: null, error };
     }
+  }
 
-    return { data, error: null };
-  },
+  static async update(updates: Partial<Profile>) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        return { data: null, error: { message: "No autenticado" } };
+      }
 
-  /**
-   * Obtener todos los perfiles (para ver avatar del maestro en chat público)
-   */
-  async getAll() {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: true });
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", session.user.id)
+        .select()
+        .single();
 
-    if (error) {
-      console.error("Error obteniendo perfiles:", error);
+      if (error) {
+        console.error("❌ Error actualizando perfil:", error);
+        return { data: null, error };
+      }
+
+      return { data, error: null };
+    } catch (error: any) {
+      console.error("❌ Error en update profile:", error);
       return { data: null, error };
     }
+  }
 
-    return { data, error: null };
-  },
+  static async create(profile: Omit<Profile, "id" | "created_at" | "updated_at">) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        return { data: null, error: { message: "No autenticado" } };
+      }
 
-  /**
-   * Actualizar perfil del usuario autenticado
-   */
-  async update(updates: ProfileUpdate): Promise<{ data: Profile | null; error: any }> {
-    const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase
+        .from("profiles")
+        .insert({
+          id: session.user.id,
+          ...profile,
+        })
+        .select()
+        .single();
 
-    if (!user) {
-      return { data: null, error: { message: "No authenticated user" } };
-    }
+      if (error) {
+        console.error("❌ Error creando perfil:", error);
+        return { data: null, error };
+      }
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .update(updates)
-      .eq("id", user.id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error actualizando perfil:", error);
+      return { data, error: null };
+    } catch (error: any) {
+      console.error("❌ Error en create profile:", error);
       return { data: null, error };
     }
+  }
 
-    console.log("✅ Perfil actualizado");
-    return { data, error: null };
-  },
-
-  /**
-   * Crear perfil (usado en registro)
-   */
-  async create(userId: string, email: string, fullName?: string): Promise<{ data: Profile | null; error: any }> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .insert([{
-        id: userId,
-        email,
-        full_name: fullName || ""
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error creando perfil:", error);
-      return { data: null, error };
-    }
-
-    console.log("✅ Perfil creado");
-    return { data, error: null };
-  },
-
-  /**
-   * Subir avatar del usuario actual
-   */
   static async uploadAvatar(file: File) {
     try {
       // Validar tipo de archivo
@@ -122,7 +108,7 @@ export const ProfileService = {
         };
       }
 
-      const { session } = await AuthService.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
         return { data: null, error: { message: 'No autenticado' } };
       }
@@ -130,7 +116,7 @@ export const ProfileService = {
       // Generar nombre único
       const fileExt = file.name.split('.').pop();
       const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `${fileName}`;
 
       console.log('📤 Subiendo avatar:', filePath);
 
@@ -170,4 +156,4 @@ export const ProfileService = {
       return { data: null, error };
     }
   }
-};
+}
