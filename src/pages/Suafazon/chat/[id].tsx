@@ -23,22 +23,12 @@ import {
   Phone,
 } from "lucide-react";
 
-const CLASSIFICATION_LABELS = {
-  pending: { label: "Pendiente", color: "bg-yellow-500/20 text-yellow-500" },
-  hot: { label: "Caliente", color: "bg-red-500/20 text-red-500" },
-  warm: { label: "Tibio", color: "bg-orange-500/20 text-orange-500" },
-  cold: { label: "Frío", color: "bg-blue-500/20 text-blue-500" },
-  converted: { label: "Convertido", color: "bg-green-500/20 text-green-500" },
-  lost: { label: "Perdido", color: "bg-gray-500/20 text-gray-500" },
-};
-
-export default function AdminChatPage() {
+export default function ChatAdmin() {
   const router = useRouter();
   const { id } = router.query;
   const [lead, setLead] = useState<Tables<"leads"> | null>(null);
   const [messages, setMessages] = useState<Tables<"messages">[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -57,35 +47,44 @@ export default function AdminChatPage() {
   useEffect(() => {
     if (!id || typeof id !== "string") return;
 
-    const loadData = async () => {
-      const { data: leadData } = await supabase
+    console.log("🔄 Cargando lead:", id);
+
+    const loadLead = async () => {
+      const { data } = await supabase
         .from("leads")
         .select("*")
         .eq("id", id)
         .single();
 
-      if (leadData) {
-        setLead(leadData);
+      if (data) {
+        console.log("✅ Lead cargado:", data.name);
+        setLead(data);
       }
+    };
 
-      const { data: messagesData } = await supabase
+    const loadMessages = async () => {
+      const { data, error } = await supabase
         .from("messages")
         .select("*")
         .eq("lead_id", id)
         .order("created_at", { ascending: true });
 
-      if (messagesData) {
-        setMessages(messagesData);
-      }
+      console.log("📨 Mensajes cargados:", data?.length || 0);
+      if (error) console.error("❌ Error cargando mensajes:", error);
 
-      setLoading(false);
+      if (data) {
+        setMessages(data);
+      }
     };
 
-    loadData();
+    loadLead();
+    loadMessages();
 
-    // Suscripción en tiempo real
+    // Suscripción Realtime
+    console.log("🔔 Configurando suscripción Realtime para lead:", id);
+
     const channel = supabase
-      .channel(`admin-chat:${id}`)
+      .channel(`chat-admin-${id}`)
       .on(
         "postgres_changes",
         {
@@ -95,10 +94,17 @@ export default function AdminChatPage() {
           filter: `lead_id=eq.${id}`,
         },
         (payload) => {
+          console.log("✨ NUEVO MENSAJE RECIBIDO (Admin):", payload.new);
           const newMsg = payload.new as Tables<"messages">;
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
+          setMessages((current) => {
+            // Evitar duplicados
+            const exists = current.some((m) => m.id === newMsg.id);
+            if (exists) {
+              console.log("⚠️ Mensaje duplicado, ignorando");
+              return current;
+            }
+            console.log("✅ Agregando mensaje nuevo al estado");
+            return [...current, newMsg];
           });
         }
       )
@@ -111,15 +117,19 @@ export default function AdminChatPage() {
           filter: `lead_id=eq.${id}`,
         },
         (payload) => {
+          console.log("🔄 MENSAJE ACTUALIZADO:", payload.new);
           const updatedMsg = payload.new as Tables<"messages">;
-          setMessages((prev) =>
-            prev.map((m) => (m.id === updatedMsg.id ? updatedMsg : m))
+          setMessages((current) =>
+            current.map((m) => (m.id === updatedMsg.id ? updatedMsg : m))
           );
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("📡 Estado suscripción Realtime (Admin):", status);
+      });
 
     return () => {
+      console.log("🔌 Desconectando canal Realtime (Admin)");
       supabase.removeChannel(channel);
     };
   }, [id]);
@@ -127,40 +137,27 @@ export default function AdminChatPage() {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !lead) return;
 
+    console.log("📤 Enviando mensaje (Admin):", newMessage);
     setSending(true);
-    const messageText = newMessage;
-    setNewMessage("");
 
-    const { error } = await supabase.from("messages").insert({
+    const { data, error } = await supabase.from("messages").insert({
       lead_id: lead.id,
-      text: messageText,
+      text: newMessage,
       is_from_maestro: true,
-    });
+    }).select();
 
     if (error) {
-      console.error("Error sending message:", error);
-      setNewMessage(messageText);
+      console.error("❌ Error enviando mensaje:", error);
+    } else {
+      console.log("✅ Mensaje enviado exitosamente:", data);
     }
 
+    setNewMessage("");
     setSending(false);
-  };
-
-  const handleToggleFavorite = async () => {
-    if (!lead) return;
-
-    const { error } = await supabase
-      .from("leads")
-      .update({ is_favorite: !lead.is_favorite })
-      .eq("id", lead.id);
-
-    if (!error) {
-      setLead({ ...lead, is_favorite: !lead.is_favorite });
-    }
   };
 
   const handleClassificationChange = async (value: string) => {
     if (!lead) return;
-
     const { error } = await supabase
       .from("leads")
       .update({ classification: value })
@@ -171,12 +168,23 @@ export default function AdminChatPage() {
     }
   };
 
+  const toggleFavorite = async () => {
+    if (!lead) return;
+    const { error } = await supabase
+      .from("leads")
+      .update({ is_favorite: !lead.is_favorite })
+      .eq("id", lead.id);
+
+    if (!error) {
+      setLead({ ...lead, is_favorite: !lead.is_favorite });
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !lead) return;
 
     setUploading(true);
-
     const fileExt = file.name.split(".").pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${lead.id}/${fileName}`;
@@ -195,17 +203,15 @@ export default function AdminChatPage() {
       data: { publicUrl },
     } = supabase.storage.from("chat-media").getPublicUrl(filePath);
 
-    const { error: messageError } = await supabase.from("messages").insert({
-      lead_id: lead.id,
-      text: file.type.startsWith("image/") ? "📷 Imagen" : "📎 Archivo",
-      media_url: publicUrl,
-      media_type: file.type.startsWith("image/") ? "image" : "file",
-      is_from_maestro: true,
-    });
+    const mediaType = file.type.startsWith("image/") ? "image" : "file";
 
-    if (messageError) {
-      console.error("Error sending message:", messageError);
-    }
+    await supabase.from("messages").insert({
+      lead_id: lead.id,
+      text: file.name,
+      is_from_maestro: true,
+      media_type: mediaType,
+      media_url: publicUrl,
+    });
 
     setUploading(false);
   };
@@ -217,8 +223,8 @@ export default function AdminChatPage() {
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
+      mediaRecorder.ondataavailable = (e) => {
+        audioChunksRef.current.push(e.data);
       };
 
       mediaRecorder.onstop = async () => {
@@ -246,8 +252,6 @@ export default function AdminChatPage() {
   const uploadAudio = async (audioBlob: Blob) => {
     if (!lead) return;
 
-    setUploading(true);
-
     const fileName = `${Math.random()}.webm`;
     const filePath = `${lead.id}/${fileName}`;
 
@@ -257,7 +261,6 @@ export default function AdminChatPage() {
 
     if (uploadError) {
       console.error("Error uploading audio:", uploadError);
-      setUploading(false);
       return;
     }
 
@@ -265,150 +268,114 @@ export default function AdminChatPage() {
       data: { publicUrl },
     } = supabase.storage.from("chat-media").getPublicUrl(filePath);
 
-    const { error: messageError } = await supabase.from("messages").insert({
+    await supabase.from("messages").insert({
       lead_id: lead.id,
-      text: "🎤 Audio",
-      media_url: publicUrl,
-      media_type: "audio",
+      text: "Nota de voz",
       is_from_maestro: true,
+      media_type: "audio",
+      media_url: publicUrl,
     });
-
-    if (messageError) {
-      console.error("Error sending message:", messageError);
-    }
-
-    setUploading(false);
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   if (!lead) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Lead no encontrado</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <Sparkles className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  const classificationData =
-    CLASSIFICATION_LABELS[lead.classification as keyof typeof CLASSIFICATION_LABELS] ||
-    CLASSIFICATION_LABELS.pending;
-
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="bg-card border-b border-border p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => router.push("/Suafazon/dashboard")}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {lead.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <h1 className="font-semibold text-foreground">{lead.name}</h1>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-3 w-3" />
-                  <span>{lead.whatsapp}</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleToggleFavorite}
-                className={lead.is_favorite ? "text-primary" : ""}
-              >
-                <Star
-                  className="h-5 w-5"
-                  fill={lead.is_favorite ? "currentColor" : "none"}
-                />
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Select
-              value={lead.classification || "pending"}
-              onValueChange={handleClassificationChange}
+      <div className="border-b border-border bg-card/50 backdrop-blur-sm p-4 flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.push("/Suafazon/dashboard")}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <Avatar className="h-10 w-10">
+          <AvatarFallback>{lead.name[0]}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h1 className="font-semibold text-foreground">{lead.name}</h1>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={toggleFavorite}
             >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(CLASSIFICATION_LABELS).map(([key, val]) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center gap-2">
-                      <div className={`h-2 w-2 rounded-full ${val.color}`} />
-                      {val.label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Badge className={classificationData.color}>
-              {classificationData.label}
-            </Badge>
+              <Star
+                className={`h-4 w-4 ${
+                  lead.is_favorite
+                    ? "fill-yellow-500 text-yellow-500"
+                    : "text-muted-foreground"
+                }`}
+              />
+            </Button>
           </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Phone className="h-3 w-3" />
+            <span>{lead.whatsapp}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            value={lead.classification || ""}
+            onValueChange={handleClassificationChange}
+          >
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Clasificar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="hot">🔥 Caliente</SelectItem>
+              <SelectItem value="warm">😊 Tibio</SelectItem>
+              <SelectItem value="cold">❄️ Frío</SelectItem>
+            </SelectContent>
+          </Select>
+          <Badge
+            variant={lead.status === "cerrado" ? "default" : "secondary"}
+            className="capitalize"
+          >
+            {lead.status}
+          </Badge>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 max-w-4xl mx-auto w-full">
-        {messages.map((message) => (
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((msg) => (
           <div
-            key={message.id}
+            key={msg.id}
             className={`flex ${
-              message.is_from_maestro ? "justify-end" : "justify-start"
+              msg.is_from_maestro ? "justify-end" : "justify-start"
             }`}
           >
             <div
-              className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                message.is_from_maestro
+              className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                msg.is_from_maestro
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground"
+                  : "bg-muted"
               }`}
             >
-              {message.media_url && (
-                <div className="mb-2">
-                  {message.media_type === "image" ? (
-                    <img
-                      src={message.media_url}
-                      alt="Imagen"
-                      className="rounded-lg max-w-full"
-                    />
-                  ) : message.media_type === "audio" ? (
-                    <audio controls src={message.media_url} className="w-full" />
-                  ) : (
-                    <a
-                      href={message.media_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline"
-                    >
-                      Ver archivo
-                    </a>
-                  )}
-                </div>
+              {msg.media_type === "image" && msg.media_url && (
+                <img
+                  src={msg.media_url}
+                  alt="Shared"
+                  className="rounded-lg max-w-full mb-2"
+                />
               )}
-              <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+              {msg.media_type === "audio" && msg.media_url && (
+                <audio controls className="mb-2">
+                  <source src={msg.media_url} type="audio/webm" />
+                </audio>
+              )}
+              <p className="text-sm">{msg.text}</p>
               <p className="text-xs opacity-70 mt-1">
-                {new Date(message.created_at).toLocaleTimeString("es-ES", {
+                {new Date(msg.created_at).toLocaleTimeString("es-MX", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
@@ -420,14 +387,14 @@ export default function AdminChatPage() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-border p-4 bg-card">
-        <div className="max-w-4xl mx-auto flex gap-2">
+      <div className="border-t border-border bg-card/50 backdrop-blur-sm p-4">
+        <div className="flex gap-2">
           <input
             type="file"
             id="file-upload"
             className="hidden"
             onChange={handleFileUpload}
-            accept="image/*,video/*,.pdf,.doc,.docx"
+            accept="image/*"
           />
           <Button
             variant="outline"
@@ -435,33 +402,39 @@ export default function AdminChatPage() {
             onClick={() => document.getElementById("file-upload")?.click()}
             disabled={uploading}
           >
-            <Upload className="h-5 w-5" />
+            {uploading ? (
+              <Sparkles className="h-5 w-5 animate-spin" />
+            ) : (
+              <Upload className="h-5 w-5" />
+            )}
           </Button>
-
           <Button
             variant="outline"
             size="icon"
             onClick={recording ? stopRecording : startRecording}
-            className={recording ? "bg-red-500/20 text-red-500" : ""}
+            className={recording ? "bg-red-500 text-white" : ""}
           >
             <Mic className="h-5 w-5" />
           </Button>
-
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
             placeholder="Escribe un mensaje..."
-            className="flex-1 bg-background border-border"
+            className="flex-1"
+            disabled={sending}
           />
-
           <Button
             onClick={handleSendMessage}
-            disabled={!newMessage.trim() || sending}
-            className="bg-primary hover:bg-primary/90"
+            disabled={sending || !newMessage.trim()}
           >
             {sending ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-background" />
+              <Sparkles className="h-5 w-5 animate-spin" />
             ) : (
               <Send className="h-5 w-5" />
             )}

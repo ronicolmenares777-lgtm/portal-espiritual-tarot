@@ -2,11 +2,10 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Sparkles } from "lucide-react";
+import { ArrowLeft, Send, Sparkles } from "lucide-react";
 
 export default function ChatUsuario() {
   const router = useRouter();
@@ -27,12 +26,17 @@ export default function ChatUsuario() {
   useEffect(() => {
     if (!leadId || typeof leadId !== "string") return;
 
+    console.log("🔄 Iniciando carga de mensajes para lead:", leadId);
+
     const loadMessages = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("messages")
         .select("*")
         .eq("lead_id", leadId)
         .order("created_at", { ascending: true });
+
+      console.log("📨 Mensajes cargados:", data?.length || 0);
+      if (error) console.error("❌ Error cargando mensajes:", error);
 
       if (data) {
         setMessages(data);
@@ -41,9 +45,11 @@ export default function ChatUsuario() {
 
     loadMessages();
 
-    // Suscripción en tiempo real
+    // Suscripción Realtime
+    console.log("🔔 Configurando suscripción Realtime para lead:", leadId);
+    
     const channel = supabase
-      .channel(`chat:${leadId}`)
+      .channel(`chat-usuario-${leadId}`)
       .on(
         "postgres_changes",
         {
@@ -53,100 +59,95 @@ export default function ChatUsuario() {
           filter: `lead_id=eq.${leadId}`,
         },
         (payload) => {
+          console.log("✨ NUEVO MENSAJE RECIBIDO:", payload.new);
           const newMsg = payload.new as Tables<"messages">;
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
+          setMessages((current) => {
+            // Evitar duplicados
+            const exists = current.some((m) => m.id === newMsg.id);
+            if (exists) {
+              console.log("⚠️ Mensaje duplicado, ignorando");
+              return current;
+            }
+            console.log("✅ Agregando mensaje nuevo al estado");
+            return [...current, newMsg];
           });
         }
       )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "messages",
-          filter: `lead_id=eq.${leadId}`,
-        },
-        (payload) => {
-          const updatedMsg = payload.new as Tables<"messages">;
-          setMessages((prev) =>
-            prev.map((m) => (m.id === updatedMsg.id ? updatedMsg : m))
-          );
-        }
-      )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("📡 Estado suscripción Realtime:", status);
+      });
 
     return () => {
+      console.log("🔌 Desconectando canal Realtime");
       supabase.removeChannel(channel);
     };
   }, [leadId]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendMessage = async () => {
     if (!newMessage.trim() || !leadId || typeof leadId !== "string") return;
 
+    console.log("📤 Enviando mensaje:", newMessage);
     setSending(true);
-    const messageText = newMessage;
-    setNewMessage("");
 
-    const { error } = await supabase.from("messages").insert({
+    const { data, error } = await supabase.from("messages").insert({
       lead_id: leadId,
-      text: messageText,
+      text: newMessage,
       is_from_maestro: false,
-    });
+    }).select();
 
     if (error) {
-      console.error("Error sending message:", error);
-      setNewMessage(messageText);
+      console.error("❌ Error enviando mensaje:", error);
+    } else {
+      console.log("✅ Mensaje enviado exitosamente:", data);
     }
 
+    setNewMessage("");
     setSending(false);
   };
 
   return (
     <>
-      <SEO
-        title="Chat con el Maestro Espiritual"
-        description="Conversación con tu guía espiritual"
-      />
       <div className="min-h-screen bg-black flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-900/40 to-black border-b border-primary/20 p-4">
-          <div className="max-w-2xl mx-auto flex items-center gap-3">
-            <Avatar className="h-12 w-12 border-2 border-primary/50">
-              <AvatarFallback className="bg-gradient-to-br from-primary to-amber-600">
-                <Sparkles className="h-6 w-6 text-background" />
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="font-serif text-lg font-semibold text-foreground">
-                Maestro Espiritual
-              </h1>
-              <p className="text-sm text-primary/70">En línea</p>
-            </div>
+        <div className="bg-gradient-to-r from-purple-900/50 to-purple-800/50 backdrop-blur-sm border-b border-purple-700/30 p-4 flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/")}
+            className="text-primary hover:text-primary/80"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <Avatar className="h-10 w-10 border-2 border-primary/30">
+            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-purple-800 text-primary">
+              <Sparkles className="h-5 w-5" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <h1 className="font-semibold text-primary">Maestro Espiritual</h1>
+            <p className="text-sm text-primary/70">En línea</p>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl mx-auto w-full">
-          {messages.map((message) => (
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((msg) => (
             <div
-              key={message.id}
+              key={msg.id}
               className={`flex ${
-                message.is_from_maestro ? "justify-start" : "justify-end"
+                msg.is_from_maestro ? "justify-start" : "justify-end"
               }`}
             >
               <div
-                className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                  message.is_from_maestro
-                    ? "bg-muted/50 text-foreground"
-                    : "bg-gradient-to-r from-primary to-amber-600 text-background"
+                className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                  msg.is_from_maestro
+                    ? "bg-purple-900/50 text-primary border border-purple-700/30"
+                    : "bg-gradient-to-r from-purple-600 to-purple-700 text-white"
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                <p className="text-sm">{msg.text}</p>
                 <p className="text-xs opacity-70 mt-1">
-                  {new Date(message.created_at).toLocaleTimeString("es-ES", {
+                  {new Date(msg.created_at).toLocaleTimeString("es-MX", {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
@@ -159,23 +160,30 @@ export default function ChatUsuario() {
 
         {/* Input */}
         <form
-          onSubmit={handleSendMessage}
-          className="border-t border-primary/20 p-4 bg-muted/20"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
+          className="border-t border-purple-700/30 bg-purple-900/20 backdrop-blur-sm p-4"
         >
-          <div className="max-w-2xl mx-auto flex gap-2">
+          <div className="flex gap-2">
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Escribe tu mensaje..."
-              className="flex-1 bg-background/50 border-primary/30 focus:border-primary"
+              placeholder="Escribe un mensaje..."
+              className="flex-1 bg-purple-900/30 border-purple-700/30 text-primary placeholder:text-primary/50"
               disabled={sending}
             />
             <Button
               type="submit"
-              disabled={!newMessage.trim() || sending}
-              className="bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-700"
+              disabled={sending || !newMessage.trim()}
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
             >
-              <Send className="h-5 w-5" />
+              {sending ? (
+                <Sparkles className="h-5 w-5 animate-spin" />
+              ) : (
+                <Send className="h-5 w-5" />
+              )}
             </Button>
           </div>
         </form>
