@@ -22,7 +22,6 @@ import {
   Star,
   Phone,
 } from "lucide-react";
-import { formatPhoneNumber } from "@/lib/utils";
 
 const CLASSIFICATION_LABELS = {
   pending: { label: "Pendiente", color: "bg-yellow-500/20 text-yellow-500" },
@@ -324,7 +323,7 @@ export default function AdminChatPage() {
                 <h1 className="font-semibold text-foreground">{lead.name}</h1>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Phone className="h-3 w-3" />
-                  <span>{formatPhoneNumber(lead.whatsapp)}</span>
+                  <span>{lead.whatsapp}</span>
                 </div>
               </div>
             </div>
