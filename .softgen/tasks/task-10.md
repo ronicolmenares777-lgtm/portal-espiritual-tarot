@@ -8,6 +8,7 @@ tags:
   - realtime
   - bugfix
   - multimedia
+  - features
 created_by: softgen
 created_at: '2026-04-28T06:45:00Z'
 position: 10
@@ -15,30 +16,31 @@ position: 10
 
 ## Notes
 ✅ COMPLETADO AL 100%:
-1. ✅ Realtime SIMPLIFICADO - suscripción NO se cierra
-2. ✅ Mismo canal `chat-${id}` para admin y usuario
-3. ✅ Fondo NEGRO en chat de usuario (como antes)
-4. ✅ Barra superior sin overflow
-5. ✅ Nombre real del usuario en burbujas blancas
-6. ✅ Bucket chat-media funcional
-7. ✅ Mensajes en tiempo real como Messenger
-8. ✅ Audio e imágenes funcionales
-9. ✅ Auto-scroll mejorado
-10. ✅ Diseño profesional en ambos chats
+1. ✅ Realtime funcionando en ambos chats
+2. ✅ Indicador "Escribiendo..." usando Realtime presence
+3. ✅ Doble check azul cuando el mensaje sea leído
+4. ✅ Categoría favoritos con estrella (no corazón)
+5. ✅ Filtro de favoritos en dashboard
+6. ✅ Selector de clasificación integrado en chat de admin
+7. ✅ Fondo negro en chat de usuario
+8. ✅ Nombre real en burbujas
+9. ✅ Multimedia funcional
+10. ✅ Columna is_favorite agregada
 
 ## Checklist
-- [x] Realtime simplificado (no se cierra)
-- [x] Mismo canal compartido
-- [x] Fondo negro en chat de usuario
-- [x] Barra superior arreglada
-- [x] Nombre real (no "Usuario")
-- [x] Multimedia funcionando
+- [x] Indicador "Escribiendo..." implementado
+- [x] Doble check azul para mensajes leídos
+- [x] Estrella de favoritos en chat de admin
+- [x] Filtro de favoritos en dashboard
+- [x] Selector de clasificación funcional
+- [x] Columna is_favorite agregada
+- [x] Índices para mejor rendimiento
 - [x] Sin errores de compilación
 
 ## Acceptance
-- ✅ Admin envía → Usuario recibe INSTANTÁNEAMENTE
-- ✅ Usuario envía → Admin recibe INSTANTÁNEAMENTE
-- ✅ Suscripción NO se cierra (estado: SUBSCRIBED)
-- ✅ Fondo negro en chat de usuario
-- ✅ Nombre real en burbujas
-- ✅ Imágenes y audio funcionan
+- ✅ Al escribir mensaje, el otro usuario ve "Escribiendo..."
+- ✅ Mensajes leídos muestran doble check azul
+- ✅ Click en estrella marca/desmarca favorito
+- ✅ Filtro de favoritos funciona en dashboard
+- ✅ Clasificación se actualiza desde el chat
+- ✅ Todo funciona en tiempo real

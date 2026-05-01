@@ -31,7 +31,8 @@ import {
   ImageIcon,
   Filter,
   Menu,
-  Phone
+  Phone,
+  Button
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -65,6 +66,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<"leads" | "listo" | "papelera">("leads");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [classificationFilter, setClassificationFilter] = useState<string | null>(null);
+  const [favoriteFilter, setFavoriteFilter] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("todos");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,31 +198,17 @@ export default function Dashboard() {
   
   // Filtrar leads según tab activo y filtro de estado
   const filteredLeads = leads.filter((lead) => {
-    // Filtrar por tab activo
-    let tabMatch = false;
+    const matchesSearch =
+      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.whatsapp.includes(searchTerm);
     
-    switch (activeTab) {
-      case "leads":
-        tabMatch = lead.status === "nuevo";
-        break;
-      case "listo":
-        tabMatch = lead.status === "listo";
-        break;
-      case "papelera":
-        // La papelera usa deletedLeads, no este filtro
-        tabMatch = false;
-        break;
-      default:
-        tabMatch = true;
-    }
+    const matchesClassification = classificationFilter
+      ? lead.classification === classificationFilter
+      : true;
+    
+    const matchesFavorite = favoriteFilter ? lead.is_favorite === true : true;
 
-    // Filtrar por estado del ritual seleccionado
-    if (selectedStatus !== "todos") {
-      const statusMatch = lead.status === selectedStatus;
-      return tabMatch && statusMatch;
-    }
-
-    return tabMatch;
+    return matchesSearch && matchesClassification && matchesFavorite;
   });
 
   // Logs para debugging
@@ -509,6 +498,41 @@ export default function Dashboard() {
                         </div>
                       </button>
                     ))}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={classificationFilter === null ? "default" : "outline"}
+                      onClick={() => setClassificationFilter(null)}
+                    >
+                      Todos
+                    </Button>
+                    <Button
+                      variant={classificationFilter === "hot" ? "default" : "outline"}
+                      onClick={() => setClassificationFilter("hot")}
+                    >
+                      🔥 Hot
+                    </Button>
+                    <Button
+                      variant={classificationFilter === "warm" ? "default" : "outline"}
+                      onClick={() => setClassificationFilter("warm")}
+                    >
+                      ☀️ Warm
+                    </Button>
+                    <Button
+                      variant={classificationFilter === "cold" ? "default" : "outline"}
+                      onClick={() => setClassificationFilter("cold")}
+                    >
+                      ❄️ Cold
+                    </Button>
+                    <Button
+                      variant={favoriteFilter ? "default" : "outline"}
+                      onClick={() => setFavoriteFilter(!favoriteFilter)}
+                      className="gap-2"
+                    >
+                      <Star className={`h-4 w-4 ${favoriteFilter ? "fill-current" : ""}`} />
+                      Favoritos
+                    </Button>
                   </div>
                 </div>
               </div>
