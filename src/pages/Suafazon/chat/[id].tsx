@@ -21,6 +21,7 @@ import {
   Mic,
   Star,
   Phone,
+  User,
 } from "lucide-react";
 
 export default function ChatPage() {
@@ -317,43 +318,47 @@ export default function ChatPage() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
+        {messages.map((msg) => (
           <div
-            key={message.id}
-            className={`flex ${
-              message.is_from_maestro ? "justify-end" : "justify-start"
-            }`}
+            key={msg.id}
+            className={`flex gap-2 ${msg.is_from_maestro ? "justify-end" : "justify-start"}`}
           >
+            {!msg.is_from_maestro && (
+              <Avatar className="h-8 w-8 mt-1">
+                <AvatarFallback className="bg-accent/20 text-accent text-xs">
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+            )}
             <div
               className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                message.is_from_maestro
+                msg.is_from_maestro
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground"
+                  : "bg-card text-card-foreground"
               }`}
             >
-              {!message.is_from_maestro && (
-                <p className="text-xs font-medium mb-1">{lead.name}</p>
-              )}
-              {message.media_url && message.media_type === "image" && (
+              {msg.media_type === "image" && msg.media_url && (
                 <img
-                  src={message.media_url}
+                  src={msg.media_url}
                   alt="Imagen"
-                  className="rounded-lg max-w-full mb-2"
+                  className="rounded-lg mb-2 max-w-full"
                 />
               )}
-              {message.media_url && message.media_type === "audio" && (
-                <audio controls className="mb-2">
-                  <source src={message.media_url} type="audio/webm" />
+              {msg.media_type === "audio" && msg.media_url && (
+                <audio controls className="mb-2 max-w-full">
+                  <source src={msg.media_url} type="audio/webm" />
                 </audio>
               )}
-              <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-              <p className="text-xs opacity-70 mt-1">
-                {new Date(message.created_at).toLocaleTimeString("es-MX", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
+              {msg.text && <p className="text-sm break-words">{msg.text}</p>}
+              <p className="text-[10px] mt-1 opacity-70">{formatTime(msg.created_at)}</p>
             </div>
+            {msg.is_from_maestro && (
+              <Avatar className="h-8 w-8 mt-1">
+                <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                  <Sparkles className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />
