@@ -20,11 +20,11 @@ export default function AdminLogin() {
         // Verificar si es admin
         const { data: profile } = await supabase
           .from("profiles")
-          .select("is_admin")
+          .select("role")
           .eq("id", data.session.user.id)
           .single();
 
-        if (profile?.is_admin) {
+        if (profile?.role === "admin") {
           router.push("/Suafazon/dashboard");
         }
       }
@@ -58,7 +58,7 @@ export default function AdminLogin() {
       // Verificar si es admin
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("is_admin")
+        .select("role")
         .eq("id", authData.user.id)
         .single();
 
@@ -72,7 +72,7 @@ export default function AdminLogin() {
 
       console.log("👤 Perfil:", profile);
 
-      if (!profile?.is_admin) {
+      if (profile?.role !== "admin") {
         console.error("❌ Usuario no es admin");
         setError("No tienes permisos de administrador");
         await supabase.auth.signOut();

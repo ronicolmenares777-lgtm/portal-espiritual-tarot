@@ -246,3 +246,40 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 export async function logout(): Promise<void> {
   await supabase.auth.signOut();
 }
+
+export const checkAdminAuth = async () => {
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error("Error obteniendo sesión:", sessionError);
+      return { isAuthenticated: false, isAdmin: false, user: null };
+    }
+
+    if (!session) {
+      return { isAuthenticated: false, isAdmin: false, user: null };
+    }
+
+    // Verificar si el usuario es admin
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, full_name, email")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profileError) {
+      console.error("Error obteniendo perfil:", profileError);
+      return { isAuthenticated: true, isAdmin: false, user: session.user };
+    }
+
+    return {
+      isAuthenticated: true,
+      isAdmin: profile?.role === "admin",
+      user: session.user,
+      profile
+    };
+  } catch (error) {
+    console.error("Error en checkAdminAuth:", error);
+    return { isAuthenticated: false, isAdmin: false, user: null };
+  }
+};
