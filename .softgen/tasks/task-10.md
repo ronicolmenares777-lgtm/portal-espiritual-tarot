@@ -17,26 +17,23 @@ position: 10
 1. Error PGRST204 resuelto con SQL manual
 2. Chat funcional al 100%
 3. Admin login configurado:
-   - Usuario: brujildo@brujo.com
+   - Usuario: templogaleano@gmail.com
    - Contraseña: Pepe2002
-   - Email confirmado en DB
+   - Email SIN confirmar (recibirá email de confirmación)
    - Perfil con role = 'admin'
-4. Supabase Auth Config actualizada:
-   - enable_confirmations: false
-   - mailer_autoconfirm: true
-   - disable_signup: false
-5. Usuario con email_verified: true en metadata
+4. Supabase Auth Config:
+   - Email confirmation requerida (ON)
+   - Usuario debe confirmar email desde Gmail
 
 ## Checklist
 - [x] SQL manual ejecutado para tabla messages
 - [x] Chat usuario funcional
-- [x] Usuario brujildo@brujo.com creado y confirmado
+- [x] Usuario actualizado a templogaleano@gmail.com
 - [x] Perfil admin con role = 'admin'
 - [x] Contraseña: Pepe2002
-- [x] Supabase Auth config actualizada
-- [x] Email verification deshabilitada
+- [x] Email sin confirmar (esperando confirmación)
 
 ## Acceptance
 - ✅ Chat funcional sin PGRST204
-- ✅ Supabase Auth no requiere email confirmation
-- ✅ Login funcional con brujildo@brujo.com / Pepe2002
+- ⏳ Usuario debe confirmar email desde Gmail
+- ⏳ Login funcionará después de confirmar email
