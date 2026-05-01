@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export type Json =
   | string
   | number
@@ -93,7 +93,7 @@ export type Database = {
           lead_id: string
           media_type: string | null
           media_url: string | null
-          text: string
+          text: string | null
         }
         Insert: {
           created_at?: string
@@ -103,7 +103,7 @@ export type Database = {
           lead_id: string
           media_type?: string | null
           media_url?: string | null
-          text: string
+          text?: string | null
         }
         Update: {
           created_at?: string
@@ -113,7 +113,7 @@ export type Database = {
           lead_id?: string
           media_type?: string | null
           media_url?: string | null
-          text?: string
+          text?: string | null
         }
         Relationships: [
           {
