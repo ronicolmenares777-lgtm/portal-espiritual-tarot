@@ -23,12 +23,13 @@ import {
   Phone,
 } from "lucide-react";
 
-export default function ChatAdmin() {
+export default function ChatPage() {
   const router = useRouter();
   const { id } = router.query;
   const [lead, setLead] = useState<Tables<"leads"> | null>(null);
   const [messages, setMessages] = useState<Tables<"messages">[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -36,18 +37,14 @@ export default function ChatAdmin() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Auto-scroll
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Cargar lead
   useEffect(() => {
-    if (!id || typeof id !== "string") return;
-
-    console.log("🔄 Cargando lead:", id);
+    if (!id) return;
 
     const loadLead = async () => {
       const { data } = await supabase
@@ -57,160 +54,105 @@ export default function ChatAdmin() {
         .single();
 
       if (data) {
-        console.log("✅ Lead cargado:", data.name);
         setLead(data);
       }
     };
+
+    loadLead();
+  }, [id]);
+
+  // Sistema de POLLING - actualiza mensajes cada 2 segundos
+  useEffect(() => {
+    if (!lead) return;
+
+    console.log("🔄 Iniciando polling de mensajes cada 2 segundos");
 
     const loadMessages = async () => {
       const { data, error } = await supabase
         .from("messages")
         .select("*")
-        .eq("lead_id", id)
+        .eq("lead_id", lead.id)
         .order("created_at", { ascending: true });
 
-      console.log("📨 Mensajes cargados:", data?.length || 0);
-      if (error) console.error("❌ Error cargando mensajes:", error);
+      if (error) {
+        console.error("❌ Error cargando mensajes:", error);
+        return;
+      }
 
       if (data) {
         setMessages(data);
       }
+      setLoading(false);
     };
 
-    loadLead();
+    // Carga inicial
     loadMessages();
 
-    // Suscripción Realtime
-    console.log("🔔 Configurando suscripción Realtime para lead:", id);
-
-    const channel = supabase
-      .channel(`chat-admin-${id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `lead_id=eq.${id}`,
-        },
-        (payload) => {
-          console.log("✨ NUEVO MENSAJE RECIBIDO (Admin):", payload.new);
-          const newMsg = payload.new as Tables<"messages">;
-          setMessages((current) => {
-            // Evitar duplicados
-            const exists = current.some((m) => m.id === newMsg.id);
-            if (exists) {
-              console.log("⚠️ Mensaje duplicado, ignorando");
-              return current;
-            }
-            console.log("✅ Agregando mensaje nuevo al estado");
-            return [...current, newMsg];
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "messages",
-          filter: `lead_id=eq.${id}`,
-        },
-        (payload) => {
-          console.log("🔄 MENSAJE ACTUALIZADO:", payload.new);
-          const updatedMsg = payload.new as Tables<"messages">;
-          setMessages((current) =>
-            current.map((m) => (m.id === updatedMsg.id ? updatedMsg : m))
-          );
-        }
-      )
-      .subscribe((status) => {
-        console.log("📡 Estado suscripción Realtime (Admin):", status);
-      });
+    // Polling cada 2 segundos
+    const interval = setInterval(loadMessages, 2000);
 
     return () => {
-      console.log("🔌 Desconectando canal Realtime (Admin)");
-      supabase.removeChannel(channel);
+      console.log("🛑 Deteniendo polling de mensajes");
+      clearInterval(interval);
     };
-  }, [id]);
+  }, [lead]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !lead) return;
 
-    console.log("📤 Enviando mensaje (Admin):", newMessage);
     setSending(true);
+    const messageText = newMessage;
+    setNewMessage("");
 
-    const { data, error } = await supabase.from("messages").insert({
+    console.log("📤 Enviando mensaje del maestro");
+
+    const { error } = await supabase.from("messages").insert({
       lead_id: lead.id,
-      text: newMessage,
+      text: messageText,
       is_from_maestro: true,
-    }).select();
+    });
 
     if (error) {
       console.error("❌ Error enviando mensaje:", error);
+      setNewMessage(messageText);
     } else {
-      console.log("✅ Mensaje enviado exitosamente:", data);
+      console.log("✅ Mensaje enviado exitosamente");
     }
 
-    setNewMessage("");
     setSending(false);
   };
 
-  const handleClassificationChange = async (value: string) => {
-    if (!lead) return;
-    const { error } = await supabase
-      .from("leads")
-      .update({ classification: value })
-      .eq("id", lead.id);
-
-    if (!error) {
-      setLead({ ...lead, classification: value });
-    }
-  };
-
-  const toggleFavorite = async () => {
-    if (!lead) return;
-    const { error } = await supabase
-      .from("leads")
-      .update({ is_favorite: !lead.is_favorite })
-      .eq("id", lead.id);
-
-    if (!error) {
-      setLead({ ...lead, is_favorite: !lead.is_favorite });
-    }
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
     if (!file || !lead) return;
 
     setUploading(true);
+
     const fileExt = file.name.split(".").pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${lead.id}/${fileName}`;
+    const fileName = `${lead.id}/${Date.now()}.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from("chat-media")
-      .upload(filePath, file);
+      .upload(fileName, file);
 
-    if (uploadError) {
-      console.error("Error uploading file:", uploadError);
+    if (error) {
+      console.error("Error uploading file:", error);
       setUploading(false);
       return;
     }
 
     const {
       data: { publicUrl },
-    } = supabase.storage.from("chat-media").getPublicUrl(filePath);
-
-    const mediaType = file.type.startsWith("image/") ? "image" : "file";
+    } = supabase.storage.from("chat-media").getPublicUrl(fileName);
 
     await supabase.from("messages").insert({
       lead_id: lead.id,
-      text: file.name,
-      is_from_maestro: true,
-      media_type: mediaType,
+      text: file.type.startsWith("image/") ? "📷 Imagen" : "📎 Archivo",
       media_url: publicUrl,
+      media_type: file.type.startsWith("image/") ? "image" : "file",
+      is_from_maestro: true,
     });
 
     setUploading(false);
@@ -220,11 +162,12 @@ export default function ChatAdmin() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
+
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (e) => {
-        audioChunksRef.current.push(e.data);
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
       };
 
       mediaRecorder.onstop = async () => {
@@ -238,7 +181,7 @@ export default function ChatAdmin() {
       mediaRecorder.start();
       setRecording(true);
     } catch (error) {
-      console.error("Error starting recording:", error);
+      console.error("Error accessing microphone:", error);
     }
   };
 
@@ -252,35 +195,63 @@ export default function ChatAdmin() {
   const uploadAudio = async (audioBlob: Blob) => {
     if (!lead) return;
 
-    const fileName = `${Math.random()}.webm`;
-    const filePath = `${lead.id}/${fileName}`;
+    setUploading(true);
 
-    const { error: uploadError } = await supabase.storage
+    const fileName = `${lead.id}/${Date.now()}.webm`;
+
+    const { data, error } = await supabase.storage
       .from("chat-media")
-      .upload(filePath, audioBlob);
+      .upload(fileName, audioBlob);
 
-    if (uploadError) {
-      console.error("Error uploading audio:", uploadError);
+    if (error) {
+      console.error("Error uploading audio:", error);
+      setUploading(false);
       return;
     }
 
     const {
       data: { publicUrl },
-    } = supabase.storage.from("chat-media").getPublicUrl(filePath);
+    } = supabase.storage.from("chat-media").getPublicUrl(fileName);
 
     await supabase.from("messages").insert({
       lead_id: lead.id,
-      text: "Nota de voz",
-      is_from_maestro: true,
-      media_type: "audio",
+      text: "🎤 Audio",
       media_url: publicUrl,
+      media_type: "audio",
+      is_from_maestro: true,
     });
+
+    setUploading(false);
   };
 
-  if (!lead) {
+  const handleClassificationChange = async (value: string) => {
+    if (!lead) return;
+
+    await supabase
+      .from("leads")
+      .update({ classification: value })
+      .eq("id", lead.id);
+
+    setLead({ ...lead, classification: value });
+  };
+
+  const toggleFavorite = async () => {
+    if (!lead) return;
+
+    const newFavoriteStatus = !lead.is_favorite;
+
+    await supabase
+      .from("leads")
+      .update({ is_favorite: newFavoriteStatus })
+      .eq("id", lead.id);
+
+    setLead({ ...lead, is_favorite: newFavoriteStatus });
+  };
+
+  if (!lead || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Sparkles className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Sparkles className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -288,94 +259,91 @@ export default function ChatAdmin() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-border bg-card/50 backdrop-blur-sm p-4 flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push("/Suafazon/dashboard")}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <Avatar className="h-10 w-10">
-          <AvatarFallback>{lead.name[0]}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
+      <div className="bg-card border-b border-border p-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/Suafazon/dashboard")}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <Avatar className="h-10 w-10">
+            <AvatarFallback>
+              {lead.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
             <h1 className="font-semibold text-foreground">{lead.name}</h1>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={toggleFavorite}
-            >
-              <Star
-                className={`h-4 w-4 ${
-                  lead.is_favorite
-                    ? "fill-yellow-500 text-yellow-500"
-                    : "text-muted-foreground"
-                }`}
-              />
-            </Button>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Phone className="h-3 w-3" />
+              <span>{lead.whatsapp}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Phone className="h-3 w-3" />
-            <span>{lead.whatsapp}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleFavorite}
+            className={lead.is_favorite ? "text-yellow-500" : ""}
+          >
+            <Star
+              className="h-5 w-5"
+              fill={lead.is_favorite ? "currentColor" : "none"}
+            />
+          </Button>
           <Select
-            value={lead.classification || ""}
+            value={lead.classification || "sin_clasificar"}
             onValueChange={handleClassificationChange}
           >
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Clasificar" />
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="hot">🔥 Caliente</SelectItem>
-              <SelectItem value="warm">😊 Tibio</SelectItem>
-              <SelectItem value="cold">❄️ Frío</SelectItem>
+              <SelectItem value="sin_clasificar">Sin clasificar</SelectItem>
+              <SelectItem value="caliente">🔥 Caliente</SelectItem>
+              <SelectItem value="tibio">🌡️ Tibio</SelectItem>
+              <SelectItem value="frio">❄️ Frío</SelectItem>
+              <SelectItem value="convertido">✅ Convertido</SelectItem>
+              <SelectItem value="perdido">❌ Perdido</SelectItem>
             </SelectContent>
           </Select>
-          <Badge
-            variant={lead.status === "cerrado" ? "default" : "secondary"}
-            className="capitalize"
-          >
-            {lead.status}
-          </Badge>
         </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => (
+        {messages.map((message) => (
           <div
-            key={msg.id}
+            key={message.id}
             className={`flex ${
-              msg.is_from_maestro ? "justify-end" : "justify-start"
+              message.is_from_maestro ? "justify-end" : "justify-start"
             }`}
           >
             <div
               className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                msg.is_from_maestro
+                message.is_from_maestro
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
+                  : "bg-muted text-foreground"
               }`}
             >
-              {msg.media_type === "image" && msg.media_url && (
+              {!message.is_from_maestro && (
+                <p className="text-xs font-medium mb-1">{lead.name}</p>
+              )}
+              {message.media_url && message.media_type === "image" && (
                 <img
-                  src={msg.media_url}
-                  alt="Shared"
+                  src={message.media_url}
+                  alt="Imagen"
                   className="rounded-lg max-w-full mb-2"
                 />
               )}
-              {msg.media_type === "audio" && msg.media_url && (
+              {message.media_url && message.media_type === "audio" && (
                 <audio controls className="mb-2">
-                  <source src={msg.media_url} type="audio/webm" />
+                  <source src={message.media_url} type="audio/webm" />
                 </audio>
               )}
-              <p className="text-sm">{msg.text}</p>
+              <p className="text-sm whitespace-pre-wrap">{message.text}</p>
               <p className="text-xs opacity-70 mt-1">
-                {new Date(msg.created_at).toLocaleTimeString("es-MX", {
+                {new Date(message.created_at).toLocaleTimeString("es-MX", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
@@ -387,51 +355,41 @@ export default function ChatAdmin() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-border bg-card/50 backdrop-blur-sm p-4">
-        <div className="flex gap-2">
+      <div className="p-4 bg-card border-t border-border">
+        <div className="flex gap-2 items-center">
           <input
             type="file"
             id="file-upload"
             className="hidden"
+            accept="image/*,video/*,.pdf,.doc,.docx"
             onChange={handleFileUpload}
-            accept="image/*"
           />
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
             onClick={() => document.getElementById("file-upload")?.click()}
             disabled={uploading}
           >
-            {uploading ? (
-              <Sparkles className="h-5 w-5 animate-spin" />
-            ) : (
-              <Upload className="h-5 w-5" />
-            )}
+            <Upload className="h-5 w-5" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
             onClick={recording ? stopRecording : startRecording}
-            className={recording ? "bg-red-500 text-white" : ""}
+            className={recording ? "text-red-500" : ""}
           >
             <Mic className="h-5 w-5" />
           </Button>
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
             placeholder="Escribe un mensaje..."
-            className="flex-1"
-            disabled={sending}
+            className="flex-1 bg-background border-border"
           />
           <Button
             onClick={handleSendMessage}
             disabled={sending || !newMessage.trim()}
+            className="bg-primary hover:bg-primary/90"
           >
             {sending ? (
               <Sparkles className="h-5 w-5 animate-spin" />
