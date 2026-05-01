@@ -76,50 +76,42 @@ export default function PerfilMaestro() {
   // Verificar autenticación y cargar perfil
   useEffect(() => {
     const loadProfile = async () => {
-      setIsLoading(true);
-      
-      // Verificar sesión
-      const { session } = await AuthService.getSession();
-      if (!session) {
-        router.replace("/Suafazon");
-        return;
-      }
+      try {
+        const { data: profile, error } = await ProfileService.get();
+        
+        if (error) {
+          console.error("Error cargando perfil:", error);
+          return;
+        }
 
-      // Cargar perfil desde Supabase
-      const { data, error } = await ProfileService.getCurrent();
-      
-      if (error) {
-        console.error("Error cargando perfil:", error);
-        alert("Error al cargar el perfil");
+        if (profile) {
+          setProfileData({
+            name: profile.full_name || "",
+            email: profile.email || "",
+            phone: profile.phone || "",
+            bio: profile.bio || "",
+            avatar: profile.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro",
+            notifications: {
+              email: true,
+              push: true,
+              newLeads: true
+            },
+            preferences: {
+              theme: "dark",
+              language: "es",
+              autoResponse: false
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error en loadProfile:", error);
+      } finally {
         setIsLoading(false);
-        return;
       }
-
-      if (data) {
-        setProfileData({
-          name: data.full_name || "",
-          email: data.email || "",
-          phone: data.phone || "",
-          bio: data.bio || "",
-          avatar: data.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=maestro",
-          notifications: {
-            email: true,
-            push: true,
-            newLeads: true
-          },
-          preferences: {
-            theme: "dark",
-            language: "es",
-            autoResponse: false
-          }
-        });
-      }
-
-      setIsLoading(false);
     };
 
     loadProfile();
-  }, [router]);
+  }, []);
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
