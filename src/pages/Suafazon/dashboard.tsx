@@ -227,7 +227,7 @@ export default function Dashboard() {
       cerrado: leads.filter(l => l.status === "cerrado").length,
       perdido: leads.filter(l => l.status === "perdido").length,
     });
-  }, [activeTab, leads, filteredLeads, selectedStatus, searchTerm, favoriteFilter]);
+  }, [activeTab, leads, filteredLeads, selectedStatus, searchTerm, favoriteFilter]));
 
   // Cargar datos
   useEffect(() => {
