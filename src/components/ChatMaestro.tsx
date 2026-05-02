@@ -203,65 +203,47 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
     setUploading(false);
   };
 
-  const handleLogin = async () => {
-    if (!loginData.name.trim() || !loginData.countryCode || !loginData.whatsapp.trim()) {
-      setLoginError("Por favor completa todos los campos");
-      return;
-    }
+  const handleAudioUpload = async (audioBlob: Blob) => {
+    if (!leadId) return;
 
-    // Validar formato de WhatsApp (solo números)
-    if (!/^\d+$/.test(loginData.whatsapp)) {
-      setLoginError("El número de WhatsApp solo debe contener dígitos");
-      return;
-    }
-
-    setLoginError("");
-    setLoading(true);
+    setUploading(true);
+    console.log("📤 [AUDIO] Procesando audio...");
 
     try {
-      console.log("🔐 [LOGIN] Intentando autenticar:", {
-        name: loginData.name,
-        countryCode: loginData.countryCode,
-        whatsapp: loginData.whatsapp
-      });
+      const reader = new FileReader();
+      
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        console.log("✅ [AUDIO] Audio convertido a base64");
 
-      // Buscar lead con EXACTAMENTE estos datos
-      const { data: leads, error } = await supabase
-        .from("leads")
-        .select("*")
-        .eq("name", loginData.name.trim())
-        .eq("country_code", loginData.countryCode)
-        .eq("whatsapp", loginData.whatsapp.trim());
+        // Guardar con prefijo [AUDIO]
+        const messageContent = `[AUDIO]${base64String}`;
 
-      console.log("🔍 [LOGIN] Resultado búsqueda:", { leads, error });
+        const { data, error: dbError } = await supabase.from("messages").insert({
+          lead_id: leadId,
+          text: messageContent,
+          is_from_maestro: false,
+        }).select();
 
-      if (error) {
-        console.error("❌ [LOGIN] Error en búsqueda:", error);
-        setLoginError("Error al verificar datos. Intenta nuevamente.");
-        setLoading(false);
-        return;
-      }
+        if (dbError) {
+          console.error("❌ [AUDIO] Error insertando mensaje:", dbError);
+          alert(`Error al enviar audio: ${dbError.message}`);
+        } else {
+          console.log("✅ [AUDIO] Audio enviado exitosamente");
+        }
 
-      if (!leads || leads.length === 0) {
-        console.log("❌ [LOGIN] No se encontró lead con estos datos exactos");
-        setLoginError("Datos incorrectos. Verifica tu nombre, código de país y número de WhatsApp.");
-        setLoading(false);
-        return;
-      }
+        setUploading(false);
+      };
 
-      // Si hay múltiples leads (mismo nombre+número), usar el más reciente
-      const lead = leads.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      )[0];
+      reader.onerror = () => {
+        console.error("❌ [AUDIO] Error leyendo blob");
+        setUploading(false);
+      };
 
-      console.log("✅ [LOGIN] Lead encontrado:", lead.id);
-
-      // Redirigir al chat con el leadId correcto
-      window.location.href = `/chat-usuario?leadId=${lead.id}`;
+      reader.readAsDataURL(audioBlob);
     } catch (err) {
-      console.error("❌ [LOGIN] Error general:", err);
-      setLoginError("Error al iniciar sesión. Intenta nuevamente.");
-      setLoading(false);
+      console.error("❌ [AUDIO] Error general:", err);
+      setUploading(false);
     }
   };
 
@@ -396,16 +378,6 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
             )}
           </Button>
         </div>
-        {loginError && (
-          <div className="bg-red-500/10 border-2 border-red-500/40 rounded-xl p-4 mb-4">
-            <p className="text-red-400 text-sm text-center font-medium">
-              {loginError}
-            </p>
-            <p className="text-red-400/70 text-xs text-center mt-2">
-              💡 Ingresa EXACTAMENTE los mismos datos con los que te registraste (nombre, código de país y número)
-            </p>
-          </div>
-        )}
       </form>
     </div>
   );

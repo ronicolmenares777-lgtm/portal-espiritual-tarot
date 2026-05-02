@@ -248,32 +248,52 @@ export default function Home() {
       return;
     }
 
+    // Validar formato de WhatsApp (solo números)
+    if (!/^\d+$/.test(loginData.whatsapp)) {
+      setLoginError("El número de WhatsApp solo debe contener dígitos");
+      return;
+    }
+
     try {
-      console.log("🔍 Buscando lead en Supabase:", { name: loginData.name, whatsapp: loginData.whatsapp });
+      console.log("🔍 Buscando lead en Supabase con TODOS los datos:", { 
+        name: loginData.name.trim(), 
+        countryCode: loginData.countryCode,
+        whatsapp: loginData.whatsapp.trim() 
+      });
       
-      const result = await LeadService.findByNameAndWhatsApp(loginData.name, loginData.whatsapp);
+      // Buscar lead con EXACTAMENTE estos tres datos: nombre, código de país y número
+      const { data: leads, error } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("name", loginData.name.trim())
+        .eq("country_code", loginData.countryCode)
+        .eq("whatsapp", loginData.whatsapp.trim());
       
-      if (result.error) {
-        console.error("❌ Error en Supabase:", result.error);
+      if (error) {
+        console.error("❌ Error en Supabase:", error);
         setLoginError("Error de conexión con Supabase. Verifica tu internet.");
         return;
       }
       
-      if (!result.data || result.data.length === 0) {
-        setLoginError("No se encontró ninguna consulta con estos datos. Verifica tu nombre y WhatsApp exactos.");
+      console.log("📊 Resultados de búsqueda:", leads);
+      
+      if (!leads || leads.length === 0) {
+        setLoginError("Datos incorrectos. Verifica tu nombre, código de país y número de WhatsApp exactos.");
         return;
       }
 
-      const lead = result.data[0];
+      // Si hay múltiples leads, usar el más reciente
+      const lead = leads.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )[0];
+      
       console.log("✅ Lead encontrado en Supabase:", lead.id);
       
-      setLeadId(lead.id);
-      setFormData(prev => ({ ...prev, name: lead.name, whatsapp: lead.whatsapp }));
-      setShowLoginModal(false);
-      setCurrentScreen("chat");
+      // Redirigir al chat-usuario con el leadId correcto
+      window.location.href = `/chat-usuario?leadId=${lead.id}`;
     } catch (error: any) {
       console.error("❌ Error en login:", error);
-      setLoginError(`Error de Supabase: ${error.message || 'Intenta de nuevo'}`);
+      setLoginError(`Error: ${error.message || 'Intenta de nuevo'}`);
     }
   };
 
@@ -626,6 +646,9 @@ export default function Home() {
               {loginError && (
                 <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
                   {loginError}
+                  <p className="text-xs mt-2 text-red-400/70">
+                    💡 Debes usar exactamente el mismo nombre, código de país y número con los que te registraste
+                  </p>
                 </div>
               )}
 
