@@ -37,6 +37,7 @@ type Lead = {
   answers: any;
   country_code: string;
   last_interaction_at: string;
+  status: string;
 };
 
 export default function ChatPage() {
@@ -47,9 +48,12 @@ export default function ChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [recording, setRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [maestroProfile, setMaestroProfile] = useState<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Cargar perfil del maestro al inicio
   useEffect(() => {
@@ -231,8 +235,85 @@ export default function ChatPage() {
     }
   };
 
-  // Función de audio deshabilitada por ahora
-  // const handleAudioRecord se implementará en una versión futura
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        await handleAudioUpload(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setRecording(true);
+      console.log("🎤 [AUDIO] Grabación iniciada");
+    } catch (err) {
+      console.error("❌ [AUDIO] Error iniciando grabación:", err);
+      alert("Error al acceder al micrófono");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      setRecording(false);
+      console.log("⏹️ [AUDIO] Grabación detenida");
+    }
+  };
+
+  const handleAudioUpload = async (audioBlob: Blob) => {
+    if (!lead) return;
+
+    setUploading(true);
+    console.log("📤 [AUDIO] Procesando audio...");
+
+    try {
+      const reader = new FileReader();
+      
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        console.log("✅ [AUDIO] Audio convertido a base64");
+
+        // Guardar con prefijo [AUDIO]
+        const messageContent = `[AUDIO]${base64String}`;
+
+        const { data, error: dbError } = await supabase.from("messages").insert({
+          lead_id: lead.id,
+          text: messageContent,
+          is_from_maestro: true,
+        }).select();
+
+        if (dbError) {
+          console.error("❌ [AUDIO] Error insertando mensaje:", dbError);
+          alert(`Error al enviar audio: ${dbError.message}`);
+        } else {
+          console.log("✅ [AUDIO] Audio enviado exitosamente");
+        }
+
+        setUploading(false);
+      };
+
+      reader.onerror = () => {
+        console.error("❌ [AUDIO] Error leyendo blob");
+        setUploading(false);
+      };
+
+      reader.readAsDataURL(audioBlob);
+    } catch (err) {
+      console.error("❌ [AUDIO] Error general:", err);
+      setUploading(false);
+    }
+  };
 
   if (!lead) {
     return (
@@ -247,43 +328,91 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-card border-b border-border p-4 flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push("/Suafazon/dashboard")}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <Avatar className="h-10 w-10">
-          <AvatarFallback className="bg-accent/20 text-accent">
-            <User className="h-5 w-5" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <h2 className="font-semibold">{lead.name}</h2>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Phone className="h-3 w-3" />
-            {lead.whatsapp}
-          </p>
+      {/* Chat Header */}
+      <div className="bg-card/80 backdrop-blur-sm border-b border-gold/20 p-6 shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push("/Suafazon/dashboard")}
+              className="px-4 py-2 bg-secondary/50 hover:bg-secondary/70 rounded-xl transition-all flex items-center gap-2"
+            >
+              ← Volver
+            </button>
+            <div>
+              <h1 className="text-2xl font-serif font-bold text-foreground">
+                {lead?.name}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {lead?.country_code} {lead?.whatsapp}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            {/* Botón de favorito */}
+            <button
+              onClick={async () => {
+                const { error } = await supabase
+                  .from("leads")
+                  .update({ is_favorite: !lead.is_favorite })
+                  .eq("id", lead.id);
+
+                if (!error) {
+                  setLead({ ...lead, is_favorite: !lead.is_favorite });
+                }
+              }}
+              className={`px-4 py-2 rounded-xl border-2 font-semibold transition-all ${
+                lead.is_favorite
+                  ? "bg-amber-500/20 border-amber-500 text-amber-500"
+                  : "bg-secondary/50 border-border text-muted-foreground hover:bg-secondary/70"
+              }`}
+            >
+              {lead.is_favorite ? "⭐ Favorito" : "☆ Marcar favorito"}
+            </button>
+
+            {/* Selector de estado */}
+            <select
+              value={lead.status}
+              onChange={async (e) => {
+                const newStatus = e.target.value;
+                const { error } = await supabase
+                  .from("leads")
+                  .update({ status: newStatus })
+                  .eq("id", lead.id);
+
+                if (!error) {
+                  setLead({ ...lead, status: newStatus });
+                }
+              }}
+              className="px-4 py-2 bg-secondary/50 border-2 border-border rounded-xl font-semibold text-foreground cursor-pointer hover:bg-secondary/70 transition-all"
+            >
+              <option value="nuevo">🆕 Nuevo</option>
+              <option value="enConversacion">💬 En Conversación</option>
+              <option value="clienteCaliente">🔥 Cliente Caliente</option>
+              <option value="listo">✅ Listo</option>
+              <option value="cerrado">🔒 Cerrado</option>
+              <option value="perdido">❌ Perdido</option>
+            </select>
+          </div>
         </div>
-        {lead.is_favorite && <Star className="h-5 w-5 fill-primary text-primary" />}
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg) => {
-          // Detectar si es imagen por el prefijo [IMG]
+          // Detectar tipos de mensaje
           const isImage = msg.text?.startsWith("[IMG]");
+          const isAudio = msg.text?.startsWith("[AUDIO]");
           const imageData = isImage ? msg.text?.substring(5) : null;
-          const textContent = isImage ? null : msg.text;
+          const audioData = isAudio ? msg.text?.substring(7) : null;
+          const textContent = (isImage || isAudio) ? null : msg.text;
 
           console.log("💬 [MSG-RENDER]", {
             id: msg.id.substring(0, 8),
             is_from_maestro: msg.is_from_maestro,
             tipo: msg.is_from_maestro ? "MAESTRO" : "USUARIO",
-            isImage
+            isImage,
+            isAudio
           });
 
           return (
@@ -325,6 +454,13 @@ export default function ChatPage() {
                     src={imageData}
                     alt="Imagen enviada"
                     className="mt-2 max-w-full max-h-80 rounded-lg"
+                  />
+                )}
+                {isAudio && audioData && (
+                  <audio
+                    src={audioData}
+                    controls
+                    className="mt-2 max-w-full"
                   />
                 )}
                 <p className={`text-[10px] mt-2 font-medium ${
@@ -398,16 +534,21 @@ export default function ChatPage() {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
+              disabled={uploading || recording}
               className="flex-1 px-4 py-2 bg-secondary/50 hover:bg-secondary/70 border border-border rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
               📷 {uploading ? "Subiendo..." : "Enviar Imagen"}
             </button>
             <button
-              disabled
-              className="flex-1 px-4 py-2 bg-secondary/30 border border-border rounded-xl font-medium opacity-50 cursor-not-allowed flex items-center justify-center gap-2"
+              onClick={recording ? stopRecording : startRecording}
+              disabled={uploading}
+              className={`flex-1 px-4 py-2 border rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 ${
+                recording 
+                  ? "bg-red-500/20 border-red-500 text-red-400 animate-pulse"
+                  : "bg-secondary/50 hover:bg-secondary/70 border-border"
+              }`}
             >
-              🎤 Audio (Próximamente)
+              🎤 {recording ? "Detener Grabación" : "Grabar Audio"}
             </button>
           </div>
         </div>
