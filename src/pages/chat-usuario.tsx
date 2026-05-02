@@ -431,16 +431,16 @@ export default function ChatUsuario() {
                   {/* Avatar - SOLO para usuario (derecha) */}
                   {!msg.is_from_maestro && (
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-lg border-2 border-primary/40">
-                        {userName?.charAt(0).toUpperCase() || "U"}
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-base sm:text-lg border-2 border-primary/40">
+                        U
                       </div>
-                      <span className="text-[10px] text-muted-foreground font-semibold max-w-[60px] truncate">
-                        {userName || "Tú"}
+                      <span className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold max-w-[50px] sm:max-w-[60px] truncate">
+                        Tú
                       </span>
                     </div>
                   )}
                 </div>
-              })}
+              ))}
               <div ref={messagesEndRef} />
             </div>
 
