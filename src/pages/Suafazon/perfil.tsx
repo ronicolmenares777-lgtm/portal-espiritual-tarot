@@ -130,32 +130,46 @@ export default function PerfilMaestro() {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) return;
+      if (!session?.user?.id) {
+        console.error("❌ [SAVE] No hay sesión de usuario");
+        setMessage({ type: "error", text: "No hay sesión activa" });
+        setSaving(false);
+        return;
+      }
 
-      const { error } = await supabase
+      console.log("💾 [SAVE] Guardando perfil...");
+      console.log("  - User ID:", session.user.id);
+      console.log("  - Nombre:", profile.full_name);
+      console.log("  - Avatar URL length:", profile.avatar_url?.length || 0);
+      console.log("  - Avatar URL preview:", profile.avatar_url?.substring(0, 50));
+
+      const { data, error } = await supabase
         .from("profiles")
         .update({
           full_name: profile.full_name.trim(),
           avatar_url: profile.avatar_url,
         })
-        .eq("id", session.user.id);
+        .eq("id", session.user.id)
+        .select();
+
+      console.log("📊 [SAVE] Respuesta de Supabase:", { data, error });
 
       if (error) {
-        console.error("Error saving profile:", error);
-        setMessage({ type: "error", text: "Error al guardar cambios" });
+        console.error("❌ [SAVE] Error guardando perfil:", error);
+        setMessage({ type: "error", text: "Error al guardar cambios: " + error.message });
         setSaving(false);
         return;
       }
 
+      console.log("✅ [SAVE] Perfil guardado exitosamente");
       setMessage({ type: "success", text: "✅ Perfil actualizado exitosamente" });
       setSaving(false);
 
-      // Redirigir al dashboard después de 2 segundos
       setTimeout(() => {
         router.push("/Suafazon/dashboard");
       }, 2000);
     } catch (err) {
-      console.error("Error:", err);
+      console.error("❌ [SAVE] Error general:", err);
       setMessage({ type: "error", text: "Error al guardar cambios" });
       setSaving(false);
     }
