@@ -212,14 +212,22 @@ export default function Dashboard() {
 
   // Logs para debugging
   useEffect(() => {
-    console.log("📊 Dashboard Estado:");
+    console.log("📊 [DASHBOARD] Estado actual:");
     console.log("  - Active Tab:", activeTab);
     console.log("  - Selected Status:", selectedStatus);
+    console.log("  - Search Term:", searchTerm);
+    console.log("  - Favorite Filter:", favoriteFilter);
     console.log("  - Total Leads:", leads.length);
     console.log("  - Filtered Leads:", filteredLeads.length);
-    console.log("  - Deleted Leads:", deletedLeads.length);
-    console.log("  - Favorite Filter:", favoriteFilter);
-  }, [activeTab, leads.length, filteredLeads.length, deletedLeads.length, selectedStatus, favoriteFilter]);
+    console.log("  - Leads por estado:", {
+      nuevo: leads.filter(l => l.status === "nuevo").length,
+      enConversacion: leads.filter(l => l.status === "enConversacion").length,
+      clienteCaliente: leads.filter(l => l.status === "clienteCaliente").length,
+      listo: leads.filter(l => l.status === "listo").length,
+      cerrado: leads.filter(l => l.status === "cerrado").length,
+      perdido: leads.filter(l => l.status === "perdido").length,
+    });
+  }, [activeTab, leads, filteredLeads, selectedStatus, searchTerm, favoriteFilter]);
 
   // Cargar datos
   useEffect(() => {
