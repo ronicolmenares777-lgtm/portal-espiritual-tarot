@@ -82,7 +82,7 @@ export default function ChatPage() {
 
     const loadMessages = async () => {
       const { data, error } = await supabase
-        .from("messages")
+        .from("chat_messages")
         .select("*")
         .eq("lead_id", id)
         .order("created_at", { ascending: true });
@@ -117,7 +117,7 @@ export default function ChatPage() {
     const messageText = newMessage;
     setNewMessage("");
 
-    const { error } = await supabase.from("messages").insert({
+    const { error } = await supabase.from("chat_messages").insert({
       lead_id: lead.id,
       text: messageText,
       is_from_maestro: true,
@@ -160,8 +160,8 @@ export default function ChatPage() {
         const base64String = reader.result as string;
         console.log("✅ [UPLOAD] Archivo convertido a base64");
 
-        // Insertar mensaje SIN media_type - se detectará del base64 al mostrar
-        const { error: dbError } = await supabase.from("messages").insert({
+        // Insertar mensaje en la NUEVA tabla chat_messages
+        const { error: dbError } = await supabase.from("chat_messages").insert({
           lead_id: lead.id,
           media_url: base64String,
           is_from_maestro: true,
@@ -215,7 +215,7 @@ export default function ChatPage() {
         .from("chat-media")
         .getPublicUrl(fileName);
 
-      await supabase.from("messages").insert({
+      await supabase.from("chat_messages").insert({
         lead_id: lead.id,
         media_url: publicUrl,
         media_type: "audio",

@@ -15,6 +15,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_from_maestro: boolean
+          is_read: boolean | null
+          lead_id: string
+          media_type: string | null
+          media_url: string | null
+          text: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_from_maestro?: boolean
+          is_read?: boolean | null
+          lead_id: string
+          media_type?: string | null
+          media_url?: string | null
+          text?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_from_maestro?: boolean
+          is_read?: boolean | null
+          lead_id?: string
+          media_type?: string | null
+          media_url?: string | null
+          text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           answers: Json | null

@@ -56,72 +56,55 @@ export default function ChatUsuario() {
 
   // Sistema de POLLING - actualiza mensajes cada 2 segundos
   useEffect(() => {
-    if (!leadId || typeof leadId !== "string") {
-      console.log("⚠️ Polling cancelado - leadId no válido:", leadId);
-      return;
-    }
-
-    console.log("🔄 INICIANDO POLLING para leadId:", leadId);
+    if (!leadId) return;
+    
+    const finalLeadId = Array.isArray(leadId) ? leadId[0] : leadId;
+    if (!finalLeadId) return;
 
     const loadMessages = async () => {
-      console.log("📡 Consultando mensajes...");
       const { data, error } = await supabase
-        .from("messages")
+        .from("chat_messages")
         .select("*")
-        .eq("lead_id", leadId)
+        .eq("lead_id", finalLeadId)
         .order("created_at", { ascending: true });
 
       if (error) {
-        console.error("❌ Error cargando mensajes:", error);
+        console.error("Error loading messages:", error);
         return;
       }
 
       if (data) {
-        console.log(`📨 Mensajes cargados: ${data.length}`, data);
         setMessages(data);
-      } else {
-        console.log("⚠️ No hay mensajes");
       }
     };
 
-    // Carga inicial inmediata
     loadMessages();
-
-    // Polling cada 2 segundos
-    const interval = setInterval(() => {
-      console.log("⏰ Ejecutando polling...");
-      loadMessages();
-    }, 2000);
+    const interval = setInterval(loadMessages, 2000);
 
     return () => {
-      console.log("🛑 Deteniendo polling");
       clearInterval(interval);
     };
   }, [leadId]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !leadId || typeof leadId !== "string") {
-      console.log("⚠️ No se puede enviar - mensaje vacío o leadId inválido");
-      return;
-    }
+    if (!newMessage.trim() || !leadId) return;
+
+    const finalLeadId = Array.isArray(leadId) ? leadId[0] : leadId;
+    if (!finalLeadId) return;
 
     setSending(true);
     const messageText = newMessage;
     setNewMessage("");
 
-    console.log("📤 Enviando mensaje del usuario:", messageText);
-
-    const { data, error } = await supabase.from("messages").insert({
-      lead_id: leadId,
+    const { error } = await supabase.from("chat_messages").insert({
+      lead_id: finalLeadId,
       text: messageText,
       is_from_maestro: false,
-    }).select();
+    });
 
     if (error) {
-      console.error("❌ Error enviando mensaje:", error);
+      console.error("Error sending message:", error);
       setNewMessage(messageText);
-    } else {
-      console.log("✅ Mensaje enviado exitosamente:", data);
     }
 
     setSending(false);
@@ -145,8 +128,8 @@ export default function ChatUsuario() {
         const base64String = reader.result as string;
         console.log("✅ [USER-UPLOAD] Archivo convertido a base64");
 
-        // Insertar mensaje SIN media_type - se detectará del base64 al mostrar
-        const { error: dbError } = await supabase.from("messages").insert({
+        // Insertar mensaje en la NUEVA tabla chat_messages
+        const { error: dbError } = await supabase.from("chat_messages").insert({
           lead_id: finalLeadId,
           media_url: base64String,
           is_from_maestro: false,

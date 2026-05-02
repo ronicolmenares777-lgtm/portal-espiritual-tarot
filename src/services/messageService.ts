@@ -1,52 +1,50 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export class MessageService {
-  static async create(data: {
-    lead_id: string;
-    text: string;
-    is_from_maestro?: boolean;
-  }) {
-    console.log("📤 Creando mensaje:", data);
-    
-    // Preparar objeto - solo incluir is_from_maestro si es true
-    const insertData: any = {
-      lead_id: data.lead_id,
-      text: data.text,
-    };
-    
-    // Solo agregar is_from_maestro si es true (para admin)
-    if (data.is_from_maestro === true) {
-      insertData.is_from_maestro = true;
-    }
-    // Si es false o undefined, NO enviarlo - dejar que DEFAULT funcione
-    
-    const { data: messages, error } = await supabase
-      .from("messages")
-      .insert(insertData)
-      .select();
-
-    if (error) {
-      console.error("❌ Error creando mensaje:", error);
-      return null;
-    }
-
-    const message = messages?.[0] || null;
-    console.log("✅ Mensaje creado exitosamente:", message);
-    return message;
-  }
-
-  static async getByLeadId(leadId: string) {
+export const messageService = {
+  async getMessagesByLeadId(leadId: string) {
     const { data, error } = await supabase
-      .from("messages")
+      .from("chat_messages")
       .select("*")
       .eq("lead_id", leadId)
       .order("created_at", { ascending: true });
 
-    if (error) {
-      console.error("❌ Error obteniendo mensajes:", error);
-      return [];
-    }
-
+    if (error) throw error;
     return data || [];
-  }
-}
+  },
+
+  async sendMessage(leadId: string, text: string, isFromMaestro: boolean) {
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .insert({
+        lead_id: leadId,
+        text,
+        is_from_maestro: isFromMaestro,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async markAsRead(messageId: string) {
+    const { error } = await supabase
+      .from("chat_messages")
+      .update({ is_read: true })
+      .eq("id", messageId);
+
+    if (error) throw error;
+  },
+
+  async getUnreadCount(leadId: string) {
+    const { count, error } = await supabase
+      .from("chat_messages")
+      .select("*", { count: "exact", head: true })
+      .eq("lead_id", leadId)
+      .eq("is_read", false)
+      .eq("is_from_maestro", false);
+
+    if (error) throw error;
+    return count || 0;
+  },
+};
