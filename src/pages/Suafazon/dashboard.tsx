@@ -196,26 +196,38 @@ export default function Dashboard() {
     setShowProfile(false);
   };
   
-  // Filtrar leads según tab activo y filtro de estado
+  // Filtrar leads según tab activo y filtros aplicados
   const filteredLeads = leads.filter((lead) => {
+    // Filtro de tab activo
+    const matchesTab = 
+      activeTab === "leads" ? lead.status === "nuevo" :
+      activeTab === "listo" ? lead.status === "listo" :
+      true; // papelera no filtra por status
+
+    // Filtro de búsqueda
     const matchesSearch =
       lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lead.whatsapp.includes(searchTerm);
     
+    // Filtro de favoritos
     const matchesFavorite = favoriteFilter ? lead.is_favorite === true : true;
 
-    return matchesSearch && matchesFavorite;
+    // Filtro de estado seleccionado
+    const matchesStatus = selectedStatus === "todos" ? true : lead.status === selectedStatus;
+
+    return matchesTab && matchesSearch && matchesFavorite && matchesStatus;
   });
 
   // Logs para debugging
   useEffect(() => {
     console.log("📊 Dashboard Estado:");
     console.log("  - Active Tab:", activeTab);
+    console.log("  - Selected Status:", selectedStatus);
     console.log("  - Total Leads:", leads.length);
     console.log("  - Filtered Leads:", filteredLeads.length);
     console.log("  - Deleted Leads:", deletedLeads.length);
-    console.log("  - Selected Status:", selectedStatus);
-  }, [activeTab, leads.length, filteredLeads.length, deletedLeads.length, selectedStatus]);
+    console.log("  - Favorite Filter:", favoriteFilter);
+  }, [activeTab, leads.length, filteredLeads.length, deletedLeads.length, selectedStatus, favoriteFilter]);
 
   // Cargar datos
   useEffect(() => {
