@@ -152,24 +152,32 @@ export default function ChatPage() {
     setUploading(true);
 
     try {
-      const fileName = `${lead.id}/${Date.now()}.${file.name.split(".").pop()}`;
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${lead.id}/${Date.now()}.${fileExt}`;
       
-      const { data, error } = await supabase.storage
+      // Intentar subir directamente
+      const { error: uploadError } = await supabase.storage
         .from("chat-media")
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false
+        });
 
-      if (error) {
-        console.error("Error uploading file:", error);
+      if (uploadError) {
+        console.error("Error uploading file:", uploadError);
+        alert("Error al subir archivo. Por favor verifica las políticas del bucket en Supabase.");
         setUploading(false);
         return;
       }
 
+      // Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
         .from("chat-media")
         .getPublicUrl(fileName);
 
       const mediaType = file.type.startsWith("image/") ? "image" : "audio";
 
+      // Insertar mensaje en la base de datos
       await supabase.from("messages").insert({
         lead_id: lead.id,
         media_url: publicUrl,

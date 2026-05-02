@@ -30,15 +30,6 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
   useEffect(() => {
     if (!leadId || typeof leadId !== "string") return;
 
-    console.log("🔄 [USUARIO] Iniciando polling de mensajes cada 2 segundos");
-
-    // Verificar buckets disponibles
-    const checkBuckets = async () => {
-      const { data: buckets, error } = await supabase.storage.listBuckets();
-      console.log("🪣 [USUARIO] Buckets disponibles:", buckets, error);
-    };
-    checkBuckets();
-
     const loadMessages = async () => {
       const { data, error } = await supabase
         .from("messages")
@@ -46,13 +37,7 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
         .eq("lead_id", leadId)
         .order("created_at", { ascending: true });
 
-      if (error) {
-        console.error("❌ [USUARIO] Error cargando mensajes:", error);
-        return;
-      }
-
-      if (data) {
-        console.log(`📨 [USUARIO] Mensajes cargados: ${data.length}`);
+      if (!error && data) {
         setMessages(data);
       }
     };
@@ -60,10 +45,7 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
     loadMessages();
     const interval = setInterval(loadMessages, 2000);
 
-    return () => {
-      console.log("🛑 [USUARIO] Deteniendo polling de mensajes");
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [leadId]);
 
   const handleSendMessage = async () => {
@@ -102,35 +84,35 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
     const file = e.target.files?.[0];
     if (!file || !leadId) return;
 
-    console.log("📤 [USUARIO] Intentando subir archivo:", file.name, file.type, file.size);
     setUploading(true);
 
     try {
-      const fileName = `${leadId}/${Date.now()}.${file.name.split(".").pop()}`;
-      console.log("📂 [USUARIO] Nombre del archivo en storage:", fileName);
-      console.log("🪣 [USUARIO] Bucket: chat-media");
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${leadId}/${Date.now()}.${fileExt}`;
       
-      const { data, error } = await supabase.storage
+      // Intentar subir directamente
+      const { error: uploadError } = await supabase.storage
         .from("chat-media")
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false
+        });
 
-      console.log("📊 [USUARIO] Resultado del upload:", { data, error });
-
-      if (error) {
-        console.error("❌ [USUARIO] Error subiendo archivo:", error);
+      if (uploadError) {
+        console.error("Error uploading file:", uploadError);
+        alert("Error al subir archivo. Por favor verifica las políticas del bucket en Supabase.");
         setUploading(false);
         return;
       }
 
+      // Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
         .from("chat-media")
         .getPublicUrl(fileName);
 
-      console.log("🔗 [USUARIO] URL pública:", publicUrl);
-
       const mediaType = file.type.startsWith("image/") ? "image" : "audio";
-      console.log("🎨 [USUARIO] Tipo de media:", mediaType);
 
+      // Insertar mensaje en la base de datos
       const { error: dbError } = await supabase.from("messages").insert({
         lead_id: leadId,
         media_url: publicUrl,
@@ -139,12 +121,10 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
       });
 
       if (dbError) {
-        console.error("❌ [USUARIO] Error insertando mensaje:", dbError);
-      } else {
-        console.log("✅ [USUARIO] Mensaje multimedia enviado exitosamente");
+        console.error("Error insertando mensaje:", dbError);
       }
     } catch (err) {
-      console.error("❌ [USUARIO] Error capturado:", err);
+      console.error("Error:", err);
     }
 
     setUploading(false);
