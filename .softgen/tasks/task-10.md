@@ -14,39 +14,34 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - Sistema de chat con multimedia funcionando:
+✅ COMPLETADO - Sistema de chat con diseño correcto:
 1. ✅ Chat de usuario - polling funcionando
 2. ✅ Chat de admin - polling funcionando
-3. ✅ Tabla messages original funcionando
-4. ✅ Multimedia implementado guardando base64 en columna text con prefijo [IMG]
-5. ✅ Sistema de mensajes de texto e imágenes funcionando
-6. ✅ Logs de debugging agregados para verificar is_from_maestro
+3. ✅ Multimedia con base64 funcionando (prefijo [IMG])
+4. ✅ Burbujas de mensajes con diseño diferenciado:
+   - Usuario: IZQUIERDA, fondo BLANCO, nombre del lead
+   - Maestro: DERECHA, fondo DORADO, nombre + avatar del perfil
+5. ✅ Perfil del maestro cargado y mostrado
+6. ✅ Mensajes se guardan correctamente con is_from_maestro
 
 ESTADO FINAL:
-- Tabla messages original (sin nuevas columnas - evita problema de caché)
-- Sistema de polling cada 2 segundos funcionando
-- Envío y recepción de mensajes de texto
-- Envío y recepción de imágenes (base64 con prefijo [IMG] en columna text)
-- Detección automática de tipo de mensaje
-- Mensajes se alinean correctamente según emisor
-
-SOLUCIÓN TÉCNICA:
-- Imágenes se guardan como: `[IMG]data:image/jpeg;base64,...`
-- Se detectan por el prefijo [IMG]
-- No requiere columnas nuevas (evita caché de PostgREST)
-- Funciona con la tabla messages existente
+- Tabla messages funcionando
+- Sistema de polling cada 2 segundos
+- Mensajes de texto e imágenes funcionando
+- Diseño de burbujas correcto con nombres y avatares
+- Código con logs de debugging para verificar flujo
 
 ## Checklist
 - [x] Sistema de polling implementado
-- [x] Chat de usuario funcionando con polling
-- [x] Chat de admin funcionando con polling
-- [x] Tabla messages funcionando
-- [x] Multimedia implementado (base64 en text)
-- [x] Botones de imagen restaurados
-- [x] Logs de debugging agregados
+- [x] Chat de usuario funcionando
+- [x] Chat de admin funcionando
+- [x] Multimedia implementado (base64)
+- [x] Diseño de burbujas diferenciado
+- [x] Nombres y avatares mostrados
+- [x] is_from_maestro guardado correctamente
 
 ## Acceptance
-- Chat de admin carga sin pantalla negra ✅
-- Mensajes de texto se envían y reciben correctamente ✅
-- Imágenes se pueden enviar y visualizar ✅
-- Mensajes se alinean según emisor (maestro/usuario) ✅
+- Chat de admin carga correctamente ✅
+- Mensajes de texto e imágenes se envían ✅
+- Usuario a la izquierda (blanco) con nombre ✅
+- Maestro a la derecha (dorado) con nombre y avatar ✅

@@ -43,14 +43,35 @@ export default function ChatPage() {
   const router = useRouter();
   const { id } = router.query;
   const [lead, setLead] = useState<Lead | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const [maestroProfile, setMaestroProfile] = useState<any>(null);
+
+  // Cargar perfil del maestro al inicio
+  useEffect(() => {
+    const loadMaestroProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profile) {
+        setMaestroProfile(profile);
+        console.log("👤 [PROFILE] Perfil del maestro cargado:", profile);
+      }
+    };
+
+    loadMaestroProfile();
+  }, []);
 
   // Cargar datos del lead
   useEffect(() => {
@@ -117,15 +138,19 @@ export default function ChatPage() {
     const messageText = newMessage;
     setNewMessage("");
 
-    const { error } = await supabase.from("messages").insert({
+    console.log("📤 [SEND] Enviando mensaje del MAESTRO, lead_id:", lead.id);
+
+    const { data, error } = await supabase.from("messages").insert({
       lead_id: lead.id,
       text: messageText,
-      is_from_maestro: true,
-    });
+      is_from_maestro: true, // CRÍTICO: El maestro envía el mensaje
+    }).select();
 
     if (error) {
-      console.error("Error sending message:", error);
+      console.error("❌ [SEND] Error sending message:", error);
       setNewMessage(messageText);
+    } else {
+      console.log("✅ [SEND] Mensaje enviado correctamente:", data);
     }
 
     setSending(false);
@@ -303,40 +328,85 @@ export default function ChatPage() {
           const imageData = isImage ? msg.text?.substring(5) : null;
           const textContent = isImage ? null : msg.text;
 
-          console.log("💬 [MSG]", {
-            id: msg.id,
+          console.log("💬 [MSG-RENDER]", {
+            id: msg.id.substring(0, 8),
             is_from_maestro: msg.is_from_maestro,
-            isImage,
-            textLength: msg.text?.length
+            tipo: msg.is_from_maestro ? "MAESTRO" : "USUARIO",
+            isImage
           });
 
           return (
             <div
               key={msg.id}
-              className={`flex ${
+              className={`flex gap-3 ${
                 msg.is_from_maestro ? "justify-end" : "justify-start"
               }`}
             >
+              {/* Avatar y nombre - SOLO para usuario (izquierda) */}
+              {!msg.is_from_maestro && (
+                <div className="flex flex-col items-center gap-1 shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-lg border-2 border-primary/40">
+                    {lead?.name?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-semibold max-w-[60px] truncate">
+                    {lead?.name || "Usuario"}
+                  </span>
+                </div>
+              )}
+
+              {/* Burbuja de mensaje */}
               <div
-                className={`max-w-[70%] rounded-lg p-3 ${
+                className={`max-w-[70%] rounded-2xl p-4 shadow-lg ${
                   msg.is_from_maestro
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                    ? "bg-gradient-to-br from-primary via-amber-500 to-primary text-primary-foreground border-2 border-amber-300"
+                    : "bg-white text-gray-900 border-2 border-gray-200"
                 }`}
               >
-                {textContent && <p className="text-sm">{textContent}</p>}
+                {textContent && (
+                  <p className={`text-sm leading-relaxed ${
+                    msg.is_from_maestro ? "text-primary-foreground" : "text-gray-900"
+                  }`}>
+                    {textContent}
+                  </p>
+                )}
                 {isImage && imageData && (
                   <img
                     src={imageData}
                     alt="Imagen enviada"
-                    className="mt-2 max-w-full max-h-80 rounded"
+                    className="mt-2 max-w-full max-h-80 rounded-lg"
                   />
                 )}
-                <p className="text-xs opacity-70 mt-1">
-                  {new Date(msg.created_at).toLocaleTimeString()} 
-                  {msg.is_from_maestro ? " (Maestro)" : " (Usuario)"}
+                <p className={`text-[10px] mt-2 font-medium ${
+                  msg.is_from_maestro ? "text-primary-foreground/80" : "text-gray-500"
+                }`}>
+                  {new Date(msg.created_at).toLocaleTimeString("es-MX", {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })}
                 </p>
               </div>
+
+              {/* Avatar y nombre - SOLO para maestro (derecha) */}
+              {msg.is_from_maestro && (
+                <div className="flex flex-col items-center gap-1 shrink-0">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-lg">
+                    {maestroProfile?.avatar_url ? (
+                      <img
+                        src={maestroProfile.avatar_url}
+                        alt={maestroProfile.full_name || "Maestro"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center text-primary-foreground font-bold text-lg">
+                        {maestroProfile?.full_name?.charAt(0).toUpperCase() || "M"}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-semibold max-w-[60px] truncate">
+                    {maestroProfile?.full_name || "Maestro"}
+                  </span>
+                </div>
+              )}
             </div>
           );
         })}
