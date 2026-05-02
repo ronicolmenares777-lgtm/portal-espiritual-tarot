@@ -1,18 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
   Send,
@@ -24,36 +15,54 @@ import {
   User,
 } from "lucide-react";
 
+type Message = {
+  id: string;
+  lead_id: string;
+  text: string | null;
+  media_url: string | null;
+  media_type: string | null;
+  is_from_maestro: boolean;
+  created_at: string;
+};
+
+type Lead = {
+  id: string;
+  nombre: string;
+  whatsapp: string;
+  problema: string;
+  categoria: string | null;
+  favorito: boolean;
+  created_at: string;
+};
+
 export default function ChatPage() {
   const router = useRouter();
   const { id } = router.query;
-  const [lead, setLead] = useState<Tables<"leads"> | null>(null);
-  const [messages, setMessages] = useState<Tables<"messages">[]>([]);
+  const [lead, setLead] = useState<Lead | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
-  // Auto-scroll
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Cargar lead
+  // Cargar datos del lead
   useEffect(() => {
     if (!id || typeof id !== "string") return;
 
     const loadLead = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("leads")
         .select("*")
         .eq("id", id)
         .single();
+
+      if (error) {
+        console.error("Error loading lead:", error);
+        return;
+      }
 
       if (data) {
         setLead(data);
@@ -67,8 +76,6 @@ export default function ChatPage() {
   useEffect(() => {
     if (!id || typeof id !== "string") return;
 
-    console.log("🔄 [ADMIN] Iniciando polling de mensajes cada 2 segundos");
-
     const loadMessages = async () => {
       const { data, error } = await supabase
         .from("messages")
@@ -77,12 +84,11 @@ export default function ChatPage() {
         .order("created_at", { ascending: true });
 
       if (error) {
-        console.error("❌ [ADMIN] Error cargando mensajes:", error);
+        console.error("Error loading messages:", error);
         return;
       }
 
       if (data) {
-        console.log(`📨 [ADMIN] Mensajes cargados: ${data.length}`);
         setMessages(data);
       }
     };
@@ -91,10 +97,14 @@ export default function ChatPage() {
     const interval = setInterval(loadMessages, 2000);
 
     return () => {
-      console.log("🛑 [ADMIN] Deteniendo polling de mensajes");
       clearInterval(interval);
     };
   }, [id]);
+
+  // Scroll automático
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !lead) return;
@@ -102,8 +112,6 @@ export default function ChatPage() {
     setSending(true);
     const messageText = newMessage;
     setNewMessage("");
-
-    console.log("📤 Enviando mensaje del admin");
 
     const { error } = await supabase.from("messages").insert({
       lead_id: lead.id,
@@ -131,6 +139,47 @@ export default function ChatPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !lead) return;
+
+    setUploading(true);
+
+    try {
+      const fileName = `${lead.id}/${Date.now()}.${file.name.split(".").pop()}`;
+      
+      const { data, error } = await supabase.storage
+        .from("chat-media")
+        .upload(fileName, file);
+
+      if (error) {
+        console.error("Error uploading file:", error);
+        setUploading(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("chat-media")
+        .getPublicUrl(fileName);
+
+      const mediaType = file.type.startsWith("image/") ? "image" : "audio";
+
+      await supabase.from("messages").insert({
+        lead_id: lead.id,
+        media_url: publicUrl,
+        media_type: mediaType,
+        is_from_maestro: true,
+      });
+    } catch (err) {
+      console.error("Error:", err);
+    }
+
+    setUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleAudioRecord = async (blob: Blob) => {
@@ -196,75 +245,10 @@ export default function ChatPage() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !lead) return;
-
-    setUploading(true);
-
-    try {
-      const fileName = `${lead.id}/${Date.now()}.${file.name.split(".").pop()}`;
-      
-      const { data, error } = await supabase.storage
-        .from("chat-media")
-        .upload(fileName, file);
-
-      if (error) {
-        console.error("Error uploading file:", error);
-        setUploading(false);
-        return;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("chat-media")
-        .getPublicUrl(fileName);
-
-      const mediaType = file.type.startsWith("image/") ? "image" : "audio";
-
-      await supabase.from("messages").insert({
-        lead_id: lead.id,
-        media_url: publicUrl,
-        media_type: mediaType,
-        is_from_maestro: true,
-      });
-    } catch (err) {
-      console.error("Error:", err);
-    }
-
-    setUploading(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const handleClassificationChange = async (value: string) => {
-    if (!lead) return;
-
-    await supabase
-      .from("leads")
-      .update({ classification: value })
-      .eq("id", lead.id);
-
-    setLead({ ...lead, classification: value });
-  };
-
-  const toggleFavorite = async () => {
-    if (!lead) return;
-
-    const newFavoriteStatus = !lead.is_favorite;
-
-    await supabase
-      .from("leads")
-      .update({ is_favorite: newFavoriteStatus })
-      .eq("id", lead.id);
-
-    setLead({ ...lead, is_favorite: newFavoriteStatus });
-  };
-
-  if (!lead || loading) {
+  if (!lead) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Sparkles className="h-8 w-8 text-primary animate-spin" />
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -272,55 +256,27 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="bg-card border-b border-border p-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/Suafazon/dashboard")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <Avatar className="h-10 w-10">
-            <AvatarFallback>
-              {lead.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <h1 className="font-semibold text-foreground">{lead.name}</h1>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Phone className="h-3 w-3" />
-              <span>{lead.whatsapp}</span>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleFavorite}
-            className={lead.is_favorite ? "text-yellow-500" : ""}
-          >
-            <Star
-              className="h-5 w-5"
-              fill={lead.is_favorite ? "currentColor" : "none"}
-            />
-          </Button>
-          <Select
-            value={lead.classification || "sin_clasificar"}
-            onValueChange={handleClassificationChange}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sin_clasificar">Sin clasificar</SelectItem>
-              <SelectItem value="caliente">🔥 Caliente</SelectItem>
-              <SelectItem value="tibio">🌡️ Tibio</SelectItem>
-              <SelectItem value="frio">❄️ Frío</SelectItem>
-              <SelectItem value="convertido">✅ Convertido</SelectItem>
-              <SelectItem value="perdido">❌ Perdido</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="sticky top-0 z-10 bg-card border-b border-border p-4 flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.push("/Suafazon/dashboard")}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <Avatar className="h-10 w-10">
+          <AvatarFallback className="bg-accent/20 text-accent">
+            <User className="h-5 w-5" />
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <h2 className="font-semibold">{lead.nombre}</h2>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Phone className="h-3 w-3" />
+            {lead.whatsapp}
+          </p>
         </div>
+        {lead.favorito && <Star className="h-5 w-5 fill-primary text-primary" />}
       </div>
 
       {/* Messages */}
@@ -372,32 +328,38 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-card border-t border-border">
-        <div className="flex gap-2 items-center">
+      <div className="sticky bottom-0 bg-card border-t border-border p-4">
+        <div className="flex items-center gap-2">
           <input
             type="file"
-            id="file-upload"
-            className="hidden"
-            accept="image/*,video/*,.pdf,.doc,.docx"
             ref={fileInputRef}
             onChange={handleFileUpload}
+            accept="image/*"
+            className="hidden"
           />
           <Button
+            type="button"
             variant="ghost"
             size="icon"
-            onClick={() => document.getElementById("file-upload")?.click()}
+            onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
           >
             <Upload className="h-5 w-5" />
           </Button>
+          
           <Button
+            type="button"
             variant="ghost"
             size="icon"
-            onClick={recording ? stopRecording : startRecording}
-            className={recording ? "text-red-500" : ""}
+            onMouseDown={startRecording}
+            onMouseUp={stopRecording}
+            onTouchStart={startRecording}
+            onTouchEnd={stopRecording}
+            disabled={uploading}
           >
-            <Mic className="h-5 w-5" />
+            <Mic className={`h-5 w-5 ${recording ? "text-destructive animate-pulse" : ""}`} />
           </Button>
+
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
@@ -405,13 +367,14 @@ export default function ChatPage() {
             placeholder="Escribe un mensaje..."
             className="flex-1 bg-background border-border"
           />
+          
           <Button
             onClick={handleSendMessage}
+            size="icon"
             disabled={sending || !newMessage.trim()}
-            className="bg-primary hover:bg-primary/90"
           >
             {sending ? (
-              <Sparkles className="h-5 w-5 animate-spin" />
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
             ) : (
               <Send className="h-5 w-5" />
             )}
