@@ -414,7 +414,7 @@ export default function ChatPage() {
             </div>
 
             {/* Área de mensajes */}
-            <div className="h-[650px] overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-background/50 to-background/80">
+            <div className="h-[600px] overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-background/50 to-background/80">
               {messages.map((msg) => {
                 // Detectar tipos de mensaje
                 const isImage = msg.text?.startsWith("[IMG]");
