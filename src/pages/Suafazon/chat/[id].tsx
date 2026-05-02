@@ -170,29 +170,29 @@ export default function ChatPage() {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const recorder = new MediaRecorder(stream);
       const chunks: Blob[] = [];
 
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-      mediaRecorder.onstop = () => {
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = () => {
         const blob = new Blob(chunks, { type: "audio/webm" });
         handleAudioRecord(blob);
         stream.getTracks().forEach((track) => track.stop());
       };
 
-      mediaRecorder.start();
+      recorder.start();
       setRecording(true);
-      setMediaRecorder(mediaRecorder);
+      mediaRecorderRef.current = recorder;
     } catch (err) {
       console.error("Error accessing microphone:", err);
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorder && recording) {
-      mediaRecorder.stop();
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
       setRecording(false);
-      setMediaRecorder(null);
+      mediaRecorderRef.current = null;
     }
   };
 
