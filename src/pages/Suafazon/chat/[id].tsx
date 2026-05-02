@@ -223,39 +223,8 @@ export default function ChatPage() {
     }
   };
 
-  const handleAudioRecord = async (blob: Blob) => {
-    if (!lead) return;
-
-    setUploading(true);
-
-    try {
-      const fileName = `${lead.id}/${Date.now()}.webm`;
-      const { data, error } = await supabase.storage
-        .from("chat-media")
-        .upload(fileName, blob);
-
-      if (error) {
-        console.error("Error uploading audio:", error);
-        setUploading(false);
-        return;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("chat-media")
-        .getPublicUrl(fileName);
-
-      await supabase.from("chat_messages").insert({
-        lead_id: lead.id,
-        media_url: publicUrl,
-        media_type: "audio",
-        is_from_maestro: true,
-      });
-    } catch (err) {
-      console.error("Error:", err);
-    }
-
-    setUploading(false);
-  };
+  // Función de audio deshabilitada por ahora
+  // const handleAudioRecord se implementará en una versión futura
 
   const startRecording = async () => {
     try {
