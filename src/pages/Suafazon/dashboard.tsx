@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 import { SEO } from "@/components/SEO";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FloatingParticles } from "@/components/FloatingParticles";
-import { LeadService } from "@/services/leadService";
-import { MessageService } from "@/services/messageService";
+import { leadService } from "@/services/leadService";
+import { messageService } from "@/services/messageService";
 import { AuthService } from "@/services/authService";
-import { ProfileService } from "@/services/profileService";
+import { profileService } from "@/services/profileService";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -117,13 +117,13 @@ export default function Dashboard() {
 
     try {
       const ids = Array.from(selectedLeads);
-      const { error } = await LeadService.moveMultipleToTrash(ids);
+      const { error } = await leadService.moveMultipleToTrash(ids);
 
       if (error) throw error;
 
       // Recargar datos
-      const { data: allLeads } = await LeadService.getActive();
-      const { data: trashedLeads } = await LeadService.getDeleted();
+      const { data: allLeads } = await leadService.getActive();
+      const { data: trashedLeads } = await leadService.getDeleted();
       
       if (allLeads) setLeads(allLeads);
       if (trashedLeads) setDeletedLeads(trashedLeads);
@@ -139,12 +139,12 @@ export default function Dashboard() {
   // Restaurar de papelera
   const restoreFromTrash = async (leadId: string) => {
     try {
-      const { error } = await LeadService.restoreFromTrash(leadId);
+      const { error } = await leadService.restoreFromTrash(leadId);
       if (error) throw error;
 
       // Recargar datos
-      const { data: allLeads } = await LeadService.getActive();
-      const { data: trashedLeads } = await LeadService.getDeleted();
+      const { data: allLeads } = await leadService.getActive();
+      const { data: trashedLeads } = await leadService.getDeleted();
       
       if (allLeads) setLeads(allLeads);
       if (trashedLeads) setDeletedLeads(trashedLeads);
@@ -163,11 +163,11 @@ export default function Dashboard() {
     }
 
     try {
-      const { error } = await LeadService.deletePermanently(leadId);
+      const { error } = await leadService.deletePermanently(leadId);
       if (error) throw error;
 
       // Recargar datos
-      const { data: trashedLeads } = await LeadService.getDeleted();
+      const { data: trashedLeads } = await leadService.getDeleted();
       if (trashedLeads) setDeletedLeads(trashedLeads);
 
       alert("Lead eliminado permanentemente");
@@ -226,7 +226,7 @@ export default function Dashboard() {
         console.log("🔄 Cargando leads desde Supabase...");
 
         // Obtener solo leads activos (no eliminados)
-        const { data: allLeads, error: leadsError } = await LeadService.getActive();
+        const { data: allLeads, error: leadsError } = await leadService.getActive();
         
         if (leadsError) {
           console.error("❌ Error cargando leads:", leadsError);
@@ -248,7 +248,7 @@ export default function Dashboard() {
         }
 
         // Obtener leads eliminados para papelera
-        const { data: trashedLeads } = await LeadService.getDeleted();
+        const { data: trashedLeads } = await leadService.getDeleted();
         if (trashedLeads) {
           setDeletedLeads(trashedLeads);
           console.log("🗑️ Leads en papelera:", trashedLeads.length);
