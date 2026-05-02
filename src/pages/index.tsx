@@ -297,6 +297,21 @@ export default function Home() {
     }
   };
 
+  // Función para obtener longitud máxima según país
+  const getMaxLengthForCountry = (countryCode: string): number => {
+    const lengths: { [key: string]: number } = {
+      "+1": 10,   // USA/Canadá: 10 dígitos
+      "+52": 10,  // México: 10 dígitos
+      "+34": 9,   // España: 9 dígitos
+      "+54": 10,  // Argentina: 10 dígitos
+      "+56": 9,   // Chile: 9 dígitos
+      "+57": 10,  // Colombia: 10 dígitos
+      "+51": 9,   // Perú: 9 dígitos
+      "+58": 10,  // Venezuela: 10 dígitos
+    };
+    return lengths[countryCode] || 10;
+  };
+
   return (
     <>
       <SEO 
@@ -418,51 +433,48 @@ export default function Home() {
 
                     {/* WhatsApp */}
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
-                        <span className="text-gold">✦</span>
-                        WhatsApp
+                      <label className="block text-gold text-sm font-medium tracking-wide flex items-center gap-2">
+                        <span className="text-gold text-base">✦</span>
+                        WHATSAPP
                       </label>
-                      <div className="space-y-2">
-                        <div className="flex gap-2">
-                          <select
-                            value={formData.countryCode}
-                            onChange={(e) =>
-                              setFormData({ ...formData, countryCode: e.target.value, whatsapp: "" })
+                      <div className="flex gap-2">
+                        <select
+                          value={formData.countryCode}
+                          onChange={(e) => {
+                            setFormData({ ...formData, countryCode: e.target.value, whatsapp: "" });
+                          }}
+                          className="w-24 px-4 py-3 bg-background/50 border-2 border-gold/30 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all backdrop-blur-sm"
+                          required
+                        >
+                          <option value="+1">🇺🇸 +1</option>
+                          <option value="+52">🇲🇽 +52</option>
+                          <option value="+34">🇪🇸 +34</option>
+                          <option value="+54">🇦🇷 +54</option>
+                          <option value="+56">🇨🇱 +56</option>
+                          <option value="+57">🇨🇴 +57</option>
+                          <option value="+51">🇵🇪 +51</option>
+                          <option value="+58">🇻🇪 +58</option>
+                        </select>
+                        <input
+                          type="tel"
+                          value={formData.whatsapp}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, "");
+                            const maxLength = getPhoneLength(formData.countryCode).max;
+                            if (value.length <= maxLength) {
+                              setFormData({ ...formData, whatsapp: value });
                             }
-                            className="bg-card/50 border border-border/50 text-foreground rounded-md px-3 py-2 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          >
-                            <option value="+1">🇺🇸 +1</option>
-                            <option value="+52">🇲🇽 +52</option>
-                            <option value="+34">🇪🇸 +34</option>
-                            <option value="+54">🇦🇷 +54</option>
-                            <option value="+56">🇨🇱 +56</option>
-                            <option value="+57">🇨🇴 +57</option>
-                            <option value="+58">🇻🇪 +58</option>
-                            <option value="+51">🇵🇪 +51</option>
-                            <option value="+593">🇪🇨 +593</option>
-                            <option value="+507">🇵🇦 +507</option>
-                            <option value="+506">🇨🇷 +506</option>
-                            <option value="+503">🇸🇻 +503</option>
-                            <option value="+502">🇬🇹 +502</option>
-                            <option value="+504">🇭🇳 +504</option>
-                            <option value="+505">🇳🇮 +505</option>
-                            <option value="+591">🇧🇴 +591</option>
-                            <option value="+598">🇺🇾 +598</option>
-                            <option value="+595">🇵🇾 +595</option>
-                          </select>
-                          <Input
-                            type="tel"
-                            placeholder="Número de WhatsApp"
-                            value={formData.whatsapp}
-                            onChange={handleWhatsAppChange}
-                            className="flex-1 bg-card/50 border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50"
-                            required
-                          />
-                        </div>
-                        {formErrors.whatsapp && (
-                          <p className="text-sm text-red-400 mt-1">{formErrors.whatsapp}</p>
-                        )}
+                          }}
+                          placeholder="Número de WhatsApp"
+                          className="flex-1 px-4 py-3 bg-background/50 border-2 border-gold/30 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all backdrop-blur-sm"
+                          required
+                        />
                       </div>
+                      {formData.whatsapp && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formData.whatsapp.length} / {getPhoneLength(formData.countryCode).max} dígitos
+                        </p>
+                      )}
                     </div>
 
                     {/* Problema/Consulta */}
