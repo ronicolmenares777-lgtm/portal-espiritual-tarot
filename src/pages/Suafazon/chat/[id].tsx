@@ -149,7 +149,7 @@ export default function ChatPage() {
     const file = e.target.files?.[0];
     if (!file || !lead) return;
 
-    console.log("📤 [UPLOAD] Iniciando upload de archivo:", file.name);
+    console.log("📤 [UPLOAD] Iniciando upload de archivo:", file.name, "Tipo:", file.type);
     setUploading(true);
 
     try {
@@ -158,20 +158,24 @@ export default function ChatPage() {
       
       reader.onloadend = async () => {
         const base64String = reader.result as string;
-        console.log("✅ [UPLOAD] Archivo convertido a base64");
+        console.log("✅ [UPLOAD] Archivo convertido a base64, tamaño:", base64String.length);
 
-        // Insertar mensaje en la NUEVA tabla chat_messages
-        const { error: dbError } = await supabase.from("chat_messages").insert({
+        // Guardar en la columna TEXT con prefijo especial para identificar que es imagen
+        const messageContent = `[IMG]${base64String}`;
+        
+        console.log("📤 [UPLOAD] Enviando mensaje con imagen, lead_id:", lead.id);
+
+        const { data, error: dbError } = await supabase.from("messages").insert({
           lead_id: lead.id,
-          media_url: base64String,
+          text: messageContent,
           is_from_maestro: true,
-        });
+        }).select();
 
         if (dbError) {
           console.error("❌ [UPLOAD] Error insertando mensaje:", dbError);
           alert(`Error al enviar archivo: ${dbError.message}`);
         } else {
-          console.log("✅ [UPLOAD] Mensaje multimedia enviado exitosamente");
+          console.log("✅ [UPLOAD] Mensaje con imagen enviado exitosamente:", data);
         }
 
         setUploading(false);
@@ -293,50 +297,98 @@ export default function ChatPage() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${
-              msg.is_from_maestro ? "justify-end" : "justify-start"
-            }`}
-          >
+        {messages.map((msg) => {
+          // Detectar si es imagen por el prefijo [IMG]
+          const isImage = msg.text?.startsWith("[IMG]");
+          const imageData = isImage ? msg.text?.substring(5) : null;
+          const textContent = isImage ? null : msg.text;
+
+          console.log("💬 [MSG]", {
+            id: msg.id,
+            is_from_maestro: msg.is_from_maestro,
+            isImage,
+            textLength: msg.text?.length
+          });
+
+          return (
             <div
-              className={`max-w-[70%] rounded-lg p-3 ${
-                msg.is_from_maestro
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
+              key={msg.id}
+              className={`flex ${
+                msg.is_from_maestro ? "justify-end" : "justify-start"
               }`}
             >
-              <p className="text-sm">{msg.text}</p>
-              <p className="text-xs opacity-70 mt-1">
-                {new Date(msg.created_at).toLocaleTimeString()}
-              </p>
+              <div
+                className={`max-w-[70%] rounded-lg p-3 ${
+                  msg.is_from_maestro
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
+                }`}
+              >
+                {textContent && <p className="text-sm">{textContent}</p>}
+                {isImage && imageData && (
+                  <img
+                    src={imageData}
+                    alt="Imagen enviada"
+                    className="mt-2 max-w-full max-h-80 rounded"
+                  />
+                )}
+                <p className="text-xs opacity-70 mt-1">
+                  {new Date(msg.created_at).toLocaleTimeString()} 
+                  {msg.is_from_maestro ? " (Maestro)" : " (Usuario)"}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
       <div className="sticky bottom-0 bg-card border-t border-border p-4">
         {/* Input de mensaje */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="Escribe un mensaje..."
-            className="flex-1 px-4 py-3 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            disabled={sending}
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={sending || !newMessage.trim()}
-            className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {sending ? "Enviando..." : "Enviar"}
-          </button>
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              placeholder="Escribe un mensaje..."
+              className="flex-1 px-4 py-3 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={sending}
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={sending || !newMessage.trim()}
+              className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {sending ? "Enviando..." : "Enviar"}
+            </button>
+          </div>
+
+          {/* Botones de multimedia */}
+          <div className="flex gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="image/*"
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex-1 px-4 py-2 bg-secondary/50 hover:bg-secondary/70 border border-border rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            >
+              📷 {uploading ? "Subiendo..." : "Enviar Imagen"}
+            </button>
+            <button
+              disabled
+              className="flex-1 px-4 py-2 bg-secondary/30 border border-border rounded-xl font-medium opacity-50 cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              🎤 Audio (Próximamente)
+            </button>
+          </div>
         </div>
       </div>
     </div>
