@@ -160,13 +160,10 @@ export default function ChatPage() {
         const base64String = reader.result as string;
         console.log("✅ [UPLOAD] Archivo convertido a base64");
 
-        const mediaType = file.type.startsWith("image/") ? "image" : "audio";
-
-        // Insertar mensaje directamente con base64
+        // Insertar mensaje SIN media_type - se detectará del base64 al mostrar
         const { error: dbError } = await supabase.from("messages").insert({
           lead_id: lead.id,
-          media_url: base64String, // Guardar base64 directamente
-          media_type: mediaType,
+          media_url: base64String,
           is_from_maestro: true,
         });
 
@@ -189,7 +186,7 @@ export default function ChatPage() {
         setUploading(false);
       };
 
-      reader.readAsDataURL(file); // Convertir a base64
+      reader.readAsDataURL(file);
     } catch (err) {
       console.error("❌ [UPLOAD] Error general:", err);
       alert("Error al procesar el archivo");
@@ -296,49 +293,46 @@ export default function ChatPage() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex gap-2 ${msg.is_from_maestro ? "justify-end" : "justify-start"}`}
-          >
-            {!msg.is_from_maestro && (
-              <Avatar className="h-8 w-8 mt-1">
-                <AvatarFallback className="bg-accent/20 text-accent text-xs">
-                  <User className="h-4 w-4" />
-                </AvatarFallback>
-              </Avatar>
-            )}
+        {messages.map((msg) => {
+          const isImage = msg.media_url?.startsWith("data:image/");
+          const isAudio = msg.media_url?.startsWith("data:audio/");
+
+          return (
             <div
-              className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                msg.is_from_maestro
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-card-foreground"
+              key={msg.id}
+              className={`flex ${
+                msg.is_from_maestro ? "justify-end" : "justify-start"
               }`}
             >
-              {msg.media_type === "image" && msg.media_url && (
-                <img
-                  src={msg.media_url}
-                  alt="Imagen"
-                  className="rounded-lg mb-2 max-w-full"
-                />
-              )}
-              {msg.media_type === "audio" && msg.media_url && (
-                <audio controls className="mb-2 max-w-full">
-                  <source src={msg.media_url} type="audio/webm" />
-                </audio>
-              )}
-              {msg.text && <p className="text-sm break-words">{msg.text}</p>}
-              <p className="text-[10px] mt-1 opacity-70">{formatTime(msg.created_at)}</p>
+              <div
+                className={`max-w-[70%] rounded-lg p-3 ${
+                  msg.is_from_maestro
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
+                }`}
+              >
+                {msg.content && <p className="text-sm">{msg.content}</p>}
+                {isImage && (
+                  <img
+                    src={msg.media_url || ""}
+                    alt="Imagen enviada"
+                    className="mt-2 max-w-full rounded"
+                  />
+                )}
+                {isAudio && (
+                  <audio
+                    src={msg.media_url || ""}
+                    controls
+                    className="mt-2 max-w-full"
+                  />
+                )}
+                <p className="text-xs opacity-70 mt-1">
+                  {new Date(msg.created_at).toLocaleTimeString()}
+                </p>
+              </div>
             </div>
-            {msg.is_from_maestro && (
-              <Avatar className="h-8 w-8 mt-1">
-                <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                  <Sparkles className="h-4 w-4" />
-                </AvatarFallback>
-              </Avatar>
-            )}
-          </div>
-        ))}
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 

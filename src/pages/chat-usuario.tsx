@@ -131,7 +131,6 @@ export default function ChatUsuario() {
     const file = e.target.files?.[0];
     if (!file || !leadId) return;
 
-    // Asegurar que leadId es string
     const finalLeadId = Array.isArray(leadId) ? leadId[0] : leadId;
     if (!finalLeadId) return;
 
@@ -146,13 +145,10 @@ export default function ChatUsuario() {
         const base64String = reader.result as string;
         console.log("✅ [USER-UPLOAD] Archivo convertido a base64");
 
-        const mediaType = file.type.startsWith("image/") ? "image" : "audio";
-
-        // Insertar mensaje directamente con base64
+        // Insertar mensaje SIN media_type - se detectará del base64 al mostrar
         const { error: dbError } = await supabase.from("messages").insert({
-          lead_id: finalLeadId, // Usar finalLeadId que es string
+          lead_id: finalLeadId,
           media_url: base64String,
-          media_type: mediaType,
           is_from_maestro: false,
         });
 
@@ -175,7 +171,7 @@ export default function ChatUsuario() {
         setSending(false);
       };
 
-      reader.readAsDataURL(file); // Convertir a base64
+      reader.readAsDataURL(file);
     } catch (err) {
       console.error("❌ [USER-UPLOAD] Error general:", err);
       alert("Error al procesar el archivo");
@@ -226,30 +222,46 @@ export default function ChatUsuario() {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.is_from_maestro ? "justify-start" : "justify-end"
-              }`}
-            >
+          {messages.map((msg) => {
+            const isImage = msg.media_url?.startsWith("data:image/");
+            const isAudio = msg.media_url?.startsWith("data:audio/");
+
+            return (
               <div
-                className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                  message.is_from_maestro
-                    ? "bg-card text-card-foreground"
-                    : "bg-primary text-primary-foreground"
+                key={msg.id}
+                className={`flex ${
+                  msg.is_from_maestro ? "justify-start" : "justify-end"
                 }`}
               >
-                <p className="text-sm">{message.text}</p>
-                <p className="text-xs opacity-70 mt-1">
-                  {new Date(message.created_at).toLocaleTimeString("es-ES", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+                <div
+                  className={`max-w-[70%] rounded-lg p-3 ${
+                    msg.is_from_maestro
+                      ? "bg-muted"
+                      : "bg-primary text-primary-foreground"
+                  }`}
+                >
+                  {msg.content && <p className="text-sm">{msg.content}</p>}
+                  {isImage && (
+                    <img
+                      src={msg.media_url || ""}
+                      alt="Imagen enviada"
+                      className="mt-2 max-w-full rounded"
+                    />
+                  )}
+                  {isAudio && (
+                    <audio
+                      src={msg.media_url || ""}
+                      controls
+                      className="mt-2 max-w-full"
+                    />
+                  )}
+                  <p className="text-xs opacity-70 mt-1">
+                    {new Date(msg.created_at).toLocaleTimeString()}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
 

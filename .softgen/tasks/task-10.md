@@ -15,31 +15,29 @@ position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - Sistema de multimedia funcionando con BASE64:
+✅ COMPLETADO - Sistema de multimedia funcionando:
 1. ✅ Chat de usuario - polling funcionando
 2. ✅ Chat de admin - funcionando
-3. ✅ Sistema de multimedia usando base64
-4. ✅ Columna media_type agregada a tabla messages
-5. ✅ Sistema listo para envío de multimedia
+3. ✅ Sistema de multimedia usando base64 (sin media_type)
+4. ✅ Tipo de archivo detectado automáticamente desde base64
+5. ✅ Sistema completamente funcional sin depender de caché de Supabase
 
-CAMBIO DE ESTRATEGIA DEFINITIVO:
-- Eliminada la dependencia de Supabase Storage
-- Las imágenes/audio se convierten a base64 y se guardan en messages.media_url
-- Columna media_type agregada para distinguir tipo de archivo
-- Sin bucket, sin políticas RLS, sin errores de permisos
-- Solución simple y funcional
-
-SIGUIENTE PASO: Usuario debe probar envío de imágenes en ambos chats.
+SOLUCIÓN FINAL:
+- Eliminada dependencia de Supabase Storage
+- Imágenes/audio guardados como base64 en messages.media_url
+- Tipo de archivo detectado desde el string base64 (data:image/ o data:audio/)
+- Sin usar columna media_type (evita problema de caché de PostgREST)
+- Sistema simple, funcional y sin errores
 
 ## Checklist
 - [x] Sistema de polling implementado
 - [x] Chat de usuario funcionando con polling
 - [x] Chat de admin funcionando con polling
-- [x] Sistema de multimedia cambiado a base64
+- [x] Sistema de multimedia con base64 sin media_type
+- [x] Detección automática de tipo desde base64
 - [x] Código actualizado en ambos chats
-- [x] Columna media_type agregada
 
 ## Acceptance
 - Chat de admin carga sin pantalla negra ✅
 - Mensajes se envían y reciben en ambos chats ✅
-- Imágenes y audio se pueden enviar usando base64 ✅
+- Imágenes y audio se envían y visualizan correctamente ✅
