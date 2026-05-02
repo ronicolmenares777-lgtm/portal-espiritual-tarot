@@ -69,7 +69,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [favoriteFilter, setFavoriteFilter] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<string>("todos");
+  const [selectedStatus, setSelectedStatus] = useState("todos");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
@@ -220,14 +220,14 @@ export default function Dashboard() {
     console.log("  - Total Leads:", leads.length);
     console.log("  - Filtered Leads:", filteredLeads.length);
     console.log("  - Leads por estado:", {
-      nuevo: leads.filter(l => l.status === "nuevo").length,
-      enConversacion: leads.filter(l => l.status === "enConversacion").length,
-      clienteCaliente: leads.filter(l => l.status === "clienteCaliente").length,
-      listo: leads.filter(l => l.status === "listo").length,
-      cerrado: leads.filter(l => l.status === "cerrado").length,
-      perdido: leads.filter(l => l.status === "perdido").length,
+      nuevo: leads.filter((l) => l.status === "nuevo").length,
+      enConversacion: leads.filter((l) => l.status === "enConversacion").length,
+      clienteCaliente: leads.filter((l) => l.status === "clienteCaliente").length,
+      listo: leads.filter((l) => l.status === "listo").length,
+      cerrado: leads.filter((l) => l.status === "cerrado").length,
+      perdido: leads.filter((l) => l.status === "perdido").length,
     });
-  }, [activeTab, leads, filteredLeads, selectedStatus, searchTerm, favoriteFilter]));
+  }, [activeTab, leads, filteredLeads, selectedStatus, searchTerm, favoriteFilter]);
 
   // Cargar datos
   useEffect(() => {
