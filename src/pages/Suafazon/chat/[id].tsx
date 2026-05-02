@@ -327,232 +327,244 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* Chat Header */}
-      <div className="bg-card/80 backdrop-blur-sm border-b border-gold/20 p-6 shadow-lg">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push("/Suafazon/dashboard")}
-              className="px-4 py-2 bg-secondary/50 hover:bg-secondary/70 rounded-xl transition-all flex items-center gap-2"
-            >
-              ← Volver
-            </button>
-            <div>
-              <h1 className="text-2xl font-serif font-bold text-foreground">
-                {lead?.name}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {lead?.country_code} {lead?.whatsapp}
-              </p>
-            </div>
-          </div>
+    <>
+      <SEO
+        title={`Chat con ${lead?.name || "Lead"} - Portal Espiritual Admin`}
+        description="Chat en vivo con consultante"
+      />
 
-          <div className="flex gap-2">
-            {/* Botón de favorito */}
-            <button
-              onClick={async () => {
-                const { error } = await supabase
-                  .from("leads")
-                  .update({ is_favorite: !lead.is_favorite })
-                  .eq("id", lead.id);
-
-                if (!error) {
-                  setLead({ ...lead, is_favorite: !lead.is_favorite });
-                }
-              }}
-              className={`px-4 py-2 rounded-xl border-2 font-semibold transition-all ${
-                lead.is_favorite
-                  ? "bg-amber-500/20 border-amber-500 text-amber-500"
-                  : "bg-secondary/50 border-border text-muted-foreground hover:bg-secondary/70"
-              }`}
-            >
-              {lead.is_favorite ? "⭐ Favorito" : "☆ Marcar favorito"}
-            </button>
-
-            {/* Selector de estado */}
-            <select
-              value={lead.status}
-              onChange={async (e) => {
-                const newStatus = e.target.value;
-                const { error } = await supabase
-                  .from("leads")
-                  .update({ status: newStatus })
-                  .eq("id", lead.id);
-
-                if (!error) {
-                  setLead({ ...lead, status: newStatus });
-                }
-              }}
-              className="px-4 py-2 bg-secondary/50 border-2 border-border rounded-xl font-semibold text-foreground cursor-pointer hover:bg-secondary/70 transition-all"
-            >
-              <option value="nuevo">🆕 Nuevo</option>
-              <option value="enConversacion">💬 En Conversación</option>
-              <option value="clienteCaliente">🔥 Cliente Caliente</option>
-              <option value="listo">✅ Listo</option>
-              <option value="cerrado">🔒 Cerrado</option>
-              <option value="perdido">❌ Perdido</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => {
-          // Detectar tipos de mensaje
-          const isImage = msg.text?.startsWith("[IMG]");
-          const isAudio = msg.text?.startsWith("[AUDIO]");
-          const imageData = isImage ? msg.text?.substring(5) : null;
-          const audioData = isAudio ? msg.text?.substring(7) : null;
-          const textContent = (isImage || isAudio) ? null : msg.text;
-
-          console.log("💬 [MSG-RENDER]", {
-            id: msg.id.substring(0, 8),
-            is_from_maestro: msg.is_from_maestro,
-            tipo: msg.is_from_maestro ? "MAESTRO" : "USUARIO",
-            isImage,
-            isAudio
-          });
-
-          return (
-            <div
-              key={msg.id}
-              className={`flex gap-3 ${
-                msg.is_from_maestro ? "justify-end" : "justify-start"
-              }`}
-            >
-              {/* Avatar y nombre - SOLO para usuario (izquierda) */}
-              {!msg.is_from_maestro && (
-                <div className="flex flex-col items-center gap-1 shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-lg border-2 border-primary/40">
-                    {lead?.name?.charAt(0).toUpperCase() || "U"}
+      <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
+        <div className="max-w-5xl mx-auto">
+          {/* Ventana de chat - Diseño mejorado */}
+          <div className="bg-card/80 backdrop-blur-sm border-2 border-gold/30 rounded-3xl shadow-2xl overflow-hidden">
+            
+            {/* Chat Header */}
+            <div className="bg-gradient-to-r from-primary/20 via-amber-500/20 to-primary/20 border-b-2 border-gold/20 p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => router.push("/Suafazon/dashboard")}
+                    className="px-4 py-2 bg-secondary/50 hover:bg-secondary/70 rounded-xl transition-all flex items-center gap-2 border border-border"
+                  >
+                    ← Volver
+                  </button>
+                  <div>
+                    <h1 className="text-2xl font-serif font-bold text-foreground">
+                      {lead?.name}
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                      {lead?.country_code} {lead?.whatsapp}
+                    </p>
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-semibold max-w-[60px] truncate">
-                    {lead?.name || "Usuario"}
-                  </span>
                 </div>
-              )}
 
-              {/* Burbuja de mensaje */}
-              <div
-                className={`max-w-[70%] rounded-2xl p-4 shadow-lg ${
-                  msg.is_from_maestro
-                    ? "bg-gradient-to-br from-primary via-amber-500 to-primary text-primary-foreground border-2 border-amber-300"
-                    : "bg-white text-gray-900 border-2 border-gray-200"
-                }`}
-              >
-                {textContent && (
-                  <p className={`text-sm leading-relaxed ${
-                    msg.is_from_maestro ? "text-primary-foreground" : "text-gray-900"
-                  }`}>
-                    {textContent}
-                  </p>
-                )}
-                {isImage && imageData && (
-                  <img
-                    src={imageData}
-                    alt="Imagen enviada"
-                    className="mt-2 max-w-full max-h-80 rounded-lg"
-                  />
-                )}
-                {isAudio && audioData && (
-                  <audio
-                    src={audioData}
-                    controls
-                    className="mt-2 max-w-full"
-                  />
-                )}
-                <p className={`text-[10px] mt-2 font-medium ${
-                  msg.is_from_maestro ? "text-primary-foreground/80" : "text-gray-500"
-                }`}>
-                  {new Date(msg.created_at).toLocaleTimeString("es-MX", {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                  })}
-                </p>
+                <div className="flex gap-2">
+                  {/* Botón de favorito */}
+                  <button
+                    onClick={async () => {
+                      const { error } = await supabase
+                        .from("leads")
+                        .update({ is_favorite: !lead.is_favorite })
+                        .eq("id", lead.id);
+
+                      if (!error) {
+                        setLead({ ...lead, is_favorite: !lead.is_favorite });
+                      }
+                    }}
+                    className={`px-4 py-2 rounded-xl border-2 font-semibold transition-all ${
+                      lead.is_favorite
+                        ? "bg-amber-500/20 border-amber-500 text-amber-500"
+                        : "bg-secondary/50 border-border text-muted-foreground hover:bg-secondary/70"
+                    }`}
+                  >
+                    {lead.is_favorite ? "⭐ Favorito" : "☆ Marcar favorito"}
+                  </button>
+
+                  {/* Selector de estado */}
+                  <select
+                    value={lead.status}
+                    onChange={async (e) => {
+                      const newStatus = e.target.value;
+                      const { error } = await supabase
+                        .from("leads")
+                        .update({ status: newStatus })
+                        .eq("id", lead.id);
+
+                      if (!error) {
+                        setLead({ ...lead, status: newStatus });
+                      }
+                    }}
+                    className="px-4 py-2 bg-secondary/50 border-2 border-border rounded-xl font-semibold text-foreground cursor-pointer hover:bg-secondary/70 transition-all"
+                  >
+                    <option value="nuevo">🆕 Nuevo</option>
+                    <option value="enConversacion">💬 En Conversación</option>
+                    <option value="clienteCaliente">🔥 Cliente Caliente</option>
+                    <option value="listo">✅ Listo</option>
+                    <option value="cerrado">🔒 Cerrado</option>
+                    <option value="perdido">❌ Perdido</option>
+                  </select>
+                </div>
               </div>
+            </div>
 
-              {/* Avatar y nombre - SOLO para maestro (derecha) */}
-              {msg.is_from_maestro && (
-                <div className="flex flex-col items-center gap-1 shrink-0">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-lg">
-                    {maestroProfile?.avatar_url ? (
-                      <img
-                        src={maestroProfile.avatar_url}
-                        alt={maestroProfile.full_name || "Maestro"}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center text-primary-foreground font-bold text-lg">
-                        {maestroProfile?.full_name?.charAt(0).toUpperCase() || "M"}
+            {/* Área de mensajes */}
+            <div className="h-[500px] overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-background/50 to-background/80">
+              {messages.map((msg) => {
+                // Detectar tipos de mensaje
+                const isImage = msg.text?.startsWith("[IMG]");
+                const isAudio = msg.text?.startsWith("[AUDIO]");
+                const imageData = isImage ? msg.text?.substring(5) : null;
+                const audioData = isAudio ? msg.text?.substring(7) : null;
+                const textContent = (isImage || isAudio) ? null : msg.text;
+
+                console.log("💬 [MSG-RENDER]", {
+                  id: msg.id.substring(0, 8),
+                  is_from_maestro: msg.is_from_maestro,
+                  tipo: msg.is_from_maestro ? "MAESTRO" : "USUARIO",
+                  isImage,
+                  isAudio
+                });
+
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex gap-3 ${
+                      msg.is_from_maestro ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    {/* Avatar y nombre - SOLO para usuario (izquierda) */}
+                    {!msg.is_from_maestro && (
+                      <div className="flex flex-col items-center gap-1 shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-lg border-2 border-primary/40">
+                          {lead?.name?.charAt(0).toUpperCase() || "U"}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-semibold max-w-[60px] truncate">
+                          {lead?.name || "Usuario"}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Burbuja de mensaje */}
+                    <div
+                      className={`max-w-[70%] rounded-2xl p-4 shadow-lg ${
+                        msg.is_from_maestro
+                          ? "bg-gradient-to-br from-primary via-amber-500 to-primary text-primary-foreground border-2 border-amber-300"
+                          : "bg-white text-gray-900 border-2 border-gray-200"
+                      }`}
+                    >
+                      {textContent && (
+                        <p className={`text-sm leading-relaxed ${
+                          msg.is_from_maestro ? "text-primary-foreground" : "text-gray-900"
+                        }`}>
+                          {textContent}
+                        </p>
+                      )}
+                      {isImage && imageData && (
+                        <img
+                          src={imageData}
+                          alt="Imagen enviada"
+                          className="mt-2 max-w-full max-h-80 rounded-lg"
+                        />
+                      )}
+                      {isAudio && audioData && (
+                        <audio
+                          src={audioData}
+                          controls
+                          className="mt-2 max-w-full"
+                        />
+                      )}
+                      <p className={`text-[10px] mt-2 font-medium ${
+                        msg.is_from_maestro ? "text-primary-foreground/80" : "text-gray-500"
+                      }`}>
+                        {new Date(msg.created_at).toLocaleTimeString("es-MX", {
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </p>
+                    </div>
+
+                    {/* Avatar y nombre - SOLO para maestro (derecha) */}
+                    {msg.is_from_maestro && (
+                      <div className="flex flex-col items-center gap-1 shrink-0">
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-lg">
+                          {maestroProfile?.avatar_url ? (
+                            <img
+                              src={maestroProfile.avatar_url}
+                              alt={maestroProfile.full_name || "Maestro"}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center text-primary-foreground font-bold text-lg">
+                              {maestroProfile?.full_name?.charAt(0).toUpperCase() || "M"}
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-semibold max-w-[60px] truncate">
+                          {maestroProfile?.full_name || "Maestro"}
+                        </span>
                       </div>
                     )}
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-semibold max-w-[60px] truncate">
-                    {maestroProfile?.full_name || "Maestro"}
-                  </span>
-                </div>
-              )}
+                );
+              })}
+              <div ref={messagesEndRef} />
             </div>
-          );
-        })}
-        <div ref={messagesEndRef} />
-      </div>
 
-      {/* Input */}
-      <div className="sticky bottom-0 bg-card border-t border-border p-4">
-        {/* Input de mensaje */}
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              placeholder="Escribe un mensaje..."
-              className="flex-1 px-4 py-3 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              disabled={sending}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={sending || !newMessage.trim()}
-              className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {sending ? "Enviando..." : "Enviar"}
-            </button>
-          </div>
+            {/* Input de mensaje */}
+            <div className="bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 border-t-2 border-gold/20 p-6">
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                    placeholder="Escribe un mensaje..."
+                    className="flex-1 px-4 py-3 bg-secondary/50 border-2 border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                    disabled={sending}
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={sending || !newMessage.trim()}
+                    className="px-6 py-3 bg-gradient-to-r from-primary via-amber-500 to-primary hover:opacity-90 text-primary-foreground rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                  >
+                    {sending ? "Enviando..." : "Enviar"}
+                  </button>
+                </div>
 
-          {/* Botones de multimedia */}
-          <div className="flex gap-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept="image/*"
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading || recording}
-              className="flex-1 px-4 py-2 bg-secondary/50 hover:bg-secondary/70 border border-border rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-            >
-              📷 {uploading ? "Subiendo..." : "Enviar Imagen"}
-            </button>
-            <button
-              onClick={recording ? stopRecording : startRecording}
-              disabled={uploading}
-              className={`flex-1 px-4 py-2 border rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 ${
-                recording 
-                  ? "bg-red-500/20 border-red-500 text-red-400 animate-pulse"
-                  : "bg-secondary/50 hover:bg-secondary/70 border-border"
-              }`}
-            >
-              🎤 {recording ? "Detener Grabación" : "Grabar Audio"}
-            </button>
+                {/* Botones de multimedia */}
+                <div className="flex gap-3">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading || recording}
+                    className="flex-1 px-4 py-2 bg-secondary/50 hover:bg-secondary/70 border-2 border-border rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  >
+                    📷 {uploading ? "Subiendo..." : "Enviar Imagen"}
+                  </button>
+                  <button
+                    onClick={recording ? stopRecording : startRecording}
+                    disabled={uploading}
+                    className={`flex-1 px-4 py-2 border-2 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 ${
+                      recording 
+                        ? "bg-red-500/20 border-red-500 text-red-400 animate-pulse"
+                        : "bg-secondary/50 hover:bg-secondary/70 border-border"
+                    }`}
+                  >
+                    🎤 {recording ? "Detener Grabación" : "Grabar Audio"}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
