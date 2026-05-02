@@ -149,43 +149,61 @@ export default function ChatPage() {
     const file = e.target.files?.[0];
     if (!file || !lead) return;
 
+    console.log("📤 [UPLOAD] Iniciando upload de archivo:", file.name);
     setUploading(true);
 
     try {
       const fileExt = file.name.split(".").pop();
       const fileName = `${lead.id}/${Date.now()}.${fileExt}`;
       
+      console.log("📤 [UPLOAD] Nombre del archivo:", fileName);
+      console.log("📤 [UPLOAD] Bucket: chat-media");
+      
       // Intentar subir directamente
-      const { error: uploadError } = await supabase.storage
+      const { data, error: uploadError } = await supabase.storage
         .from("chat-media")
         .upload(fileName, file, {
           cacheControl: "3600",
           upsert: false
         });
 
+      console.log("📤 [UPLOAD] Respuesta:", { data, uploadError });
+
       if (uploadError) {
-        console.error("Error uploading file:", uploadError);
-        alert("Error al subir archivo. Por favor verifica las políticas del bucket en Supabase.");
+        console.error("❌ [UPLOAD] Error completo:", uploadError);
+        console.error("❌ [UPLOAD] Error message:", uploadError.message);
+        console.error("❌ [UPLOAD] Error statusCode:", uploadError.statusCode);
+        alert(`Error al subir archivo: ${uploadError.message}`);
         setUploading(false);
         return;
       }
+
+      console.log("✅ [UPLOAD] Archivo subido exitosamente");
 
       // Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
         .from("chat-media")
         .getPublicUrl(fileName);
 
+      console.log("🔗 [UPLOAD] URL pública:", publicUrl);
+
       const mediaType = file.type.startsWith("image/") ? "image" : "audio";
 
       // Insertar mensaje en la base de datos
-      await supabase.from("messages").insert({
+      const { error: dbError } = await supabase.from("messages").insert({
         lead_id: lead.id,
         media_url: publicUrl,
         media_type: mediaType,
         is_from_maestro: true,
       });
+
+      if (dbError) {
+        console.error("❌ [UPLOAD] Error insertando mensaje:", dbError);
+      } else {
+        console.log("✅ [UPLOAD] Mensaje insertado en BD");
+      }
     } catch (err) {
-      console.error("Error:", err);
+      console.error("❌ [UPLOAD] Error general:", err);
     }
 
     setUploading(false);
