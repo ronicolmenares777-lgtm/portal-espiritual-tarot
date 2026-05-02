@@ -131,6 +131,10 @@ export default function ChatUsuario() {
     const file = e.target.files?.[0];
     if (!file || !leadId) return;
 
+    // Asegurar que leadId es string
+    const finalLeadId = Array.isArray(leadId) ? leadId[0] : leadId;
+    if (!finalLeadId) return;
+
     console.log("📤 [USER-UPLOAD] Iniciando upload de archivo:", file.name);
     setSending(true);
 
@@ -146,8 +150,8 @@ export default function ChatUsuario() {
 
         // Insertar mensaje directamente con base64
         const { error: dbError } = await supabase.from("messages").insert({
-          lead_id: leadId,
-          media_url: base64String, // Guardar base64 directamente
+          lead_id: finalLeadId, // Usar finalLeadId que es string
+          media_url: base64String,
           media_type: mediaType,
           is_from_maestro: false,
         });
