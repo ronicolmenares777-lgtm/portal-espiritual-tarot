@@ -139,10 +139,15 @@ export default function ChatPage() {
     };
   }, [id]);
 
-  // Auto-scroll cuando llegan mensajes nuevos
+  // Auto-scroll solo al cargar el chat inicialmente
+  const hasScrolledInitially = useRef(false);
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (messages.length > 0 && !hasScrolledInitially.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      hasScrolledInitially.current = true;
+    }
+  }, [messages.length]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !lead) return;
@@ -409,7 +414,7 @@ export default function ChatPage() {
             </div>
 
             {/* Área de mensajes */}
-            <div className="h-[500px] overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-background/50 to-background/80">
+            <div className="h-[650px] overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-background/50 to-background/80">
               {messages.map((msg) => {
                 // Detectar tipos de mensaje
                 const isImage = msg.text?.startsWith("[IMG]");

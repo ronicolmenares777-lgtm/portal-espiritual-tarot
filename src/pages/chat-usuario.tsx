@@ -20,6 +20,7 @@ export default function ChatUsuario() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const hasScrolledInitially = useRef(false);
 
   // Cargar nombre del usuario y perfil del maestro
   useEffect(() => {
@@ -53,6 +54,24 @@ export default function ChatUsuario() {
     loadData();
   }, [leadId]);
 
+  // Cargar perfil del maestro al inicio
+  useEffect(() => {
+    const loadMaestroProfile = async () => {
+      // Obtener el primer admin (maestro)
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("*")
+        .limit(1);
+
+      if (profiles && profiles.length > 0) {
+        setMaestroProfile(profiles[0]);
+        console.log("👤 [PROFILE] Perfil del maestro cargado:", profiles[0]);
+      }
+    };
+
+    loadMaestroProfile();
+  }, []);
+
   // Sistema de POLLING - actualiza mensajes cada 2 segundos
   useEffect(() => {
     if (!leadId) return;
@@ -85,10 +104,13 @@ export default function ChatUsuario() {
     };
   }, [leadId]);
 
-  // Auto-scroll cuando llegan mensajes nuevos
+  // Auto-scroll solo al cargar el chat inicialmente
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (messages.length > 0 && !hasScrolledInitially.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      hasScrolledInitially.current = true;
+    }
+  }, [messages.length]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !leadId) return;
@@ -305,7 +327,7 @@ export default function ChatUsuario() {
                       msg.is_from_maestro ? "justify-start" : "justify-end"
                     }`}
                   >
-                    {/* Avatar - SOLO para maestro (izquierda) */}
+                    {/* Avatar y nombre - SOLO para maestro (izquierda) */}
                     {msg.is_from_maestro && (
                       <div className="flex flex-col items-center gap-1 shrink-0">
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-lg">
