@@ -96,12 +96,16 @@ export default function Dashboard() {
   };
 
   const selectAll = () => {
-    const allIds = filteredLeads.map(l => l.id);
+    const allIds = filteredLeads.map((l) => l.id);
     setSelectedLeads(new Set(allIds));
   };
 
   const deselectAll = () => {
     setSelectedLeads(new Set());
+  };
+
+  const handleSelectLead = (leadId: string) => {
+    toggleSelectLead(leadId);
   };
 
   // Mover a papelera
