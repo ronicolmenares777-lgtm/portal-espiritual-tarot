@@ -725,7 +725,7 @@ export default function Dashboard() {
                               📱 {lead.country_code} {lead.whatsapp}
                             </span>
                             <span className="flex items-center gap-1">
-                              🔮 {lead.card_selected || "Sin carta"}
+                              🔮 {lead.cards_selected?.join(", ") || "Sin carta"}
                             </span>
                             <span className="flex items-center gap-1">
                               📅 {new Date(lead.created_at).toLocaleDateString("es-MX")}
