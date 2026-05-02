@@ -225,7 +225,7 @@ export default function Dashboard() {
       clienteCaliente: leads.filter((l) => l.status === "clienteCaliente").length,
       listo: leads.filter((l) => l.status === "listo").length,
       cerrado: leads.filter((l) => l.status === "cerrado").length,
-      perdido: leads.filter((l) => l.status === "perdido").length,
+      perdido: leads.filter((l) => l.status === "perdido").length
     });
   }, [activeTab, leads, filteredLeads, selectedStatus, searchTerm, favoriteFilter]);
 
