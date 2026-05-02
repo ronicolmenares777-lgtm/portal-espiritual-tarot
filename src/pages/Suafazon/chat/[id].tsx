@@ -311,7 +311,7 @@ export default function ChatPage() {
                     : "bg-muted"
                 }`}
               >
-                {msg.content && <p className="text-sm">{msg.content}</p>}
+                {msg.text && <p className="text-sm">{msg.text}</p>}
                 {isImage && (
                   <img
                     src={msg.media_url || ""}
