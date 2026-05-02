@@ -153,62 +153,47 @@ export default function ChatPage() {
     setUploading(true);
 
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${lead.id}/${Date.now()}.${fileExt}`;
+      // Convertir archivo a base64
+      const reader = new FileReader();
       
-      console.log("📤 [UPLOAD] Nombre del archivo:", fileName);
-      console.log("📤 [UPLOAD] Bucket: chat-media");
-      
-      // Intentar subir directamente
-      const { data, error: uploadError } = await supabase.storage
-        .from("chat-media")
-        .upload(fileName, file, {
-          cacheControl: "3600",
-          upsert: false
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        console.log("✅ [UPLOAD] Archivo convertido a base64");
+
+        const mediaType = file.type.startsWith("image/") ? "image" : "audio";
+
+        // Insertar mensaje directamente con base64
+        const { error: dbError } = await supabase.from("messages").insert({
+          lead_id: lead.id,
+          media_url: base64String, // Guardar base64 directamente
+          media_type: mediaType,
+          is_from_maestro: true,
         });
 
-      console.log("📤 [UPLOAD] Respuesta:", { data, uploadError });
+        if (dbError) {
+          console.error("❌ [UPLOAD] Error insertando mensaje:", dbError);
+          alert(`Error al enviar archivo: ${dbError.message}`);
+        } else {
+          console.log("✅ [UPLOAD] Mensaje multimedia enviado exitosamente");
+        }
 
-      if (uploadError) {
-        console.error("❌ [UPLOAD] Error completo:", uploadError);
-        console.error("❌ [UPLOAD] Error message:", uploadError.message);
-        console.error("❌ [UPLOAD] Error statusCode:", uploadError.statusCode);
-        alert(`Error al subir archivo: ${uploadError.message}`);
         setUploading(false);
-        return;
-      }
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      };
 
-      console.log("✅ [UPLOAD] Archivo subido exitosamente");
+      reader.onerror = () => {
+        console.error("❌ [UPLOAD] Error leyendo archivo");
+        alert("Error al leer el archivo");
+        setUploading(false);
+      };
 
-      // Obtener URL pública
-      const { data: { publicUrl } } = supabase.storage
-        .from("chat-media")
-        .getPublicUrl(fileName);
-
-      console.log("🔗 [UPLOAD] URL pública:", publicUrl);
-
-      const mediaType = file.type.startsWith("image/") ? "image" : "audio";
-
-      // Insertar mensaje en la base de datos
-      const { error: dbError } = await supabase.from("messages").insert({
-        lead_id: lead.id,
-        media_url: publicUrl,
-        media_type: mediaType,
-        is_from_maestro: true,
-      });
-
-      if (dbError) {
-        console.error("❌ [UPLOAD] Error insertando mensaje:", dbError);
-      } else {
-        console.log("✅ [UPLOAD] Mensaje insertado en BD");
-      }
+      reader.readAsDataURL(file); // Convertir a base64
     } catch (err) {
       console.error("❌ [UPLOAD] Error general:", err);
-    }
-
-    setUploading(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      alert("Error al procesar el archivo");
+      setUploading(false);
     }
   };
 

@@ -1,3 +1,4 @@
+import React from "react";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,7 @@ export default function ChatUsuario() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto scroll al final
   useEffect(() => {
@@ -123,6 +125,58 @@ export default function ChatUsuario() {
     }
 
     setSending(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !leadId) return;
+
+    console.log("📤 [USER-UPLOAD] Iniciando upload de archivo:", file.name);
+    setSending(true);
+
+    try {
+      // Convertir archivo a base64
+      const reader = new FileReader();
+      
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        console.log("✅ [USER-UPLOAD] Archivo convertido a base64");
+
+        const mediaType = file.type.startsWith("image/") ? "image" : "audio";
+
+        // Insertar mensaje directamente con base64
+        const { error: dbError } = await supabase.from("messages").insert({
+          lead_id: leadId,
+          media_url: base64String, // Guardar base64 directamente
+          media_type: mediaType,
+          is_from_maestro: false,
+        });
+
+        if (dbError) {
+          console.error("❌ [USER-UPLOAD] Error insertando mensaje:", dbError);
+          alert(`Error al enviar archivo: ${dbError.message}`);
+        } else {
+          console.log("✅ [USER-UPLOAD] Mensaje multimedia enviado exitosamente");
+        }
+
+        setSending(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      };
+
+      reader.onerror = () => {
+        console.error("❌ [USER-UPLOAD] Error leyendo archivo");
+        alert("Error al leer el archivo");
+        setSending(false);
+      };
+
+      reader.readAsDataURL(file); // Convertir a base64
+    } catch (err) {
+      console.error("❌ [USER-UPLOAD] Error general:", err);
+      alert("Error al procesar el archivo");
+      setSending(false);
+    }
   };
 
   if (!lead) {
