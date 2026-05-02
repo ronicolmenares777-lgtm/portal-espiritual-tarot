@@ -113,6 +113,15 @@ export default function ChatPage() {
       }
 
       if (data) {
+        console.log("🔍 [DEBUG] Mensajes cargados:", data.length);
+        data.forEach((msg, idx) => {
+          console.log(`📨 [MSG ${idx + 1}]`, {
+            id: msg.id.substring(0, 8),
+            is_from_maestro: msg.is_from_maestro,
+            tipo: msg.is_from_maestro ? "MAESTRO ➡️" : "USUARIO ⬅️",
+            text: msg.text?.substring(0, 30) + "..."
+          });
+        });
         setMessages(data);
       }
     };
