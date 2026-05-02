@@ -199,7 +199,7 @@ export default function Dashboard() {
     const matchesTab = 
       activeTab === "leads" ? lead.status === "nuevo" :
       activeTab === "listo" ? lead.status === "listo" :
-      true; // papelera no filtra por status
+      true;
 
     // Filtro de búsqueda
     const matchesSearch =
