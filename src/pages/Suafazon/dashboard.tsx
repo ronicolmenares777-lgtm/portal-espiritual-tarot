@@ -219,15 +219,7 @@ export default function Dashboard() {
     console.log("  - Favorite Filter:", favoriteFilter);
     console.log("  - Total Leads:", leads.length);
     console.log("  - Filtered Leads:", filteredLeads.length);
-    console.log("  - Leads por estado:", {
-      nuevo: leads.filter((l) => l.status === "nuevo").length,
-      enConversacion: leads.filter((l) => l.status === "enConversacion").length,
-      clienteCaliente: leads.filter((l) => l.status === "clienteCaliente").length,
-      listo: leads.filter((l) => l.status === "listo").length,
-      cerrado: leads.filter((l) => l.status === "cerrado").length,
-      perdido: leads.filter((l) => l.status === "perdido").length,
-    });
-  }, [activeTab, leads, filteredLeads, selectedStatus, searchTerm, favoriteFilter]);
+  }, [activeTab, leads.length, filteredLeads.length, selectedStatus, searchTerm, favoriteFilter]);
 
   // Cargar datos
   useEffect(() => {
