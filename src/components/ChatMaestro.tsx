@@ -28,9 +28,16 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
 
   // Sistema de POLLING - actualiza mensajes cada 2 segundos
   useEffect(() => {
-    if (!leadId) return;
+    if (!leadId || typeof leadId !== "string") return;
 
     console.log("🔄 [USUARIO] Iniciando polling de mensajes cada 2 segundos");
+
+    // Verificar buckets disponibles
+    const checkBuckets = async () => {
+      const { data: buckets, error } = await supabase.storage.listBuckets();
+      console.log("🪣 [USUARIO] Buckets disponibles:", buckets, error);
+    };
+    checkBuckets();
 
     const loadMessages = async () => {
       const { data, error } = await supabase
@@ -50,14 +57,8 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
       }
     };
 
-    // Carga inicial
     loadMessages();
-
-    // Polling cada 2 segundos
-    const interval = setInterval(() => {
-      console.log("⏰ [USUARIO] Ejecutando polling...");
-      loadMessages();
-    }, 2000);
+    const interval = setInterval(loadMessages, 2000);
 
     return () => {
       console.log("🛑 [USUARIO] Deteniendo polling de mensajes");

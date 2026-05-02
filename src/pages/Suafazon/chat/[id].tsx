@@ -65,39 +65,43 @@ export default function ChatPage() {
 
   // Sistema de POLLING - actualiza mensajes cada 2 segundos
   useEffect(() => {
-    if (!lead) return;
+    if (!id || typeof id !== "string") return;
 
-    console.log("🔄 Iniciando polling de mensajes cada 2 segundos");
+    console.log("🔄 [ADMIN] Iniciando polling de mensajes cada 2 segundos");
+
+    // Verificar buckets disponibles
+    const checkBuckets = async () => {
+      const { data: buckets, error } = await supabase.storage.listBuckets();
+      console.log("🪣 [ADMIN] Buckets disponibles:", buckets, error);
+    };
+    checkBuckets();
 
     const loadMessages = async () => {
       const { data, error } = await supabase
         .from("messages")
         .select("*")
-        .eq("lead_id", lead.id)
+        .eq("lead_id", id)
         .order("created_at", { ascending: true });
 
       if (error) {
-        console.error("❌ Error cargando mensajes:", error);
+        console.error("❌ [ADMIN] Error cargando mensajes:", error);
         return;
       }
 
       if (data) {
+        console.log(`📨 [ADMIN] Mensajes cargados: ${data.length}`);
         setMessages(data);
       }
-      setLoading(false);
     };
 
-    // Carga inicial
     loadMessages();
-
-    // Polling cada 2 segundos
     const interval = setInterval(loadMessages, 2000);
 
     return () => {
-      console.log("🛑 Deteniendo polling de mensajes");
+      console.log("🛑 [ADMIN] Deteniendo polling de mensajes");
       clearInterval(interval);
     };
-  }, [lead]);
+  }, [id]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !lead) return;
