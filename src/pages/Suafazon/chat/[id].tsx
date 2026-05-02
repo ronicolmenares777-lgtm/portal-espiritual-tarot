@@ -27,12 +27,16 @@ type Message = {
 
 type Lead = {
   id: string;
-  nombre: string;
+  name: string;
   whatsapp: string;
-  problema: string;
-  categoria: string | null;
-  favorito: boolean;
+  problem: string;
+  classification: string | null;
+  is_favorite: boolean;
   created_at: string;
+  cards_selected: string[];
+  answers: any;
+  country_code: string;
+  last_interaction_at: string;
 };
 
 export default function ChatPage() {
@@ -270,13 +274,13 @@ export default function ChatPage() {
           </AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <h2 className="font-semibold">{lead.nombre}</h2>
+          <h2 className="font-semibold">{lead.name}</h2>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <Phone className="h-3 w-3" />
             {lead.whatsapp}
           </p>
         </div>
-        {lead.favorito && <Star className="h-5 w-5 fill-primary text-primary" />}
+        {lead.is_favorite && <Star className="h-5 w-5 fill-primary text-primary" />}
       </div>
 
       {/* Messages */}
