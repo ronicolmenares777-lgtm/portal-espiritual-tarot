@@ -125,7 +125,7 @@ export default function ChatPage() {
     };
   }, [id]);
 
-  // Scroll automático
+  // Auto-scroll cuando llegan mensajes nuevos
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -225,36 +225,13 @@ export default function ChatPage() {
   // Función de audio deshabilitada por ahora
   // const handleAudioRecord se implementará en una versión futura
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
-
-      recorder.ondataavailable = (e) => chunks.push(e.data);
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: "audio/webm" });
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      recorder.start();
-      setRecording(true);
-    } catch (err) {
-      console.error("Error accessing microphone:", err);
-    }
-  };
-
-  const stopRecording = () => {
-    if (recording) {
-      recorder.stop();
-      setRecording(false);
-    }
-  };
-
   if (!lead) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="mt-4 text-muted-foreground">Cargando chat...</p>
+        </div>
       </div>
     );
   }
