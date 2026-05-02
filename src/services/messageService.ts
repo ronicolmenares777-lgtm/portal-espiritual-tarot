@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const messageService = {
   async getMessagesByLeadId(leadId: string) {
     const { data, error } = await supabase
-      .from("chat_messages")
+      .from("messages")
       .select("*")
       .eq("lead_id", leadId)
       .order("created_at", { ascending: true });
@@ -14,7 +14,7 @@ export const messageService = {
 
   async sendMessage(leadId: string, text: string, isFromMaestro: boolean) {
     const { data, error } = await supabase
-      .from("chat_messages")
+      .from("messages")
       .insert({
         lead_id: leadId,
         text,
@@ -29,7 +29,7 @@ export const messageService = {
 
   async markAsRead(messageId: string) {
     const { error } = await supabase
-      .from("chat_messages")
+      .from("messages")
       .update({ is_read: true })
       .eq("id", messageId);
 
@@ -38,7 +38,7 @@ export const messageService = {
 
   async getUnreadCount(leadId: string) {
     const { count, error } = await supabase
-      .from("chat_messages")
+      .from("messages")
       .select("*", { count: "exact", head: true })
       .eq("lead_id", leadId)
       .eq("is_read", false)

@@ -63,7 +63,7 @@ export default function ChatUsuario() {
 
     const loadMessages = async () => {
       const { data, error } = await supabase
-        .from("chat_messages")
+        .from("messages")
         .select("*")
         .eq("lead_id", finalLeadId)
         .order("created_at", { ascending: true });
@@ -96,7 +96,7 @@ export default function ChatUsuario() {
     const messageText = newMessage;
     setNewMessage("");
 
-    const { error } = await supabase.from("chat_messages").insert({
+    const { error } = await supabase.from("messages").insert({
       lead_id: finalLeadId,
       text: messageText,
       is_from_maestro: false,
@@ -205,46 +205,27 @@ export default function ChatUsuario() {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((msg) => {
-            const isImage = msg.media_url?.startsWith("data:image/");
-            const isAudio = msg.media_url?.startsWith("data:audio/");
-
-            return (
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex ${
+                msg.is_from_maestro ? "justify-start" : "justify-end"
+              }`}
+            >
               <div
-                key={msg.id}
-                className={`flex ${
-                  msg.is_from_maestro ? "justify-start" : "justify-end"
+                className={`max-w-[70%] rounded-lg p-3 ${
+                  msg.is_from_maestro
+                    ? "bg-muted"
+                    : "bg-primary text-primary-foreground"
                 }`}
               >
-                <div
-                  className={`max-w-[70%] rounded-lg p-3 ${
-                    msg.is_from_maestro
-                      ? "bg-muted"
-                      : "bg-primary text-primary-foreground"
-                  }`}
-                >
-                  {msg.text && <p className="text-sm">{msg.text}</p>}
-                  {isImage && (
-                    <img
-                      src={msg.media_url || ""}
-                      alt="Imagen enviada"
-                      className="mt-2 max-w-full rounded"
-                    />
-                  )}
-                  {isAudio && (
-                    <audio
-                      src={msg.media_url || ""}
-                      controls
-                      className="mt-2 max-w-full"
-                    />
-                  )}
-                  <p className="text-xs opacity-70 mt-1">
-                    {new Date(msg.created_at).toLocaleTimeString()}
-                  </p>
-                </div>
+                <p className="text-sm">{msg.text}</p>
+                <p className="text-xs opacity-70 mt-1">
+                  {new Date(msg.created_at).toLocaleTimeString()}
+                </p>
               </div>
-            );
-          })}
+            </div>
+          ))}
           <div ref={messagesEndRef} />
         </div>
 
@@ -256,25 +237,24 @@ export default function ChatUsuario() {
           }}
           className="p-4 bg-background/95 backdrop-blur border-t border-border"
         >
+          {/* Input de mensaje */}
           <div className="flex gap-2">
-            <Input
+            <input
+              type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
               placeholder="Escribe un mensaje..."
-              className="flex-1 bg-card border-border text-foreground"
+              className="flex-1 px-4 py-3 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={sending}
             />
-            <Button
-              type="submit"
-              disabled={!newMessage.trim() || sending}
-              className="bg-primary hover:bg-primary/90"
+            <button
+              onClick={handleSendMessage}
+              disabled={sending || !newMessage.trim()}
+              className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {sending ? (
-                <Sparkles className="h-5 w-5 animate-spin" />
-              ) : (
-                <Send className="h-5 w-5" />
-              )}
-            </Button>
+              {sending ? "Enviando..." : "Enviar"}
+            </button>
           </div>
         </form>
       </div>

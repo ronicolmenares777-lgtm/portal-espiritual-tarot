@@ -82,7 +82,7 @@ export default function ChatPage() {
 
     const loadMessages = async () => {
       const { data, error } = await supabase
-        .from("chat_messages")
+        .from("messages")
         .select("*")
         .eq("lead_id", id)
         .order("created_at", { ascending: true });
@@ -117,7 +117,7 @@ export default function ChatPage() {
     const messageText = newMessage;
     setNewMessage("");
 
-    const { error } = await supabase.from("chat_messages").insert({
+    const { error } = await supabase.from("messages").insert({
       lead_id: lead.id,
       text: messageText,
       is_from_maestro: true,
@@ -293,101 +293,50 @@ export default function ChatPage() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => {
-          const isImage = msg.media_url?.startsWith("data:image/");
-          const isAudio = msg.media_url?.startsWith("data:audio/");
-
-          return (
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={`flex ${
+              msg.is_from_maestro ? "justify-end" : "justify-start"
+            }`}
+          >
             <div
-              key={msg.id}
-              className={`flex ${
-                msg.is_from_maestro ? "justify-end" : "justify-start"
+              className={`max-w-[70%] rounded-lg p-3 ${
+                msg.is_from_maestro
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted"
               }`}
             >
-              <div
-                className={`max-w-[70%] rounded-lg p-3 ${
-                  msg.is_from_maestro
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
-                }`}
-              >
-                {msg.text && <p className="text-sm">{msg.text}</p>}
-                {isImage && (
-                  <img
-                    src={msg.media_url || ""}
-                    alt="Imagen enviada"
-                    className="mt-2 max-w-full rounded"
-                  />
-                )}
-                {isAudio && (
-                  <audio
-                    src={msg.media_url || ""}
-                    controls
-                    className="mt-2 max-w-full"
-                  />
-                )}
-                <p className="text-xs opacity-70 mt-1">
-                  {new Date(msg.created_at).toLocaleTimeString()}
-                </p>
-              </div>
+              <p className="text-sm">{msg.text}</p>
+              <p className="text-xs opacity-70 mt-1">
+                {new Date(msg.created_at).toLocaleTimeString()}
+              </p>
             </div>
-          );
-        })}
+          </div>
+        ))}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
       <div className="sticky bottom-0 bg-card border-t border-border p-4">
-        <div className="flex items-center gap-2">
+        {/* Input de mensaje */}
+        <div className="flex gap-2">
           <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept="image/*"
-            className="hidden"
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-          >
-            <Upload className="h-5 w-5" />
-          </Button>
-          
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onMouseDown={startRecording}
-            onMouseUp={stopRecording}
-            onTouchStart={startRecording}
-            onTouchEnd={stopRecording}
-            disabled={uploading}
-          >
-            <Mic className={`h-5 w-5 ${recording ? "text-destructive animate-pulse" : ""}`} />
-          </Button>
-
-          <Input
+            type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
             placeholder="Escribe un mensaje..."
-            className="flex-1 bg-background border-border"
+            className="flex-1 px-4 py-3 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            disabled={sending}
           />
-          
-          <Button
+          <button
             onClick={handleSendMessage}
-            size="icon"
             disabled={sending || !newMessage.trim()}
+            className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            {sending ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
-          </Button>
+            {sending ? "Enviando..." : "Enviar"}
+          </button>
         </div>
       </div>
     </div>
