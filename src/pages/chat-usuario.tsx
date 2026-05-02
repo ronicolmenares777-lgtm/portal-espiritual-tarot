@@ -110,7 +110,7 @@ export default function ChatUsuario() {
     const { data, error } = await supabase.from("messages").insert({
       lead_id: finalLeadId,
       text: messageText,
-      is_from_maestro: false, // CRÍTICO: El usuario envía el mensaje
+      is_from_maestro: false,
     }).select();
 
     if (error) {
@@ -265,7 +265,6 @@ export default function ChatUsuario() {
       />
 
       <div className="min-h-screen bg-background text-foreground flex flex-col">
-        {/* Chat Container */}
         <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto">
           {/* Header */}
           <div className="bg-card/80 backdrop-blur-sm border-b border-gold/20 p-6 shadow-lg">
