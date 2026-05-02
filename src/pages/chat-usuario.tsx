@@ -57,27 +57,34 @@ export default function ChatUsuario() {
   // Cargar perfil del maestro al inicio
   useEffect(() => {
     const loadMaestroProfile = async () => {
-      console.log("👤 [PROFILE] Cargando perfil del maestro...");
+      console.log("👤 [PROFILE] Iniciando carga del perfil del maestro...");
       
-      // Obtener el primer perfil (maestro/admin)
-      const { data: profiles, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .limit(1)
-        .single();
+      try {
+        const { data: profiles, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .limit(1);
 
-      if (error) {
-        console.error("❌ [PROFILE] Error cargando perfil:", error);
-        return;
-      }
+        if (error) {
+          console.error("❌ [PROFILE] Error cargando perfil:", error);
+          return;
+        }
 
-      if (profiles) {
-        setMaestroProfile(profiles);
-        console.log("✅ [PROFILE] Perfil del maestro cargado:", profiles);
-        console.log("  - Nombre:", profiles.full_name);
-        console.log("  - Avatar URL:", profiles.avatar_url);
-      } else {
-        console.log("⚠️ [PROFILE] No se encontró perfil del maestro");
+        console.log("📊 [PROFILE] Datos recibidos de Supabase:", profiles);
+
+        if (profiles && profiles.length > 0) {
+          const profile = profiles[0];
+          setMaestroProfile(profile);
+          console.log("✅ [PROFILE] Perfil del maestro cargado correctamente:");
+          console.log("  - ID:", profile.id);
+          console.log("  - Nombre:", profile.full_name);
+          console.log("  - Avatar URL:", profile.avatar_url);
+          console.log("  - Email:", profile.email);
+        } else {
+          console.log("⚠️ [PROFILE] No se encontró ningún perfil en la tabla profiles");
+        }
+      } catch (err) {
+        console.error("❌ [PROFILE] Error general:", err);
       }
     };
 
@@ -297,22 +304,27 @@ export default function ChatUsuario() {
             <div className="bg-gradient-to-r from-primary/20 via-amber-500/20 to-primary/20 border-b-2 border-gold/20 p-6 shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-primary shadow-lg">
+                  <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-primary shadow-lg bg-gradient-to-br from-primary to-amber-500">
                     {maestroProfile?.avatar_url ? (
                       <img
                         src={maestroProfile.avatar_url}
                         alt={maestroProfile.full_name || "Maestro Espiritual"}
                         className="w-full h-full object-cover"
+                        onLoad={() => console.log("✅ Avatar header cargado:", maestroProfile.avatar_url)}
+                        onError={(e) => {
+                          console.error("❌ Error cargando avatar header:", maestroProfile.avatar_url);
+                          console.error("  - Event:", e);
+                        }}
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center text-primary-foreground font-bold text-2xl">
-                        M
+                      <div className="w-full h-full flex items-center justify-center text-primary-foreground font-bold text-2xl">
+                        {maestroProfile?.full_name?.charAt(0).toUpperCase() || "M"}
                       </div>
                     )}
                   </div>
                   <div>
                     <h1 className="text-2xl font-serif font-bold text-foreground">
-                      Maestro Espiritual
+                      {maestroProfile?.full_name || "Maestro Espiritual"}
                     </h1>
                     <p className="text-sm text-green-500 flex items-center gap-1">
                       <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
@@ -365,6 +377,11 @@ export default function ChatUsuario() {
                               src={maestroProfile.avatar_url}
                               alt={maestroProfile.full_name || "Maestro"}
                               className="w-full h-full object-cover"
+                              onLoad={() => console.log("✅ Imagen del maestro cargada:", maestroProfile.avatar_url)}
+                              onError={(e) => {
+                                console.error("❌ Error cargando imagen del maestro:", maestroProfile.avatar_url);
+                                console.error("  - Event:", e);
+                              }}
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center text-primary-foreground font-bold text-lg">
