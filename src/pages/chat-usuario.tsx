@@ -12,9 +12,10 @@ export default function ChatUsuario() {
   const router = useRouter();
   const { leadId } = router.query;
   const [lead, setLead] = useState<Tables<"leads"> | null>(null);
-  const [messages, setMessages] = useState<Tables<"messages">[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
