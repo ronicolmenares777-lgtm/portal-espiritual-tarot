@@ -9,47 +9,43 @@ tags:
   - bugfix
   - multimedia
   - features
+  - profile
+  - dashboard
 created_by: softgen
 created_at: '2026-04-28T06:45:00Z'
 position: 10
 ---
 
 ## Notes
-✅ COMPLETADO - Sistema de chat completo:
+✅ COMPLETADO - Sistema completo funcionando:
 1. ✅ Chat de usuario - polling funcionando
 2. ✅ Chat de admin - polling funcionando
-3. ✅ Multimedia con base64 funcionando:
-   - Imágenes con prefijo [IMG]
-   - Audio con prefijo [AUDIO] (grabación de voz)
-4. ✅ Burbujas de mensajes con diseño diferenciado:
-   - Usuario: IZQUIERDA, fondo BLANCO, nombre del lead
-   - Maestro: DERECHA, fondo DORADO, nombre + avatar del perfil
-5. ✅ Opciones de gestión restauradas:
-   - Botón de favorito (⭐ / ☆)
-   - Selector de estado (nuevo/conversación/caliente/listo/cerrado/perdido)
-6. ✅ Grabación de audio implementada con MediaRecorder API
+3. ✅ Multimedia con base64 funcionando (imágenes y audio)
+4. ✅ Burbujas de mensajes con diseño diferenciado
+5. ✅ Opciones de favorito y estados en chat
+6. ✅ Página de perfil mejorada - edición de nombre y subida de imagen
+7. ✅ Filtros de dashboard corregidos - muestran leads por categoría correctamente
 
-ESTADO FINAL:
-- Tabla messages funcionando
-- Sistema de polling cada 2 segundos
-- Mensajes de texto, imágenes y audio funcionando
-- Diseño de burbujas correcto con nombres y avatares
-- Opciones de favorito y cambio de estado en header
-- Sistema completo y funcional
+FUNCIONALIDADES FINALES:
+- Sistema de chat completo con texto, imágenes y audio
+- Diseño de burbujas: usuario (izquierda/blanco) vs maestro (derecha/dorado)
+- Perfil del maestro editable con imagen base64
+- Filtros de dashboard funcionando correctamente por estado
+- Gestión de favoritos y categorías
+- Todo persistido en Supabase
 
 ## Checklist
 - [x] Sistema de polling implementado
-- [x] Chat de usuario funcionando
-- [x] Chat de admin funcionando
-- [x] Multimedia implementado (base64)
-- [x] Grabación de audio implementada
-- [x] Diseño de burbujas diferenciado
-- [x] Nombres y avatares mostrados
-- [x] Favorito y estados restaurados
+- [x] Chat de usuario y admin funcionando
+- [x] Multimedia implementado (imágenes y audio)
+- [x] Diseño de burbujas correcto
+- [x] Favorito y estados funcionando
+- [x] Página de perfil mejorada
+- [x] Filtros de dashboard corregidos
 
 ## Acceptance
-- Chat de admin carga correctamente ✅
-- Mensajes de texto, imágenes y audio se envían ✅
-- Usuario a la izquierda (blanco) con nombre ✅
-- Maestro a la derecha (dorado) con nombre y avatar ✅
-- Botones de favorito y estado funcionando ✅
+- Chat funciona con texto, imágenes y audio ✅
+- Burbujas se alinean correctamente ✅
+- Perfil del maestro es editable ✅
+- Imagen del perfil aparece en el chat ✅
+- Filtros de dashboard muestran leads correctos ✅
