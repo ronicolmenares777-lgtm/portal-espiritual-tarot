@@ -195,21 +195,16 @@ export default function Dashboard() {
   
   // Filtrar leads según tab activo y filtros aplicados
   const filteredLeads = leads.filter((lead) => {
-    // Filtro de tab activo
     const matchesTab = 
       activeTab === "leads" ? lead.status === "nuevo" :
       activeTab === "listo" ? lead.status === "listo" :
       true;
 
-    // Filtro de búsqueda
     const matchesSearch =
       lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lead.whatsapp.includes(searchTerm);
     
-    // Filtro de favoritos
     const matchesFavorite = favoriteFilter ? lead.is_favorite === true : true;
-
-    // Filtro de estado seleccionado
     const matchesStatus = selectedStatus === "todos" ? true : lead.status === selectedStatus;
 
     return matchesTab && matchesSearch && matchesFavorite && matchesStatus;
@@ -217,22 +212,14 @@ export default function Dashboard() {
 
   // Logs para debugging
   useEffect(() => {
-    console.log("📊 [DASHBOARD] Estado actual:");
+    console.log("📊 Dashboard Estado:");
     console.log("  - Active Tab:", activeTab);
     console.log("  - Selected Status:", selectedStatus);
-    console.log("  - Search Term:", searchTerm);
-    console.log("  - Favorite Filter:", favoriteFilter);
     console.log("  - Total Leads:", leads.length);
     console.log("  - Filtered Leads:", filteredLeads.length);
-    console.log("  - Leads por estado:", {
-      nuevo: leads.filter(l => l.status === "nuevo").length,
-      enConversacion: leads.filter(l => l.status === "enConversacion").length,
-      clienteCaliente: leads.filter(l => l.status === "clienteCaliente").length,
-      listo: leads.filter(l => l.status === "listo").length,
-      cerrado: leads.filter(l => l.status === "cerrado").length,
-      perdido: leads.filter(l => l.status === "perdido").length,
-    });
-  }, [activeTab, leads, filteredLeads, selectedStatus, searchTerm, favoriteFilter]);
+    console.log("  - Deleted Leads:", deletedLeads.length);
+    console.log("  - Favorite Filter:", favoriteFilter);
+  }, [activeTab, leads.length, filteredLeads.length, deletedLeads.length, selectedStatus, favoriteFilter]);
 
   // Cargar datos
   useEffect(() => {
