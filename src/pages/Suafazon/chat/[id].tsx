@@ -47,7 +47,6 @@ export default function ChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [recording, setRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [maestroProfile, setMaestroProfile] = useState<any>(null);
@@ -235,23 +234,20 @@ export default function ChatPage() {
       recorder.ondataavailable = (e) => chunks.push(e.data);
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: "audio/webm" });
-        handleAudioRecord(blob);
         stream.getTracks().forEach((track) => track.stop());
       };
 
       recorder.start();
       setRecording(true);
-      mediaRecorderRef.current = recorder;
     } catch (err) {
       console.error("Error accessing microphone:", err);
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && recording) {
-      mediaRecorderRef.current.stop();
+    if (recording) {
+      recorder.stop();
       setRecording(false);
-      mediaRecorderRef.current = null;
     }
   };
 
