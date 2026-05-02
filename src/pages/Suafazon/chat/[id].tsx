@@ -133,6 +133,69 @@ export default function ChatPage() {
     });
   };
 
+  const handleAudioRecord = async (blob: Blob) => {
+    if (!lead) return;
+
+    setUploading(true);
+
+    try {
+      const fileName = `${lead.id}/${Date.now()}.webm`;
+      const { data, error } = await supabase.storage
+        .from("chat-media")
+        .upload(fileName, blob);
+
+      if (error) {
+        console.error("Error uploading audio:", error);
+        setUploading(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("chat-media")
+        .getPublicUrl(fileName);
+
+      await supabase.from("messages").insert({
+        lead_id: lead.id,
+        media_url: publicUrl,
+        media_type: "audio",
+        is_from_maestro: true,
+      });
+    } catch (err) {
+      console.error("Error:", err);
+    }
+
+    setUploading(false);
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        handleAudioRecord(blob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setRecording(true);
+      setMediaRecorder(mediaRecorder);
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && recording) {
+      mediaRecorder.stop();
+      setRecording(false);
+      setMediaRecorder(null);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !lead) return;
@@ -172,72 +235,6 @@ export default function ChatPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  };
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: "audio/webm",
-        });
-        await uploadAudio(audioBlob);
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      mediaRecorder.start();
-      setRecording(true);
-    } catch (error) {
-      console.error("Error accessing microphone:", error);
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && recording) {
-      mediaRecorderRef.current.stop();
-      setRecording(false);
-    }
-  };
-
-  const uploadAudio = async (audioBlob: Blob) => {
-    if (!lead) return;
-
-    setUploading(true);
-
-    const fileName = `${lead.id}/${Date.now()}.webm`;
-
-    const { data, error } = await supabase.storage
-      .from("chat-media")
-      .upload(fileName, audioBlob);
-
-    if (error) {
-      console.error("Error uploading audio:", error);
-      setUploading(false);
-      return;
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("chat-media").getPublicUrl(fileName);
-
-    await supabase.from("messages").insert({
-      lead_id: lead.id,
-      text: "🎤 Audio",
-      media_url: publicUrl,
-      media_type: "audio",
-      is_from_maestro: true,
-    });
-
-    setUploading(false);
   };
 
   const handleClassificationChange = async (value: string) => {
