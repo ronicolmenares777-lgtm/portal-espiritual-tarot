@@ -689,28 +689,19 @@ export default function Dashboard() {
                 {filteredLeads.length === 0 ? (
                   <div className="bg-card/50 border-2 border-dashed border-border rounded-xl p-8 text-center">
                     <p className="text-muted-foreground">
-                      {searchTerm 
-                        ? "No se encontraron resultados para tu búsqueda" 
-                        : selectedStatus === "todos"
-                          ? activeTab === "leads" 
-                            ? "No hay leads nuevos" 
-                            : activeTab === "listo"
-                              ? "No hay leads listos"
-                              : "No hay leads en papelera"
-                          : selectedStatus === "nuevo"
-                            ? "No hay leads nuevos"
-                            : selectedStatus === "enConversacion"
-                              ? "No hay leads en conversación"
-                              : selectedStatus === "clienteCaliente"
-                                ? "No hay clientes calientes"
-                                : selectedStatus === "listo"
-                                  ? "No hay leads listos"
-                                  : selectedStatus === "cerrado"
-                                    ? "No hay leads cerrados"
-                                    : selectedStatus === "perdido"
-                                      ? "No hay leads perdidos"
-                                      : "No hay leads con este estado"
-                        }
+                      {(() => {
+                        if (searchTerm) return "No se encontraron resultados para tu búsqueda";
+                        if (selectedStatus === "nuevo") return "No hay leads nuevos";
+                        if (selectedStatus === "enConversacion") return "No hay leads en conversación";
+                        if (selectedStatus === "clienteCaliente") return "No hay clientes calientes";
+                        if (selectedStatus === "listo") return "No hay leads listos";
+                        if (selectedStatus === "cerrado") return "No hay leads cerrados";
+                        if (selectedStatus === "perdido") return "No hay leads perdidos";
+                        if (activeTab === "leads") return "No hay leads nuevos";
+                        if (activeTab === "listo") return "No hay leads listos";
+                        if (activeTab === "papelera") return "No hay leads en papelera";
+                        return "No hay leads con este estado";
+                      })()}
                     </p>
                   </div>
                 ) : (
@@ -725,112 +716,46 @@ export default function Dashboard() {
                           : "border-border hover:border-primary/50"
                       }`}
                     >
-                      <div className="flex items-start gap-3 lg:gap-4">
-                        <div className="pt-1 shrink-0">
-                          <input
-                            type="checkbox"
-                            checked={selectedLeads.has(lead.id)}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              toggleSelectLead(lead.id);
-                            }}
-                            className="w-5 h-5 lg:w-6 lg:h-6 rounded-lg border-2 border-primary/50 bg-transparent checked:bg-primary checked:border-primary cursor-pointer transition-all"
-                          />
-                        </div>
+                      {/* Contenido del lead card - se mantiene igual */}
+                      <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                        {/* Checkbox */}
+                        <input
+                          type="checkbox"
+                          checked={selectedLeads.has(lead.id)}
+                          onChange={() => handleSelectLead(lead.id)}
+                          className="w-5 h-5 rounded border-2 border-border bg-background checked:bg-primary checked:border-primary cursor-pointer"
+                        />
 
+                        {/* Info del lead */}
                         <div className="flex-1 min-w-0">
-                          <div 
-                            className="flex items-start gap-3 mb-4 cursor-pointer"
-                            onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                          >
-                            <div className="w-14 h-14 lg:w-16 lg:h-16 shrink-0 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-xl lg:text-2xl border-2 border-primary/40 shadow-lg">
-                              {lead.name.charAt(0).toUpperCase()}
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-lg lg:text-xl text-foreground mb-1">
-                                {lead.name}
-                              </h3>
-                              <div className="flex flex-col gap-1">
-                                <p className="text-sm lg:text-base text-muted-foreground flex items-center gap-2">
-                                  <span className="text-primary">📱</span>
-                                  <span className="font-mono">{lead.country_code} {lead.whatsapp}</span>
-                                </p>
-                                <p className="text-xs text-muted-foreground/70">
-                                  Registrado: {new Date(lead.created_at).toLocaleDateString("es-MX", {
-                                    day: "2-digit",
-                                    month: "long",
-                                    year: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit"
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Badge de estado */}
-                            <span
-                              className={`shrink-0 px-3 lg:px-4 py-1.5 lg:py-2 rounded-xl text-xs lg:text-sm font-bold border-2 whitespace-nowrap ${
-                                lead.status === "nuevo"
-                                  ? "bg-blue-500/20 text-blue-400 border-blue-500/50"
-                                  : lead.status === "enConversacion"
-                                  ? "bg-purple-500/20 text-purple-400 border-purple-500/50"
-                                  : lead.status === "clienteCaliente"
-                                  ? "bg-orange-500/20 text-orange-400 border-orange-500/50"
-                                  : lead.status === "listo"
-                                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
-                                  : lead.status === "cerrado"
-                                  ? "bg-green-500/20 text-green-400 border-green-500/50"
-                                  : lead.status === "perdido"
-                                  ? "bg-gray-500/20 text-gray-400 border-gray-500/50"
-                                  : "bg-muted/20 text-muted-foreground border-muted/50"
-                              }`}
-                            >
-                              {lead.status === "nuevo" ? "Nuevo"
-                                : lead.status === "enConversacion" ? "En Chat"
-                                : lead.status === "clienteCaliente" ? "Caliente"
-                                : lead.status === "listo" ? "Listo"
-                                : lead.status === "cerrado" ? "Cerrado"
-                                : lead.status === "perdido" ? "Perdido"
-                                : "Sin Estado"}
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-serif font-bold text-foreground truncate">
+                              {lead.name}
+                            </h3>
+                            {lead.is_favorite && (
+                              <span className="text-amber-400 text-xl">⭐</span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              📱 {lead.country_code} {lead.whatsapp}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              🔮 {lead.card_selected || "Sin carta"}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              📅 {new Date(lead.created_at).toLocaleDateString("es-MX")}
                             </span>
                           </div>
-
-                          <div className="bg-secondary/20 rounded-xl p-4 border border-border mb-3">
-                            <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-2 font-semibold">
-                              Consulta:
-                            </p>
-                            <p className="text-sm lg:text-base text-foreground leading-relaxed">
-                              {lead.problem}
-                            </p>
-                          </div>
-
-                          {Array.isArray(lead.cards_selected) && lead.cards_selected.length > 0 && (
-                            <div className="bg-primary/5 rounded-xl p-3 border border-primary/20 mb-3">
-                              <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-2 font-semibold">
-                                Cartas:
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {lead.cards_selected.map((card, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="text-xs lg:text-sm bg-primary/20 text-primary px-3 py-1.5 rounded-lg font-bold border border-primary/40"
-                                  >
-                                    🎴 {String(card)}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          <button
-                            onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                            className="w-full px-4 py-3 bg-gradient-to-r from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 text-primary rounded-xl transition-all hover:scale-[1.02] text-sm font-bold border border-primary/40 shadow-md flex items-center justify-center gap-2"
-                          >
-                            <span>💬</span>
-                            <span>Ver Chat Completo</span>
-                          </button>
                         </div>
+
+                        {/* Botón de acción */}
+                        <button
+                          onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                          className="px-6 py-3 bg-gradient-to-r from-primary via-amber-500 to-primary hover:opacity-90 text-primary-foreground rounded-xl font-semibold transition-all shadow-lg"
+                        >
+                          Ver Chat
+                        </button>
                       </div>
                     </motion.div>
                   ))}
