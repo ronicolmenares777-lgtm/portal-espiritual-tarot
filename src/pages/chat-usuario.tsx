@@ -60,9 +60,12 @@ export default function ChatUsuario() {
       console.log("👤 [PROFILE] Iniciando carga del perfil del maestro...");
       
       try {
+        // Forzar recarga completa sin caché
+        const timestamp = Date.now();
         const { data: profiles, error } = await supabase
           .from("profiles")
           .select("*")
+          .not("avatar_url", "is", null)
           .limit(1);
 
         if (error) {
@@ -81,7 +84,18 @@ export default function ChatUsuario() {
           console.log("  - Avatar URL:", profile.avatar_url);
           console.log("  - Email:", profile.email);
         } else {
-          console.log("⚠️ [PROFILE] No se encontró ningún perfil en la tabla profiles");
+          console.log("⚠️ [PROFILE] No se encontró ningún perfil con avatar_url en la tabla profiles");
+          
+          // Intentar cargar cualquier perfil como fallback
+          const { data: anyProfile } = await supabase
+            .from("profiles")
+            .select("*")
+            .limit(1);
+          
+          if (anyProfile && anyProfile.length > 0) {
+            setMaestroProfile(anyProfile[0]);
+            console.log("📋 [PROFILE] Cargado perfil sin avatar:", anyProfile[0]);
+          }
         }
       } catch (err) {
         console.error("❌ [PROFILE] Error general:", err);
@@ -89,6 +103,10 @@ export default function ChatUsuario() {
     };
 
     loadMaestroProfile();
+    
+    // Recargar perfil cada 5 segundos para obtener actualizaciones
+    const interval = setInterval(loadMaestroProfile, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Sistema de POLLING - actualiza mensajes cada 2 segundos
@@ -358,66 +376,69 @@ export default function ChatUsuario() {
               {messages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex gap-2 sm:gap-3 ${
+                  className={`flex gap-3 ${
                     msg.is_from_maestro ? "justify-start" : "justify-end"
                   }`}
                 >
                   {/* Avatar y nombre - SOLO para maestro (izquierda) */}
                   {msg.is_from_maestro && (
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-primary shadow-lg">
+                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-lg">
                         {maestroProfile?.avatar_url ? (
                           <img
                             src={maestroProfile.avatar_url}
                             alt={maestroProfile.full_name || "Maestro"}
                             className="w-full h-full object-cover"
-                            onLoad={() => console.log("✅ Imagen del maestro cargada:", maestroProfile.avatar_url)}
                             onError={(e) => {
-                              console.error("❌ Error cargando imagen del maestro:", maestroProfile.avatar_url);
-                              console.error("  - Event:", e);
+                              console.error("❌ Error cargando imagen del maestro");
+                              e.currentTarget.style.display = 'none';
                             }}
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center text-primary-foreground font-bold text-sm sm:text-lg">
+                          <div className="w-full h-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center text-primary-foreground font-bold text-lg">
                             {maestroProfile?.full_name?.charAt(0).toUpperCase() || "M"}
                           </div>
                         )}
                       </div>
-                      <span className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold max-w-[50px] sm:max-w-[60px] truncate">
+                      <span className="text-[10px] text-muted-foreground font-semibold max-w-[60px] truncate">
                         {maestroProfile?.full_name || "Maestro"}
                       </span>
                     </div>
                   )}
 
-                  {/* Burbuja del mensaje - Responsive */}
+                  {/* Burbuja del mensaje */}
                   <div
-                    className={`max-w-[75%] sm:max-w-[70%] md:max-w-[65%] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-lg ${
+                    className={`max-w-[65%] rounded-3xl p-4 shadow-lg ${
                       msg.is_from_maestro
-                        ? "bg-gradient-to-br from-card to-card/80 border-2 border-gold/20"
+                        ? "bg-white text-gray-900 border-2 border-gold/20"
                         : "bg-gradient-to-br from-primary to-amber-500 text-primary-foreground border-2 border-primary/30"
                     }`}
                   >
-                    {msg.text && (
-                      <p className={`text-sm leading-relaxed ${
-                        msg.is_from_maestro ? "text-gray-900" : "text-primary-foreground"
-                      }`}>
+                    {/* Mostrar SOLO texto si NO es imagen ni audio */}
+                    {msg.text && !msg.text.startsWith("[IMG]") && !msg.text.startsWith("[AUDIO]") && (
+                      <p className="text-sm leading-relaxed">
                         {msg.text}
                       </p>
                     )}
-                    {msg.text?.startsWith("[IMG]") && msg.text?.substring(5) && (
+
+                    {/* Mostrar imagen si empieza con [IMG] */}
+                    {msg.text?.startsWith("[IMG]") && (
                       <img
-                        src={msg.text?.substring(5)}
+                        src={msg.text.substring(5)}
                         alt="Imagen enviada"
-                        className="mt-2 max-w-full max-h-80 rounded-lg"
+                        className="max-w-full max-h-80 rounded-lg"
                       />
                     )}
-                    {msg.text?.startsWith("[AUDIO]") && msg.text?.substring(7) && (
+
+                    {/* Mostrar audio si empieza con [AUDIO] */}
+                    {msg.text?.startsWith("[AUDIO]") && (
                       <audio
-                        src={msg.text?.substring(7)}
+                        src={msg.text.substring(7)}
                         controls
-                        className="mt-2 max-w-full"
+                        className="max-w-full"
                       />
                     )}
+
                     <p className={`text-[10px] mt-2 font-medium ${
                       msg.is_from_maestro ? "text-gray-500" : "text-primary-foreground/80"
                     }`}>
@@ -431,10 +452,10 @@ export default function ChatUsuario() {
                   {/* Avatar - SOLO para usuario (derecha) */}
                   {!msg.is_from_maestro && (
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-base sm:text-lg border-2 border-primary/40">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-lg border-2 border-primary/40">
                         U
                       </div>
-                      <span className="text-[9px] sm:text-[10px] text-muted-foreground font-semibold max-w-[50px] sm:max-w-[60px] truncate">
+                      <span className="text-[10px] text-muted-foreground font-semibold max-w-[60px] truncate">
                         Tú
                       </span>
                     </div>
