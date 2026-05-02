@@ -85,7 +85,7 @@ export default function Dashboard() {
   const [deletedLeads, setDeletedLeads] = useState<any[]>([]);
 
   // Funciones de selección
-  const toggleSelectLead = (leadId: string) => {
+  const handleSelectLead = (leadId: string) => {
     const newSelected = new Set(selectedLeads);
     if (newSelected.has(leadId)) {
       newSelected.delete(leadId);
@@ -104,8 +104,10 @@ export default function Dashboard() {
     setSelectedLeads(new Set());
   };
 
-  const handleSelectLead = (leadId: string) => {
-    toggleSelectLead(leadId);
+  // Logout
+  const handleLogout = async () => {
+    await AuthService.signOut();
+    router.replace("/Suafazon");
   };
 
   // Mover a papelera
@@ -125,7 +127,6 @@ export default function Dashboard() {
 
       if (error) throw error;
 
-      // Recargar datos
       const { data: allLeads } = await LeadService.getActive();
       const { data: trashedLeads } = await LeadService.getDeleted();
       
@@ -146,7 +147,6 @@ export default function Dashboard() {
       const { error } = await LeadService.restoreFromTrash(leadId);
       if (error) throw error;
 
-      // Recargar datos
       const { data: allLeads } = await LeadService.getActive();
       const { data: trashedLeads } = await LeadService.getDeleted();
       
@@ -170,7 +170,6 @@ export default function Dashboard() {
       const { error } = await LeadService.deletePermanently(leadId);
       if (error) throw error;
 
-      // Recargar datos
       const { data: trashedLeads } = await LeadService.getDeleted();
       if (trashedLeads) setDeletedLeads(trashedLeads);
 
@@ -179,12 +178,6 @@ export default function Dashboard() {
       console.error("Error eliminando:", error);
       alert("Error al eliminar");
     }
-  };
-
-  // Logout handler
-  const handleLogout = async () => {
-    await AuthService.signOut();
-    router.replace("/Suafazon");
   };
 
   // Profile functions
