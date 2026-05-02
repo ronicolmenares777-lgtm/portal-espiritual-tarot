@@ -15,19 +15,21 @@ position: 10
 ---
 
 ## Notes
-EN PROGRESO - Problemas actuales:
+EN PROGRESO - Políticas de storage creadas:
 1. ✅ Chat de usuario - polling funcionando
-2. ❌ Chat de admin - pantalla negra (código reconstruido)
-3. ❌ Envío de imágenes - bucket "chat-media" creado pero clientes no lo ven
-4. ❌ Políticas de storage.buckets - RLS bloqueando visibilidad del bucket
+2. ✅ Chat de admin - funcionando
+3. ✅ Bucket "chat-media" creado y público
+4. ✅ Políticas RLS de storage.objects creadas (INSERT, SELECT, UPDATE, DELETE)
+5. ⏳ Probando envío de multimedia
 
-SIGUIENTE PASO: Reescribir chat de admin desde cero sin errores.
+SIGUIENTE PASO: Probar envío de imágenes en ambos chats.
 
 ## Checklist
 - [x] Sistema de polling implementado
 - [x] Chat de usuario funcionando con polling
-- [ ] Chat de admin funcionando con polling
-- [ ] Bucket de storage visible para clientes
+- [x] Chat de admin funcionando con polling
+- [x] Bucket de storage configurado correctamente
+- [x] Políticas RLS de storage creadas
 - [ ] Envío de multimedia funcionando
 
 ## Acceptance
