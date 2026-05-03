@@ -189,9 +189,9 @@ export default function ChatUsuario() {
         .from("messages")
         .insert([{
           lead_id: leadId,
-          content: messageText,
-          sender: "user",
-          read: false
+          text: messageText,
+          is_from_maestro: false,
+          is_read: false
         }])
         .select()
         .single();
