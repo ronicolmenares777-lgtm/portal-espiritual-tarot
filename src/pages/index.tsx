@@ -582,11 +582,10 @@ export default function Home() {
           />
         )}
 
-        {currentScreen === "reveal" && selectedCard && (
-          <CardReveal 
-            card={selectedCard}
-            cardIndex={selectedCardIndex}
-            onComplete={() => setCurrentScreen("questions")}
+        {currentScreen === "reveal" && selectedCards.length > 0 && (
+          <CardReveal
+            card={selectedCards[currentCardReveal]}
+            onContinue={handleCardRevealComplete}
           />
         )}
 

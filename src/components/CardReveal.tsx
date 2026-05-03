@@ -139,7 +139,7 @@ export function CardReveal({ card, onContinue }: CardRevealProps) {
               Mensaje del Cosmos
             </h2>
             <p className="text-foreground/90 text-sm sm:text-base md:text-lg leading-relaxed text-center">
-              {card.description}
+              {card.message}
             </p>
           </div>
         </motion.div>
