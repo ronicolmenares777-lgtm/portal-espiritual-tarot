@@ -195,10 +195,20 @@ export default function Home() {
 
       if (result.error) {
         console.error("❌ Error creando lead:", result.error);
-        setFormErrors({ 
-          ...formErrors, 
-          problem: "Error al guardar. Por favor intenta de nuevo." 
-        });
+        
+        // Detectar error de WhatsApp duplicado
+        if (result.error.code === "DUPLICATE_WHATSAPP") {
+          setFormErrors({ 
+            ...formErrors, 
+            whatsapp: result.error.message
+          });
+        } else {
+          setFormErrors({ 
+            ...formErrors, 
+            problem: "Error al guardar. Por favor intenta de nuevo." 
+          });
+        }
+        
         setIsSubmitting(false);
         return;
       }
@@ -533,6 +543,7 @@ export default function Home() {
                           value={formData.countryCode}
                           onChange={(e) => {
                             setFormData({ ...formData, countryCode: e.target.value, whatsapp: "" });
+                            setFormErrors({ ...formErrors, whatsapp: "" });
                           }}
                           className="w-20 sm:w-24 px-2 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-background/50 border-2 border-gold/30 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all backdrop-blur-sm"
                           required
@@ -554,6 +565,7 @@ export default function Home() {
                             const maxLength = getPhoneLength(formData.countryCode).max;
                             if (value.length <= maxLength) {
                               setFormData({ ...formData, whatsapp: value });
+                              setFormErrors({ ...formErrors, whatsapp: "" });
                             }
                           }}
                           placeholder="Número de WhatsApp"
@@ -561,10 +573,15 @@ export default function Home() {
                           required
                         />
                       </div>
-                      {formData.whatsapp && (
+                      {formData.whatsapp && !formErrors.whatsapp && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {formData.whatsapp.length} / {getPhoneLength(formData.countryCode).max} dígitos
                         </p>
+                      )}
+                      {formErrors.whatsapp && (
+                        <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                          <p className="text-xs text-red-400">{formErrors.whatsapp}</p>
+                        </div>
                       )}
                     </div>
 

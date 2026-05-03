@@ -46,6 +46,18 @@ export const LeadService = {
 
       if (error) {
         console.error("❌ Error de Supabase:", error);
+        
+        // Detectar error de WhatsApp duplicado
+        if (error.code === "23505" && error.message.includes("leads_whatsapp_unique")) {
+          return { 
+            data: null, 
+            error: { 
+              code: "DUPLICATE_WHATSAPP",
+              message: "Este número de WhatsApp ya está registrado. Si ya tienes una consulta activa, usa el botón 'Ingresar' en la parte superior derecha para acceder a tu chat."
+            }
+          };
+        }
+        
         return { data: null, error };
       }
 
