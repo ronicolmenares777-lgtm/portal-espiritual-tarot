@@ -117,7 +117,7 @@ export function QuestionScreen({ card, onAnswersComplete }: QuestionScreenProps)
     ];
   };
 
-  const questions = getQuestions();
+  const QUESTIONS = getQuestions();
 
   const handleAnswer = (answer: string) => {
     // Si selecciona "Quiero hablar ahora con el maestro" en la primera pregunta
@@ -131,7 +131,7 @@ export function QuestionScreen({ card, onAnswersComplete }: QuestionScreenProps)
     const newAnswers = [...answers, answer];
     setAnswers(newAnswers);
 
-    if (currentQuestion < questions.length - 1) {
+    if (currentQuestion < QUESTIONS.length - 1) {
       // Siguiente pregunta
       setTimeout(() => {
         setCurrentQuestion(currentQuestion + 1);
@@ -145,76 +145,104 @@ export function QuestionScreen({ card, onAnswersComplete }: QuestionScreenProps)
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        {/* Progreso */}
-        <div className="mb-8">
-          <div className="flex justify-center gap-2 mb-4">
-            {questions.map((_, index) => (
-              <div
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 relative overflow-hidden">
+      {/* Título */}
+      <motion.div
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="text-center space-y-3 sm:space-y-4 mb-8 sm:mb-12 md:mb-16 max-w-3xl px-4"
+      >
+        <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-gold tracking-wider">
+          AFINA TU ENERGÍA
+        </h1>
+        <p className="text-gold/70 text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em] uppercase">
+          Pregunta {currentQuestion + 1} de {QUESTIONS.length}
+        </p>
+        <div className="w-full bg-secondary/30 rounded-full h-1.5 sm:h-2 overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-gold to-accent"
+            initial={{ width: 0 }}
+            animate={{ width: `${((currentQuestion + 1) / QUESTIONS.length) * 100}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+      </motion.div>
+
+      {/* Pregunta actual */}
+      <motion.div
+        key={currentQuestion}
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -50 }}
+        transition={{ duration: 0.5 }}
+        className="relative max-w-4xl mx-auto w-full"
+      >
+        <div className="absolute -inset-1 bg-gradient-to-r from-gold/20 via-accent/20 to-gold/20 rounded-2xl sm:rounded-3xl blur-2xl opacity-60" />
+        
+        <div className="relative bg-card/80 backdrop-blur-xl border-2 border-gold/30 rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-8 lg:p-10 shadow-2xl">
+          {/* Texto de la pregunta */}
+          <h2 className="font-serif text-lg sm:text-xl md:text-2xl lg:text-3xl text-foreground text-center mb-6 sm:mb-8 md:mb-10 leading-relaxed px-2">
+            {QUESTIONS[currentQuestion].question}
+          </h2>
+
+          {/* Opciones de respuesta */}
+          <div className="space-y-3 sm:space-y-4">
+            {QUESTIONS[currentQuestion].options.map((option, index) => (
+              <motion.button
                 key={index}
-                className={`h-1 flex-1 rounded-full transition-all duration-500 ${
-                  index <= currentQuestion ? "bg-gold" : "bg-muted/30"
-                }`}
-              />
+                onClick={() => handleAnswer(option)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full group relative overflow-hidden rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 transition-all border-2 border-gold/30 hover:border-gold/60 bg-secondary/30 hover:bg-secondary/50 shadow-lg hover:shadow-xl hover:shadow-gold/20"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-gold/5 via-accent/5 to-gold/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="relative flex items-center gap-3 sm:gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold text-sm sm:text-base">
+                    {String.fromCharCode(65 + index)}
+                  </div>
+                  <span className="text-foreground/90 text-left text-sm sm:text-base md:text-lg flex-1">
+                    {option}
+                  </span>
+                  <div className="flex-shrink-0 text-gold/60 group-hover:text-gold transition-colors">
+                    →
+                  </div>
+                </div>
+              </motion.button>
             ))}
           </div>
-          <p className="text-center text-sm text-muted-foreground">
-            Pregunta {currentQuestion + 1} de {questions.length}
-          </p>
         </div>
+      </motion.div>
 
-        <AnimatePresence mode="wait">
+      {/* Círculos decorativos */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {[...Array(4)].map((_, i) => (
           <motion.div
-            key={currentQuestion}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
-            className="text-center"
-          >
-            {/* Pregunta */}
-            <h2 className="text-2xl md:text-3xl font-serif text-gold mb-12 tracking-wider">
-              {questions[currentQuestion].question}
-            </h2>
-
-            {/* Opciones */}
-            <div className="space-y-4">
-              {questions[currentQuestion].options.map((option, index) => {
-                const isMaestroOption = option === "Quiero hablar ahora con el maestro";
-                
-                return (
-                  <motion.button
-                    key={option}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    onClick={() => handleAnswer(option)}
-                    className={`w-full px-6 py-4 rounded-xl border text-left group transition-all ${
-                      isMaestroOption
-                        ? "bg-gold/20 border-gold/60 hover:bg-gold/30 hover:border-gold"
-                        : "bg-card/50 border-gold/20 hover:border-gold/50 hover:bg-card/70"
-                    }`}
-                    style={{
-                      boxShadow: isMaestroOption 
-                        ? "0 0 30px hsl(var(--gold) / 0.3)"
-                        : "0 0 20px hsl(var(--gold) / 0.1)",
-                    }}
-                  >
-                    <span className={`text-base md:text-lg transition-colors ${
-                      isMaestroOption
-                        ? "text-gold font-semibold"
-                        : "text-foreground group-hover:text-gold"
-                    }`}>
-                      {isMaestroOption && "⚡ "}
-                      {option}
-                    </span>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </motion.div>
-        </AnimatePresence>
+            key={i}
+            className="absolute rounded-full border border-gold/10"
+            style={{
+              width: `${250 + i * 100}px`,
+              height: `${250 + i * 100}px`,
+              left: "50%",
+              top: "50%",
+              x: "-50%",
+              y: "-50%",
+            }}
+            animate={{
+              scale: [1, 1.1, 1],
+              opacity: [0.1, 0.2, 0.1],
+            }}
+            transition={{
+              duration: 4 + i,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
       </div>
     </div>
   );

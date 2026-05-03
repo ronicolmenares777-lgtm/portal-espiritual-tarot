@@ -36,18 +36,18 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="text-center space-y-4 mb-16"
+        className="text-center space-y-3 sm:space-y-4 mb-12 sm:mb-16 px-4"
       >
-        <h1 className="font-serif text-4xl md:text-6xl text-gold tracking-wider">
+        <h1 className="font-serif text-3xl sm:text-4xl md:text-6xl text-gold tracking-wider">
           SELECCIONA TU CARTA
         </h1>
-        <p className="text-gold/70 text-sm tracking-[0.3em] uppercase max-w-lg mx-auto">
+        <p className="text-gold/70 text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em] uppercase max-w-lg mx-auto">
           El cosmos aguarda tu elección
         </p>
       </motion.div>
 
       {/* Cartas */}
-      <div className="flex gap-6 md:gap-12 items-center justify-center mb-12 flex-wrap max-w-4xl">
+      <div className="flex gap-4 sm:gap-6 md:gap-12 items-center justify-center mb-8 sm:mb-12 flex-wrap max-w-4xl">
         {cards.map((card, index) => (
           <motion.div
             key={index}
@@ -72,7 +72,7 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
             }}
           >
             <motion.div
-              className="w-36 h-52 md:w-44 md:h-64"
+              className="w-32 h-44 sm:w-36 sm:h-52 md:w-44 md:h-64"
               animate={{
                 rotateY: hoveredCard === index ? 5 : 0,
                 z: hoveredCard === index ? 50 : 0,
@@ -91,7 +91,7 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
                 {/* Patrón de fondo místico */}
                 <div className="absolute inset-0 opacity-20">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <svg width="100" height="100" viewBox="0 0 120 120">
+                    <svg width="80" height="80" viewBox="0 0 120 120" className="sm:w-[100px] sm:h-[100px]">
                       <circle cx="60" cy="60" r="50" fill="none" stroke="hsl(var(--gold))" strokeWidth="2"/>
                       <circle cx="60" cy="60" r="40" fill="none" stroke="hsl(var(--gold))" strokeWidth="1.5"/>
                       <path d="M60 10 L60 110 M10 60 L110 60" stroke="hsl(var(--gold))" strokeWidth="1"/>
@@ -102,10 +102,10 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
                 
                 {/* Pentagrama central */}
                 <motion.svg
-                  width="70"
-                  height="70"
+                  width="60"
+                  height="60"
                   viewBox="0 0 100 100"
-                  className="relative z-10"
+                  className="relative z-10 sm:w-[70px] sm:h-[70px]"
                   animate={{
                     rotate: hoveredCard === index ? 360 : 0,
                   }}
@@ -125,10 +125,10 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
                 </motion.svg>
 
                 {/* Símbolos en las esquinas */}
-                <div className="absolute top-3 left-3 text-gold/50 text-xs">☽</div>
-                <div className="absolute top-3 right-3 text-gold/50 text-xs">☀</div>
-                <div className="absolute bottom-3 left-3 text-gold/50 text-xs">✦</div>
-                <div className="absolute bottom-3 right-3 text-gold/50 text-xs">✧</div>
+                <div className="absolute top-2 sm:top-3 left-2 sm:left-3 text-gold/50 text-xs">☽</div>
+                <div className="absolute top-2 sm:top-3 right-2 sm:right-3 text-gold/50 text-xs">☀</div>
+                <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 text-gold/50 text-xs">✦</div>
+                <div className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 text-gold/50 text-xs">✧</div>
 
                 {/* Efecto de brillo en hover */}
                 <AnimatePresence>
@@ -157,7 +157,7 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
 
             {/* Sombra dinámica */}
             <motion.div
-              className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-28 h-6 bg-gold/20 rounded-full blur-xl"
+              className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-24 sm:w-28 h-4 sm:h-6 bg-gold/20 rounded-full blur-xl"
               animate={{
                 opacity: hoveredCard === index ? 0.6 : 0.3,
                 scale: hoveredCard === index ? 1.2 : 1,
@@ -203,12 +203,12 @@ export function CardSelection({ onCardSelected }: CardSelectionProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8, duration: 0.8 }}
-        className="text-center space-y-2"
+        className="text-center space-y-2 px-4 max-w-2xl"
       >
-        <p className="text-foreground/80 text-base md:text-lg">
+        <p className="text-foreground/80 text-sm sm:text-base md:text-lg">
           Cierra los ojos, respira profundo y deja que tu intuición te guíe
         </p>
-        <p className="text-gold/60 text-sm tracking-wider">
+        <p className="text-gold/60 text-xs sm:text-sm tracking-wider">
           Elige la carta que resuene con la energía de tu corazón
         </p>
       </motion.div>
