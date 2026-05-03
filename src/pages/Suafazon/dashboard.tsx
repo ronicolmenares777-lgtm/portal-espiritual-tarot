@@ -30,13 +30,12 @@ export default function Dashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("todos");
-  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const router = useRouter();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
-  // Cargar leads al inicio
+  // Cargar leads al inicio UNA SOLA VEZ
   useEffect(() => {
     const adminSession = localStorage.getItem("adminSession");
     if (!adminSession) {
@@ -47,7 +46,7 @@ export default function Dashboard() {
     loadLeads();
   }, [router]);
 
-  // Polling cada 10 segundos - SIMPLE Y LIMPIO
+  // Polling cada 10 segundos - SIMPLE
   useEffect(() => {
     const interval = setInterval(() => {
       loadLeads();
@@ -168,7 +167,6 @@ export default function Dashboard() {
             </div>
 
             <div className="flex gap-2 sm:gap-3 items-center">
-              {/* Botón de notificaciones - SIEMPRE VISIBLE */}
               <Button
                 onClick={handleToggleNotifications}
                 variant={notificationsEnabled ? "default" : "outline"}
@@ -373,7 +371,7 @@ export default function Dashboard() {
                       <td className="px-4 py-3 text-sm max-w-xs truncate">
                         {lead.problem}
                       </td>
-                      <td className="px-4 py-3 text-sm">{lead.selected_card}</td>
+                      <td className="px-4 py-3 text-sm">{lead.selected_card_id}</td>
                       <td className="px-4 py-3">{getStatusBadge(lead.status)}</td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
