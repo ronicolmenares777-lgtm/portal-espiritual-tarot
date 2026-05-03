@@ -57,7 +57,7 @@ export default function Dashboard() {
   const toggleFavorite = async (leadId: string, currentFavorite: boolean) => {
     const { error } = await supabase
       .from("leads")
-      .update({ favorite: !currentFavorite })
+      .update({ is_favorite: !currentFavorite })
       .eq("id", leadId);
 
     if (!error) loadLeads();
@@ -297,12 +297,12 @@ export default function Dashboard() {
                             {lead.name}
                           </h3>
                           <button
-                            onClick={() => toggleFavorite(lead.id, lead.favorite || false)}
+                            onClick={() => toggleFavorite(lead.id, lead.is_favorite || false)}
                             className="text-gold hover:text-gold/80"
                           >
                             <Star
                               className={`h-5 w-5 ${
-                                lead.favorite ? "fill-current" : ""
+                                lead.is_favorite ? "fill-current" : ""
                               }`}
                             />
                           </button>
