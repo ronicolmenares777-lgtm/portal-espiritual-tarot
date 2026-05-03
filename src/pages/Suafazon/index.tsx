@@ -30,27 +30,25 @@ export default function AdminLogin() {
     setError("");
     setIsLoggingIn(true);
 
-    const credentials = `Suafazon:${email}:${password}`;
-    const hashedCredentials = btoa(credentials);
-
-    console.log("🔐 Intentando login con:", hashedCredentials.substring(0, 20) + "...");
+    console.log("🔐 Intentando login con:", email);
 
     try {
+      // Buscar perfil de admin por email y role
       const { data: profile, error: authError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("auth_token", hashedCredentials)
-        .eq("focus", "admin")
+        .eq("email", email)
+        .eq("role", "admin")
         .single();
 
       if (authError || !profile) {
         console.error("❌ Autenticación fallida:", authError);
-        setError("Credenciales inválidas");
+        setError("Credenciales inválidas o no tienes permisos de administrador");
         setIsLoggingIn(false);
         return;
       }
 
-      console.log("✅ Autenticación exitosa:", profile);
+      console.log("✅ Perfil de admin encontrado:", profile);
 
       // Prevenir redirecciones múltiples
       if (isRedirecting) {
