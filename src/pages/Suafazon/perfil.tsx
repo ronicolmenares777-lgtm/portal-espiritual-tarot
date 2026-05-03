@@ -255,6 +255,20 @@ export default function PerfilMaestro() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-card rounded-xl sm:rounded-2xl shadow-xl border border-border p-6 sm:p-8 lg:p-10"
         >
+          {/* Botón de regreso */}
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/Suafazon/dashboard")}
+              className="flex-shrink-0"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </Button>
+          </div>
+
           {/* Header */}
           <div className="text-center mb-6 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-gold mb-2">
