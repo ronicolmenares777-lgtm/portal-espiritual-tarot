@@ -1,17 +1,15 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
-import { SEO } from "@/components/SEO";
-import { useToast } from "@/hooks/use-toast";
-import { Send, Image, Mic, Sparkles, User, Upload, MicOff } from "lucide-react";
-import { motion } from "framer-motion";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Send, Sparkles, Upload, Mic, MicOff, User, LogOut } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function ChatUsuario() {
   const router = useRouter();
-  const { toast } = useToast();
   const [leadId, setLeadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -348,36 +346,6 @@ export default function ChatUsuario() {
     }
   };
 
-  // Cargar mensajes
-  const loadMessages = async () => {
-    if (!leadId) {
-      console.log("⚠️ [CHAT] No hay lead_id, esperando...");
-      return [];
-    }
-
-    console.log("🔄 [CHAT] Cargando mensajes para lead_id:", leadId);
-
-    try {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("lead_id", leadId)
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        console.error("❌ [CHAT] Error cargando mensajes:", error);
-        return [];
-      }
-
-      console.log("📊 [CHAT] Mensajes cargados:", data?.length || 0);
-      setMessages(data || []);
-      return data || [];
-    } catch (err) {
-      console.error("❌ [CHAT] Error general cargando mensajes:", err);
-      return [];
-    }
-  };
-
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-background via-background/95 to-background">
       {/* Header mejorado */}
@@ -425,82 +393,115 @@ export default function ChatUsuario() {
               </svg>
               <span className="hidden sm:inline">WhatsApp</span>
             </motion.a>
+
+            {/* Botón cerrar sesión */}
+            <motion.button
+              onClick={() => {
+                localStorage.removeItem("currentLeadId");
+                router.push("/");
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-red-500/90 hover:bg-red-500 text-white rounded-xl font-medium shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/50 transition-all"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Salir</span>
+            </motion.button>
           </div>
         </div>
       </div>
 
       {/* Área de mensajes mejorada */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-        {messages.map((msg) => (
-          <motion.div
-            key={msg.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex gap-3 ${msg.is_from_maestro ? "justify-end" : "justify-start"}`}
-          >
-            {/* Avatar usuario */}
-            {!msg.is_from_maestro && (
-              <Avatar className="h-9 w-9 mt-1 flex-shrink-0 border-2 border-accent/20">
-                <AvatarFallback className="bg-gradient-to-br from-accent/10 to-accent/20 text-accent">
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-            )}
+        {messages.map((msg) => {
+          // Detectar si el mensaje es una imagen
+          const isImage = msg.text && msg.text.startsWith("[IMG]");
+          const isAudio = msg.text && msg.text.startsWith("[AUDIO]");
+          
+          // Extraer contenido base64 si es imagen o audio
+          const imageData = isImage ? msg.text.replace("[IMG]", "") : null;
+          const audioData = isAudio ? msg.text.replace("[AUDIO]", "") : null;
 
-            {/* Burbuja de mensaje mejorada */}
-            <div
-              className={`max-w-[75%] sm:max-w-[70%] rounded-2xl px-4 py-3 shadow-md ${
-                msg.is_from_maestro
-                  ? "bg-gradient-to-br from-gold via-accent to-gold text-background shadow-gold/20"
-                  : "bg-card text-foreground border border-border/50 shadow-black/5"
-              }`}
+          return (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex gap-3 ${msg.is_from_maestro ? "justify-end" : "justify-start"}`}
             >
-              {msg.media_type === "image" && msg.media_url && (
-                <div className="rounded-xl overflow-hidden mb-2 border-2 border-white/10">
-                  <img
-                    src={msg.media_url}
-                    alt="Imagen"
-                    className="max-w-full h-auto"
-                    loading="lazy"
-                  />
-                </div>
-              )}
-              {msg.media_type === "audio" && msg.media_url && (
-                <audio controls className="mb-2 w-full max-w-xs">
-                  <source src={msg.media_url} type="audio/webm" />
-                </audio>
-              )}
-              {msg.text && (
-                <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
-                  {msg.text}
-                </p>
-              )}
-              <p className={`text-[10px] mt-1.5 ${msg.is_from_maestro ? "text-background/60" : "text-muted-foreground/60"}`}>
-                {formatTime(msg.created_at)}
-              </p>
-            </div>
-
-            {/* Avatar maestro */}
-            {msg.is_from_maestro && (
-              <Avatar className="h-9 w-9 mt-1 flex-shrink-0 border-2 border-gold/30">
-                {maestroProfile?.avatar_url ? (
-                  <img src={maestroProfile.avatar_url} alt="Maestro" className="object-cover" />
-                ) : (
-                  <AvatarFallback className="bg-gradient-to-br from-gold/20 to-accent/20 text-gold">
-                    <Sparkles className="h-5 w-5" />
+              {/* Avatar usuario */}
+              {!msg.is_from_maestro && (
+                <Avatar className="h-9 w-9 mt-1 flex-shrink-0 border-2 border-accent/20">
+                  <AvatarFallback className="bg-gradient-to-br from-accent/10 to-accent/20 text-accent">
+                    <User className="h-5 w-5" />
                   </AvatarFallback>
+                </Avatar>
+              )}
+
+              {/* Burbuja de mensaje mejorada */}
+              <div
+                className={`max-w-[75%] sm:max-w-[70%] rounded-2xl px-4 py-3 shadow-md ${
+                  msg.is_from_maestro
+                    ? "bg-gradient-to-br from-gold via-accent to-gold text-background shadow-gold/20"
+                    : "bg-card text-foreground border border-border/50 shadow-black/5"
+                }`}
+              >
+                {/* Mostrar imagen si existe */}
+                {imageData && (
+                  <div className="rounded-xl overflow-hidden mb-2 border-2 border-white/10">
+                    <img
+                      src={imageData}
+                      alt="Imagen"
+                      className="max-w-full h-auto"
+                      loading="lazy"
+                    />
+                  </div>
                 )}
-              </Avatar>
-            )}
-          </motion.div>
-        ))}
+                
+                {/* Mostrar audio si existe */}
+                {audioData && (
+                  <audio controls className="mb-2 w-full max-w-xs">
+                    <source src={audioData} type="audio/webm" />
+                  </audio>
+                )}
+                
+                {/* Mostrar texto solo si NO es imagen ni audio */}
+                {!isImage && !isAudio && msg.text && (
+                  <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                    {msg.text}
+                  </p>
+                )}
+                
+                <p className={`text-[10px] mt-1.5 ${msg.is_from_maestro ? "text-background/60" : "text-muted-foreground/60"}`}>
+                  {formatTime(msg.created_at)}
+                </p>
+              </div>
+
+              {/* Avatar maestro */}
+              {msg.is_from_maestro && (
+                <Avatar className="h-9 w-9 mt-1 flex-shrink-0 border-2 border-gold/30">
+                  {maestroProfile?.avatar_url ? (
+                    <img src={maestroProfile.avatar_url} alt="Maestro" className="object-cover" />
+                  ) : (
+                    <AvatarFallback className="bg-gradient-to-br from-gold/20 to-accent/20 text-gold">
+                      <Sparkles className="h-5 w-5" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+              )}
+            </motion.div>
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input área mejorada */}
       <div className="sticky bottom-0 bg-card/80 backdrop-blur-xl border-t border-gold/20 shadow-2xl shadow-black/10">
         <div className="p-4 sm:p-6">
-          <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }} className="flex items-center gap-3">
             <input
               type="file"
               ref={fileInputRef}
