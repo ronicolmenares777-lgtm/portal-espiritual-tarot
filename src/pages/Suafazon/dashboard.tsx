@@ -280,7 +280,7 @@ export default function Dashboard() {
                         <td className="px-6 py-4 text-sm max-w-xs truncate">{lead.problem}</td>
                         <td className="px-6 py-4 text-sm">
                           <span className="px-2 py-1 rounded bg-gold/10 text-gold text-xs">
-                            {lead.card_selected || "N/A"}
+                            {lead.selected_card_id || "N/A"}
                           </span>
                         </td>
                         <td className="px-6 py-4">{getStatusBadge(lead.status)}</td>
