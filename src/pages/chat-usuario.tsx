@@ -179,16 +179,35 @@ export default function ChatUsuario() {
 
   // Enviar mensaje de texto
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !leadId) return;
+    console.log("🚀 [USER-SEND] ========== INICIANDO ENVÍO ==========");
+    console.log("📋 [USER-SEND] Mensaje:", newMessage.trim());
+    console.log("📋 [USER-SEND] Lead ID:", leadId);
+    
+    if (!newMessage.trim() || !leadId) {
+      console.error("❌ [USER-SEND] Bloqueado - mensaje vacío o leadId faltante");
+      console.error("  - Mensaje vacío?", !newMessage.trim());
+      console.error("  - leadId faltante?", !leadId);
+      return;
+    }
 
     const messageText = newMessage.trim();
+    const finalLeadId = Array.isArray(leadId) ? leadId[0] : leadId;
+    
+    console.log("📤 [USER-SEND] Preparando insert con:", {
+      lead_id: finalLeadId,
+      text: messageText,
+      is_from_maestro: false,
+      is_read: false
+    });
+    
     setNewMessage(""); // Limpiar input INMEDIATAMENTE
+    setSending(true);
 
     try {
       const { data, error } = await supabase
         .from("messages")
         .insert([{
-          lead_id: leadId,
+          lead_id: finalLeadId,
           text: messageText,
           is_from_maestro: false,
           is_read: false
@@ -196,14 +215,22 @@ export default function ChatUsuario() {
         .select()
         .single();
 
+      console.log("📊 [USER-SEND] Respuesta de Supabase:", { data, error });
+
       if (error) {
-        console.error("Error enviando mensaje:", error);
+        console.error("❌ [USER-SEND] Error insertando mensaje:", error);
+        console.error("  - Code:", error.code);
+        console.error("  - Message:", error.message);
+        console.error("  - Details:", error.details);
         setNewMessage(messageText); // Restaurar mensaje si falla
+        alert(`Error al enviar mensaje: ${error.message}`);
+        setSending(false);
         return;
       }
 
       // Agregar mensaje inmediatamente a la lista local
       if (data) {
+        console.log("✅ [USER-SEND] Mensaje enviado exitosamente, agregando a lista local");
         setMessages(prev => [...prev, data]);
         
         // Scroll al fondo
@@ -211,9 +238,14 @@ export default function ChatUsuario() {
           messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }, 100);
       }
+      
+      setSending(false);
+      console.log("✅ [USER-SEND] ========== ENVÍO COMPLETADO ==========");
     } catch (err) {
-      console.error("Error:", err);
+      console.error("❌ [USER-SEND] Error catch general:", err);
       setNewMessage(messageText); // Restaurar mensaje si falla
+      alert(`Error inesperado: ${err}`);
+      setSending(false);
     }
   };
 
