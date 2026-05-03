@@ -34,8 +34,7 @@ import {
   Menu,
   Phone,
   MessageSquare,
-  Calendar,
-  Input
+  Calendar
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
