@@ -386,12 +386,12 @@ export default function Dashboard() {
                 {notificationsEnabled ? (
                   <>
                     <Bell className="h-4 w-4" />
-                    Notificaciones ON
+                    <span className="hidden sm:inline">Notificaciones ON</span>
                   </>
                 ) : (
                   <>
                     <BellOff className="h-4 w-4" />
-                    Activar Notificaciones
+                    <span className="hidden sm:inline">Activar Notificaciones</span>
                   </>
                 )}
               </Button>
