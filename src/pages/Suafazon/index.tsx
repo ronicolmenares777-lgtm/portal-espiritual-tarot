@@ -1,124 +1,80 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AdminLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  useEffect(() => {
-    // Solo verificar si ya hay sesión activa AL MONTAR
-    const adminSession = localStorage.getItem("adminSession");
-    if (adminSession === "logged_in") {
-      console.log("🔄 Sesión activa detectada, redirigiendo...");
-      router.push("/Suafazon/dashboard");
-    }
-  }, []); // Array vacío - solo ejecutar UNA VEZ al montar
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Prevenir múltiples ejecuciones
-    if (isLoggingIn) {
-      console.log("⏸️ Login ya en progreso, ignorando...");
-      return;
-    }
-
     setError("");
-    setIsLoggingIn(true);
 
-    console.log("🔐 Intentando login...");
-
-    try {
-      // Verificar si las credenciales son las del admin hardcoded
-      if (email === "admin@suafazon.com" && password === "Suafazon2024!") {
-        console.log("✅ Credenciales admin correctas");
-        
-        // Guardar sesión
-        localStorage.setItem("adminSession", "logged_in");
-        localStorage.setItem("adminEmail", email);
-
-        console.log("➡️ Redirigiendo a dashboard...");
-        await router.push("/Suafazon/dashboard");
-        
-        // NO resetear isLoggingIn - dejar que el componente se desmonte
-        return;
-      }
-
-      // Si no son las credenciales del admin, error
-      console.error("❌ Credenciales inválidas");
+    // Credenciales hardcoded
+    if (email === "admin@suafazon.com" && password === "Suafazon2024!") {
+      localStorage.setItem("adminSession", "logged_in");
+      router.push("/Suafazon/dashboard");
+    } else {
       setError("Credenciales inválidas");
-      setIsLoggingIn(false);
-    } catch (err) {
-      console.error("❌ Error en login:", err);
-      setError("Error al iniciar sesión");
-      setIsLoggingIn(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
-          <h1 className="text-3xl font-serif text-primary text-center mb-2">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-purple-950/20 to-background">
+      <Card className="w-full max-w-md bg-card/80 backdrop-blur-xl border-gold/20">
+        <CardHeader className="text-center space-y-2">
+          <CardTitle className="text-3xl font-serif text-gold">
             Portal Administrativo
-          </h1>
-          <p className="text-muted-foreground text-center mb-8">
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
             Acceso exclusivo para maestros espirituales
           </p>
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm text-foreground/80">Email</label>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@email.com"
+                className="bg-background/50 border-gold/20 focus:border-gold/50"
                 required
-                className="w-full"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Contraseña</label>
+            <div className="space-y-2">
+              <label className="text-sm text-foreground/80">Contraseña</label>
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                className="bg-background/50 border-gold/20 focus:border-gold/50"
                 required
-                className="w-full"
               />
             </div>
 
             {error && (
-              <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-lg text-sm">
+              <div className="text-sm text-red-400 bg-red-500/10 p-3 rounded border border-red-500/20">
                 {error}
               </div>
             )}
 
             <Button
               type="submit"
-              disabled={loading}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-background font-semibold"
             >
-              {loading ? "Verificando..." : "Ingresar al Portal"}
+              Ingresar al Portal
             </Button>
           </form>
-        </div>
-      </motion.div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
