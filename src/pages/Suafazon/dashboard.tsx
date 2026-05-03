@@ -12,7 +12,8 @@ import { motion } from "framer-motion";
 export default function Dashboard() {
   const [leads, setLeads] = useState<Tables<"leads">[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "nuevo" | "enConversacion" | "atendido" | "favoritos" | "papelera">("all");
+  const [currentView, setCurrentView] = useState<"leads" | "listo" | "papelera">("leads");
+  const [ritualFilter, setRitualFilter] = useState<"all" | "nuevo" | "enChat" | "favorito">("all");
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const router = useRouter();
   const [showProfileMenu, setShowProfileMenu] = useState(false);

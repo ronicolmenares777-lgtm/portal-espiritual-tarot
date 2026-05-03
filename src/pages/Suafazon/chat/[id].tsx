@@ -69,7 +69,7 @@ export default function ChatAdmin() {
   }, [id]);
 
   const handleStatusChange = async (newStatus: string) => {
-    if (!id) return;
+    if (!id || typeof id !== "string") return;
     
     const { error } = await supabase
       .from("leads")
@@ -82,7 +82,7 @@ export default function ChatAdmin() {
   };
 
   const handleToggleFavorite = async () => {
-    if (!id) return;
+    if (!id || typeof id !== "string") return;
     
     const { error } = await supabase
       .from("leads")
