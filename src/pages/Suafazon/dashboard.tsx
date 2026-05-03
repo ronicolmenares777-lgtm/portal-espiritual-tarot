@@ -45,22 +45,60 @@ export default function Dashboard() {
     checkNotifications();
   }, [router]);
 
+  // Auto-refresh cada 10 segundos + Realtime subscriptions
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      router.push("/Suafazon");
+      return;
+    }
+
+    // Polling cada 10 segundos
+    const interval = setInterval(() => {
+      console.log("🔄 [POLLING] Actualizando leads...");
+      loadLeads();
+    }, 10000);
+
+    // Realtime subscription para nuevos leads
+    const subscription = supabase
+      .channel('leads_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leads'
+        },
+        (payload) => {
+          console.log('🔔 [REALTIME] Cambio detectado en leads:', payload);
+          loadLeads(); // Recargar leads al detectar cambios
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
   const loadLeads = async () => {
-    console.log("🔄 Cargando leads desde Supabase...");
-    
-    const { data, error } = await supabase
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    console.log("📊 Leads recibidos de Supabase:", data);
-    console.log("❌ Error (si hay):", error);
+      if (error) {
+        console.error("Error cargando leads:", error);
+        return;
+      }
 
-    if (!error && data) {
-      console.log("✅ Total de leads cargados:", data.length);
-      setLeads(data);
-    } else {
-      console.error("❌ Error cargando leads:", error);
+      if (data) {
+        console.log(`✅ [LEADS] Cargados ${data.length} leads`);
+        setLeads(data);
+      }
+    } catch (err) {
+      console.error("Error en loadLeads:", err);
     }
   };
 
