@@ -217,7 +217,8 @@ export default function ChatAdmin() {
       const { error: messageError } = await supabase.from("messages").insert({
         lead_id: id,
         text: "",
-        image_url: data.publicUrl,
+        media_url: data.publicUrl,
+        media_type: "image",
         is_from_maestro: true,
         is_read: false,
       });
@@ -283,7 +284,8 @@ export default function ChatAdmin() {
       const { error: messageError } = await supabase.from("messages").insert({
         lead_id: id,
         text: "",
-        audio_url: data.publicUrl,
+        media_url: data.publicUrl,
+        media_type: "audio",
         is_from_maestro: true,
         is_read: false,
       });
@@ -379,17 +381,17 @@ export default function ChatAdmin() {
               {msg.is_from_maestro && (
                 <div className="flex items-start gap-2 justify-end">
                   <div className="max-w-[70%] bg-gradient-to-br from-gold/20 to-accent/10 border border-gold/30 rounded-lg p-3">
-                    {msg.image_url && (
+                    {msg.media_type === "image" && msg.media_url && (
                       <img
-                        src={msg.image_url}
+                        src={msg.media_url}
                         alt="Imagen"
                         className="max-w-full rounded-lg mb-2 cursor-pointer"
-                        onClick={() => handleImageClick(msg.image_url!)}
+                        onClick={() => handleImageClick(msg.media_url!)}
                       />
                     )}
-                    {msg.audio_url && (
+                    {msg.media_type === "audio" && msg.media_url && (
                       <audio controls className="max-w-full mb-2">
-                        <source src={msg.audio_url} type="audio/webm" />
+                        <source src={msg.media_url} type="audio/webm" />
                       </audio>
                     )}
                     <p className="text-sm text-foreground">{msg.text}</p>
@@ -416,11 +418,35 @@ export default function ChatAdmin() {
                 </div>
               )}
               {!msg.is_from_maestro && (
-                <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
-                  <AvatarFallback className="bg-accent/20 text-accent">
-                    <User className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
+                <div className="flex items-start gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                    {lead?.name?.charAt(0).toUpperCase() || "?"}
+                  </div>
+                  <div className="max-w-[70%] bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30 rounded-lg p-3">
+                    {msg.media_type === "image" && msg.media_url && (
+                      <img
+                        src={msg.media_url}
+                        alt="Imagen"
+                        className="max-w-full rounded-lg mb-2 cursor-pointer"
+                        onClick={() => handleImageClick(msg.media_url!)}
+                      />
+                    )}
+                    {msg.media_type === "audio" && msg.media_url && (
+                      <audio controls className="max-w-full mb-2">
+                        <source src={msg.media_url} type="audio/webm" />
+                      </audio>
+                    )}
+                    <p className="text-sm text-foreground">{msg.text}</p>
+                    <p className="text-xs text-foreground/50 mt-1">
+                      {msg.created_at
+                        ? new Date(msg.created_at).toLocaleTimeString("es-MX", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : ""}
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           );
