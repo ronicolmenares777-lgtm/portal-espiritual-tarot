@@ -17,8 +17,6 @@ export default function ChatUsuario() {
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [maestroProfile, setMaestroProfile] = useState<any>(null);
-  const [maestroName, setMaestroName] = useState("Maestro Espiritual");
-  const [maestroAvatar, setMaestroAvatar] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -359,8 +357,8 @@ export default function ChatUsuario() {
             <div className="relative flex-shrink-0">
               <div className="absolute -inset-1 bg-gradient-to-r from-gold/50 via-accent/50 to-gold/50 rounded-full blur-md animate-pulse-glow" />
               <Avatar className="relative h-12 w-12 sm:h-14 sm:w-14 border-2 border-gold/40">
-                {maestroAvatar ? (
-                  <img src={maestroAvatar} alt="Maestro" className="object-cover" />
+                {maestroProfile?.avatar_url ? (
+                  <img src={maestroProfile.avatar_url} alt="Maestro" className="object-cover" />
                 ) : (
                   <AvatarFallback className="bg-gradient-to-br from-gold/20 to-accent/20 text-gold">
                     <Sparkles className="h-6 w-6 sm:h-7 sm:w-7" />
@@ -374,7 +372,7 @@ export default function ChatUsuario() {
             {/* Info del maestro */}
             <div className="flex-1 min-w-0">
               <h2 className="font-serif text-base sm:text-lg md:text-xl font-bold text-gold tracking-wide truncate">
-                {maestroName}
+                {maestroProfile?.full_name || "Maestro Espiritual"}
               </h2>
               <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1 sm:gap-2">
                 <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse" />
@@ -419,203 +417,86 @@ export default function ChatUsuario() {
 
       {/* Área de mensajes mejorada */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
-        {messages.map((msg) => (
-          <motion.div
-            key={msg.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex gap-2 sm:gap-3 ${msg.is_from_maestro ? "justify-end" : "justify-start"}`}
-          >
-            {/* Avatar usuario */}
-            {!msg.is_from_maestro && (
-              <Avatar className="h-8 w-8 sm:h-9 sm:w-9 mt-1 flex-shrink-0 border-2 border-accent/20">
-                <AvatarFallback className="bg-gradient-to-br from-accent/10 to-accent/20 text-accent">
-                  <User className="h-4 w-4 sm:h-5 sm:w-5" />
-                </AvatarFallback>
-              </Avatar>
-            )}
-
-            {/* Burbuja de mensaje mejorada */}
-            <div
-              className={`max-w-[75%] sm:max-w-[70%] rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md ${
-                msg.is_from_maestro
-                  ? "bg-gradient-to-br from-gold via-accent to-gold text-background shadow-gold/20"
-                  : "bg-card text-foreground border border-border/50 shadow-black/5"
-              }`}
+        {messages.map((msg) => {
+          // Detectar si el mensaje es una imagen o audio
+          const isImage = msg.text?.startsWith("[IMG]");
+          const isAudio = msg.text?.startsWith("[AUDIO]");
+          
+          return (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex gap-2 sm:gap-3 ${msg.is_from_maestro ? "justify-end" : "justify-start"}`}
             >
-              {/* Renderizar imagen */}
-              {(msg.text?.startsWith("[IMG]")) && (
-                <div 
-                  className="rounded-xl overflow-hidden mb-2 border-2 border-white/10 cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setSelectedImage(msg.text?.replace("[IMG]", "") || "")}
-                >
-                  <img
-                    src={msg.text.replace("[IMG]", "")}
-                    alt="Imagen"
-                    className="max-w-full h-auto"
-                    loading="lazy"
-                  />
-                </div>
-              )}
-              
-              {/* Mostrar audio si existe */}
-              {audioData && (
-                <audio controls className="mb-2 w-full max-w-xs">
-                  <source src={audioData} type="audio/webm" />
-                </audio>
-              )}
-              
-              {/* Mostrar texto solo si NO es imagen ni audio */}
-              {!isImage && !isAudio && msg.text && (
-                <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
-                  {msg.text}
-                </p>
-              )}
-              
-              <p className={`text-[10px] mt-1.5 ${msg.is_from_maestro ? "text-background/60" : "text-muted-foreground/60"}`}>
-                {formatTime(msg.created_at)}
-              </p>
-            </div>
-
-            {/* Avatar maestro */}
-            {msg.is_from_maestro && (
-              <Avatar className="h-9 w-9 mt-1 flex-shrink-0 border-2 border-gold/30">
-                {maestroProfile?.avatar_url ? (
-                  <img src={maestroProfile.avatar_url} alt="Maestro" className="object-cover" />
-                ) : (
-                  <AvatarFallback className="bg-gradient-to-br from-gold/20 to-accent/20 text-gold">
-                    <Sparkles className="h-5 w-5" />
+              {/* Avatar usuario */}
+              {!msg.is_from_maestro && (
+                <Avatar className="h-8 w-8 sm:h-9 sm:w-9 mt-1 flex-shrink-0 border-2 border-accent/20">
+                  <AvatarFallback className="bg-gradient-to-br from-accent/10 to-accent/20 text-accent">
+                    <User className="h-4 w-4 sm:h-5 sm:w-5" />
                   </AvatarFallback>
-                )}
-              </Avatar>
-            )}
-          </motion.div>
-        )})}
-        <div ref={messagesEndRef} />
-      </div>
+                </Avatar>
+              )}
 
-      {/* Input área mejorada */}
-      <div className="sticky bottom-0 bg-card/80 backdrop-blur-xl border-t border-gold/20 shadow-2xl shadow-black/10">
-        <div className="p-3 sm:p-4 md:p-6">
-          <form onSubmit={handleSendMessage} className="flex items-center gap-2 sm:gap-3">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept="image/*"
-              className="hidden"
-            />
-            
-            {/* Botones de acción */}
-            <div className="flex gap-1 sm:gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-gold/10 hover:text-gold transition-all"
-              >
-                <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-              
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onMouseDown={startRecording}
-                onMouseUp={stopRecording}
-                onTouchStart={startRecording}
-                onTouchEnd={stopRecording}
-                disabled={uploading}
-                className={`flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-all ${
-                  recording 
-                    ? "bg-red-500/20 text-red-500 hover:bg-red-500/30" 
-                    : "hover:bg-gold/10 hover:text-gold"
+              {/* Burbuja de mensaje mejorada */}
+              <div
+                className={`max-w-[75%] sm:max-w-[70%] rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md ${
+                  msg.is_from_maestro
+                    ? "bg-gradient-to-br from-gold via-accent to-gold text-background shadow-gold/20"
+                    : "bg-card text-foreground border border-border/50 shadow-black/5"
                 }`}
               >
-                {recording ? (
-                  <MicOff className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse" />
-                ) : (
-                  <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
+                {/* Renderizar imagen */}
+                {isImage && (
+                  <div 
+                    className="rounded-xl overflow-hidden mb-2 border-2 border-white/10 cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setSelectedImage(msg.text?.replace("[IMG]", "") || "")}
+                  >
+                    <img
+                      src={msg.text?.replace("[IMG]", "") || ""}
+                      alt="Imagen"
+                      className="max-w-full h-auto"
+                      loading="lazy"
+                    />
+                  </div>
                 )}
-              </Button>
-            </div>
+                
+                {/* Renderizar audio */}
+                {isAudio && (
+                  <audio controls className="mb-2 w-full max-w-xs">
+                    <source src={msg.text?.replace("[AUDIO]", "") || ""} type="audio/webm" />
+                  </audio>
+                )}
+                
+                {/* Renderizar texto solo si NO es imagen ni audio */}
+                {!isImage && !isAudio && msg.text && (
+                  <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                    {msg.text}
+                  </p>
+                )}
+                
+                <p className={`text-[10px] mt-1.5 ${msg.is_from_maestro ? "text-background/60" : "text-muted-foreground/60"}`}>
+                  {formatTime(msg.created_at)}
+                </p>
+              </div>
 
-            {/* Input de texto mejorado */}
-            <div className="flex-1 relative">
-              <Input
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Escribe tu mensaje..."
-                className="w-full bg-secondary/30 border-2 border-gold/20 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/50 focus:bg-secondary/40 transition-all"
-                disabled={sending || uploading}
-              />
-            </div>
-            
-            {/* Botón enviar mejorado */}
-            <Button
-              type="submit"
-              size="icon"
-              disabled={sending || !newMessage.trim()}
-              className="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-r from-gold to-accent hover:from-accent hover:to-gold text-background shadow-lg shadow-gold/30 hover:shadow-xl hover:shadow-gold/50 transition-all disabled:opacity-50"
-            >
-              {sending ? (
-                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-current border-t-transparent" />
-              ) : (
-                <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+              {/* Avatar maestro */}
+              {msg.is_from_maestro && (
+                <Avatar className="h-8 w-8 sm:h-9 sm:w-9 mt-1 flex-shrink-0 border-2 border-gold/30">
+                  {maestroProfile?.avatar_url ? (
+                    <img src={maestroProfile.avatar_url} alt="Maestro" className="object-cover" />
+                  ) : (
+                    <AvatarFallback className="bg-gradient-to-br from-gold/20 to-accent/20 text-gold">
+                      <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
               )}
-            </Button>
-          </form>
-
-          {/* Indicador de estado */}
-          {(uploading || recording) && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-2 sm:mt-3 flex items-center gap-2 text-xs text-muted-foreground"
-            >
-              <div className="w-2 h-2 bg-gold rounded-full animate-pulse" />
-              {uploading && "Subiendo archivo..."}
-              {recording && "Grabando audio..."}
             </motion.div>
-          )}
-        </div>
+          )
+        })}
+        <div ref={messagesEndRef} />
       </div>
-
-      {/* Modal de imagen (Lightbox) */}
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedImage(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-              className="relative max-w-4xl max-h-[90vh]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="absolute -top-12 right-0 text-white hover:text-gold transition-colors"
-              >
-                <X className="w-8 h-8" />
-              </button>
-              <img
-                src={selectedImage}
-                alt="Vista completa"
-                className="max-w-full max-h-[90vh] object-contain rounded-lg"
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
