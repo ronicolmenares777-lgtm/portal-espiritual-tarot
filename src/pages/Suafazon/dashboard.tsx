@@ -17,12 +17,10 @@ import {
   Phone,
   Eye,
   Trash2,
-  Bell,
-  BellOff,
+  RefreshCw,
   BarChart3,
 } from "lucide-react";
 import Link from "next/link";
-import { notificationService } from "@/services/notificationService";
 
 type Lead = Tables<"leads">;
 
@@ -33,9 +31,8 @@ export default function Dashboard() {
   const router = useRouter();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
-  // Cargar leads al inicio UNA SOLA VEZ
+  // Cargar leads SOLO al inicio - UNA SOLA VEZ
   useEffect(() => {
     const adminSession = localStorage.getItem("adminSession");
     if (!adminSession) {
@@ -44,16 +41,7 @@ export default function Dashboard() {
     }
 
     loadLeads();
-  }, [router]);
-
-  // Polling cada 10 segundos - SIMPLE
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadLeads();
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
+  }, []); // Array vacío = solo se ejecuta UNA VEZ al montar
 
   const loadLeads = async () => {
     try {
@@ -79,23 +67,6 @@ export default function Dashboard() {
     setIsRefreshing(true);
     await loadLeads();
     setTimeout(() => setIsRefreshing(false), 500);
-  };
-
-  const handleToggleNotifications = async () => {
-    if (notificationsEnabled) {
-      notificationService.disable();
-      setNotificationsEnabled(false);
-    } else {
-      const enabled = await notificationService.enable({
-        onLeadClick: (leadId) => {
-          router.push(`/Suafazon/chat/${leadId}`);
-        },
-        onMessageClick: (leadId) => {
-          router.push(`/Suafazon/chat/${leadId}`);
-        },
-      });
-      setNotificationsEnabled(enabled);
-    }
   };
 
   const handleLogout = () => {
@@ -168,21 +139,13 @@ export default function Dashboard() {
 
             <div className="flex gap-2 sm:gap-3 items-center">
               <Button
-                onClick={handleToggleNotifications}
-                variant={notificationsEnabled ? "default" : "outline"}
+                onClick={handleRefresh}
+                variant="outline"
                 size="icon"
-                className={`${
-                  notificationsEnabled
-                    ? "bg-gold/90 hover:bg-gold text-background"
-                    : ""
-                }`}
-                title={notificationsEnabled ? "Notificaciones activadas" : "Activar notificaciones"}
+                disabled={isRefreshing}
+                title="Actualizar leads"
               >
-                {notificationsEnabled ? (
-                  <Bell className="h-4 w-4" />
-                ) : (
-                  <BellOff className="h-4 w-4" />
-                )}
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
               </Button>
 
               <div className="relative">
@@ -308,16 +271,6 @@ export default function Dashboard() {
               </Button>
             ))}
           </div>
-
-          <Button
-            onClick={handleRefresh}
-            variant="outline"
-            size="sm"
-            disabled={isRefreshing}
-            className="sm:w-auto"
-          >
-            {isRefreshing ? "Actualizando..." : "Actualizar"}
-          </Button>
         </div>
 
         {/* Leads Table */}
