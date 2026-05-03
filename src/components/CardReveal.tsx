@@ -6,11 +6,10 @@ import type { TarotCard } from "@/lib/tarotCards";
 
 interface CardRevealProps {
   card: TarotCard;
-  cardIndex: number;
-  onComplete: () => void;
+  onContinue: () => void;
 }
 
-export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
+export function CardReveal({ card, onContinue }: CardRevealProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -22,14 +21,14 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
 
     // Completar después de mostrar la carta - 4 segundos
     const completeTimer = setTimeout(() => {
-      onComplete();
+      onContinue();
     }, 4000); // 4 segundos para mejor ritmo
 
     return () => {
       clearTimeout(flipTimer);
       clearTimeout(completeTimer);
     };
-  }, [onComplete]);
+  }, [onContinue]);
 
   const handleImageError = () => {
     console.error("Error cargando imagen:", card.image);
@@ -79,7 +78,7 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
           <div className="flex items-center justify-center gap-3 sm:gap-4">
             <div className="h-px w-12 sm:w-16 md:w-24 bg-gradient-to-r from-transparent to-gold/50" />
             <span className="text-gold/70 text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em]">
-              {card.category}
+              ARCANO DEL TAROT
             </span>
             <div className="h-px w-12 sm:w-16 md:w-24 bg-gradient-to-l from-transparent to-gold/50" />
           </div>
@@ -140,7 +139,7 @@ export function CardReveal({ card, cardIndex, onComplete }: CardRevealProps) {
               Mensaje del Cosmos
             </h2>
             <p className="text-foreground/90 text-sm sm:text-base md:text-lg leading-relaxed text-center">
-              {card.meaning}
+              {card.description}
             </p>
           </div>
         </motion.div>
