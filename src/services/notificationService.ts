@@ -100,6 +100,13 @@ export class NotificationService {
   private startLeadsListener() {
     console.log("🔔 Iniciando listener de nuevos leads...");
 
+    // CRÍTICO: Limpiar canal existente antes de crear uno nuevo
+    if (this.leadsChannel) {
+      console.log("🧹 Limpiando canal de leads existente...");
+      supabase.removeChannel(this.leadsChannel);
+      this.leadsChannel = null;
+    }
+
     this.leadsChannel = supabase
       .channel("leads-changes")
       .on(
@@ -135,6 +142,13 @@ export class NotificationService {
    */
   private startMessagesListener() {
     console.log("🔔 Iniciando listener de nuevos mensajes...");
+
+    // CRÍTICO: Limpiar canal existente antes de crear uno nuevo
+    if (this.messagesChannel) {
+      console.log("🧹 Limpiando canal de mensajes existente...");
+      supabase.removeChannel(this.messagesChannel);
+      this.messagesChannel = null;
+    }
 
     this.messagesChannel = supabase
       .channel("messages-changes")
@@ -183,6 +197,12 @@ export class NotificationService {
     onLeadClick?: (leadId: string) => void;
     onMessageClick?: (leadId: string) => void;
   }): Promise<boolean> {
+    // Si ya está activado, no hacer nada
+    if (this.isEnabled) {
+      console.log("⚠️ Notificaciones ya están activadas");
+      return true;
+    }
+
     // Solicitar permiso
     const granted = await this.requestPermission();
     if (!granted) {
