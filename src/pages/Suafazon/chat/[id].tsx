@@ -205,15 +205,29 @@ export default function ChatAdmin() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-card border-b border-border p-4 flex items-center gap-3 shadow-sm">
-        <Avatar className="h-10 w-10">
-          <AvatarFallback className="bg-accent/20 text-accent">
-            <User className="h-5 w-5" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-foreground truncate">{leadName}</h2>
-          <p className="text-xs text-muted-foreground truncate">{leadPhone}</p>
+      <div className="sticky top-0 z-10 bg-card border-b border-border p-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          {/* Botón de regreso al dashboard */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/Suafazon/dashboard")}
+            className="flex-shrink-0"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </Button>
+
+          <Avatar className="h-10 w-10">
+            <AvatarFallback className="bg-accent/20 text-accent">
+              <User className="h-5 w-5" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-semibold text-foreground truncate">{leadName}</h2>
+            <p className="text-xs text-muted-foreground truncate">{leadPhone}</p>
+          </div>
         </div>
       </div>
 

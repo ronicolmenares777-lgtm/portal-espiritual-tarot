@@ -5,13 +5,18 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Star, LogOut, User } from "lucide-react";
+import { Star, LogOut, User, Trash2, Heart } from "lucide-react";
 import { motion } from "framer-motion";
+
+type LeadStatus = "nuevo" | "enConversacion" | "atendido";
+type ViewFilter = "all" | "favorites" | "trash";
 
 export default function Dashboard() {
   const [leads, setLeads] = useState<Tables<"leads">[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "nuevo" | "enConversacion" | "atendido">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | LeadStatus>("all");
+  const [viewFilter, setViewFilter] = useState<ViewFilter>("all");
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -51,6 +56,55 @@ export default function Dashboard() {
     }
   };
 
+  const handleToggleSelect = (leadId: string) => {
+    setSelectedLeads((prev) =>
+      prev.includes(leadId) ? prev.filter((id) => id !== leadId) : [...prev, leadId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedLeads.length === filteredLeads.length) {
+      setSelectedLeads([]);
+    } else {
+      setSelectedLeads(filteredLeads.map((lead) => lead.id));
+    }
+  };
+
+  const handleMoveToTrash = async () => {
+    if (selectedLeads.length === 0) return;
+
+    const { error } = await supabase
+      .from("leads")
+      .update({ is_deleted: true })
+      .in("id", selectedLeads);
+
+    if (!error) {
+      setSelectedLeads([]);
+      loadLeads();
+    }
+  };
+
+  const handleRestoreFromTrash = async (leadId: string) => {
+    const { error } = await supabase
+      .from("leads")
+      .update({ is_deleted: false })
+      .eq("id", leadId);
+
+    if (!error) {
+      loadLeads();
+    }
+  };
+
+  const handlePermanentDelete = async (leadId: string) => {
+    if (!confirm("¿Estás seguro de eliminar permanentemente este lead?")) return;
+
+    const { error } = await supabase.from("leads").delete().eq("id", leadId);
+
+    if (!error) {
+      loadLeads();
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "nuevo":
@@ -82,7 +136,11 @@ export default function Dashboard() {
       lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.whatsapp.includes(searchQuery);
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesView =
+      (viewFilter === "all" && !lead.is_deleted) ||
+      (viewFilter === "favorites" && lead.is_favorite && !lead.is_deleted) ||
+      (viewFilter === "trash" && lead.is_deleted);
+    return matchesSearch && matchesStatus && matchesView;
   });
 
   return (
@@ -103,10 +161,7 @@ export default function Dashboard() {
             >
               Perfil
             </Button>
-            <Button
-              onClick={handleLogout}
-              variant="destructive"
-            >
+            <Button onClick={handleLogout} variant="destructive">
               <LogOut className="w-4 h-4 mr-2" />
               Salir
             </Button>
@@ -117,29 +172,58 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
             <p className="text-muted-foreground text-sm mb-2">Total Leads</p>
-            <p className="text-3xl font-bold text-foreground">{leads.length}</p>
+            <p className="text-3xl font-bold text-foreground">
+              {leads.filter((l) => !l.is_deleted).length}
+            </p>
           </div>
           <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
             <p className="text-muted-foreground text-sm mb-2">Nuevos</p>
             <p className="text-3xl font-bold text-blue-400">
-              {leads.filter((l) => l.status === "nuevo").length}
+              {leads.filter((l) => l.status === "nuevo" && !l.is_deleted).length}
             </p>
           </div>
           <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
             <p className="text-muted-foreground text-sm mb-2">En conversación</p>
             <p className="text-3xl font-bold text-yellow-400">
-              {leads.filter((l) => l.status === "enConversacion").length}
+              {leads.filter((l) => l.status === "enConversacion" && !l.is_deleted).length}
             </p>
           </div>
           <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
             <p className="text-muted-foreground text-sm mb-2">Atendidos</p>
             <p className="text-3xl font-bold text-green-400">
-              {leads.filter((l) => l.status === "atendido").length}
+              {leads.filter((l) => l.status === "atendido" && !l.is_deleted).length}
             </p>
           </div>
         </div>
 
-        {/* Filtros */}
+        {/* Filtros de vista */}
+        <div className="flex gap-4 mb-6">
+          <Button
+            variant={viewFilter === "all" ? "default" : "outline"}
+            onClick={() => setViewFilter("all")}
+            className="flex items-center gap-2"
+          >
+            Todos ({leads.filter((l) => !l.is_deleted).length})
+          </Button>
+          <Button
+            variant={viewFilter === "favorites" ? "default" : "outline"}
+            onClick={() => setViewFilter("favorites")}
+            className="flex items-center gap-2"
+          >
+            <Heart className="w-4 h-4" />
+            Favoritos ({leads.filter((l) => l.is_favorite && !l.is_deleted).length})
+          </Button>
+          <Button
+            variant={viewFilter === "trash" ? "default" : "outline"}
+            onClick={() => setViewFilter("trash")}
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Papelera ({leads.filter((l) => l.is_deleted).length})
+          </Button>
+        </div>
+
+        {/* Filtros y búsqueda */}
         <div className="flex gap-4 mb-6">
           <Input
             placeholder="Buscar por nombre o WhatsApp..."
@@ -173,11 +257,44 @@ export default function Dashboard() {
           </Button>
         </div>
 
+        {/* Acciones masivas */}
+        {selectedLeads.length > 0 && viewFilter !== "trash" && (
+          <div className="mb-6 p-4 bg-card border border-border rounded-xl flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {selectedLeads.length} lead(s) seleccionado(s)
+            </p>
+            <Button
+              variant="destructive"
+              onClick={handleMoveToTrash}
+              className="flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Mover a papelera
+            </Button>
+          </div>
+        )}
+
         {/* Lista de leads */}
         <div className="space-y-4">
+          {filteredLeads.length > 0 && viewFilter !== "trash" && (
+            <div className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl">
+              <input
+                type="checkbox"
+                checked={selectedLeads.length === filteredLeads.length}
+                onChange={handleSelectAll}
+                className="w-5 h-5 rounded border-border"
+              />
+              <span className="text-sm text-muted-foreground">Seleccionar todos</span>
+            </div>
+          )}
+
           {filteredLeads.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No hay leads que coincidan con tu búsqueda</p>
+              <p className="text-muted-foreground">
+                {viewFilter === "trash"
+                  ? "No hay leads en la papelera"
+                  : "No hay leads que coincidan con tu búsqueda"}
+              </p>
             </div>
           ) : (
             <>
@@ -187,65 +304,118 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   whileHover={{ scale: 1.01 }}
-                  className="bg-card border border-border rounded-xl p-6 shadow-lg hover:shadow-xl transition-all cursor-pointer"
-                  onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                  className="bg-card border border-border rounded-xl p-6 shadow-lg hover:shadow-xl transition-all"
                 >
                   <div className="flex items-start gap-4">
-                    <Avatar className="h-14 w-14">
-                      <AvatarFallback className="bg-primary/20 text-primary text-xl">
-                        {lead.name.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-serif font-bold text-foreground truncate">
-                          {lead.name}
-                        </h3>
-                        {lead.is_favorite && (
-                          <span className="text-amber-400 text-xl">⭐</span>
+                    {viewFilter !== "trash" && (
+                      <input
+                        type="checkbox"
+                        checked={selectedLeads.includes(lead.id)}
+                        onChange={() => handleToggleSelect(lead.id)}
+                        className="mt-1 w-5 h-5 rounded border-border"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
+
+                    <div
+                      className="flex-1 flex items-start gap-4 cursor-pointer"
+                      onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                    >
+                      <Avatar className="h-14 w-14">
+                        <AvatarFallback className="bg-primary/20 text-primary text-xl">
+                          {lead.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-serif font-bold text-foreground truncate">
+                            {lead.name}
+                          </h3>
+                          {lead.is_favorite && <span className="text-amber-400 text-xl">⭐</span>}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>📱</span>
+                            <span>
+                              {lead.country_code} {lead.whatsapp}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>🔮</span>
+                            <span>
+                              {lead.cards_selected && lead.cards_selected.length > 0
+                                ? lead.cards_selected[0]
+                                : "Sin carta"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>📅</span>
+                            <span>
+                              {new Date(lead.created_at).toLocaleDateString("es-MX", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              })}
+                            </span>
+                            <span>•</span>
+                            <span>
+                              {new Date(lead.created_at).toLocaleTimeString("es-MX", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        {viewFilter !== "trash" && (
+                          <Button
+                            variant={lead.is_favorite ? "default" : "outline"}
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleFavorite(lead.id, lead.is_favorite);
+                            }}
+                          >
+                            <Star className={`h-4 w-4 ${lead.is_favorite ? "fill-current" : ""}`} />
+                          </Button>
+                        )}
+
+                        {viewFilter === "trash" ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRestoreFromTrash(lead.id);
+                              }}
+                            >
+                              Restaurar
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePermanentDelete(lead.id);
+                              }}
+                            >
+                              Eliminar
+                            </Button>
+                          </>
+                        ) : (
+                          <span
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium ${getStatusColor(
+                              lead.status
+                            )}`}
+                          >
+                            {getStatusText(lead.status)}
+                          </span>
                         )}
                       </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>📱</span>
-                          <span>{lead.country_code} {lead.whatsapp}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>🔮</span>
-                          <span>{lead.cards_selected && lead.cards_selected.length > 0 ? lead.cards_selected[0] : "Sin carta"}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>📅</span>
-                          <span>{new Date(lead.created_at).toLocaleDateString("es-MX", { 
-                            day: "2-digit", 
-                            month: "2-digit", 
-                            year: "numeric" 
-                          })}</span>
-                          <span>•</span>
-                          <span>{new Date(lead.created_at).toLocaleTimeString("es-MX", { 
-                            hour: "2-digit", 
-                            minute: "2-digit" 
-                          })}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        variant={lead.is_favorite ? "default" : "outline"}
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleFavorite(lead.id, lead.is_favorite);
-                        }}
-                      >
-                        <Star className={`h-4 w-4 ${lead.is_favorite ? "fill-current" : ""}`} />
-                      </Button>
-                      
-                      <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${getStatusColor(lead.status)}`}>
-                        {getStatusText(lead.status)}
-                      </span>
                     </div>
                   </div>
                 </motion.div>
