@@ -3,11 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 export interface AnalyticsEvent {
   event_type: 'page_view' | 'form_start' | 'form_complete' | 'card_select' | 'chat_start' | 'share_click' | 'exit';
   session_id: string;
+  visitor_id: string;
   user_agent?: string;
   device_type?: 'mobile' | 'tablet' | 'desktop';
   browser?: string;
   page_path?: string;
   referrer?: string;
+  country?: string;
+  country_code?: string;
   event_data?: Record<string, any>;
 }
 
@@ -64,17 +67,24 @@ class AnalyticsService {
     }
   }
 
-  // Generar o recuperar session ID
-  private getSessionId(): string {
-    if (this.sessionId) return this.sessionId;
-    
+  // Generar o recuperar session ID (dura mientras está abierto el navegador)
+  private getOrCreateSessionId(): string {
     let sessionId = sessionStorage.getItem('analytics_session');
     if (!sessionId) {
       sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       sessionStorage.setItem('analytics_session', sessionId);
     }
-    this.sessionId = sessionId;
     return sessionId;
+  }
+
+  // Generar o recuperar visitor ID (persistente entre sesiones)
+  private getOrCreateVisitorId(): string {
+    let visitorId = localStorage.getItem('analytics_visitor');
+    if (!visitorId) {
+      visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('analytics_visitor', visitorId);
+    }
+    return visitorId;
   }
 
   // Detectar tipo de dispositivo
@@ -120,7 +130,7 @@ class AnalyticsService {
         device_type: this.getDeviceType(),
         country: this.countryData?.country || "Unknown",
         country_code: this.countryData?.country_code || "XX",
-        metadata: Object.keys(metadata).length > 0 ? metadata : null,
+        event_data: Object.keys(metadata).length > 0 ? metadata : null,
       });
 
       if (error) {
