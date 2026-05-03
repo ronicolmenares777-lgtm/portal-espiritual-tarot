@@ -26,8 +26,9 @@ type Lead = Tables<"leads">;
 export default function Dashboard() {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState<"all" | "ready" | "archive">("all");
-  const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
+  const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<"leads" | "listo" | "papelera">("leads");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -89,13 +90,11 @@ export default function Dashboard() {
   };
 
   const toggleLeadSelection = (leadId: string) => {
-    const newSelected = new Set(selectedLeads);
-    if (newSelected.has(leadId)) {
-      newSelected.delete(leadId);
-    } else {
-      newSelected.add(leadId);
-    }
-    setSelectedLeads(newSelected);
+    setSelectedLeads(prev => 
+      prev.includes(leadId) 
+        ? prev.filter(id => id !== leadId)
+        : [...prev, leadId]
+    );
   };
 
   const selectAll = () => {
@@ -108,20 +107,35 @@ export default function Dashboard() {
   };
 
   const getFilteredLeads = () => {
-    if (selectedFilter === "ready") {
+    if (statusFilter === "listo") {
       return leads.filter(l => l.status === "ready");
     }
-    if (selectedFilter === "archive") {
+    if (statusFilter === "papelera") {
       return leads.filter(l => l.status === "archive");
     }
     return leads.filter(l => l.status !== "archive");
   };
 
+  // Filtrar leads por el filtro activo
+  useEffect(() => {
+    let filtered = [...leads];
+    
+    if (statusFilter === "leads") {
+      filtered = leads.filter(l => l.status === "nuevo");
+    } else if (statusFilter === "listo") {
+      filtered = leads.filter(l => l.status === "ready");
+    } else if (statusFilter === "papelera") {
+      filtered = leads.filter(l => l.status === "archive");
+    }
+    
+    setFilteredLeads(filtered);
+  }, [leads, statusFilter]);
+
   const filteredLeads = getFilteredLeads();
   const stats = {
-    leads: leads.filter(l => l.status !== "ready" && l.status !== "archive").length,
-    ready: leads.filter(l => l.status === "ready").length,
-    archive: leads.filter(l => l.status === "archive").length,
+    leads: leads.filter(l => l.status === "nuevo").length,
+    listo: leads.filter(l => l.status === "ready").length,
+    papelera: leads.filter(l => l.status === "archive").length,
   };
 
   const getInitial = (name: string) => {
