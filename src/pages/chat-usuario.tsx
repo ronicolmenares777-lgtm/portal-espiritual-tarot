@@ -1,21 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
-import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
+import { SEO } from "@/components/SEO";
+import { useToast } from "@/hooks/use-toast";
 import { Send, Image, Mic } from "lucide-react";
 
 export default function ChatUsuario() {
   const router = useRouter();
-  const { leadId } = router.query;
-  
+  const { toast } = useToast();
+  const [leadId, setLeadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [maestroProfile, setMaestroProfile] = useState<any>(null);
-  const [userName, setUserName] = useState("");
-  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -149,28 +148,72 @@ export default function ChatUsuario() {
     }
   }, [messages.length]);
 
+  // Enviar mensaje de texto
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !leadId) return;
-
-    const finalLeadId = Array.isArray(leadId) ? leadId[0] : leadId;
-    if (!finalLeadId) return;
-
-    setSending(true);
-    const messageText = newMessage;
-    setNewMessage("");
-
-    const { error } = await supabase.from("messages").insert({
-      lead_id: finalLeadId,
-      text: messageText,
-      is_from_maestro: false,
-    });
-
-    if (error) {
-      console.error("Error sending message:", error);
-      setNewMessage(messageText);
+    if (!newMessage.trim() || sending) {
+      console.log("⚠️ [SEND] Mensaje vacío o ya enviando");
+      return;
     }
 
-    setSending(false);
+    console.log("📤 [SEND] ========== INICIANDO ENVÍO DE MENSAJE ==========");
+    console.log("  - Lead ID:", leadId);
+    console.log("  - Mensaje:", newMessage);
+    console.log("  - Estado sending:", sending);
+
+    if (!leadId) {
+      console.error("❌ [SEND] No hay lead_id disponible");
+      toast({
+        title: "❌ Error",
+        description: "No se pudo identificar la conversación",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSending(true);
+
+    try {
+      console.log("💾 [SEND] Insertando mensaje en Supabase...");
+      
+      const { data, error } = await supabase
+        .from("messages")
+        .insert({
+          lead_id: leadId,
+          text: newMessage.trim(),
+          is_from_maestro: false,
+        })
+        .select();
+
+      console.log("📊 [SEND] Respuesta de Supabase:", { data, error });
+
+      if (error) {
+        console.error("❌ [SEND] Error insertando mensaje:", error);
+        toast({
+          title: "❌ Error",
+          description: "No se pudo enviar el mensaje",
+          variant: "destructive",
+        });
+        setSending(false);
+        return;
+      }
+
+      console.log("✅ [SEND] Mensaje insertado exitosamente:", data);
+      
+      setNewMessage("");
+      setSending(false);
+
+      // Forzar recarga inmediata de mensajes
+      console.log("🔄 [SEND] Forzando recarga de mensajes...");
+      await loadMessages();
+    } catch (err) {
+      console.error("❌ [SEND] Error general:", err);
+      toast({
+        title: "❌ Error",
+        description: "Ocurrió un error al enviar el mensaje",
+        variant: "destructive",
+      });
+      setSending(false);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -304,6 +347,36 @@ export default function ChatUsuario() {
     } catch (err) {
       console.error("❌ [AUDIO] Error general:", err);
       setUploading(false);
+    }
+  };
+
+  // Cargar mensajes
+  const loadMessages = async () => {
+    if (!leadId) {
+      console.log("⚠️ [CHAT] No hay lead_id, esperando...");
+      return [];
+    }
+
+    console.log("🔄 [CHAT] Cargando mensajes para lead_id:", leadId);
+
+    try {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("lead_id", leadId)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("❌ [CHAT] Error cargando mensajes:", error);
+        return [];
+      }
+
+      console.log("📊 [CHAT] Mensajes cargados:", data?.length || 0);
+      setMessages(data || []);
+      return data || [];
+    } catch (err) {
+      console.error("❌ [CHAT] Error general cargando mensajes:", err);
+      return [];
     }
   };
 
