@@ -31,7 +31,9 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState<"leads" | "listo" | "papelera">("leads");
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [newMessageLeadId, setNewMessageLeadId] = useState<string | null>(null);
 
+  // Stats - calcular basado en el status de los leads
   const stats = {
     leads: leads.filter(l => l.status === "nuevo").length,
     listo: leads.filter(l => l.status === "ready").length,
@@ -52,6 +54,39 @@ export default function Dashboard() {
 
     console.log("✅ Sesión activa detectada, cargando leads...");
     loadLeads();
+
+    // Configurar Realtime para escuchar nuevos mensajes
+    const messagesSubscription = supabase
+      .channel("messages_channel")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: "is_from_maestro=eq.false",
+        },
+        (payload) => {
+          console.log("🔔 Nuevo mensaje recibido:", payload);
+          const newMessage = payload.new as any;
+          
+          // Mostrar notificación
+          setNewMessageLeadId(newMessage.lead_id);
+          
+          // Recargar leads para actualizar contadores
+          loadLeads();
+          
+          // Ocultar notificación después de 5 segundos
+          setTimeout(() => {
+            setNewMessageLeadId(null);
+          }, 5000);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      messagesSubscription.unsubscribe();
+    };
   }, []);
 
   // Filtrar leads por el filtro activo y favoritos
@@ -155,6 +190,27 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen flex bg-background">
+      {/* Notificación de nuevo mensaje */}
+      {newMessageLeadId && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
+          <div className="bg-gradient-to-r from-gold to-accent text-black px-6 py-3 rounded-lg shadow-2xl shadow-gold/50 border border-gold/30 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center animate-pulse">
+              <MessageCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-bold text-sm">¡Nuevo mensaje!</p>
+              <p className="text-xs opacity-90">Un usuario acaba de escribir</p>
+            </div>
+            <button
+              onClick={() => setNewMessageLeadId(null)}
+              className="ml-4 hover:bg-black/20 rounded p-1 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <div className="w-64 bg-gradient-to-b from-black via-black to-purple-950/20 border-r border-gold/20 flex flex-col shadow-2xl">
         {/* Logo */}
@@ -479,9 +535,16 @@ export default function Dashboard() {
                           <span>Ver Chat Completo</span>
                         </button>
 
-                        <span className="px-2 py-0.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 text-[10px] font-medium rounded-full">
-                          Nuevo
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {newMessageLeadId === lead.id && (
+                            <span className="px-2 py-0.5 bg-gold/20 border border-gold/50 text-gold text-[10px] font-bold rounded-full animate-pulse">
+                              ¡Nuevo!
+                            </span>
+                          )}
+                          <span className="px-2 py-0.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 text-[10px] font-medium rounded-full">
+                            Nuevo
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
