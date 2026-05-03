@@ -18,6 +18,7 @@ import {
   XSquare,
   Sparkles,
   BarChart3,
+  Download,
 } from "lucide-react";
 
 type Lead = Tables<"leads">;
@@ -98,6 +99,41 @@ export default function Dashboard() {
       .eq("id", leadId);
 
     if (!error) loadLeads();
+  };
+
+  const exportToCSV = () => {
+    const csvHeaders = "Nombre,WhatsApp,Problema,Estado,Fecha\n";
+    const csvRows = filteredLeads.map(lead => {
+      const date = lead.created_at 
+        ? new Date(lead.created_at).toLocaleDateString("es-MX")
+        : "N/A";
+      return `"${lead.name}","${lead.whatsapp}","${lead.problem}","${lead.status}","${date}"`;
+    }).join("\n");
+    
+    const csvContent = csvHeaders + csvRows;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `leads_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const sendToPapelera = async () => {
+    if (selectedLeads.length === 0) return;
+    
+    const { error } = await supabase
+      .from("leads")
+      .update({ status: "archive" })
+      .in("id", selectedLeads);
+
+    if (!error) {
+      setSelectedLeads([]);
+      loadLeads();
+    }
   };
 
   const handleLogout = () => {
@@ -219,78 +255,96 @@ export default function Dashboard() {
       <div className="flex-1 overflow-auto">
         <div className="p-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-3xl font-serif text-gold mb-2">Portal Maestro</h2>
-              <p className="text-foreground/60 text-sm">Gestión de almas y consultas espirituales</p>
+              <h2 className="text-2xl font-serif text-gold mb-1">Portal Maestro</h2>
+              <p className="text-foreground/60 text-xs">Gestión de almas y consultas espirituales</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => router.push("/Suafazon/perfil")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gold/20 text-gold hover:bg-gold/10 transition-all"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gold/20 text-gold hover:bg-gold/10 transition-all text-sm"
               >
-                <User className="h-4 w-4" />
-                <span className="text-sm font-medium">Perfil</span>
+                <User className="h-3.5 w-3.5" />
+                <span className="font-medium">Perfil</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all text-sm"
               >
-                <LogOut className="h-4 w-4" />
-                <span className="text-sm font-medium">Salir</span>
+                <LogOut className="h-3.5 w-3.5" />
+                <span className="font-medium">Salir</span>
               </button>
             </div>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-3 gap-6 mb-8">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 p-6">
-              <div className="flex items-center justify-between mb-3">
-                <Users className="h-8 w-8 text-blue-400" />
-                <span className="text-xs uppercase tracking-wider text-blue-400/80 font-medium">LEADS</span>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Users className="h-6 w-6 text-blue-400" />
+                <span className="text-[10px] uppercase tracking-wider text-blue-400/80 font-medium">LEADS</span>
               </div>
-              <p className="text-4xl font-bold text-blue-400 mb-1">{stats.leads}</p>
-              <p className="text-xs text-blue-400/60">🔵 {stats.leads} leads cargados</p>
-              <div className="absolute -right-4 -bottom-4 text-blue-500/5 text-8xl">📊</div>
+              <p className="text-3xl font-bold text-blue-400 mb-0.5">{stats.leads}</p>
+              <p className="text-[10px] text-blue-400/60">🔵 {stats.leads} leads cargados</p>
+              <div className="absolute -right-3 -bottom-3 text-blue-500/5 text-6xl">📊</div>
             </div>
 
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 p-6">
-              <div className="flex items-center justify-between mb-3">
-                <CheckCircle className="h-8 w-8 text-green-400" />
-                <span className="text-xs uppercase tracking-wider text-green-400/80 font-medium">LISTO</span>
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <CheckCircle className="h-6 w-6 text-green-400" />
+                <span className="text-[10px] uppercase tracking-wider text-green-400/80 font-medium">LISTO</span>
               </div>
-              <p className="text-4xl font-bold text-green-400 mb-1">{stats.listo}</p>
-              <p className="text-xs text-green-400/60">🟢 Filtrados: {stats.listo}</p>
-              <div className="absolute -right-4 -bottom-4 text-green-500/5 text-8xl">✓</div>
+              <p className="text-3xl font-bold text-green-400 mb-0.5">{stats.listo}</p>
+              <p className="text-[10px] text-green-400/60">🟢 Filtrados: {stats.listo}</p>
+              <div className="absolute -right-3 -bottom-3 text-green-500/5 text-6xl">✓</div>
             </div>
 
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 p-6">
-              <div className="flex items-center justify-between mb-3">
-                <Trash2 className="h-8 w-8 text-red-400" />
-                <span className="text-xs uppercase tracking-wider text-red-400/80 font-medium">PAPELERA</span>
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Trash2 className="h-6 w-6 text-red-400" />
+                <span className="text-[10px] uppercase tracking-wider text-red-400/80 font-medium">PAPELERA</span>
               </div>
-              <p className="text-4xl font-bold text-red-400 mb-1">{stats.papelera}</p>
-              <p className="text-xs text-red-400/60">🔴 Total: {stats.papelera} leads</p>
-              <div className="absolute -right-4 -bottom-4 text-red-500/5 text-8xl">🗑️</div>
+              <p className="text-3xl font-bold text-red-400 mb-0.5">{stats.papelera}</p>
+              <p className="text-[10px] text-red-400/60">🔴 Total: {stats.papelera} leads</p>
+              <div className="absolute -right-3 -bottom-3 text-red-500/5 text-6xl">🗑️</div>
             </div>
           </div>
 
-          {/* Botones Actualizar + Monitoreo */}
-          <div className="flex items-center justify-between mb-6">
-            <button
-              onClick={() => router.push("/Suafazon/monitoreo")}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-purple-500/20 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all"
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span className="text-sm font-medium">Ver Monitoreo</span>
-            </button>
+          {/* Botones Actualizar + Monitoreo + Exportar + Papelera */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => router.push("/Suafazon/monitoreo")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/20 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all text-sm"
+              >
+                <BarChart3 className="h-3.5 w-3.5" />
+                <span className="font-medium">Monitoreo</span>
+              </button>
+              <button
+                onClick={exportToCSV}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all text-sm"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span className="font-medium">Exportar</span>
+              </button>
+              {selectedLeads.length > 0 && (
+                <button
+                  onClick={sendToPapelera}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-sm"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span className="font-medium">Enviar a Papelera ({selectedLeads.length})</span>
+                </button>
+              )}
+            </div>
             <button
               onClick={loadLeads}
               disabled={isLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gold/20 bg-gold/10 text-gold hover:bg-gold/20 transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gold/20 bg-gold/10 text-gold hover:bg-gold/20 transition-all disabled:opacity-50 text-sm"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-              <span className="text-sm font-medium">Actualizar</span>
+              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              <span className="font-medium">Actualizar</span>
             </button>
           </div>
 
@@ -309,9 +363,10 @@ export default function Dashboard() {
               filteredLeads.map((lead) => (
                 <div
                   key={lead.id}
-                  className="relative bg-gradient-to-br from-muted/50 to-background border border-gold/10 rounded-xl p-6 hover:border-gold/30 transition-all shadow-lg"
+                  className="relative bg-gradient-to-br from-muted/50 to-background border border-gold/10 rounded-lg p-4 hover:border-gold/30 transition-all shadow-lg"
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3">
+                    {/* Checkbox */}
                     <input
                       type="checkbox"
                       checked={selectedLeads.includes(lead.id)}
@@ -322,18 +377,20 @@ export default function Dashboard() {
                           setSelectedLeads(selectedLeads.filter(id => id !== lead.id));
                         }
                       }}
-                      className="mt-1 h-4 w-4 rounded border-gold/30 text-gold focus:ring-gold"
+                      className="mt-1 h-3.5 w-3.5 rounded border-gold/30 text-gold focus:ring-gold"
                     />
 
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold to-accent flex items-center justify-center text-black font-bold text-lg shrink-0">
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold to-accent flex items-center justify-center text-black font-bold text-base shrink-0">
                       {lead.name?.charAt(0).toUpperCase() || "?"}
                     </div>
 
+                    {/* Contenido */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="text-lg font-semibold text-foreground mb-1">{lead.name}</h3>
-                          <div className="flex items-center gap-2 text-sm text-foreground/60">
+                          <h3 className="text-base font-semibold text-foreground mb-0.5">{lead.name}</h3>
+                          <div className="flex items-center gap-1.5 text-xs text-foreground/60">
                             <Phone className="h-3 w-3" />
                             <a
                               href={`https://wa.me/${lead.whatsapp?.replace(/\D/g, "")}`}
@@ -344,18 +401,17 @@ export default function Dashboard() {
                               {lead.whatsapp}
                             </a>
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-foreground/50 mt-1">
-                            <Calendar className="h-3 w-3" />
+                          <div className="flex items-center gap-1.5 text-[10px] text-foreground/50 mt-0.5">
+                            <Calendar className="h-2.5 w-2.5" />
                             <span>
-                              Registrado{" "}
                               {lead.created_at
                                 ? new Date(lead.created_at).toLocaleDateString("es-MX", {
                                     day: "2-digit",
                                     month: "2-digit",
                                     year: "numeric",
                                   }) +
-                                  " - " +
-                                  new Date(lead.created_at).toLocaleTimeString("es-MX", {
+                                    " - " +
+                                    new Date(lead.created_at).toLocaleTimeString("es-MX", {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                     hour12: true,
@@ -365,35 +421,38 @@ export default function Dashboard() {
                           </div>
                         </div>
 
+                        {/* Estrella favorito */}
                         <button
                           onClick={() => toggleFavorite(lead.id, lead.is_favorite || false)}
                           className="text-gold hover:text-gold/80 transition-colors"
                         >
                           <Star
-                            className={`h-5 w-5 ${
+                            className={`h-4 w-4 ${
                               lead.is_favorite ? "fill-current" : ""
                             }`}
                           />
                         </button>
                       </div>
 
-                      <div className="mb-4">
-                        <p className="text-xs text-foreground/50 mb-1 uppercase tracking-wider font-medium">CONSULTA:</p>
-                        <p className="text-sm text-foreground/80 leading-relaxed">
+                      {/* Consulta */}
+                      <div className="mb-3">
+                        <p className="text-[10px] text-foreground/50 mb-0.5 uppercase tracking-wider font-medium">CONSULTA:</p>
+                        <p className="text-xs text-foreground/80 leading-relaxed">
                           {lead.problem}
                         </p>
                       </div>
 
+                      {/* Botón Ver Chat + Badge */}
                       <div className="flex items-center justify-between">
                         <button
                           onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                          className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-gold to-accent text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-gold/20 transition-all"
+                          className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-gold to-accent text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-gold/20 transition-all text-sm"
                         >
-                          <MessageCircle className="h-4 w-4" />
-                          <span className="text-sm">Ver Chat Completo</span>
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          <span>Ver Chat Completo</span>
                         </button>
 
-                        <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-medium rounded-full">
+                        <span className="px-2 py-0.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 text-[10px] font-medium rounded-full">
                           Nuevo
                         </span>
                       </div>
