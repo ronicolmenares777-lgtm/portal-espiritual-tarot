@@ -119,13 +119,13 @@ export default function Dashboard() {
   const handleMoveToTrash = async (leadIds: string[]) => {
     const { error } = await supabase
       .from("leads")
-      .update({ is_deleted: true })
+      .update({ deleted_at: new Date().toISOString() })
       .in("id", leadIds);
 
     if (!error) {
       setLeads((prev) =>
         prev.map((lead) =>
-          leadIds.includes(lead.id) ? { ...lead, is_deleted: true } : lead
+          leadIds.includes(lead.id) ? { ...lead, deleted_at: new Date().toISOString() } : lead
         )
       );
       setSelectedLeads([]);
@@ -135,13 +135,13 @@ export default function Dashboard() {
   const handleRestoreFromTrash = async (leadId: string) => {
     const { error } = await supabase
       .from("leads")
-      .update({ is_deleted: false })
+      .update({ deleted_at: null })
       .eq("id", leadId);
 
     if (!error) {
       setLeads((prev) =>
         prev.map((lead) =>
-          lead.id === leadId ? { ...lead, is_deleted: false } : lead
+          lead.id === leadId ? { ...lead, deleted_at: null } : lead
         )
       );
     }
@@ -182,11 +182,11 @@ export default function Dashboard() {
     // Filtro de vista (LEADS, LISTO, PAPELERA)
     let matchesView = true;
     if (currentView === "leads") {
-      matchesView = !lead.is_deleted && lead.status !== "atendido";
+      matchesView = lead.deleted_at === null && lead.status !== "atendido";
     } else if (currentView === "listo") {
-      matchesView = !lead.is_deleted && lead.status === "atendido";
+      matchesView = lead.deleted_at === null && lead.status === "atendido";
     } else if (currentView === "papelera") {
-      matchesView = lead.is_deleted === true;
+      matchesView = lead.deleted_at !== null;
     }
 
     // Filtro de estado del ritual
@@ -218,11 +218,11 @@ export default function Dashboard() {
     );
   };
 
-  const activeLeads = leads.filter(l => !l.is_deleted);
+  const activeLeads = leads.filter(l => l.deleted_at === null);
   const newLeads = activeLeads.filter(l => l.status === "nuevo");
   const inConversationLeads = activeLeads.filter(l => l.status === "enConversacion");
   const attendedLeads = activeLeads.filter(l => l.status === "atendido");
-  const trashedLeads = leads.filter(l => l.is_deleted);
+  const trashedLeads = leads.filter(l => l.deleted_at !== null);
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -522,7 +522,7 @@ export default function Dashboard() {
                 for (const leadId of selectedLeads) {
                   await supabase
                     .from("leads")
-                    .update({ is_deleted: true })
+                    .update({ deleted_at: new Date().toISOString() })
                     .eq("id", leadId);
                 }
                 setSelectedLeads([]);
@@ -612,7 +612,7 @@ export default function Dashboard() {
                   </div>
 
                   {/* Status */}
-                  {!lead.is_deleted && (
+                  {lead.deleted_at === null && (
                     <Button
                       size="sm"
                       className={getStatusColor(lead.status)}
