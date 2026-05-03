@@ -4,24 +4,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { leadService } from "@/services/leadService";
-import type { Lead } from "@/types/admin";
+import type { Tables } from "@/integrations/supabase/types";
 import { Search, Eye, Trash2, RefreshCw } from "lucide-react";
+
+type Lead = Tables<"leads">;
 
 export default function Dashboard() {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "contacted" | "converted">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "nuevo" | "contactado" | "convertido">("all");
   const [isLoading, setIsLoading] = useState(true);
 
   // Stats
   const stats = {
     total: leads.length,
-    nuevos: leads.filter(l => l.status === "pending").length,
-    contactados: leads.filter(l => l.status === "contacted").length,
-    convertidos: leads.filter(l => l.status === "converted").length,
+    nuevos: leads.filter(l => l.status === "nuevo").length,
+    contactados: leads.filter(l => l.status === "contactado").length,
+    convertidos: leads.filter(l => l.status === "convertido").length,
   };
 
   // Cargar leads al inicio
@@ -52,7 +53,7 @@ export default function Dashboard() {
       result = result.filter(
         l =>
           l.name?.toLowerCase().includes(query) ||
-          l.phone?.includes(query) ||
+          l.whatsapp?.includes(query) ||
           l.problem?.toLowerCase().includes(query)
       );
     }
@@ -63,8 +64,16 @@ export default function Dashboard() {
   const loadLeads = async () => {
     setIsLoading(true);
     try {
-      const data = await leadService.getAllLeads();
-      setLeads(data || []);
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error cargando leads:", error);
+      } else {
+        setLeads(data || []);
+      }
     } catch (error) {
       console.error("Error cargando leads:", error);
     } finally {
@@ -206,23 +215,23 @@ export default function Dashboard() {
               Todos
             </Button>
             <Button
-              variant={statusFilter === "pending" ? "default" : "outline"}
-              onClick={() => setStatusFilter("pending")}
-              className={statusFilter === "pending" ? "bg-yellow-500 hover:bg-yellow-600" : ""}
+              variant={statusFilter === "nuevo" ? "default" : "outline"}
+              onClick={() => setStatusFilter("nuevo")}
+              className={statusFilter === "nuevo" ? "bg-yellow-500 hover:bg-yellow-600" : ""}
             >
               Nuevo
             </Button>
             <Button
-              variant={statusFilter === "contacted" ? "default" : "outline"}
-              onClick={() => setStatusFilter("contacted")}
-              className={statusFilter === "contacted" ? "bg-blue-500 hover:bg-blue-600" : ""}
+              variant={statusFilter === "contactado" ? "default" : "outline"}
+              onClick={() => setStatusFilter("contactado")}
+              className={statusFilter === "contactado" ? "bg-blue-500 hover:bg-blue-600" : ""}
             >
               Contactado
             </Button>
             <Button
-              variant={statusFilter === "converted" ? "default" : "outline"}
-              onClick={() => setStatusFilter("converted")}
-              className={statusFilter === "converted" ? "bg-green-500 hover:bg-green-600" : ""}
+              variant={statusFilter === "convertido" ? "default" : "outline"}
+              onClick={() => setStatusFilter("convertido")}
+              className={statusFilter === "convertido" ? "bg-green-500 hover:bg-green-600" : ""}
             >
               Convertido
             </Button>
@@ -260,18 +269,18 @@ export default function Dashboard() {
                         <td className="px-6 py-4 text-sm font-medium">{lead.name}</td>
                         <td className="px-6 py-4 text-sm text-green-400">
                           <a
-                            href={`https://wa.me/${lead.phone?.replace(/\D/g, "")}`}
+                            href={`https://wa.me/${lead.whatsapp?.replace(/\D/g, "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:underline"
                           >
-                            {lead.phone}
+                            {lead.whatsapp}
                           </a>
                         </td>
                         <td className="px-6 py-4 text-sm max-w-xs truncate">{lead.problem}</td>
                         <td className="px-6 py-4 text-sm">
                           <span className="px-2 py-1 rounded bg-gold/10 text-gold text-xs">
-                            {lead.selected_card_id || "N/A"}
+                            {lead.card_selected || "N/A"}
                           </span>
                         </td>
                         <td className="px-6 py-4">{getStatusBadge(lead.status)}</td>
@@ -293,8 +302,8 @@ export default function Dashboard() {
                               variant="ghost"
                               onClick={async () => {
                                 if (confirm("¿Eliminar este lead?")) {
-                                  await leadService.deleteLead(lead.id);
-                                  loadLeads();
+                                  const { error } = await supabase.from("leads").delete().eq("id", lead.id);
+                                  if (!error) loadLeads();
                                 }
                               }}
                               className="text-red-400 hover:text-red-300"
