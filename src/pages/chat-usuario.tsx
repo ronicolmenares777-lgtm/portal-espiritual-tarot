@@ -402,7 +402,7 @@ export default function ChatUsuario() {
             <div className="flex gap-1 sm:gap-2">
               {/* Botón WhatsApp mejorado */}
               <motion.a
-                href="https://wa.me/message/XH42ORU47RJCF1"
+                href="https://api.whatsapp.com/message/XH42ORU47RJCF1"
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.05 }}

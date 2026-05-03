@@ -269,7 +269,7 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
           <p className="text-xs text-muted-foreground">En línea</p>
         </div>
         <motion.a
-          href="https://wa.me/message/XH42ORU47RJCF1"
+          href="https://api.whatsapp.com/message/XH42ORU47RJCF1"
           target="_blank"
           rel="noopener noreferrer"
         />
