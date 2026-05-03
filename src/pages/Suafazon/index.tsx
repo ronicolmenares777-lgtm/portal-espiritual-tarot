@@ -13,17 +13,14 @@ export default function AdminLogin() {
     e.preventDefault();
     setError("");
 
-    const credentials = `Suafazon:${email}:${password}`;
-    const hashedCredentials = btoa(credentials);
-
-    console.log("🔐 Intentando login con:", hashedCredentials.substring(0, 20) + "...");
+    console.log("🔐 Intentando login con:", email);
 
     try {
       const { data: profile, error: authError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("auth_token", hashedCredentials)
-        .eq("focus", "admin")
+        .eq("email", email)
+        .eq("role", "admin")
         .single();
 
       if (authError || !profile) {
