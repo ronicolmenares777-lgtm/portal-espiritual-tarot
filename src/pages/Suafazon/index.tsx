@@ -11,81 +11,65 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
-    // Verificar si ya está autenticado
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        // Verificar si es admin
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", data.session.user.id)
-          .single();
-
-        if (profile?.role === "admin") {
-          router.push("/Suafazon/dashboard");
-        }
-      }
-    };
-    checkAuth();
-  }, [router]);
+    // Solo verificar si ya hay sesión activa AL MONTAR
+    const adminSession = localStorage.getItem("adminSession");
+    if (adminSession === "logged_in") {
+      console.log("🔄 Sesión activa detectada, redirigiendo...");
+      router.push("/Suafazon/dashboard");
+    }
+  }, []); // Array vacío - solo ejecutar UNA VEZ al montar
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
+    
+    // Prevenir múltiples ejecuciones
+    if (isLoggingIn) {
+      console.log("⏸️ Login ya en progreso, ignorando...");
+      return;
+    }
 
-    console.log("🔐 Intentando login con:", email);
+    setError("");
+    setIsLoggingIn(true);
+
+    const credentials = `Suafazon:${email}:${password}`;
+    const hashedCredentials = btoa(credentials);
+
+    console.log("🔐 Intentando login con:", hashedCredentials.substring(0, 20) + "...");
 
     try {
-      // Intentar login
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
-      });
-
-      if (authError) {
-        console.error("❌ Error de autenticación:", authError);
-        setError("Email o contraseña incorrectos");
-        setLoading(false);
-        return;
-      }
-
-      console.log("✅ Autenticación exitosa:", authData);
-
-      // Verificar si es admin
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile, error: authError } = await supabase
         .from("profiles")
-        .select("role")
-        .eq("id", authData.user.id)
+        .select("*")
+        .eq("auth_token", hashedCredentials)
+        .eq("focus", "admin")
         .single();
 
-      if (profileError) {
-        console.error("❌ Error obteniendo perfil:", profileError);
-        setError("Error verificando permisos");
-        await supabase.auth.signOut();
-        setLoading(false);
+      if (authError || !profile) {
+        console.error("❌ Autenticación fallida:", authError);
+        setError("Credenciales inválidas");
+        setIsLoggingIn(false);
         return;
       }
 
-      console.log("👤 Perfil:", profile);
+      console.log("✅ Autenticación exitosa:", profile);
+      console.log("🔄 Guardando sesión y redirigiendo...");
 
-      if (profile?.role !== "admin") {
-        console.error("❌ Usuario no es admin");
-        setError("No tienes permisos de administrador");
-        await supabase.auth.signOut();
-        setLoading(false);
-        return;
-      }
+      // Guardar sesión
+      localStorage.setItem("adminSession", "logged_in");
+      localStorage.setItem("adminProfile", JSON.stringify(profile));
 
-      console.log("✅ Redirigiendo a dashboard...");
-      router.push("/Suafazon/dashboard");
+      // Redirigir al dashboard
+      console.log("➡️ Redirigiendo a dashboard...");
+      await router.push("/Suafazon/dashboard");
+      
+      // NO resetear isLoggingIn aquí - dejar que el componente se desmonte
     } catch (err) {
-      console.error("❌ Error inesperado:", err);
+      console.error("❌ Error en login:", err);
       setError("Error al iniciar sesión");
-      setLoading(false);
+      setIsLoggingIn(false);
     }
   };
 
