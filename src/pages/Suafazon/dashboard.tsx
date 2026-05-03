@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Star, LogOut, User, Trash2 } from "lucide-react";
+import { Star, LogOut, User, Trash2, Download } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Dashboard() {
@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState<"all" | "nuevo" | "enConversacion" | "atendido" | "favoritos" | "papelera">("all");
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const router = useRouter();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   useEffect(() => {
     loadLeads();
@@ -104,20 +105,32 @@ export default function Dashboard() {
   };
 
   const filteredLeads = leads.filter((lead) => {
+    // Filtro de búsqueda
     const matchesSearch = 
       lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.whatsapp.includes(searchQuery);
-    
-    if (statusFilter === "favoritos") {
-      return matchesSearch && lead.is_favorite;
+
+    // Filtro de vista (LEADS, LISTO, PAPELERA)
+    let matchesView = true;
+    if (currentView === "leads") {
+      matchesView = !lead.is_deleted && lead.status !== "atendido";
+    } else if (currentView === "listo") {
+      matchesView = !lead.is_deleted && lead.status === "atendido";
+    } else if (currentView === "papelera") {
+      matchesView = lead.is_deleted === true;
     }
-    if (statusFilter === "papelera") {
-      return matchesSearch && lead.is_deleted;
+
+    // Filtro de estado del ritual
+    let matchesRitual = true;
+    if (ritualFilter === "nuevo") {
+      matchesRitual = lead.status === "nuevo";
+    } else if (ritualFilter === "enChat") {
+      matchesRitual = lead.status === "enConversacion";
+    } else if (ritualFilter === "favorito") {
+      matchesRitual = lead.is_favorite === true;
     }
-    if (statusFilter === "all") {
-      return matchesSearch && !lead.is_deleted;
-    }
-    return matchesSearch && lead.status === statusFilter && !lead.is_deleted;
+
+    return matchesSearch && matchesView && matchesRitual;
   });
 
   const handleSelectAll = () => {
@@ -208,82 +221,44 @@ export default function Dashboard() {
         </div>
 
         {/* Estado del ritual */}
-        <div className="pt-4 border-t border-border">
-          <h3 className="text-xs font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-            <span>⚡</span> ESTADO DEL RITUAL
-          </h3>
+        <div className="space-y-3">
+          <button className="w-full flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <span>📊</span>
+            <span>ESTADO DEL RITUAL</span>
+          </button>
+          
           <div className="grid grid-cols-2 gap-2">
             <Button
-              variant={statusFilter === "all" ? "default" : "outline"}
-              onClick={() => setStatusFilter("all")}
-              className="text-xs h-auto py-2"
-              size="sm"
+              variant={ritualFilter === "all" ? "default" : "outline"}
+              onClick={() => setRitualFilter("all")}
+              className="text-xs h-9"
             >
-              📊 Todos
-              <span className="block text-[10px] mt-0.5">{activeLeads.length}</span>
+              <span className="mr-1">📋</span>
+              Todos
             </Button>
             <Button
-              variant={statusFilter === "nuevo" ? "default" : "outline"}
-              onClick={() => setStatusFilter("nuevo")}
-              className="text-xs h-auto py-2"
-              size="sm"
+              variant={ritualFilter === "nuevo" ? "default" : "outline"}
+              onClick={() => setRitualFilter("nuevo")}
+              className="text-xs h-9"
             >
-              🆕 Nuevo
-              <span className="block text-[10px] mt-0.5">{newLeads.length}</span>
+              <span className="mr-1">🆕</span>
+              Nuevo
             </Button>
             <Button
-              variant={statusFilter === "enConversacion" ? "default" : "outline"}
-              onClick={() => setStatusFilter("enConversacion")}
-              className="text-xs h-auto py-2"
-              size="sm"
+              variant={ritualFilter === "enChat" ? "default" : "outline"}
+              onClick={() => setRitualFilter("enChat")}
+              className="text-xs h-9"
             >
-              💬 En Chat
-              <span className="block text-[10px] mt-0.5">{inConversationLeads.length}</span>
+              <span className="mr-1">💬</span>
+              En Chat
             </Button>
             <Button
-              variant="outline"
-              className="text-xs h-auto py-2"
-              size="sm"
-              disabled
+              variant={ritualFilter === "favorito" ? "default" : "outline"}
+              onClick={() => setRitualFilter("favorito")}
+              className="text-xs h-9"
             >
-              ⭐ Calificó
-              <span className="block text-[10px] mt-0.5">0</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="text-xs h-auto py-2"
-              size="sm"
-              disabled
-            >
-              📝 Lista
-              <span className="block text-[10px] mt-0.5">0</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="text-xs h-auto py-2"
-              size="sm"
-              disabled
-            >
-              💰 Ganacia
-              <span className="block text-[10px] mt-0.5">0</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="text-xs h-auto py-2"
-              size="sm"
-              disabled
-            >
-              ❌ Perdida
-              <span className="block text-[10px] mt-0.5">0</span>
-            </Button>
-            <Button
-              variant={statusFilter === "favoritos" ? "default" : "outline"}
-              onClick={() => setStatusFilter("favoritos")}
-              className="text-xs h-auto py-2"
-              size="sm"
-            >
-              ⭐ Favoritos
-              <span className="block text-[10px] mt-0.5">{leads.filter(l => l.is_favorite).length}</span>
+              <span className="mr-1">⭐</span>
+              Favoritos
             </Button>
           </div>
         </div>
@@ -292,75 +267,142 @@ export default function Dashboard() {
       {/* Main content */}
       <div className="flex-1 p-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-serif font-bold text-gold mb-2">Portal Maestro</h1>
-              <p className="text-muted-foreground">Gestión de almas y consultas espirituales</p>
-              <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-                <span>📊 {leads.length} leads cargados</span>
-                <span>🔍 {filteredLeads.length} Filtrados</span>
-                <span>📈 Total: {leads.length} Leads</span>
-              </div>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-serif font-bold text-gold mb-2">Portal Maestro</h1>
+            <p className="text-muted-foreground">Gestión de almas y consultas espirituales</p>
+            <div className="flex gap-6 mt-2 text-sm text-muted-foreground">
+              <span>📊 {leads.filter(l => !l.is_deleted).length} leads cargados</span>
+              <span>✅ Filtrados: {filteredLeads.length}</span>
+              <span>🗑️ Total: {leads.length} leads</span>
             </div>
-            <div className="flex gap-3">
+          </div>
+          
+          <div className="flex gap-3">
+            <div className="relative">
               <Button
                 variant="outline"
-                onClick={() => router.push("/Suafazon/perfil")}
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="flex items-center gap-2"
               >
-                <User className="w-4 h-4" />
+                <User className="h-4 w-4" />
                 Perfil
               </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  localStorage.removeItem("adminSession");
-                  router.push("/");
-                }}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Salir
-              </Button>
+              
+              {/* Menú desplegable de perfil */}
+              {showProfileMenu && (
+                <div className="absolute right-0 top-12 w-56 bg-card border border-border rounded-lg shadow-xl z-50">
+                  <div className="p-2 space-y-1">
+                    <button
+                      onClick={() => {
+                        router.push("/Suafazon/perfil");
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-accent/10 rounded-md transition-colors text-left"
+                    >
+                      <User className="h-4 w-4" />
+                      Editar Perfil
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Exportar leads a CSV
+                        const csv = leads.map(l => `${l.name},${l.whatsapp},${l.status}`).join('\n');
+                        const blob = new Blob([csv], { type: 'text/csv' });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'leads.csv';
+                        a.click();
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-accent/10 rounded-md transition-colors text-left"
+                    >
+                      <Download className="h-4 w-4" />
+                      Exportar Leads
+                    </button>
+                    <div className="h-px bg-border my-1" />
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem("adminSession");
+                        router.push("/");
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-destructive/10 text-destructive rounded-md transition-colors text-left"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-
-          {/* Stats cards */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-blue-400">{activeLeads.length}</div>
-              <div className="text-sm text-blue-300 mt-1">📋 LEADS</div>
-            </div>
-            <div className="bg-green-500/20 border-2 border-green-500/40 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-green-400">{attendedLeads.length}</div>
-              <div className="text-sm text-green-300 mt-1">✅ LISTO</div>
-            </div>
-            <div className="bg-red-500/20 border-2 border-red-500/40 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-red-400">{trashedLeads.length}</div>
-              <div className="text-sm text-red-300 mt-1">🗑️ PAPELERA</div>
-            </div>
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex gap-3">
+            
             <Button
-              variant="outline"
-              onClick={handleSelectAll}
+              variant="destructive"
+              onClick={() => {
+                localStorage.removeItem("adminSession");
+                router.push("/");
+              }}
               className="flex items-center gap-2"
             >
-              ☑️ Seleccionar todo
+              <LogOut className="h-4 w-4" />
+              Salir
             </Button>
-            {selectedLeads.length > 0 && statusFilter !== "papelera" && (
-              <Button
-                variant="destructive"
-                onClick={() => handleMoveToTrash(selectedLeads)}
-                className="flex items-center gap-2"
-              >
-                ❌ Deseleccionar ({selectedLeads.length})
-              </Button>
-            )}
           </div>
+        </div>
+
+        {/* Stats cards */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-4 text-center">
+            <div className="text-3xl font-bold text-blue-400">{activeLeads.length}</div>
+            <div className="text-sm text-blue-300 mt-1">📋 LEADS</div>
+          </div>
+          <div className="bg-green-500/20 border-2 border-green-500/40 rounded-xl p-4 text-center">
+            <div className="text-3xl font-bold text-green-400">{attendedLeads.length}</div>
+            <div className="text-sm text-green-300 mt-1">✅ LISTO</div>
+          </div>
+          <div className="bg-red-500/20 border-2 border-red-500/40 rounded-xl p-4 text-center">
+            <div className="text-3xl font-bold text-red-400">{trashedLeads.length}</div>
+            <div className="text-sm text-red-300 mt-1">🗑️ PAPELERA</div>
+          </div>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex gap-3 mb-6">
+          <Button
+            variant="outline"
+            onClick={handleSelectAll}
+            className="flex-1"
+          >
+            ✅ Seleccionar todo
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleDeselectAll}
+            className="flex-1"
+          >
+            ❌ Deseleccionar
+          </Button>
+          
+          {/* Botón de papelera - solo visible cuando hay seleccionados */}
+          {selectedLeads.length > 0 && (
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                for (const leadId of selectedLeads) {
+                  await supabase
+                    .from("leads")
+                    .update({ is_deleted: true })
+                    .eq("id", leadId);
+                }
+                setSelectedLeads([]);
+                loadLeads();
+              }}
+              className="flex-1"
+            >
+              🗑️ Enviar a papelera ({selectedLeads.length})
+            </Button>
+          )}
         </div>
 
         {/* Leads list */}

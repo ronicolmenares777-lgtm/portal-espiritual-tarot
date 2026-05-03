@@ -5,7 +5,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Upload, Mic, MicOff, User, Sparkles, Download, X } from "lucide-react";
+import { Send, Upload, Mic, MicOff, User, Sparkles, Download, X, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ChatAdmin() {
@@ -17,6 +17,8 @@ export default function ChatAdmin() {
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [leadStatus, setLeadStatus] = useState<string>("nuevo");
+  const [isFavorite, setIsFavorite] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -32,12 +34,21 @@ export default function ChatAdmin() {
     if (!id || typeof id !== "string") return;
 
     const loadLead = async () => {
-      const { data } = await supabase.from("leads").select("*").eq("id", id).single();
-      if (data) {
-        setLeadName(data.name);
-        setLeadPhone(`${data.country_code} ${data.whatsapp}`);
+      const { data: lead } = await supabase
+        .from("leads")
+        .select("name, whatsapp, status, is_favorite")
+        .eq("id", id)
+        .single();
+
+      if (lead) {
+        setLeadName(lead.name || "Usuario");
+        setLeadPhone(lead.whatsapp || "");
+        setLeadStatus(lead.status || "nuevo");
+        setIsFavorite(lead.is_favorite || false);
       }
     };
+
+    loadLead();
 
     const loadMessages = async () => {
       const { data, error } = await supabase
@@ -51,12 +62,37 @@ export default function ChatAdmin() {
       }
     };
 
-    loadLead();
     loadMessages();
 
     const interval = setInterval(loadMessages, 2000);
     return () => clearInterval(interval);
   }, [id]);
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!id) return;
+    
+    const { error } = await supabase
+      .from("leads")
+      .update({ status: newStatus })
+      .eq("id", id);
+
+    if (!error) {
+      setLeadStatus(newStatus);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!id) return;
+    
+    const { error } = await supabase
+      .from("leads")
+      .update({ is_favorite: !isFavorite })
+      .eq("id", id);
+
+    if (!error) {
+      setIsFavorite(!isFavorite);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !id) return;
@@ -205,9 +241,9 @@ export default function ChatAdmin() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-card border-b border-border p-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          {/* Botón de regreso al dashboard */}
+      <div className="sticky top-0 z-10 bg-card border-b border-border shadow-sm">
+        {/* Fila 1: Navegación y usuario */}
+        <div className="p-4 flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
@@ -228,6 +264,44 @@ export default function ChatAdmin() {
             <h2 className="font-semibold text-foreground truncate">{leadName}</h2>
             <p className="text-xs text-muted-foreground truncate">{leadPhone}</p>
           </div>
+
+          {/* Botón de favorito */}
+          <Button
+            variant={isFavorite ? "default" : "outline"}
+            size="icon"
+            onClick={handleToggleFavorite}
+            className="flex-shrink-0"
+          >
+            <Star className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+          </Button>
+        </div>
+
+        {/* Fila 2: Selector de estado */}
+        <div className="px-4 pb-3 flex gap-2 overflow-x-auto">
+          <Button
+            variant={leadStatus === "nuevo" ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleStatusChange("nuevo")}
+            className="text-xs whitespace-nowrap"
+          >
+            🆕 Nuevo
+          </Button>
+          <Button
+            variant={leadStatus === "enConversacion" ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleStatusChange("enConversacion")}
+            className="text-xs whitespace-nowrap"
+          >
+            💬 En Chat
+          </Button>
+          <Button
+            variant={leadStatus === "atendido" ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleStatusChange("atendido")}
+            className="text-xs whitespace-nowrap"
+          >
+            ✅ Atendido
+          </Button>
         </div>
       </div>
 
