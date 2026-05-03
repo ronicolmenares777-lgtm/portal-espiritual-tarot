@@ -20,20 +20,15 @@ export default function Dashboard() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [notificationsSupported, setNotificationsSupported] = useState(true);
 
   useEffect(() => {
     loadLeads();
   }, []);
 
-  // Verificar soporte de notificaciones y auto-activar
+  // Auto-activar notificaciones si ya estaban habilitadas
   useEffect(() => {
     const checkNotifications = async () => {
-      const supported = notificationService.isSupported();
-      setNotificationsSupported(supported);
-
-      if (supported) {
-        // Intentar auto-activar si ya estaban habilitadas
+      if (notificationService.isSupported()) {
         const activated = await notificationService.autoEnable({
           onLeadClick: (leadId) => {
             router.push(`/Suafazon/chat/${leadId}`);
@@ -48,14 +43,6 @@ export default function Dashboard() {
     };
 
     checkNotifications();
-
-    // Cleanup al desmontar
-    return () => {
-      if (notificationService.isActive()) {
-        // No desactivar automáticamente - mantener notificaciones activas
-        // El usuario debe desactivar manualmente
-      }
-    };
   }, [router]);
 
   const loadLeads = async () => {
@@ -380,26 +367,24 @@ export default function Dashboard() {
           </div>
           
           <div className="flex gap-2 sm:gap-3 items-center">
-            {/* Botón de notificaciones - SIEMPRE VISIBLE */}
-            {notificationsSupported && (
-              <Button
-                onClick={handleToggleNotifications}
-                variant={notificationsEnabled ? "default" : "outline"}
-                size="icon"
-                className={`${
-                  notificationsEnabled
-                    ? "bg-gold/90 hover:bg-gold text-background"
-                    : ""
-                }`}
-                title={notificationsEnabled ? "Notificaciones activadas" : "Activar notificaciones"}
-              >
-                {notificationsEnabled ? (
-                  <Bell className="h-4 w-4" />
-                ) : (
-                  <BellOff className="h-4 w-4" />
-                )}
-              </Button>
-            )}
+            {/* Botón de notificaciones - SIEMPRE VISIBLE FORZADO */}
+            <Button
+              onClick={handleToggleNotifications}
+              variant={notificationsEnabled ? "default" : "outline"}
+              size="icon"
+              className={`${
+                notificationsEnabled
+                  ? "bg-gold/90 hover:bg-gold text-background"
+                  : ""
+              }`}
+              title={notificationsEnabled ? "Notificaciones activadas" : "Activar notificaciones"}
+            >
+              {notificationsEnabled ? (
+                <Bell className="h-4 w-4" />
+              ) : (
+                <BellOff className="h-4 w-4" />
+              )}
+            </Button>
 
             <div className="relative">
               <Button
