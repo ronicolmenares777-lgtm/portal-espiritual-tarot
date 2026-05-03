@@ -79,16 +79,10 @@ export default function ChatAdmin() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!id || typeof id !== "string") return;
-    
-    const { error } = await supabase
-      .from("leads")
-      .update({ status: newStatus })
-      .eq("id", id);
-
-    if (!error) {
-      setLeadStatus(newStatus);
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === "nuevo" || value === "contactado" || value === "convertido") {
+      updateLeadStatus(value);
     }
   };
 
@@ -250,12 +244,7 @@ export default function ChatAdmin() {
           <div className="flex items-center gap-2">
             <select
               value={leadStatus}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === "nuevo" || value === "contactado" || value === "convertido") {
-                  updateLeadStatus(value as "nuevo" | "contactado" | "convertido");
-                }
-              }}
+              onChange={handleStatusChange}
               className="px-3 py-1.5 rounded-lg border border-gold/20 bg-background text-sm text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
             >
               <option value="nuevo">🔵 Nuevo</option>
