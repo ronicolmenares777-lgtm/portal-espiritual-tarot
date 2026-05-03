@@ -586,15 +586,7 @@ export default function Home() {
         )}
 
         {currentScreen === "warning" && (
-          <WarningMessage 
-            onContinue={() => {
-              console.log("✅ Navegando al chat...");
-              if (leadId) {
-                localStorage.setItem("currentLeadId", leadId);
-              }
-              router.push("/chat-usuario");
-            }} 
-          />
+          <WarningMessage onOpenChat={handleOpenChat} />
         )}
 
         {currentScreen === "chat" && (
