@@ -65,6 +65,7 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           id: string
+          is_deleted: boolean | null
           is_favorite: boolean | null
           last_interaction_at: string | null
           name: string
@@ -88,6 +89,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           id?: string
+          is_deleted?: boolean | null
           is_favorite?: boolean | null
           last_interaction_at?: string | null
           name: string
@@ -111,6 +113,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           id?: string
+          is_deleted?: boolean | null
           is_favorite?: boolean | null
           last_interaction_at?: string | null
           name?: string

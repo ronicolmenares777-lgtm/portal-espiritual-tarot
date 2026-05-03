@@ -497,6 +497,129 @@ export default function ChatUsuario() {
         })}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Input área mejorada */}
+      <div className="sticky bottom-0 bg-card/80 backdrop-blur-xl border-t border-gold/20 shadow-2xl shadow-black/10">
+        <div className="p-3 sm:p-4 md:p-6">
+          <form onSubmit={handleSendMessage} className="flex items-center gap-2 sm:gap-3">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="image/*"
+              className="hidden"
+            />
+            
+            {/* Botones de acción */}
+            <div className="flex gap-1 sm:gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-gold/10 hover:text-gold transition-all"
+              >
+                <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+              
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onMouseDown={startRecording}
+                onMouseUp={stopRecording}
+                onTouchStart={startRecording}
+                onTouchEnd={stopRecording}
+                disabled={uploading}
+                className={`flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-all ${
+                  recording 
+                    ? "bg-red-500/20 text-red-500 hover:bg-red-500/30" 
+                    : "hover:bg-gold/10 hover:text-gold"
+                }`}
+              >
+                {recording ? (
+                  <MicOff className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse" />
+                ) : (
+                  <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
+                )}
+              </Button>
+            </div>
+
+            {/* Input de texto mejorado */}
+            <div className="flex-1 relative">
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Escribe tu mensaje..."
+                className="w-full bg-secondary/30 border-2 border-gold/20 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/50 focus:bg-secondary/40 transition-all"
+                disabled={sending || uploading}
+              />
+            </div>
+            
+            {/* Botón enviar mejorado */}
+            <Button
+              type="submit"
+              size="icon"
+              disabled={sending || !newMessage.trim()}
+              className="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-r from-gold to-accent hover:from-accent hover:to-gold text-background shadow-lg shadow-gold/30 hover:shadow-xl hover:shadow-gold/50 transition-all disabled:opacity-50"
+            >
+              {sending ? (
+                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-current border-t-transparent" />
+              ) : (
+                <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+              )}
+            </Button>
+          </form>
+
+          {/* Indicador de estado */}
+          {(uploading || recording) && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-2 sm:mt-3 flex items-center gap-2 text-xs text-muted-foreground"
+            >
+              <div className="w-2 h-2 bg-gold rounded-full animate-pulse" />
+              {uploading && "Subiendo archivo..."}
+              {recording && "Grabando audio..."}
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal de imagen (Lightbox) */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedImage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="relative max-w-4xl max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="absolute -top-12 right-0 text-white hover:text-gold transition-colors"
+              >
+                <X className="w-8 h-8" />
+              </button>
+              <img
+                src={selectedImage}
+                alt="Vista completa"
+                className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
