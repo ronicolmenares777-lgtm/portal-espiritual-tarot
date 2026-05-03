@@ -45,7 +45,7 @@ export default function Dashboard() {
     checkNotifications();
   }, [router]);
 
-  // Auto-refresh cada 10 segundos + Realtime subscriptions
+  // Auto-refresh cada 10 segundos (SIN realtime para evitar duplicados)
   useEffect(() => {
     const adminSession = localStorage.getItem("adminSession");
     if (!adminSession) {
@@ -53,32 +53,15 @@ export default function Dashboard() {
       return;
     }
 
-    // Polling cada 10 segundos
+    // Polling cada 10 segundos - suficiente para actualización automática
     const interval = setInterval(() => {
       console.log("🔄 [POLLING] Actualizando leads...");
       loadLeads();
     }, 10000);
 
-    // Realtime subscription para nuevos leads
-    const subscription = supabase
-      .channel('leads_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'leads'
-        },
-        (payload) => {
-          console.log('🔔 [REALTIME] Cambio detectado en leads:', payload);
-          loadLeads(); // Recargar leads al detectar cambios
-        }
-      )
-      .subscribe();
-
+    // Cleanup al desmontar
     return () => {
       clearInterval(interval);
-      subscription.unsubscribe();
     };
   }, [router]);
 
