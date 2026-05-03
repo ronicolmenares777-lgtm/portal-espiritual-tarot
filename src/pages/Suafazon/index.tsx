@@ -1,153 +1,141 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
 
 export default function AdminLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
-
-  // Verificar sesión existente SOLO al montar - UNA VEZ
-  useEffect(() => {
-    const adminSession = localStorage.getItem("adminSession");
-    if (adminSession === "logged_in" && !isRedirecting) {
-      setIsRedirecting(true);
-      router.push("/Suafazon/dashboard");
-    }
-  }, []); // Array vacío - SOLO ejecutar al montar
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Prevenir múltiples clicks
-    if (isLoggingIn || isRedirecting) {
-      return;
-    }
-
     setError("");
-    setIsLoggingIn(true);
 
-    console.log("🔐 Intentando login con:", email);
+    const credentials = `Suafazon:${email}:${password}`;
+    const hashedCredentials = btoa(credentials);
+
+    console.log("🔐 Intentando login con:", hashedCredentials.substring(0, 20) + "...");
 
     try {
-      // Buscar perfil de admin por email y role
       const { data: profile, error: authError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("email", email)
-        .eq("role", "admin")
+        .eq("auth_token", hashedCredentials)
+        .eq("focus", "admin")
         .single();
 
       if (authError || !profile) {
         console.error("❌ Autenticación fallida:", authError);
-        setError("Credenciales inválidas o no tienes permisos de administrador");
-        setIsLoggingIn(false);
+        setError("Credenciales inválidas");
         return;
       }
 
-      console.log("✅ Perfil de admin encontrado:", profile);
+      console.log("✅ Autenticación exitosa:", profile);
+      console.log("🔄 Redirigiendo a dashboard...");
 
-      // Prevenir redirecciones múltiples
-      if (isRedirecting) {
-        return;
-      }
-
-      setIsRedirecting(true);
       localStorage.setItem("adminSession", "logged_in");
       localStorage.setItem("adminProfile", JSON.stringify(profile));
 
-      console.log("➡️ Redirigiendo a dashboard...");
       router.push("/Suafazon/dashboard");
-      
     } catch (err) {
       console.error("❌ Error en login:", err);
       setError("Error al iniciar sesión");
-      setIsLoggingIn(false);
     }
   };
 
-  // Si ya está redirigiendo, mostrar pantalla de carga
-  if (isRedirecting) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-foreground/60">Redirigiendo...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-serif text-primary tracking-wide">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-950/50 via-purple-900/30 to-background" />
+      
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute bg-gold/30 rounded-full animate-pulse-glow"
+            style={{
+              width: Math.random() * 3 + 1 + 'px',
+              height: Math.random() * 3 + 1 + 'px',
+              top: Math.random() * 100 + '%',
+              left: Math.random() * 100 + '%',
+              animationDelay: Math.random() * 3 + 's',
+              animationDuration: Math.random() * 3 + 2 + 's',
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="max-w-md w-full space-y-8 relative z-10">
+        <div className="text-center space-y-4">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="inline-block"
+          >
+            <div className="relative w-32 h-32 mx-auto mb-6">
+              <div className="absolute inset-0 bg-gradient-to-r from-gold/30 via-accent/30 to-gold/30 rounded-full blur-2xl animate-pulse-glow" />
+              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-primary/20 via-accent/10 to-primary/20 backdrop-blur-xl border-4 border-gold/40 shadow-2xl shadow-gold/50 flex items-center justify-center">
+                <span className="text-6xl">🔮</span>
+              </div>
+            </div>
+          </motion.div>
+
+          <h2 className="text-3xl font-serif italic text-gold">
             Portal Administrativo
-          </h1>
-          <p className="text-muted-foreground">
+          </h2>
+          <p className="text-foreground/70 text-sm">
             Acceso exclusivo para maestros espirituales
           </p>
         </div>
 
-        <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-8 shadow-2xl">
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-foreground/80">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-background/50 border border-border/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground/50 transition-all"
-                placeholder="tu@email.com"
-                required
-                disabled={isLoggingIn}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-foreground/80">
-                Contraseña
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-background/50 border border-border/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground/50 transition-all"
-                placeholder="••••••••"
-                required
-                disabled={isLoggingIn}
-              />
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
-                {error}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-gold/10 via-accent/10 to-gold/10 rounded-2xl blur-xl" />
+          <div className="relative bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl border-2 border-gold/20 rounded-2xl p-8 shadow-2xl">
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-foreground/80 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 bg-background/50 border border-gold/30 rounded-lg focus:outline-none focus:border-gold/60 text-foreground transition-colors"
+                  placeholder="tu@email.com"
+                  required
+                />
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={isLoggingIn}
-              className="w-full py-3 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-background font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoggingIn ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-background"></div>
-                  Ingresando...
-                </span>
-              ) : (
-                "Ingresar al Portal"
+              <div>
+                <label className="block text-sm font-medium text-foreground/80 mb-2">
+                  Contraseña
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 bg-background/50 border border-gold/30 rounded-lg focus:outline-none focus:border-gold/60 text-foreground transition-colors"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm">
+                  {error}
+                </div>
               )}
-            </button>
-          </form>
+
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-gold via-accent to-gold text-background font-semibold py-3 px-6 rounded-lg hover:shadow-lg hover:shadow-gold/50 transition-all duration-300 transform hover:scale-105"
+              >
+                Ingresar al Portal
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
