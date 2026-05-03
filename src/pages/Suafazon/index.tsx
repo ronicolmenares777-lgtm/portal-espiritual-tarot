@@ -1,80 +1,157 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    // Credenciales hardcoded
-    if (email === "admin@suafazon.com" && password === "Suafazon2024!") {
-      localStorage.setItem("adminSession", "logged_in");
+  // Verificar sesión existente SOLO al montar - UNA VEZ
+  useEffect(() => {
+    const adminSession = localStorage.getItem("adminSession");
+    if (adminSession === "logged_in" && !isRedirecting) {
+      setIsRedirecting(true);
       router.push("/Suafazon/dashboard");
-    } else {
-      setError("Credenciales inválidas");
+    }
+  }, []); // Array vacío - SOLO ejecutar al montar
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Prevenir múltiples clicks
+    if (isLoggingIn || isRedirecting) {
+      return;
+    }
+
+    setError("");
+    setIsLoggingIn(true);
+
+    const credentials = `Suafazon:${email}:${password}`;
+    const hashedCredentials = btoa(credentials);
+
+    console.log("🔐 Intentando login con:", hashedCredentials.substring(0, 20) + "...");
+
+    try {
+      const { data: profile, error: authError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("auth_token", hashedCredentials)
+        .eq("focus", "admin")
+        .single();
+
+      if (authError || !profile) {
+        console.error("❌ Autenticación fallida:", authError);
+        setError("Credenciales inválidas");
+        setIsLoggingIn(false);
+        return;
+      }
+
+      console.log("✅ Autenticación exitosa:", profile);
+
+      // Prevenir redirecciones múltiples
+      if (isRedirecting) {
+        return;
+      }
+
+      setIsRedirecting(true);
+      localStorage.setItem("adminSession", "logged_in");
+      localStorage.setItem("adminProfile", JSON.stringify(profile));
+
+      console.log("➡️ Redirigiendo a dashboard...");
+      router.push("/Suafazon/dashboard");
+      
+    } catch (err) {
+      console.error("❌ Error en login:", err);
+      setError("Error al iniciar sesión");
+      setIsLoggingIn(false);
     }
   };
 
+  // Si ya está redirigiendo, mostrar pantalla de carga
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-foreground/60">Redirigiendo...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-purple-950/20 to-background">
-      <Card className="w-full max-w-md bg-card/80 backdrop-blur-xl border-gold/20">
-        <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-3xl font-serif text-gold">
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-serif text-primary tracking-wide">
             Portal Administrativo
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
+          </h1>
+          <p className="text-muted-foreground">
             Acceso exclusivo para maestros espirituales
           </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        </div>
+
+        <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-8 shadow-2xl">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm text-foreground/80">Email</label>
-              <Input
+              <label htmlFor="email" className="text-sm font-medium text-foreground/80">
+                Email
+              </label>
+              <input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-background/50 border border-border/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground/50 transition-all"
                 placeholder="tu@email.com"
-                className="bg-background/50 border-gold/20 focus:border-gold/50"
                 required
+                disabled={isLoggingIn}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm text-foreground/80">Contraseña</label>
-              <Input
+              <label htmlFor="password" className="text-sm font-medium text-foreground/80">
+                Contraseña
+              </label>
+              <input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-background/50 border border-border/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground/50 transition-all"
                 placeholder="••••••••"
-                className="bg-background/50 border-gold/20 focus:border-gold/50"
                 required
+                disabled={isLoggingIn}
               />
             </div>
 
             {error && (
-              <div className="text-sm text-red-400 bg-red-500/10 p-3 rounded border border-red-500/20">
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
                 {error}
               </div>
             )}
 
-            <Button
+            <button
               type="submit"
-              className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-background font-semibold"
+              disabled={isLoggingIn}
+              className="w-full py-3 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-background font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Ingresar al Portal
-            </Button>
+              {isLoggingIn ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-background"></div>
+                  Ingresando...
+                </span>
+              ) : (
+                "Ingresar al Portal"
+              )}
+            </button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
