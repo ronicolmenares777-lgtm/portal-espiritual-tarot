@@ -2,9 +2,9 @@
 export interface TarotCard {
   id: string;
   name: string;
-  number: string;
   image: string;
-  loveMessage: string;
+  meaning: string;
+  interpretation: string;
 }
 
 // Pool de 5 cartas de amor del Tarot Rider-Waite (imágenes locales)
