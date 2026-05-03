@@ -180,70 +180,38 @@ export default function ChatUsuario() {
 
   // Enviar mensaje de texto
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || sending) {
-      console.log("⚠️ [SEND] Mensaje vacío o ya enviando");
-      return;
-    }
-
-    console.log("📤 [SEND] ========== INICIANDO ENVÍO DE MENSAJE ==========");
-    console.log("  - Lead ID:", leadId);
-    console.log("  - Mensaje:", newMessage);
-    console.log("  - Estado sending:", sending);
-
-    if (!leadId) {
-      console.error("❌ [SEND] No hay lead_id disponible");
-      toast({
-        title: "❌ Error",
-        description: "No se pudo identificar la conversación",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!newMessage.trim() || !leadId) return;
 
     setSending(true);
+    const messageText = newMessage;
+    setNewMessage("");
 
-    try {
-      console.log("💾 [SEND] Insertando mensaje en Supabase...");
-      
-      const { data, error } = await supabase
-        .from("messages")
-        .insert({
-          lead_id: leadId,
-          text: newMessage.trim(),
-          is_from_maestro: false,
-        })
-        .select();
+    const { error } = await supabase.from("messages").insert({
+      lead_id: leadId,
+      text: messageText,
+      is_from_maestro: false,
+    });
 
-      console.log("📊 [SEND] Respuesta de Supabase:", { data, error });
-
-      if (error) {
-        console.error("❌ [SEND] Error insertando mensaje:", error);
-        toast({
-          title: "❌ Error",
-          description: "No se pudo enviar el mensaje",
-          variant: "destructive",
-        });
-        setSending(false);
-        return;
-      }
-
-      console.log("✅ [SEND] Mensaje insertado exitosamente:", data);
-      
-      setNewMessage("");
-      setSending(false);
-
-      // Forzar recarga inmediata de mensajes
-      console.log("🔄 [SEND] Forzando recarga de mensajes...");
-      await loadMessages();
-    } catch (err) {
-      console.error("❌ [SEND] Error general:", err);
-      toast({
-        title: "❌ Error",
-        description: "Ocurrió un error al enviar el mensaje",
-        variant: "destructive",
-      });
-      setSending(false);
+    if (error) {
+      console.error("Error enviando mensaje:", error);
+      setNewMessage(messageText);
     }
+
+    setSending(false);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const formatTime = (date: string) => {
+    return new Date(date).toLocaleTimeString("es-MX", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
