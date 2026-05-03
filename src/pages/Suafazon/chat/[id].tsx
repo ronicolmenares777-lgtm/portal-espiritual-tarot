@@ -11,10 +11,14 @@ import {
   Sparkles,
   Upload,
   Mic,
+  MicOff,
   Star,
   Phone,
   User,
+  Download,
+  X,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Message = {
   id: string;
@@ -50,6 +54,7 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [maestroProfile, setMaestroProfile] = useState<any>(null);
@@ -344,137 +349,61 @@ export default function ChatPage() {
           {/* Ventana de chat - Diseño mejorado */}
           <div className="bg-card/80 backdrop-blur-sm border-2 border-gold/30 rounded-3xl shadow-2xl overflow-hidden">
             
-            {/* Chat Header */}
-            <div className="bg-gradient-to-r from-primary/20 via-amber-500/20 to-primary/20 border-b-2 border-gold/20 p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => router.push("/Suafazon/dashboard")}
-                    className="px-4 py-2 bg-secondary/50 hover:bg-secondary/70 rounded-xl transition-all flex items-center gap-2 border border-border"
-                  >
-                    ← Volver
-                  </button>
-                  <div>
-                    <h1 className="text-2xl font-serif font-bold text-foreground">
-                      {lead?.name}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                      {lead?.country_code} {lead?.whatsapp}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  {/* Botón de favorito */}
-                  <button
-                    onClick={async () => {
-                      const { error } = await supabase
-                        .from("leads")
-                        .update({ is_favorite: !lead.is_favorite })
-                        .eq("id", lead.id);
-
-                      if (!error) {
-                        setLead({ ...lead, is_favorite: !lead.is_favorite });
-                      }
-                    }}
-                    className={`px-4 py-2 rounded-xl border-2 font-semibold transition-all ${
-                      lead.is_favorite
-                        ? "bg-amber-500/20 border-amber-500 text-amber-500"
-                        : "bg-secondary/50 border-border text-muted-foreground hover:bg-secondary/70"
-                    }`}
-                  >
-                    {lead.is_favorite ? "⭐ Favorito" : "☆ Marcar favorito"}
-                  </button>
-
-                  {/* Selector de estado */}
-                  <select
-                    value={lead.status}
-                    onChange={async (e) => {
-                      const newStatus = e.target.value;
-                      const { error } = await supabase
-                        .from("leads")
-                        .update({ status: newStatus })
-                        .eq("id", lead.id);
-
-                      if (!error) {
-                        setLead({ ...lead, status: newStatus });
-                      }
-                    }}
-                    className="px-4 py-2 bg-secondary/50 border-2 border-border rounded-xl font-semibold text-foreground cursor-pointer hover:bg-secondary/70 transition-all"
-                  >
-                    <option value="nuevo">🆕 Nuevo</option>
-                    <option value="enConversacion">💬 En Conversación</option>
-                    <option value="clienteCaliente">🔥 Cliente Caliente</option>
-                    <option value="listo">✅ Listo</option>
-                    <option value="cerrado">🔒 Cerrado</option>
-                    <option value="perdido">❌ Perdido</option>
-                  </select>
-                </div>
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-card border-b border-border p-3 sm:p-4 flex items-center gap-3 shadow-sm">
+              <Avatar className="h-9 w-9 sm:h-10 sm:w-10">
+                <AvatarFallback className="bg-accent/20 text-accent">
+                  <User className="h-4 w-4 sm:h-5 sm:w-5" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-semibold text-foreground truncate text-sm sm:text-base">{lead?.name}</h2>
+                <p className="text-xs text-muted-foreground truncate">{lead?.country_code} {lead?.whatsapp}</p>
               </div>
             </div>
 
             {/* Área de mensajes */}
-            <div className="h-[750px] overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-background/50 to-background/80">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
               {messages.map((msg) => {
-                // Detectar tipos de mensaje
                 const isImage = msg.text?.startsWith("[IMG]");
                 const isAudio = msg.text?.startsWith("[AUDIO]");
-                const imageData = isImage ? msg.text?.substring(5) : null;
-                const audioData = isAudio ? msg.text?.substring(7) : null;
-                const textContent = (isImage || isAudio) ? null : msg.text;
-
-                console.log("💬 [MSG-RENDER]", {
-                  id: msg.id.substring(0, 8),
-                  is_from_maestro: msg.is_from_maestro,
-                  tipo: msg.is_from_maestro ? "MAESTRO" : "USUARIO",
-                  isImage,
-                  isAudio
-                });
-
+                
                 return (
                   <div
                     key={msg.id}
-                    className={`flex gap-3 ${
-                      msg.is_from_maestro ? "justify-end" : "justify-start"
-                    }`}
+                    className={`flex gap-2 sm:gap-3 ${msg.is_from_maestro ? "justify-start" : "justify-end"}`}
                   >
-                    {/* Avatar y nombre - SOLO para usuario (izquierda) */}
-                    {!msg.is_from_maestro && (
-                      <div className="flex flex-col items-center gap-1 shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary font-bold text-lg border-2 border-primary/40">
-                          {lead?.name?.charAt(0).toUpperCase() || "U"}
-                        </div>
-                        <span className="text-[10px] text-muted-foreground font-semibold max-w-[60px] truncate">
-                          {lead?.name || "Usuario"}
-                        </span>
-                      </div>
+                    {msg.is_from_maestro && (
+                      <Avatar className="h-7 w-7 sm:h-8 sm:w-8 mt-1 flex-shrink-0">
+                        <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                          <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </AvatarFallback>
+                      </Avatar>
                     )}
-
-                    {/* Burbuja de mensaje */}
                     <div
-                      className={`max-w-[70%] rounded-2xl p-4 shadow-lg ${
+                      className={`max-w-[75%] sm:max-w-[70%] rounded-2xl px-3 py-2 sm:px-4 sm:py-2 ${
                         msg.is_from_maestro
-                          ? "bg-gradient-to-br from-primary via-amber-500 to-primary text-primary-foreground border-2 border-amber-300"
-                          : "bg-white text-gray-900 border-2 border-gray-200"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card text-card-foreground border border-border"
                       }`}
                     >
-                      {textContent && (
+                      {msg.text && (
                         <p className={`text-sm leading-relaxed ${
                           msg.is_from_maestro ? "text-primary-foreground" : "text-gray-900"
                         }`}>
-                          {textContent}
+                          {msg.text}
                         </p>
                       )}
-                      {isImage && imageData && (
+                      {isImage && msg.text?.substring(5) && (
                         <img
-                          src={imageData}
+                          src={msg.text?.substring(5)}
                           alt="Imagen enviada"
                           className="mt-2 max-w-full max-h-80 rounded-lg"
                         />
                       )}
-                      {isAudio && audioData && (
+                      {isAudio && msg.text?.substring(7) && (
                         <audio
-                          src={audioData}
+                          src={msg.text?.substring(7)}
                           controls
                           className="mt-2 max-w-full"
                         />
@@ -488,89 +417,119 @@ export default function ChatPage() {
                         })}
                       </p>
                     </div>
-
-                    {/* Avatar y nombre - SOLO para maestro (derecha) */}
-                    {msg.is_from_maestro && (
-                      <div className="flex flex-col items-center gap-1 shrink-0">
-                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-lg">
-                          {maestroProfile?.avatar_url ? (
-                            <img
-                              src={maestroProfile.avatar_url}
-                              alt={maestroProfile.full_name || "Maestro"}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center text-primary-foreground font-bold text-lg">
-                              {maestroProfile?.full_name?.charAt(0).toUpperCase() || "M"}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-[10px] text-muted-foreground font-semibold max-w-[60px] truncate">
-                          {maestroProfile?.full_name || "Maestro"}
-                        </span>
-                      </div>
-                    )}
                   </div>
                 );
               })}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input de mensaje */}
-            <div className="bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 border-t-2 border-gold/20 p-6">
-              <div className="space-y-3">
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                    placeholder="Escribe un mensaje..."
-                    className="flex-1 px-4 py-3 bg-secondary/50 border-2 border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                    disabled={sending}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={sending || !newMessage.trim()}
-                    className="px-6 py-3 bg-gradient-to-r from-primary via-amber-500 to-primary hover:opacity-90 text-primary-foreground rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
-                  >
-                    {sending ? "Enviando..." : "Enviar"}
-                  </button>
-                </div>
+            {/* Input área */}
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage();
+            }} className="sticky bottom-0 bg-card border-t border-border p-3 sm:p-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10"
+                >
+                  <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onMouseDown={startRecording}
+                  onMouseUp={stopRecording}
+                  onTouchStart={startRecording}
+                  onTouchEnd={stopRecording}
+                  disabled={uploading}
+                  className={`flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10 ${recording ? "text-destructive animate-pulse" : ""}`}
+                >
+                  <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
 
-                {/* Botones de multimedia */}
-                <div className="flex gap-3">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading || recording}
-                    className="flex-1 px-4 py-2 bg-secondary/50 hover:bg-secondary/70 border-2 border-border rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                  >
-                    📷 {uploading ? "Subiendo..." : "Enviar Imagen"}
-                  </button>
-                  <button
-                    onClick={recording ? stopRecording : startRecording}
-                    disabled={uploading}
-                    className={`flex-1 px-4 py-2 border-2 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 ${
-                      recording 
-                        ? "bg-red-500/20 border-red-500 text-red-400 animate-pulse"
-                        : "bg-secondary/50 hover:bg-secondary/70 border-border"
-                    }`}
-                  >
-                    🎤 {recording ? "Detener Grabación" : "Grabar Audio"}
-                  </button>
-                </div>
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Escribe un mensaje..."
+                  className="flex-1 text-sm sm:text-base"
+                  disabled={sending || uploading}
+                />
+                
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={sending || !newMessage.trim()}
+                  className="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10"
+                >
+                  {sending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                  ) : (
+                    <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+                  )}
+                </Button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>
+
+      {/* Modal de imagen para admin (con descarga) */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedImage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="relative max-w-4xl max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="absolute -top-16 right-0 flex gap-3">
+                <a
+                  href={selectedImage}
+                  download={`imagen-${Date.now()}.png`}
+                  className="flex items-center gap-2 px-4 py-2 bg-gold/90 hover:bg-gold text-background rounded-lg font-medium shadow-lg transition-all"
+                >
+                  <Download className="w-5 h-5" />
+                  Descargar
+                </a>
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  className="text-white hover:text-gold transition-colors"
+                >
+                  <X className="w-8 h-8" />
+                </button>
+              </div>
+              <img
+                src={selectedImage}
+                alt="Vista completa"
+                className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
