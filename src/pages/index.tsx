@@ -297,6 +297,22 @@ export default function Home() {
     }
   };
 
+  const handleOpenChat = () => {
+    console.log("💬 [CHAT] Abriendo chat con el maestro");
+    console.log("  - Lead ID:", leadId);
+    
+    if (!leadId) {
+      console.error("❌ [CHAT] No hay leadId disponible");
+      return;
+    }
+
+    // Guardar leadId en localStorage para persistencia
+    localStorage.setItem("currentLeadId", leadId);
+    
+    // Redirigir al chat de usuario
+    router.push(`/chat-usuario?leadId=${leadId}`);
+  };
+
   // Función para obtener longitud máxima según país
   const getMaxLengthForCountry = (countryCode: string): number => {
     const lengths: { [key: string]: number } = {
