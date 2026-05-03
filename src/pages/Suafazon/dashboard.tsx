@@ -380,7 +380,7 @@ export default function Dashboard() {
           </div>
           
           <div className="flex gap-3 items-center">
-            {/* Botón de notificaciones */}
+            {/* Botón de notificaciones - VISIBLE EN MÓVILES */}
             {notificationsSupported && (
               <Button
                 onClick={handleToggleNotifications}
@@ -412,7 +412,7 @@ export default function Dashboard() {
                 className="flex items-center gap-2"
               >
                 <User className="h-4 w-4" />
-                Perfil
+                <span className="hidden sm:inline">Perfil</span>
               </Button>
               
               {/* Menú desplegable de perfil */}
@@ -484,7 +484,7 @@ export default function Dashboard() {
               className="flex items-center gap-2"
             >
               <LogOut className="h-4 w-4" />
-              Salir
+              <span className="hidden sm:inline">Salir</span>
             </Button>
           </div>
         </div>
