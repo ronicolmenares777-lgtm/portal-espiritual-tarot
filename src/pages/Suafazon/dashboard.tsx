@@ -52,14 +52,21 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    // Verificar autenticación
+    if (typeof window === "undefined") return;
+    
     const adminSession = localStorage.getItem("adminSession");
     if (!adminSession) {
+      console.log("❌ No hay sesión activa, redirigiendo a login...");
       router.push("/Suafazon");
       return;
     }
 
+    console.log("✅ Sesión activa detectada");
     loadLeads();
+  }, []);
 
+  useEffect(() => {
     const interval = setInterval(() => {
       console.log("🔄 [POLLING] Actualizando leads...");
       loadLeads();
@@ -88,6 +95,9 @@ export default function Dashboard() {
   }, [router]);
 
   const handleLogout = () => {
+    if (typeof window === "undefined") return;
+    
+    console.log("🚪 Cerrando sesión...");
     localStorage.removeItem("adminSession");
     localStorage.removeItem("adminProfile");
     router.push("/Suafazon");
@@ -187,6 +197,26 @@ export default function Dashboard() {
         return <Badge className="bg-gray-500">Archivado</Badge>;
       default:
         return null;
+    }
+  };
+
+  const toggleNotifications = async () => {
+    if (typeof window === "undefined") return;
+    
+    if (notificationsEnabled) {
+      notificationService.disable();
+      setNotificationsEnabled(false);
+      console.log("🔕 Notificaciones desactivadas");
+    } else {
+      const enabled = await notificationService.enable({
+        onLeadClick: (leadId) => {
+          router.push(`/Suafazon/chat/${leadId}`);
+        },
+      });
+      setNotificationsEnabled(enabled);
+      if (enabled) {
+        console.log("🔔 Notificaciones activadas");
+      }
     }
   };
 
