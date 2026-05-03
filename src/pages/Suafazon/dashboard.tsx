@@ -262,7 +262,7 @@ export default function Dashboard() {
                 <MessageSquare className="h-4 w-4" />
                 Contactados
               </CardTitle>
-            </CardContent>
+            </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-accent">{stats.contactados}</p>
             </CardContent>
