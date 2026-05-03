@@ -5,6 +5,7 @@ export interface TarotCard {
   number: string;
   image: string;
   meaning: string;
+  loveMessage: string;
   interpretation: string;
 }
 
