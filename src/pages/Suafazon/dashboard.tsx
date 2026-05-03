@@ -29,6 +29,7 @@ export default function Dashboard() {
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<"leads" | "listo" | "papelera">("leads");
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const stats = {
@@ -53,9 +54,11 @@ export default function Dashboard() {
     loadLeads();
   }, []);
 
+  // Filtrar leads por el filtro activo y favoritos
   useEffect(() => {
     let filtered = [...leads];
     
+    // Filtro por estado
     if (statusFilter === "leads") {
       filtered = leads.filter(l => l.status === "nuevo");
     } else if (statusFilter === "listo") {
@@ -64,8 +67,13 @@ export default function Dashboard() {
       filtered = leads.filter(l => l.status === "archive");
     }
     
+    // Filtro adicional por favoritos
+    if (showOnlyFavorites) {
+      filtered = filtered.filter(l => l.is_favorite === true);
+    }
+    
     setFilteredLeads(filtered);
-  }, [leads, statusFilter]);
+  }, [leads, statusFilter, showOnlyFavorites]);
 
   const loadLeads = async () => {
     setIsLoading(true);
@@ -148,15 +156,15 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen flex bg-background">
       {/* Sidebar */}
-      <div className="w-64 bg-black border-r border-gold/10 flex flex-col">
+      <div className="w-64 bg-gradient-to-b from-black via-black to-purple-950/20 border-r border-gold/20 flex flex-col shadow-2xl">
         {/* Logo */}
-        <div className="p-6 border-b border-gold/10">
+        <div className="p-6 border-b border-gold/20">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold to-accent flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold via-accent to-gold/80 flex items-center justify-center shadow-lg shadow-gold/30 animate-pulse-glow">
               <span className="text-lg">🔮</span>
             </div>
             <div>
-              <h1 className="text-gold font-serif text-xl font-bold">Portal Maestro</h1>
+              <h1 className="text-gold font-serif text-xl font-bold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-gold to-accent">Portal Maestro</h1>
             </div>
           </div>
         </div>
@@ -165,44 +173,44 @@ export default function Dashboard() {
         <div className="flex-1 p-4 space-y-2">
           <button
             onClick={() => setStatusFilter("leads")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               statusFilter === "leads"
-                ? "bg-gold text-black font-semibold shadow-lg shadow-gold/20"
-                : "text-foreground/70 hover:bg-gold/10 hover:text-gold"
+                ? "bg-gradient-to-r from-gold to-accent text-black font-semibold shadow-xl shadow-gold/30 scale-105"
+                : "text-foreground/70 hover:bg-gradient-to-r hover:from-gold/10 hover:to-accent/10 hover:text-gold hover:scale-102"
             }`}
           >
             <Users className="h-4 w-4" />
             <span>LEADS</span>
-            <span className="ml-auto text-sm">{stats.leads}</span>
+            <span className="ml-auto text-sm font-bold">{stats.leads}</span>
           </button>
 
           <button
             onClick={() => setStatusFilter("listo")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               statusFilter === "listo"
-                ? "bg-green-500 text-white font-semibold shadow-lg shadow-green-500/20"
-                : "text-foreground/70 hover:bg-green-500/10 hover:text-green-400"
+                ? "bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow-xl shadow-green-500/30 scale-105"
+                : "text-foreground/70 hover:bg-gradient-to-r hover:from-green-500/10 hover:to-green-600/10 hover:text-green-400 hover:scale-102"
             }`}
           >
             <CheckCircle className="h-4 w-4" />
             <span>LISTO</span>
-            <span className="ml-auto text-sm">{stats.listo}</span>
+            <span className="ml-auto text-sm font-bold">{stats.listo}</span>
           </button>
 
           <button
             onClick={() => setStatusFilter("papelera")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
               statusFilter === "papelera"
-                ? "bg-red-500 text-white font-semibold shadow-lg shadow-red-500/20"
-                : "text-foreground/70 hover:bg-red-500/10 hover:text-red-400"
+                ? "bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold shadow-xl shadow-red-500/30 scale-105"
+                : "text-foreground/70 hover:bg-gradient-to-r hover:from-red-500/10 hover:to-red-600/10 hover:text-red-400 hover:scale-102"
             }`}
           >
             <Trash2 className="h-4 w-4" />
             <span>PAPELERA</span>
-            <span className="ml-auto text-sm">{stats.papelera}</span>
+            <span className="ml-auto text-sm font-bold">{stats.papelera}</span>
           </button>
 
-          <div className="my-4 h-px bg-gold/10" />
+          <div className="my-4 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
 
           <button
             onClick={() => {
@@ -244,9 +252,17 @@ export default function Dashboard() {
             <span>En Chat</span>
           </button>
 
-          <button className="w-full flex items-center gap-2 px-4 py-2 text-sm rounded-lg text-foreground/70 hover:bg-muted hover:text-gold transition-all">
-            <Star className="h-3.5 w-3.5" />
+          <button
+            onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
+            className={`w-full flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-all ${
+              showOnlyFavorites 
+                ? "bg-gold/20 text-gold font-medium" 
+                : "text-foreground/70 hover:bg-muted hover:text-gold"
+            }`}
+          >
+            <Star className={`h-3.5 w-3.5 ${showOnlyFavorites ? "fill-current" : ""}`} />
             <span>Favoritos</span>
+            {showOnlyFavorites && <span className="ml-auto text-xs">✓</span>}
           </button>
         </div>
       </div>
@@ -280,34 +296,43 @@ export default function Dashboard() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 p-4">
+            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-blue-500/5 border border-blue-500/30 p-4 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 hover:scale-105">
               <div className="flex items-center justify-between mb-2">
-                <Users className="h-6 w-6 text-blue-400" />
-                <span className="text-[10px] uppercase tracking-wider text-blue-400/80 font-medium">LEADS</span>
+                <div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
+                  <Users className="h-5 w-5 text-blue-400" />
+                </div>
+                <span className="text-[10px] uppercase tracking-widest text-blue-400/80 font-bold">LEADS</span>
               </div>
-              <p className="text-3xl font-bold text-blue-400 mb-0.5">{stats.leads}</p>
-              <p className="text-[10px] text-blue-400/60">🔵 {stats.leads} leads cargados</p>
-              <div className="absolute -right-3 -bottom-3 text-blue-500/5 text-6xl">📊</div>
+              <p className="text-3xl font-bold text-blue-400 mb-0.5 bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-500">{stats.leads}</p>
+              <p className="text-[10px] text-blue-400/60 font-medium">🔵 {stats.leads} leads activos</p>
+              <div className="absolute -right-3 -bottom-3 text-blue-500/5 text-6xl group-hover:scale-110 transition-transform">📊</div>
+              <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
 
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 p-4">
+            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500/20 via-green-600/10 to-green-500/5 border border-green-500/30 p-4 hover:shadow-2xl hover:shadow-green-500/20 transition-all duration-300 hover:scale-105">
               <div className="flex items-center justify-between mb-2">
-                <CheckCircle className="h-6 w-6 text-green-400" />
-                <span className="text-[10px] uppercase tracking-wider text-green-400/80 font-medium">LISTO</span>
+                <div className="p-2 rounded-lg bg-green-500/20 group-hover:bg-green-500/30 transition-colors">
+                  <CheckCircle className="h-5 w-5 text-green-400" />
+                </div>
+                <span className="text-[10px] uppercase tracking-widest text-green-400/80 font-bold">LISTO</span>
               </div>
-              <p className="text-3xl font-bold text-green-400 mb-0.5">{stats.listo}</p>
-              <p className="text-[10px] text-green-400/60">🟢 Filtrados: {stats.listo}</p>
-              <div className="absolute -right-3 -bottom-3 text-green-500/5 text-6xl">✓</div>
+              <p className="text-3xl font-bold text-green-400 mb-0.5 bg-clip-text text-transparent bg-gradient-to-r from-green-300 to-green-500">{stats.listo}</p>
+              <p className="text-[10px] text-green-400/60 font-medium">🟢 {stats.listo} completados</p>
+              <div className="absolute -right-3 -bottom-3 text-green-500/5 text-6xl group-hover:scale-110 transition-transform">✓</div>
+              <div className="absolute inset-0 bg-gradient-to-tr from-green-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
 
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 p-4">
+            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-red-500/20 via-red-600/10 to-red-500/5 border border-red-500/30 p-4 hover:shadow-2xl hover:shadow-red-500/20 transition-all duration-300 hover:scale-105">
               <div className="flex items-center justify-between mb-2">
-                <Trash2 className="h-6 w-6 text-red-400" />
-                <span className="text-[10px] uppercase tracking-wider text-red-400/80 font-medium">PAPELERA</span>
+                <div className="p-2 rounded-lg bg-red-500/20 group-hover:bg-red-500/30 transition-colors">
+                  <Trash2 className="h-5 w-5 text-red-400" />
+                </div>
+                <span className="text-[10px] uppercase tracking-widest text-red-400/80 font-bold">PAPELERA</span>
               </div>
-              <p className="text-3xl font-bold text-red-400 mb-0.5">{stats.papelera}</p>
-              <p className="text-[10px] text-red-400/60">🔴 Total: {stats.papelera} leads</p>
-              <div className="absolute -right-3 -bottom-3 text-red-500/5 text-6xl">🗑️</div>
+              <p className="text-3xl font-bold text-red-400 mb-0.5 bg-clip-text text-transparent bg-gradient-to-r from-red-300 to-red-500">{stats.papelera}</p>
+              <p className="text-[10px] text-red-400/60 font-medium">🔴 {stats.papelera} archivados</p>
+              <div className="absolute -right-3 -bottom-3 text-red-500/5 text-6xl group-hover:scale-110 transition-transform">🗑️</div>
+              <div className="absolute inset-0 bg-gradient-to-tr from-red-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </div>
 
@@ -316,24 +341,24 @@ export default function Dashboard() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => router.push("/Suafazon/monitoreo")}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/20 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all text-sm"
+                className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/30 bg-gradient-to-r from-purple-500/10 to-purple-600/10 text-purple-400 hover:from-purple-500/20 hover:to-purple-600/20 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-200 text-sm hover:scale-105"
               >
-                <BarChart3 className="h-3.5 w-3.5" />
+                <BarChart3 className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
                 <span className="font-medium">Monitoreo</span>
               </button>
               <button
                 onClick={exportToCSV}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all text-sm"
+                className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-500/30 bg-gradient-to-r from-blue-500/10 to-blue-600/10 text-blue-400 hover:from-blue-500/20 hover:to-blue-600/20 hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-200 text-sm hover:scale-105"
               >
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
                 <span className="font-medium">Exportar</span>
               </button>
               {selectedLeads.length > 0 && (
                 <button
                   onClick={sendToPapelera}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-sm"
+                  className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/30 bg-gradient-to-r from-red-500/10 to-red-600/10 text-red-400 hover:from-red-500/20 hover:to-red-600/20 hover:shadow-lg hover:shadow-red-500/20 transition-all duration-200 text-sm animate-in slide-in-from-left-2 hover:scale-105"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
                   <span className="font-medium">Enviar a Papelera ({selectedLeads.length})</span>
                 </button>
               )}
@@ -341,9 +366,9 @@ export default function Dashboard() {
             <button
               onClick={loadLeads}
               disabled={isLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gold/20 bg-gold/10 text-gold hover:bg-gold/20 transition-all disabled:opacity-50 text-sm"
+              className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gold/30 bg-gradient-to-r from-gold/10 to-accent/10 text-gold hover:from-gold/20 hover:to-accent/20 hover:shadow-lg hover:shadow-gold/20 transition-all duration-200 disabled:opacity-50 text-sm hover:scale-105"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-3.5 w-3.5 group-hover:scale-110 transition-transform ${isLoading ? "animate-spin" : ""}`} />
               <span className="font-medium">Actualizar</span>
             </button>
           </div>
@@ -363,9 +388,11 @@ export default function Dashboard() {
               filteredLeads.map((lead) => (
                 <div
                   key={lead.id}
-                  className="relative bg-gradient-to-br from-muted/50 to-background border border-gold/10 rounded-lg p-4 hover:border-gold/30 transition-all shadow-lg"
+                  className="group relative bg-gradient-to-br from-muted/60 via-background to-muted/40 border border-gold/20 rounded-xl p-4 hover:border-gold/50 hover:shadow-2xl hover:shadow-gold/10 transition-all duration-300 hover:scale-[1.02]"
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-gold/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
+                  
+                  <div className="relative flex items-start gap-3">
                     {/* Checkbox */}
                     <input
                       type="checkbox"
@@ -377,11 +404,11 @@ export default function Dashboard() {
                           setSelectedLeads(selectedLeads.filter(id => id !== lead.id));
                         }
                       }}
-                      className="mt-1 h-3.5 w-3.5 rounded border-gold/30 text-gold focus:ring-gold"
+                      className="mt-1 h-3.5 w-3.5 rounded border-gold/30 text-gold focus:ring-gold focus:ring-offset-0 cursor-pointer"
                     />
 
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold to-accent flex items-center justify-center text-black font-bold text-base shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold via-accent to-gold/80 flex items-center justify-center text-black font-bold text-base shrink-0 shadow-lg shadow-gold/20 group-hover:shadow-xl group-hover:shadow-gold/30 group-hover:scale-110 transition-all">
                       {lead.name?.charAt(0).toUpperCase() || "?"}
                     </div>
 
@@ -389,14 +416,14 @@ export default function Dashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="text-base font-semibold text-foreground mb-0.5">{lead.name}</h3>
+                          <h3 className="text-base font-semibold text-foreground mb-0.5 group-hover:text-gold transition-colors">{lead.name}</h3>
                           <div className="flex items-center gap-1.5 text-xs text-foreground/60">
                             <Phone className="h-3 w-3" />
                             <a
                               href={`https://wa.me/${lead.whatsapp?.replace(/\D/g, "")}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-green-400 hover:underline"
+                              className="text-green-400 hover:text-green-300 hover:underline transition-colors"
                             >
                               {lead.whatsapp}
                             </a>
@@ -424,11 +451,11 @@ export default function Dashboard() {
                         {/* Estrella favorito */}
                         <button
                           onClick={() => toggleFavorite(lead.id, lead.is_favorite || false)}
-                          className="text-gold hover:text-gold/80 transition-colors"
+                          className="text-gold hover:text-gold/80 transition-all hover:scale-125"
                         >
                           <Star
                             className={`h-4 w-4 ${
-                              lead.is_favorite ? "fill-current" : ""
+                              lead.is_favorite ? "fill-current animate-pulse-glow" : ""
                             }`}
                           />
                         </button>
@@ -446,7 +473,7 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between">
                         <button
                           onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                          className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-gold to-accent text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-gold/20 transition-all text-sm"
+                          className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-gold to-accent text-black font-semibold rounded-lg hover:shadow-xl hover:shadow-gold/30 transition-all duration-200 text-sm hover:scale-105"
                         >
                           <MessageCircle className="h-3.5 w-3.5" />
                           <span>Ver Chat Completo</span>
