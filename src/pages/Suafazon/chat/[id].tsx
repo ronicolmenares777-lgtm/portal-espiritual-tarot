@@ -29,58 +29,55 @@ export default function ChatAdmin() {
   const audioChunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const loadLead = async () => {
+    if (!id || typeof id !== "string") return;
+
+    console.log("📡 Cargando lead:", id);
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error("❌ Error cargando lead:", error);
+    } else {
+      console.log("✅ Lead cargado:", data);
+      setLead(data);
+      setIsFavorite(data.is_favorite || false);
+      setLeadStatus(data.status as "nuevo" | "contactado" | "convertido" || "nuevo");
+    }
+  };
+
+  const loadMessages = async () => {
+    if (!id || typeof id !== "string") return;
+
+    console.log("📡 Cargando mensajes para lead:", id);
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("lead_id", id)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("❌ Error cargando mensajes:", error);
+    } else {
+      console.log("✅ Mensajes cargados:", data?.length || 0);
+      setMessages(data || []);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      loadLead();
+      loadMessages();
+      setIsLoading(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  useEffect(() => {
-    if (!id || typeof id !== "string") return;
-
-    const loadLead = async () => {
-      if (!id || typeof id !== "string") return;
-
-      console.log("📡 Cargando lead:", id);
-      const { data, error } = await supabase
-        .from("leads")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) {
-        console.error("❌ Error cargando lead:", error);
-      } else {
-        console.log("✅ Lead cargado:", data);
-        setLead(data);
-        setIsFavorite(data.is_favorite || false);
-        setLeadStatus(data.status || "nuevo");
-      }
-    };
-
-    const loadMessages = async () => {
-      if (!id || typeof id !== "string") return;
-
-      console.log("📡 Cargando mensajes para lead:", id);
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("lead_id", id)
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        console.error("❌ Error cargando mensajes:", error);
-      } else {
-        console.log("✅ Mensajes cargados:", data?.length || 0);
-        setMessages(data || []);
-      }
-    };
-
-    loadLead();
-    loadMessages();
-    setIsLoading(false);
-
-    const interval = setInterval(loadMessages, 2000);
-    return () => clearInterval(interval);
-  }, [id]);
 
   const handleStatusChange = async (newStatus: string) => {
     if (!id || typeof id !== "string") return;
@@ -366,27 +363,24 @@ export default function ChatAdmin() {
             <Mic className="h-5 w-5" />
           </Button>
 
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Escribe un mensaje..."
-            className="flex-1"
-            disabled={sending || uploading}
-          />
-          
-          <Button
-            type="submit"
-            size="icon"
-            disabled={sending || !newMessage.trim()}
-            className="flex-shrink-0"
-          >
-            {sending ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-            ) : (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && !isSending && sendMessage()}
+              placeholder="Escribe un mensaje..."
+              disabled={isSending}
+              className="flex-1 px-4 py-2 rounded-lg border border-gold/20 bg-background text-foreground placeholder:text-foreground/50 focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none disabled:opacity-50"
+            />
+            <button
+              onClick={sendMessage}
+              disabled={isSending || !newMessage.trim()}
+              className="px-4 py-2 bg-gradient-to-r from-gold to-accent text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-gold/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <Send className="h-5 w-5" />
-            )}
-          </Button>
+            </button>
+          </div>
         </div>
       </form>
 
