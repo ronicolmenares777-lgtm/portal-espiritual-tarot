@@ -44,6 +44,7 @@ export default function Home() {
   const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
   const [selectedCardIndex, setSelectedCardIndex] = useState(0);
+  const [currentCardReveal, setCurrentCardReveal] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [nombrePlaceholder, setNombrePlaceholder] = useState(nombreEjemplos[0]);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -311,6 +312,20 @@ export default function Home() {
     
     // Redirigir al chat de usuario
     router.push(`/chat-usuario?leadId=${leadId}`);
+  };
+
+  const handleCardRevealComplete = () => {
+    console.log("📖 [CARD] Revelación completada");
+    console.log("  - Carta actual:", currentCardReveal);
+    console.log("  - Total de cartas:", selectedCards.length);
+    
+    if (currentCardReveal < selectedCards.length - 1) {
+      // Hay más cartas que revelar
+      setCurrentCardReveal(currentCardReveal + 1);
+    } else {
+      // Todas las cartas reveladas, pasar a preguntas
+      setCurrentScreen("questions");
+    }
   };
 
   // Función para obtener longitud máxima según país
