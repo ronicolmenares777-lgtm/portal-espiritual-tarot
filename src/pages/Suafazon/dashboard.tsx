@@ -368,39 +368,35 @@ export default function Dashboard() {
       {/* Main content */}
       <div className="flex-1 p-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-6 sm:mb-8">
           <div>
-            <h1 className="text-4xl font-serif font-bold text-gold mb-2">Portal Maestro</h1>
-            <p className="text-muted-foreground">Gestión de almas y consultas espirituales</p>
-            <div className="flex gap-6 mt-2 text-sm text-muted-foreground">
-              <span>📊 {leads.filter(l => l.deleted_at === null).length} leads cargados</span>
-              <span>✅ Filtrados: {filteredLeads.length}</span>
-              <span>🗑️ Total: {leads.length} leads</span>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-gold mb-1 sm:mb-2">Portal Maestro</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Gestión de almas y consultas espirituales</p>
+            <div className="flex gap-3 sm:gap-6 mt-2 text-xs sm:text-sm text-muted-foreground flex-wrap">
+              <span>📊 {leads.filter(l => l.deleted_at === null).length}</span>
+              <span className="hidden sm:inline">✅ Filtrados: {filteredLeads.length}</span>
+              <span className="hidden sm:inline">🗑️ Total: {leads.length} leads</span>
             </div>
           </div>
           
-          <div className="flex gap-3 items-center">
-            {/* Botón de notificaciones - VISIBLE EN MÓVILES */}
+          <div className="flex gap-2 sm:gap-3 items-center">
+            {/* Botón de notificaciones - SIEMPRE VISIBLE */}
             {notificationsSupported && (
               <Button
                 onClick={handleToggleNotifications}
                 variant={notificationsEnabled ? "default" : "outline"}
-                className={`flex items-center gap-2 ${
+                size="icon"
+                className={`${
                   notificationsEnabled
                     ? "bg-gold/90 hover:bg-gold text-background"
                     : ""
                 }`}
+                title={notificationsEnabled ? "Notificaciones activadas" : "Activar notificaciones"}
               >
                 {notificationsEnabled ? (
-                  <>
-                    <Bell className="h-4 w-4" />
-                    <span className="hidden sm:inline">Notificaciones ON</span>
-                  </>
+                  <Bell className="h-4 w-4" />
                 ) : (
-                  <>
-                    <BellOff className="h-4 w-4" />
-                    <span className="hidden sm:inline">Activar Notificaciones</span>
-                  </>
+                  <BellOff className="h-4 w-4" />
                 )}
               </Button>
             )}
@@ -409,10 +405,11 @@ export default function Dashboard() {
               <Button
                 variant="outline"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2"
+                size="icon"
+                className="sm:w-auto sm:px-4"
               >
                 <User className="h-4 w-4" />
-                <span className="hidden sm:inline">Perfil</span>
+                <span className="hidden sm:inline sm:ml-2">Perfil</span>
               </Button>
               
               {/* Menú desplegable de perfil */}
@@ -481,43 +478,44 @@ export default function Dashboard() {
                 localStorage.removeItem("adminSession");
                 router.push("/");
               }}
-              className="flex items-center gap-2"
+              size="icon"
+              className="sm:w-auto sm:px-4"
             >
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Salir</span>
+              <span className="hidden sm:inline sm:ml-2">Salir</span>
             </Button>
           </div>
         </div>
 
         {/* Stats cards */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-4 text-center">
-            <div className="text-3xl font-bold text-blue-400">{activeLeads.length}</div>
-            <div className="text-sm text-blue-300 mt-1">📋 LEADS</div>
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
+          <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-2 sm:p-4 text-center">
+            <div className="text-xl sm:text-3xl font-bold text-blue-400">{activeLeads.length}</div>
+            <div className="text-xs sm:text-sm text-blue-300 mt-1">📋 LEADS</div>
           </div>
-          <div className="bg-green-500/20 border-2 border-green-500/40 rounded-xl p-4 text-center">
-            <div className="text-3xl font-bold text-green-400">{attendedLeads.length}</div>
-            <div className="text-sm text-green-300 mt-1">✅ LISTO</div>
+          <div className="bg-green-500/20 border-2 border-green-500/40 rounded-xl p-2 sm:p-4 text-center">
+            <div className="text-xl sm:text-3xl font-bold text-green-400">{attendedLeads.length}</div>
+            <div className="text-xs sm:text-sm text-green-300 mt-1">✅ LISTO</div>
           </div>
-          <div className="bg-red-500/20 border-2 border-red-500/40 rounded-xl p-4 text-center">
-            <div className="text-3xl font-bold text-red-400">{trashedLeads.length}</div>
-            <div className="text-sm text-red-300 mt-1">🗑️ PAPELERA</div>
+          <div className="bg-red-500/20 border-2 border-red-500/40 rounded-xl p-2 sm:p-4 text-center">
+            <div className="text-xl sm:text-3xl font-bold text-red-400">{trashedLeads.length}</div>
+            <div className="text-xs sm:text-sm text-red-300 mt-1">🗑️ PAPELERA</div>
           </div>
         </div>
 
         {/* Botones de acción */}
-        <div className="flex gap-3 mb-6">
+        <div className="flex gap-2 sm:gap-3 mb-4 sm:mb-6">
           <Button
             variant="outline"
             onClick={handleSelectAll}
-            className="flex-1"
+            className="flex-1 text-xs sm:text-sm px-2 sm:px-4"
           >
-            ✅ Seleccionar todo
+            ✅ Seleccionar
           </Button>
           <Button
             variant="outline"
             onClick={handleDeselectAll}
-            className="flex-1"
+            className="flex-1 text-xs sm:text-sm px-2 sm:px-4"
           >
             ❌ Deseleccionar
           </Button>
@@ -536,9 +534,9 @@ export default function Dashboard() {
                 setSelectedLeads([]);
                 loadLeads();
               }}
-              className="flex-1"
+              className="flex-1 text-xs sm:text-sm px-2 sm:px-4"
             >
-              🗑️ Enviar a papelera ({selectedLeads.length})
+              🗑️ ({selectedLeads.length})
             </Button>
           )}
         </div>
@@ -555,9 +553,9 @@ export default function Dashboard() {
                 key={lead.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-card/60 border-2 border-gold/20 rounded-xl p-6 hover:border-gold/40 transition-all"
+                className="bg-card/60 border-2 border-gold/20 rounded-xl p-3 sm:p-6 hover:border-gold/40 transition-all"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-2 sm:gap-4">
                   {/* Checkbox */}
                   <Checkbox
                     checked={selectedLeads.includes(lead.id)}
@@ -566,29 +564,30 @@ export default function Dashboard() {
                   />
 
                   {/* Avatar */}
-                  <Avatar className="h-12 w-12 border-2 border-gold/30">
-                    <AvatarFallback className="bg-gold/20 text-gold text-lg font-bold">
+                  <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-gold/30">
+                    <AvatarFallback className="bg-gold/20 text-gold text-base sm:text-lg font-bold">
                       {lead.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
 
                   {/* Info */}
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-serif font-bold text-lg text-foreground">
+                      <h3 className="font-serif font-bold text-base sm:text-lg text-foreground truncate">
                         {lead.name}
                       </h3>
                       <button
                         onClick={() => handleToggleFavorite(lead.id, lead.is_favorite || false)}
+                        className="flex-shrink-0"
                       >
-                        <Star className={`w-5 h-5 ${lead.is_favorite ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
+                        <Star className={`w-4 h-4 sm:w-5 sm:h-5 ${lead.is_favorite ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
                       </button>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-2 truncate">
                       📱 {lead.country_code} {lead.whatsapp}
                     </p>
                     <p className="text-xs text-muted-foreground mb-3">
-                      Registrado {new Date(lead.created_at).toLocaleDateString("es-MX", { 
+                      {new Date(lead.created_at).toLocaleDateString("es-MX", { 
                         day: "2-digit", 
                         month: "2-digit", 
                         year: "numeric" 
@@ -599,22 +598,24 @@ export default function Dashboard() {
                     </p>
                     <div className="mb-4">
                       <div className="text-xs font-semibold text-muted-foreground mb-1">CONSULTA:</div>
-                      <p className="text-sm text-foreground/90">{lead.problem}</p>
+                      <p className="text-xs sm:text-sm text-foreground/90 line-clamp-2">{lead.problem}</p>
                     </div>
                     
                     {currentView === "papelera" ? (
                       <Button
                         onClick={() => handleRestoreFromTrash(lead.id)}
-                        className="w-full bg-green-500/90 hover:bg-green-500"
+                        className="w-full text-xs sm:text-sm bg-green-500/90 hover:bg-green-500"
+                        size="sm"
                       >
                         ♻️ Restaurar
                       </Button>
                     ) : (
                       <Button
                         onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                        className="w-full bg-gradient-to-r from-gold/80 to-accent/80 hover:from-gold hover:to-accent"
+                        className="w-full text-xs sm:text-sm bg-gradient-to-r from-gold/80 to-accent/80 hover:from-gold hover:to-accent"
+                        size="sm"
                       >
-                        💬 Ver Chat Completo
+                        💬 Ver Chat
                       </Button>
                     )}
                   </div>
@@ -623,7 +624,7 @@ export default function Dashboard() {
                   {lead.deleted_at === null && (
                     <Button
                       size="sm"
-                      className={getStatusColor(lead.status)}
+                      className={`${getStatusColor(lead.status)} text-xs hidden sm:flex`}
                     >
                       {getStatusText(lead.status)}
                     </Button>

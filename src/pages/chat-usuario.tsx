@@ -181,22 +181,40 @@ export default function ChatUsuario() {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !leadId) return;
 
-    setSending(true);
-    const messageText = newMessage;
-    setNewMessage("");
+    const messageText = newMessage.trim();
+    setNewMessage(""); // Limpiar input INMEDIATAMENTE
 
-    const { error } = await supabase.from("messages").insert({
-      lead_id: leadId,
-      text: messageText,
-      is_from_maestro: false,
-    });
+    try {
+      const { data, error } = await supabase
+        .from("messages")
+        .insert([{
+          lead_id: leadId,
+          content: messageText,
+          sender: "user",
+          read: false
+        }])
+        .select()
+        .single();
 
-    if (error) {
-      console.error("Error enviando mensaje:", error);
-      setNewMessage(messageText);
+      if (error) {
+        console.error("Error enviando mensaje:", error);
+        setNewMessage(messageText); // Restaurar mensaje si falla
+        return;
+      }
+
+      // Agregar mensaje inmediatamente a la lista local
+      if (data) {
+        setMessages(prev => [...prev, data]);
+        
+        // Scroll al fondo
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      setNewMessage(messageText); // Restaurar mensaje si falla
     }
-
-    setSending(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
