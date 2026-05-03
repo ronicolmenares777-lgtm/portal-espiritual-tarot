@@ -720,16 +720,28 @@ export default function Dashboard() {
                               <span className="text-amber-400 text-xl">⭐</span>
                             )}
                           </div>
-                          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              📱 {lead.country_code} {lead.whatsapp}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              🔮 {lead.cards_selected?.join(", ") || "Sin carta"}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              📅 {new Date(lead.created_at).toLocaleDateString("es-MX")}
-                            </span>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>📱</span>
+                              <span>{lead.country_code} {lead.whatsapp}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>🔮</span>
+                              <span>{lead.cards_selected && lead.cards_selected.length > 0 ? lead.cards_selected[0] : "Sin carta"}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>📅</span>
+                              <span>{new Date(lead.created_at).toLocaleDateString("es-MX", { 
+                                day: "2-digit", 
+                                month: "2-digit", 
+                                year: "numeric" 
+                              })}</span>
+                              <span>•</span>
+                              <span>{new Date(lead.created_at).toLocaleTimeString("es-MX", { 
+                                hour: "2-digit", 
+                                minute: "2-digit" 
+                              })}</span>
+                            </div>
                           </div>
                         </div>
 

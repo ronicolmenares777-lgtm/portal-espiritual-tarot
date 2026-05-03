@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Sparkles, Upload, Mic, MicOff, User } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface ChatMaestroProps {
   leadId: string;
@@ -267,6 +268,11 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
           <h2 className="font-semibold text-foreground truncate">Maestro Espiritual</h2>
           <p className="text-xs text-muted-foreground">En línea</p>
         </div>
+        <motion.a
+          href="https://wa.me/message/XH42ORU47RJCF1"
+          target="_blank"
+          rel="noopener noreferrer"
+        />
       </div>
 
       {/* Área de mensajes con scroll */}
