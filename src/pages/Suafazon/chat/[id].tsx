@@ -251,10 +251,8 @@ export default function ChatAdmin() {
             <select
               value={leadStatus}
               onChange={(e) => {
-                const value = e.target.value;
-                if (value === "nuevo" || value === "contactado" || value === "convertido") {
-                  updateLeadStatus(value);
-                }
+                const value = e.target.value as "nuevo" | "contactado" | "convertido";
+                updateLeadStatus(value);
               }}
               className="px-3 py-1.5 rounded-lg border border-gold/20 bg-background text-sm text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
             >
