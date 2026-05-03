@@ -94,227 +94,108 @@ export function WarningMessage({ onContinue }: WarningMessageProps) {
           </div>
         </div>
 
-        {/* Bola de Cristal Profesional */}
-        <div className="flex flex-col items-center gap-8">
-          <p className="text-center text-sm text-muted-foreground/80 tracking-wider">
-            Mantén presionada la esfera para conectar con el maestro
-          </p>
-
-          <div className="relative">
-            {/* Anillos de energía orbital */}
-            {isPressed && (
-              <>
-                <div className="absolute inset-0 animate-spin" style={{ animationDuration: '4s' }}>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full border border-gold/20" />
-                </div>
-                <div className="absolute inset-0 animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }}>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] rounded-full border border-gold/10" />
-                </div>
-              </>
-            )}
-
-            {/* Contenedor principal */}
-            <button
-              onMouseDown={() => setIsPressed(true)}
-              onMouseUp={() => setIsPressed(false)}
-              onMouseLeave={() => setIsPressed(false)}
-              onTouchStart={() => setIsPressed(true)}
-              onTouchEnd={() => setIsPressed(false)}
-              disabled={isDone}
-              className="relative group focus:outline-none"
-            >
-              {/* Base de madera oscura */}
-              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 rounded-[50%] bg-gradient-to-b from-amber-900/80 to-amber-950 border-t-2 border-amber-700/50"
-                   style={{
-                     boxShadow: '0 8px 20px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 215, 0, 0.1)',
-                   }}>
-                {/* Textura de madera */}
-                <div className="absolute inset-0 rounded-[50%] opacity-30"
-                     style={{
-                       background: 'repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(139, 69, 19, 0.3) 2px, rgba(139, 69, 19, 0.3) 4px)',
-                     }} />
+        {/* Contenedor de bola de cristal y botón WhatsApp */}
+        <div className="flex items-center justify-center gap-8 my-12">
+          {/* Bola de cristal animada */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="relative w-48 h-48 md:w-64 md:h-64"
+          >
+            {/* Resplandor exterior */}
+            <div className="absolute inset-0 bg-gradient-to-r from-gold/30 via-accent/30 to-gold/30 rounded-full blur-3xl animate-pulse-glow" />
+            
+            {/* Bola principal */}
+            <div className="relative w-full h-full rounded-full bg-gradient-to-br from-primary/20 via-accent/10 to-primary/20 backdrop-blur-xl border-4 border-gold/40 shadow-2xl shadow-gold/50 overflow-hidden">
+              {/* Efecto de brillo interno */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-shimmer" />
+              
+              {/* Partículas internas flotantes */}
+              <div className="absolute inset-0">
+                {[...Array(12)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 bg-gold/60 rounded-full"
+                    style={{
+                      left: `${20 + Math.random() * 60}%`,
+                      top: `${20 + Math.random() * 60}%`,
+                    }}
+                    animate={{
+                      y: [-10, 10, -10],
+                      x: [-5, 5, -5],
+                      opacity: [0.3, 0.8, 0.3],
+                    }}
+                    transition={{
+                      duration: 3 + Math.random() * 2,
+                      repeat: Infinity,
+                      delay: Math.random() * 2,
+                    }}
+                  />
+                ))}
               </div>
 
-              {/* Bola de cristal */}
-              <div 
-                className={`relative w-64 h-64 rounded-full transition-all duration-500 ${
-                  isPressed ? 'scale-[1.05]' : 'scale-100 hover:scale-[1.02]'
-                }`}
-                style={{
-                  background: 'radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.9), rgba(230, 230, 255, 0.6) 25%, rgba(200, 180, 255, 0.4) 50%, rgba(150, 120, 220, 0.5) 70%, rgba(100, 70, 180, 0.6) 85%, rgba(60, 30, 120, 0.7))',
-                  boxShadow: isPressed 
-                    ? '0 0 100px rgba(212, 175, 55, 0.7), inset 0 0 80px rgba(255, 255, 255, 0.3), inset -20px -20px 60px rgba(100, 70, 180, 0.4), 0 30px 80px rgba(0, 0, 0, 0.5)'
-                    : '0 0 50px rgba(212, 175, 55, 0.4), inset 0 0 60px rgba(255, 255, 255, 0.2), inset -15px -15px 40px rgba(100, 70, 180, 0.3), 0 20px 50px rgba(0, 0, 0, 0.4)',
-                }}
-              >
-                {/* Reflejo superior principal - más grande y brillante */}
-                <div 
-                  className="absolute top-[12%] left-[18%] w-28 h-28 rounded-full opacity-90 pointer-events-none"
-                  style={{
-                    background: 'radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.6) 40%, transparent 70%)',
-                    filter: 'blur(12px)',
+              {/* Símbolo central */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <motion.div
+                  animate={{
+                    rotate: 360,
+                    scale: [1, 1.1, 1],
                   }}
-                />
-
-                {/* Reflejo secundario */}
-                <div 
-                  className="absolute top-[25%] left-[35%] w-16 h-16 rounded-full opacity-60 pointer-events-none"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9), transparent 60%)',
-                    filter: 'blur(8px)',
+                  transition={{
+                    rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                    scale: { duration: 2, repeat: Infinity },
                   }}
-                />
+                  className="text-6xl md:text-7xl"
+                >
+                  🔮
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
 
-                {/* Reflejo inferior derecho */}
-                <div 
-                  className="absolute bottom-[18%] right-[22%] w-20 h-20 rounded-full opacity-40 pointer-events-none"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.7), transparent 65%)',
-                    filter: 'blur(10px)',
-                  }}
-                />
-
-                {/* Nebulosa interior - energía mística */}
-                <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
-                  {/* Capa 1 - Dorada */}
-                  <div 
-                    className={`absolute inset-0 opacity-40 ${isPressed ? 'animate-spin' : ''}`}
-                    style={{
-                      background: 'radial-gradient(ellipse 60% 40% at 50% 45%, rgba(212, 175, 55, 0.5), transparent 70%)',
-                      animationDuration: '12s',
-                    }}
-                  />
-                  {/* Capa 2 - Púrpura */}
-                  <div 
-                    className={`absolute inset-0 opacity-35 ${isPressed ? 'animate-spin' : ''}`}
-                    style={{
-                      background: 'radial-gradient(ellipse 50% 60% at 60% 50%, rgba(180, 140, 255, 0.4), transparent 65%)',
-                      animationDuration: '9s',
-                      animationDirection: 'reverse',
-                    }}
-                  />
-                  {/* Capa 3 - Azul místico */}
-                  <div 
-                    className={`absolute inset-0 opacity-30 ${isPressed ? 'animate-spin' : ''}`}
-                    style={{
-                      background: 'radial-gradient(ellipse 55% 50% at 40% 55%, rgba(120, 180, 255, 0.3), transparent 70%)',
-                      animationDuration: '15s',
-                    }}
-                  />
-                </div>
-
-                {/* Partículas flotantes internas - más sutiles */}
-                {isPressed && (
-                  <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
-                    {[...Array(20)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute rounded-full"
-                        style={{
-                          width: Math.random() * 3 + 1 + 'px',
-                          height: Math.random() * 3 + 1 + 'px',
-                          left: Math.random() * 100 + '%',
-                          top: Math.random() * 100 + '%',
-                          background: i % 3 === 0 ? 'rgba(212, 175, 55, 0.8)' : i % 3 === 1 ? 'rgba(180, 140, 255, 0.7)' : 'rgba(255, 255, 255, 0.9)',
-                          boxShadow: `0 0 ${Math.random() * 4 + 2}px currentColor`,
-                          animation: 'float 3s ease-in-out infinite',
-                          animationDelay: Math.random() * 3 + 's',
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Símbolo central */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  {isDone ? (
-                    <div className="animate-in zoom-in duration-500">
-                      <div className="w-20 h-20 rounded-full bg-gold/20 flex items-center justify-center backdrop-blur-sm border-2 border-gold">
-                        <svg className="w-12 h-12 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className={`relative transition-all duration-500 ${isPressed ? 'scale-110' : 'scale-100'}`}>
-                      {/* Ojo místico con diseño refinado */}
-                      <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-gold/20 to-purple-500/20 backdrop-blur-sm flex items-center justify-center border border-gold/30">
-                        <svg className="w-12 h-12 text-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                        </svg>
-                        {/* Pupila central animada */}
-                        <div className={`absolute w-4 h-4 rounded-full bg-gold ${isPressed ? 'animate-pulse' : ''}`}
-                             style={{
-                               boxShadow: '0 0 12px hsl(var(--gold)), 0 0 24px hsl(var(--gold) / 0.5)',
-                             }} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Barra de progreso circular exterior */}
-                {isPressed && !isDone && (
-                  <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" style={{ filter: 'drop-shadow(0 0 12px hsl(var(--gold)))' }}>
-                    <circle
-                      cx="50%"
-                      cy="50%"
-                      r="48%"
-                      fill="none"
-                      stroke="hsl(var(--gold) / 0.2)"
-                      strokeWidth="2"
-                    />
-                    <circle
-                      cx="50%"
-                      cy="50%"
-                      r="48%"
-                      fill="none"
-                      stroke="hsl(var(--gold))"
-                      strokeWidth="2"
-                      strokeDasharray="603"
-                      strokeDashoffset={603 - (603 * progress) / 100}
-                      className="transition-all duration-100"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                )}
-
-                {/* Contador de progreso */}
-                {isPressed && !isDone && (
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-gold text-xs font-semibold tracking-[0.2em] drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] pointer-events-none">
-                    {progress}%
-                  </div>
-                )}
-
-                {/* Brillo de borde - efecto cristal */}
-                <div className="absolute inset-0 rounded-full pointer-events-none"
-                     style={{
-                       background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%)',
-                       mixBlendMode: 'overlay',
-                     }} />
+          {/* Botón de WhatsApp grande */}
+          <motion.a
+            href="https://wa.me/1234567890"
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.8 }}
+            className="relative w-48 h-48 md:w-64 md:h-64 flex flex-col items-center justify-center gap-4 group cursor-pointer"
+          >
+            {/* Círculo del botón */}
+            <div className="relative w-full h-full rounded-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 shadow-2xl shadow-green-500/50 hover:shadow-green-500/70 transition-all flex items-center justify-center border-4 border-green-400/40">
+              {/* Resplandor exterior del botón */}
+              <div className="absolute inset-0 bg-gradient-to-r from-green-500/30 via-green-400/30 to-green-500/30 rounded-full blur-3xl animate-pulse-glow" />
+              
+              {/* Icono de WhatsApp */}
+              <div className="relative z-10">
+                <svg
+                  className="w-24 h-24 md:w-32 md:h-32 text-white drop-shadow-lg"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                </svg>
               </div>
 
-              {/* Sombra proyectada */}
-              <div 
-                className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-56 h-12 rounded-[50%] opacity-60 blur-2xl transition-all duration-500 pointer-events-none"
-                style={{
-                  background: 'radial-gradient(ellipse, rgba(0, 0, 0, 0.6), transparent 70%)',
-                  transform: isPressed 
-                    ? 'translateX(-50%) translateY(4px) scale(1.1)' 
-                    : 'translateX(-50%) scale(1)',
-                }}
-              />
-            </button>
-          </div>
+              {/* Efecto de brillo al hover */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-full" />
+            </div>
 
-          <p className={`text-center text-xs tracking-widest uppercase transition-all duration-500 ${
-            isDone ? 'text-gold' : 'text-gold/60'
-          }`}>
-            {isDone ? (
-              <span className="animate-pulse">✨ Conexión establecida ✨</span>
-            ) : (
-              'Canalizando energía espiritual'
-            )}
-          </p>
+            {/* Texto debajo del botón */}
+            <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
+              <p className="text-green-400 font-bold text-lg md:text-xl drop-shadow-lg">
+                Conversar por
+              </p>
+              <p className="text-green-300 font-bold text-xl md:text-2xl drop-shadow-lg">
+                WHATSAPP
+              </p>
+            </div>
+          </motion.a>
         </div>
       </div>
 
