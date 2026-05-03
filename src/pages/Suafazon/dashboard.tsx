@@ -371,7 +371,32 @@ export default function Dashboard() {
             </div>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            {/* Botón de notificaciones */}
+            {notificationsSupported && (
+              <Button
+                onClick={handleToggleNotifications}
+                variant={notificationsEnabled ? "default" : "outline"}
+                className={`flex items-center gap-2 ${
+                  notificationsEnabled
+                    ? "bg-gold/90 hover:bg-gold text-background"
+                    : ""
+                }`}
+              >
+                {notificationsEnabled ? (
+                  <>
+                    <Bell className="h-4 w-4" />
+                    Notificaciones ON
+                  </>
+                ) : (
+                  <>
+                    <BellOff className="h-4 w-4" />
+                    Activar Notificaciones
+                  </>
+                )}
+              </Button>
+            )}
+
             <div className="relative">
               <Button
                 variant="outline"
