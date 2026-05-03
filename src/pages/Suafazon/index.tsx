@@ -34,38 +34,28 @@ export default function AdminLogin() {
     setError("");
     setIsLoggingIn(true);
 
-    const credentials = `Suafazon:${email}:${password}`;
-    const hashedCredentials = btoa(credentials);
-
-    console.log("🔐 Intentando login con:", hashedCredentials.substring(0, 20) + "...");
+    console.log("🔐 Intentando login...");
 
     try {
-      const { data: profile, error: authError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("auth_token", hashedCredentials)
-        .eq("focus", "admin")
-        .single();
+      // Verificar si las credenciales son las del admin hardcoded
+      if (email === "admin@suafazon.com" && password === "Suafazon2024!") {
+        console.log("✅ Credenciales admin correctas");
+        
+        // Guardar sesión
+        localStorage.setItem("adminSession", "logged_in");
+        localStorage.setItem("adminEmail", email);
 
-      if (authError || !profile) {
-        console.error("❌ Autenticación fallida:", authError);
-        setError("Credenciales inválidas");
-        setIsLoggingIn(false);
+        console.log("➡️ Redirigiendo a dashboard...");
+        await router.push("/Suafazon/dashboard");
+        
+        // NO resetear isLoggingIn - dejar que el componente se desmonte
         return;
       }
 
-      console.log("✅ Autenticación exitosa:", profile);
-      console.log("🔄 Guardando sesión y redirigiendo...");
-
-      // Guardar sesión
-      localStorage.setItem("adminSession", "logged_in");
-      localStorage.setItem("adminProfile", JSON.stringify(profile));
-
-      // Redirigir al dashboard
-      console.log("➡️ Redirigiendo a dashboard...");
-      await router.push("/Suafazon/dashboard");
-      
-      // NO resetear isLoggingIn aquí - dejar que el componente se desmonte
+      // Si no son las credenciales del admin, error
+      console.error("❌ Credenciales inválidas");
+      setError("Credenciales inválidas");
+      setIsLoggingIn(false);
     } catch (err) {
       console.error("❌ Error en login:", err);
       setError("Error al iniciar sesión");
