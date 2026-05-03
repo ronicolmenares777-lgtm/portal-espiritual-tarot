@@ -59,13 +59,21 @@ export default function Dashboard() {
   }, [router]);
 
   const loadLeads = async () => {
+    console.log("🔄 Cargando leads desde Supabase...");
+    
     const { data, error } = await supabase
       .from("leads")
       .select("*")
       .order("created_at", { ascending: false });
 
+    console.log("📊 Leads recibidos de Supabase:", data);
+    console.log("❌ Error (si hay):", error);
+
     if (!error && data) {
+      console.log("✅ Total de leads cargados:", data.length);
       setLeads(data);
+    } else {
+      console.error("❌ Error cargando leads:", error);
     }
   };
 
