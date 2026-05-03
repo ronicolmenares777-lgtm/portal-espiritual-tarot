@@ -47,7 +47,8 @@ export default function Dashboard() {
 
   // Auto-refresh cada 10 segundos + Realtime subscriptions
   useEffect(() => {
-    if (!isAuthenticated()) {
+    const adminSession = localStorage.getItem("adminSession");
+    if (!adminSession) {
       router.push("/Suafazon");
       return;
     }
