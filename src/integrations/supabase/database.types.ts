@@ -18,6 +18,8 @@ export type Database = {
       analytics_events: {
         Row: {
           browser: string | null
+          country: string | null
+          country_code: string | null
           created_at: string | null
           device_type: string | null
           event_data: Json | null
@@ -30,6 +32,8 @@ export type Database = {
         }
         Insert: {
           browser?: string | null
+          country?: string | null
+          country_code?: string | null
           created_at?: string | null
           device_type?: string | null
           event_data?: Json | null
@@ -42,6 +46,8 @@ export type Database = {
         }
         Update: {
           browser?: string | null
+          country?: string | null
+          country_code?: string | null
           created_at?: string | null
           device_type?: string | null
           event_data?: Json | null

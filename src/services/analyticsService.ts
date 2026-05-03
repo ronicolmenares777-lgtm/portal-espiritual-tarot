@@ -36,6 +36,33 @@ export interface AnalyticsStats {
 
 class AnalyticsService {
   private sessionId: string | null = null;
+  private visitorId: string | null = null;
+  private countryData: { country: string; country_code: string } | null = null;
+
+  constructor() {
+    if (typeof window !== "undefined") {
+      this.sessionId = this.getOrCreateSessionId();
+      this.visitorId = this.getOrCreateVisitorId();
+      this.detectCountry();
+    }
+  }
+
+  private async detectCountry() {
+    try {
+      // Usar ipapi.co para detectar país (gratis, sin API key)
+      const response = await fetch("https://ipapi.co/json/");
+      if (response.ok) {
+        const data = await response.json();
+        this.countryData = {
+          country: data.country_name || "Unknown",
+          country_code: data.country_code || "XX"
+        };
+      }
+    } catch (error) {
+      console.log("No se pudo detectar país, usando default");
+      this.countryData = { country: "Unknown", country_code: "XX" };
+    }
+  }
 
   // Generar o recuperar session ID
   private getSessionId(): string {
@@ -74,28 +101,33 @@ class AnalyticsService {
   }
 
   // Registrar evento genérico
-  async trackEvent(eventType: AnalyticsEvent['event_type'], eventData?: Record<string, any>) {
-    try {
-      const event: AnalyticsEvent = {
-        event_type: eventType,
-        session_id: this.getSessionId(),
-        user_agent: navigator.userAgent,
-        device_type: this.getDeviceType(),
-        browser: this.getBrowser(),
-        page_path: window.location.pathname,
-        referrer: document.referrer || undefined,
-        event_data: eventData
-      };
+  private async trackEvent(
+    eventType: string,
+    metadata: Record<string, any> = {}
+  ): Promise<void> {
+    if (!this.sessionId || !this.visitorId) return;
 
-      const { error } = await supabase
-        .from('analytics_events')
-        .insert(event);
+    // Esperar a que se detecte el país (máximo 2 segundos)
+    if (!this.countryData) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+
+    try {
+      const { error } = await supabase.from("analytics_events").insert({
+        event_type: eventType,
+        session_id: this.sessionId,
+        visitor_id: this.visitorId,
+        device_type: this.getDeviceType(),
+        country: this.countryData?.country || "Unknown",
+        country_code: this.countryData?.country_code || "XX",
+        metadata: Object.keys(metadata).length > 0 ? metadata : null,
+      });
 
       if (error) {
-        console.error('Error tracking event:', error);
+        console.error("Error tracking event:", error);
       }
     } catch (error) {
-      console.error('Error in trackEvent:', error);
+      console.error("Error in trackEvent:", error);
     }
   }
 
