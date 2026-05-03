@@ -20,7 +20,7 @@ export default function ChatAdmin() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [leadStatus, setLeadStatus] = useState<"nuevo" | "contactado" | "convertido">("nuevo");
+  const [leadStatus, setLeadStatus] = useState<"nuevo" | "ready">("nuevo");
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export default function ChatAdmin() {
       console.log("✅ Lead cargado:", data);
       setLead(data);
       setIsFavorite(data.is_favorite || false);
-      setLeadStatus(data.status as "nuevo" | "contactado" | "convertido" || "nuevo");
+      setLeadStatus((data.status === "ready" ? "ready" : "nuevo") as "nuevo" | "ready");
     }
   };
 
@@ -81,7 +81,8 @@ export default function ChatAdmin() {
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    if (value === "nuevo" || value === "contactado" || value === "convertido") {
+    console.log("📝 Cambiando estado a:", value);
+    if (value === "nuevo" || value === "ready") {
       updateLeadStatus(value);
     }
   };
@@ -144,25 +145,35 @@ export default function ChatAdmin() {
     if (!id || typeof id !== "string") return;
 
     const newFavoriteStatus = !isFavorite;
+    console.log("⭐ Cambiando favorito a:", newFavoriteStatus);
+    
     const { error } = await supabase
       .from("leads")
       .update({ is_favorite: newFavoriteStatus })
       .eq("id", id);
 
-    if (!error) {
+    if (error) {
+      console.error("❌ Error actualizando favorito:", error);
+    } else {
+      console.log("✅ Favorito actualizado correctamente");
       setIsFavorite(newFavoriteStatus);
+      loadLead();
     }
   };
 
-  const updateLeadStatus = async (newStatus: "nuevo" | "contactado" | "convertido") => {
+  const updateLeadStatus = async (newStatus: "nuevo" | "ready") => {
     if (!id || typeof id !== "string") return;
 
+    console.log("🔄 Actualizando estado a:", newStatus);
     const { error } = await supabase
       .from("leads")
       .update({ status: newStatus })
       .eq("id", id);
 
-    if (!error) {
+    if (error) {
+      console.error("❌ Error actualizando estado:", error);
+    } else {
+      console.log("✅ Estado actualizado correctamente");
       setLeadStatus(newStatus);
       loadLead();
     }
@@ -245,11 +256,10 @@ export default function ChatAdmin() {
             <select
               value={leadStatus}
               onChange={handleStatusChange}
-              className="px-3 py-1.5 rounded-lg border border-gold/20 bg-background text-sm text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
+              className="px-3 py-1.5 rounded-lg border border-gold/20 bg-background text-sm text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none cursor-pointer"
             >
-              <option value="nuevo">🔵 Nuevo</option>
-              <option value="contactado">🟡 Contactado</option>
-              <option value="convertido">🟢 Convertido</option>
+              <option value="nuevo">💬 EN CHAT</option>
+              <option value="ready">✅ LISTO</option>
             </select>
           </div>
         </div>
