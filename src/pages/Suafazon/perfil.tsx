@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
-import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
+import { SEO } from "@/components/SEO";
+import { useToast } from "@/hooks/use-toast";
 import { AuthService } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import Link from "next/link";
 
 export default function PerfilMaestro() {
   const router = useRouter();
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [loading, setLoading] = useState(true);
@@ -52,7 +54,11 @@ export default function PerfilMaestro() {
 
         if (error) {
           console.error("Error loading profile:", error);
-          setMessage({ type: "error", text: "Error al cargar perfil" });
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Error al cargar perfil",
+          });
           return;
         }
 
@@ -74,103 +80,156 @@ export default function PerfilMaestro() {
     loadProfile();
   }, [router]);
 
-  // Manejar subida de imagen
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Manejar cambio de imagen
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validar tipo de archivo
+    console.log("📸 [IMAGE] ========== PROCESANDO IMAGEN ==========");
+    console.log("  - Nombre archivo:", file.name);
+    console.log("  - Tipo:", file.type);
+    console.log("  - Tamaño:", (file.size / 1024).toFixed(2), "KB");
+
+    // Validar tipo
     if (!file.type.startsWith("image/")) {
-      setMessage({ type: "error", text: "Por favor selecciona una imagen válida" });
+      console.error("❌ [IMAGE] Tipo de archivo inválido:", file.type);
+      toast({
+        title: "❌ Error",
+        description: "Por favor selecciona una imagen válida",
+        variant: "destructive",
+      });
       return;
     }
 
-    // Validar tamaño (máximo 2MB)
+    // Validar tamaño (máx 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      setMessage({ type: "error", text: "La imagen debe ser menor a 2MB" });
+      console.error("❌ [IMAGE] Archivo muy grande:", file.size);
+      toast({
+        title: "❌ Error",
+        description: "La imagen debe ser menor a 2MB",
+        variant: "destructive",
+      });
       return;
     }
 
     setUploading(true);
-    setMessage(null);
 
-    try {
-      // Convertir a base64
-      const reader = new FileReader();
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      console.log("✅ [IMAGE] Imagen convertida a base64");
+      console.log("  - Base64 length:", base64String.length);
+      console.log("  - Base64 preview (primeros 100 chars):", base64String.substring(0, 100));
       
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setProfile({ ...profile, avatar_url: base64String });
-        setMessage({ type: "success", text: "Imagen cargada. Haz clic en Guardar para aplicar los cambios." });
-        setUploading(false);
-      };
-
-      reader.onerror = () => {
-        setMessage({ type: "error", text: "Error al leer la imagen" });
-        setUploading(false);
-      };
-
-      reader.readAsDataURL(file);
-    } catch (err) {
-      console.error("Error uploading image:", err);
-      setMessage({ type: "error", text: "Error al subir imagen" });
+      setProfile({ ...profile, avatar_url: base64String });
       setUploading(false);
-    }
+      
+      toast({
+        title: "✅ Imagen cargada",
+        description: "Ahora haz clic en 'Guardar Cambios' para confirmar",
+      });
+      
+      console.log("📝 [IMAGE] Estado del perfil actualizado con nueva imagen");
+    };
+    reader.onerror = (error) => {
+      console.error("❌ [IMAGE] Error leyendo archivo:", error);
+      toast({
+        title: "❌ Error",
+        description: "Error al cargar la imagen",
+        variant: "destructive",
+      });
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Guardar cambios
   const handleSave = async () => {
     if (!profile.full_name.trim()) {
-      setMessage({ type: "error", text: "El nombre es obligatorio" });
+      toast({
+        title: "❌ Error",
+        description: "El nombre es obligatorio",
+        variant: "destructive",
+      });
       return;
     }
 
     setSaving(true);
-    setMessage(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) {
         console.error("❌ [SAVE] No hay sesión de usuario");
-        setMessage({ type: "error", text: "No hay sesión activa" });
+        toast({
+          title: "❌ Error",
+          description: "No hay sesión activa",
+          variant: "destructive",
+        });
         setSaving(false);
         return;
       }
 
-      console.log("💾 [SAVE] Guardando perfil...");
+      console.log("💾 [SAVE] ========== GUARDANDO PERFIL ==========");
       console.log("  - User ID:", session.user.id);
       console.log("  - Nombre:", profile.full_name);
+      console.log("  - Email:", profile.email);
+      console.log("  - Avatar URL existe?:", !!profile.avatar_url);
       console.log("  - Avatar URL length:", profile.avatar_url?.length || 0);
-      console.log("  - Avatar URL preview:", profile.avatar_url?.substring(0, 50));
+      console.log("  - Avatar URL type:", typeof profile.avatar_url);
+      console.log("  - Avatar URL preview (primeros 100 chars):", profile.avatar_url?.substring(0, 100));
+      
+      const updateData = {
+        full_name: profile.full_name.trim(),
+        avatar_url: profile.avatar_url || null,
+      };
+      
+      console.log("📦 [SAVE] Datos a enviar a Supabase:", {
+        full_name: updateData.full_name,
+        avatar_url_length: updateData.avatar_url?.length || 0,
+      });
 
       const { data, error } = await supabase
         .from("profiles")
-        .update({
-          full_name: profile.full_name.trim(),
-          avatar_url: profile.avatar_url,
-        })
+        .update(updateData)
         .eq("id", session.user.id)
         .select();
 
-      console.log("📊 [SAVE] Respuesta de Supabase:", { data, error });
+      console.log("📊 [SAVE] Respuesta de Supabase:");
+      console.log("  - Data:", data);
+      console.log("  - Error:", error);
 
       if (error) {
-        console.error("❌ [SAVE] Error guardando perfil:", error);
-        setMessage({ type: "error", text: "Error al guardar cambios: " + error.message });
+        console.error("❌ [SAVE] Error de Supabase:", error);
+        toast({
+          title: "❌ Error al guardar",
+          description: error.message,
+          variant: "destructive",
+        });
         setSaving(false);
         return;
       }
 
-      console.log("✅ [SAVE] Perfil guardado exitosamente");
-      setMessage({ type: "success", text: "✅ Perfil actualizado exitosamente" });
+      console.log("✅ [SAVE] Perfil guardado exitosamente en Supabase");
+      console.log("  - Datos guardados:", data);
+
+      toast({
+        title: "✅ Perfil actualizado",
+        description: "Tus cambios se han guardado correctamente",
+      });
+
       setSaving(false);
 
+      // Redirigir al dashboard después de 1.5 segundos
       setTimeout(() => {
         router.push("/Suafazon/dashboard");
-      }, 2000);
+      }, 1500);
     } catch (err) {
-      console.error("❌ [SAVE] Error general:", err);
-      setMessage({ type: "error", text: "Error al guardar cambios" });
+      console.error("❌ [SAVE] Error general capturado:", err);
+      toast({
+        title: "❌ Error",
+        description: "Ocurrió un error al guardar los cambios",
+        variant: "destructive",
+      });
       setSaving(false);
     }
   };
@@ -258,7 +317,7 @@ export default function PerfilMaestro() {
               <input
                 type="file"
                 ref={fileInputRef}
-                onChange={handleImageUpload}
+                onChange={handleImageChange}
                 accept="image/*"
                 className="hidden"
               />
