@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Star, LogOut, User, Trash2, Download } from "lucide-react";
+import { Star, LogOut, User, Trash2, Download, Bell, BellOff } from "lucide-react";
 import { motion } from "framer-motion";
+import { notificationService } from "@/services/notificationService";
 
 export default function Dashboard() {
   const [leads, setLeads] = useState<Tables<"leads">[]>([]);
@@ -17,10 +18,45 @@ export default function Dashboard() {
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const router = useRouter();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationsSupported, setNotificationsSupported] = useState(true);
 
   useEffect(() => {
     loadLeads();
   }, []);
+
+  // Verificar soporte de notificaciones y auto-activar
+  useEffect(() => {
+    const checkNotifications = async () => {
+      const supported = notificationService.isSupported();
+      setNotificationsSupported(supported);
+
+      if (supported) {
+        // Intentar auto-activar si ya estaban habilitadas
+        const activated = await notificationService.autoEnable({
+          onLeadClick: (leadId) => {
+            router.push(`/Suafazon/chat/${leadId}`);
+          },
+          onMessageClick: (leadId) => {
+            router.push(`/Suafazon/chat/${leadId}`);
+          },
+        });
+
+        setNotificationsEnabled(activated);
+      }
+    };
+
+    checkNotifications();
+
+    // Cleanup al desmontar
+    return () => {
+      if (notificationService.isActive()) {
+        // No desactivar automáticamente - mantener notificaciones activas
+        // El usuario debe desactivar manualmente
+      }
+    };
+  }, [router]);
 
   const loadLeads = async () => {
     const { data, error } = await supabase
@@ -30,6 +66,38 @@ export default function Dashboard() {
 
     if (!error && data) {
       setLeads(data);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadLeads();
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
+  const handleToggleNotifications = async () => {
+    if (notificationsEnabled) {
+      // Desactivar
+      notificationService.disable();
+      setNotificationsEnabled(false);
+    } else {
+      // Activar
+      const success = await notificationService.enable({
+        onLeadClick: (leadId) => {
+          router.push(`/Suafazon/chat/${leadId}`);
+        },
+        onMessageClick: (leadId) => {
+          router.push(`/Suafazon/chat/${leadId}`);
+        },
+      });
+
+      setNotificationsEnabled(success);
+
+      if (!success) {
+        alert(
+          "No se pudo activar las notificaciones. Por favor, permite las notificaciones en la configuración de tu navegador."
+        );
+      }
     }
   };
 
@@ -169,6 +237,18 @@ export default function Dashboard() {
 
         {/* Filtros principales */}
         <div className="space-y-2">
+          {notificationsEnabled && (
+            <div className="mb-3 p-3 bg-gold/10 border border-gold/30 rounded-lg">
+              <div className="flex items-center gap-2 text-xs text-gold">
+                <Bell className="w-4 h-4 animate-pulse" />
+                <span className="font-medium">Notificaciones activas</span>
+              </div>
+              <p className="text-xs text-gold/70 mt-1">
+                Recibirás alertas de nuevos leads y mensajes
+              </p>
+            </div>
+          )}
+
           <Button
             variant={currentView === "leads" ? "default" : "ghost"}
             onClick={() => setCurrentView("leads")}
