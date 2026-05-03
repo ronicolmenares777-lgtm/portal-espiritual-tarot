@@ -2,6 +2,7 @@
 export interface TarotCard {
   id: string;
   name: string;
+  number: string;
   image: string;
   meaning: string;
   interpretation: string;
