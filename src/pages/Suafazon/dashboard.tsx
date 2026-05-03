@@ -75,6 +75,8 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     if (typeof window === "undefined") return;
+    
+    console.log("🚪 Cerrando sesión...");
     localStorage.removeItem("adminSession");
     localStorage.removeItem("adminProfile");
     router.push("/Suafazon");
@@ -99,11 +101,11 @@ export default function Dashboard() {
 
   const selectAll = () => {
     const filtered = getFilteredLeads();
-    setSelectedLeads(new Set(filtered.map(l => l.id)));
+    setSelectedLeads(filtered.map(l => l.id)));
   };
 
   const deselectAll = () => {
-    setSelectedLeads(new Set());
+    setSelectedLeads([]);
   };
 
   const getFilteredLeads = () => {
@@ -131,7 +133,6 @@ export default function Dashboard() {
     setFilteredLeads(filtered);
   }, [leads, statusFilter]);
 
-  const filteredLeads = getFilteredLeads();
   const stats = {
     leads: leads.filter(l => l.status === "nuevo").length,
     listo: leads.filter(l => l.status === "ready").length,
@@ -157,7 +158,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen flex bg-background">
       {/* Sidebar */}
       <div className="w-64 bg-black border-r border-gold/10 flex flex-col">
         {/* Logo */}
