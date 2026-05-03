@@ -4,35 +4,61 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface WarningMessageProps {
-  onContinue?: () => void;
+  onOpenChat: () => void;
 }
 
-export function WarningMessage({ onContinue }: WarningMessageProps) {
-  const [isPressed, setIsPressed] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [isDone, setIsDone] = useState(false);
+export function WarningMessage({ onOpenChat }: WarningMessageProps) {
+  const [isPressing, setIsPressing] = useState(false);
+  const [pressProgress, setPressProgress] = useState(0);
+  const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [progressInterval, setProgressInterval] = useState<NodeJS.Timeout | null>(null);
 
+  const PRESS_DURATION = 3000; // 3 segundos
+
+  // Limpiar timers al desmontar
   useEffect(() => {
-    if (!isPressed) {
-      setProgress(0);
-      return;
-    }
+    return () => {
+      if (pressTimer) clearTimeout(pressTimer);
+      if (progressInterval) clearInterval(progressInterval);
+    };
+  }, [pressTimer, progressInterval]);
 
+  const handlePressStart = () => {
+    console.log("🔮 [BALL] Iniciando presión de bola de cristal");
+    setIsPressing(true);
+    setPressProgress(0);
+
+    // Timer para completar la acción
+    const timer = setTimeout(() => {
+      console.log("✅ [BALL] Presión completada - Abriendo chat");
+      onOpenChat();
+      handlePressEnd();
+    }, PRESS_DURATION);
+    setPressTimer(timer);
+
+    // Actualizar progreso cada 50ms
     const interval = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + 2;
-        if (next >= 100) {
-          clearInterval(interval);
-          setIsDone(true);
-          setTimeout(() => onContinue?.(), 500);
-          return 100;
-        }
-        return next;
+      setPressProgress((prev) => {
+        const newProgress = prev + (50 / PRESS_DURATION) * 100;
+        return newProgress > 100 ? 100 : newProgress;
       });
-    }, 40);
+    }, 50);
+    setProgressInterval(interval);
+  };
 
-    return () => clearInterval(interval);
-  }, [isPressed, onContinue]);
+  const handlePressEnd = () => {
+    console.log("⏹️ [BALL] Finalizando presión");
+    setIsPressing(false);
+    setPressProgress(0);
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      setPressTimer(null);
+    }
+    if (progressInterval) {
+      clearInterval(progressInterval);
+      setProgressInterval(null);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
@@ -97,63 +123,115 @@ export function WarningMessage({ onContinue }: WarningMessageProps) {
 
         {/* Contenedor de bola de cristal y botón WhatsApp */}
         <div className="flex items-center justify-center gap-8 my-12">
-          {/* Bola de cristal animada */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.8 }}
-            className="relative w-48 h-48 md:w-64 md:h-64"
-          >
-            {/* Resplandor exterior */}
-            <div className="absolute inset-0 bg-gradient-to-r from-gold/30 via-accent/30 to-gold/30 rounded-full blur-3xl animate-pulse-glow" />
-            
-            {/* Bola principal */}
-            <div className="relative w-full h-full rounded-full bg-gradient-to-br from-primary/20 via-accent/10 to-primary/20 backdrop-blur-xl border-4 border-gold/40 shadow-2xl shadow-gold/50 overflow-hidden">
-              {/* Efecto de brillo interno */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-shimmer" />
+          {/* Bola de cristal interactiva */}
+          <div className="relative flex flex-col items-center gap-4">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.8 }}
+              className="relative w-48 h-48 md:w-64 md:h-64 cursor-pointer"
+              onMouseDown={handlePressStart}
+              onMouseUp={handlePressEnd}
+              onMouseLeave={handlePressEnd}
+              onTouchStart={handlePressStart}
+              onTouchEnd={handlePressEnd}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {/* Resplandor exterior */}
+              <div className="absolute inset-0 bg-gradient-to-r from-gold/30 via-accent/30 to-gold/30 rounded-full blur-3xl animate-pulse-glow" />
               
-              {/* Partículas internas flotantes */}
-              <div className="absolute inset-0">
-                {[...Array(12)].map((_, i) => (
+              {/* Indicador de progreso circular */}
+              {isPressing && (
+                <svg className="absolute inset-0 w-full h-full -rotate-90">
+                  <circle
+                    cx="50%"
+                    cy="50%"
+                    r="48%"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    className="text-gold/30"
+                  />
+                  <circle
+                    cx="50%"
+                    cy="50%"
+                    r="48%"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    strokeDasharray={`${2 * Math.PI * 48} ${2 * Math.PI * 48}`}
+                    strokeDashoffset={`${2 * Math.PI * 48 * (1 - pressProgress / 100)}`}
+                    className="text-gold transition-all duration-75"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              )}
+              
+              {/* Bola principal */}
+              <div className={`relative w-full h-full rounded-full bg-gradient-to-br from-primary/20 via-accent/10 to-primary/20 backdrop-blur-xl border-4 ${isPressing ? "border-gold" : "border-gold/40"} shadow-2xl shadow-gold/50 overflow-hidden transition-all`}>
+                {/* Efecto de brillo interno */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-shimmer" />
+                
+                {/* Partículas internas flotantes */}
+                <div className="absolute inset-0">
+                  {[...Array(12)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-1 h-1 bg-gold/60 rounded-full"
+                      style={{
+                        left: `${20 + Math.random() * 60}%`,
+                        top: `${20 + Math.random() * 60}%`,
+                      }}
+                      animate={{
+                        y: [-10, 10, -10],
+                        x: [-5, 5, -5],
+                        opacity: [0.3, 0.8, 0.3],
+                      }}
+                      transition={{
+                        duration: 3 + Math.random() * 2,
+                        repeat: Infinity,
+                        delay: Math.random() * 2,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Símbolo central */}
+                <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div
-                    key={i}
-                    className="absolute w-1 h-1 bg-gold/60 rounded-full"
-                    style={{
-                      left: `${20 + Math.random() * 60}%`,
-                      top: `${20 + Math.random() * 60}%`,
-                    }}
                     animate={{
-                      y: [-10, 10, -10],
-                      x: [-5, 5, -5],
-                      opacity: [0.3, 0.8, 0.3],
+                      rotate: 360,
+                      scale: isPressing ? [1, 1.2, 1] : [1, 1.1, 1],
                     }}
                     transition={{
-                      duration: 3 + Math.random() * 2,
-                      repeat: Infinity,
-                      delay: Math.random() * 2,
+                      rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                      scale: { duration: isPressing ? 0.5 : 2, repeat: Infinity },
                     }}
-                  />
-                ))}
+                    className="text-6xl md:text-7xl"
+                  >
+                    🔮
+                  </motion.div>
+                </div>
               </div>
+            </motion.div>
 
-              {/* Símbolo central */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <motion.div
-                  animate={{
-                    rotate: 360,
-                    scale: [1, 1.1, 1],
-                  }}
-                  transition={{
-                    rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-                    scale: { duration: 2, repeat: Infinity },
-                  }}
-                  className="text-6xl md:text-7xl"
-                >
-                  🔮
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
+            {/* Texto indicativo debajo de la bola */}
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="text-gold/80 text-sm md:text-base font-medium text-center"
+            >
+              {isPressing ? (
+                <span className="text-gold font-bold animate-pulse">
+                  ✨ Manteniendo presión... {Math.round(pressProgress)}%
+                </span>
+              ) : (
+                "Mantén presionada para abrir chat con el maestro"
+              )}
+            </motion.p>
+          </div>
 
           {/* Botón de WhatsApp grande */}
           <motion.a
