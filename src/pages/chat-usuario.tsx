@@ -28,16 +28,14 @@ export default function ChatUsuario() {
       const finalLeadId = Array.isArray(leadId) ? leadId[0] : leadId;
       if (!finalLeadId) return;
 
-      // Cargar datos del lead
+      // Cargar datos del lead (sin usar el nombre en este componente)
       const { data: leadData } = await supabase
         .from("leads")
         .select("name")
         .eq("id", finalLeadId)
         .single();
 
-      if (leadData) {
-        setUserName(leadData.name);
-      }
+      console.log("📋 [LEAD] Datos del lead cargados:", leadData);
 
       // Cargar perfil del maestro (primer admin)
       const { data: profiles } = await supabase
