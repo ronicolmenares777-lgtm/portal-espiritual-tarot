@@ -21,50 +21,6 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
-  useEffect(() => {
-    loadLeads();
-  }, []);
-
-  // Auto-activar notificaciones si ya estaban habilitadas
-  useEffect(() => {
-    const checkNotifications = async () => {
-      if (notificationService.isSupported()) {
-        const activated = await notificationService.autoEnable({
-          onLeadClick: (leadId) => {
-            router.push(`/Suafazon/chat/${leadId}`);
-          },
-          onMessageClick: (leadId) => {
-            router.push(`/Suafazon/chat/${leadId}`);
-          },
-        });
-
-        setNotificationsEnabled(activated);
-      }
-    };
-
-    checkNotifications();
-  }, [router]);
-
-  // Auto-refresh cada 10 segundos (SIN realtime para evitar duplicados)
-  useEffect(() => {
-    const adminSession = localStorage.getItem("adminSession");
-    if (!adminSession) {
-      router.push("/Suafazon");
-      return;
-    }
-
-    // Polling cada 10 segundos - suficiente para actualización automática
-    const interval = setInterval(() => {
-      console.log("🔄 [POLLING] Actualizando leads...");
-      loadLeads();
-    }, 10000);
-
-    // Cleanup al desmontar
-    return () => {
-      clearInterval(interval);
-    };
-  }, [router]);
-
   const loadLeads = async () => {
     try {
       const { data, error } = await supabase
@@ -85,6 +41,50 @@ export default function Dashboard() {
       console.error("Error en loadLeads:", err);
     }
   };
+
+  // Cargar leads al inicio
+  useEffect(() => {
+    loadLeads();
+  }, []);
+
+  // Auto-refresh cada 10 segundos
+  useEffect(() => {
+    const adminSession = localStorage.getItem("adminSession");
+    if (!adminSession) {
+      router.push("/Suafazon");
+      return;
+    }
+
+    // Polling cada 10 segundos
+    const interval = setInterval(() => {
+      console.log("🔄 [POLLING] Actualizando leads...");
+      loadLeads();
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []); // Dependency array VACÍO - solo ejecuta una vez
+
+  // Auto-activar notificaciones si ya estaban habilitadas
+  useEffect(() => {
+    const checkNotifications = async () => {
+      if (notificationService.isSupported()) {
+        const activated = await notificationService.autoEnable({
+          onLeadClick: (leadId) => {
+            router.push(`/Suafazon/chat/${leadId}`);
+          },
+          onMessageClick: (leadId) => {
+            router.push(`/Suafazon/chat/${leadId}`);
+          },
+        });
+
+        setNotificationsEnabled(activated);
+      }
+    };
+
+    checkNotifications();
+  }, []); // Solo ejecutar una vez al montar
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
