@@ -5,24 +5,19 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Star, LogOut, User, Trash2, Heart } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Star, LogOut, User, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
-
-type LeadStatus = "nuevo" | "enConversacion" | "atendido";
-type ViewFilter = "all" | "favorites" | "trash";
 
 export default function Dashboard() {
   const [leads, setLeads] = useState<Tables<"leads">[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | LeadStatus>("all");
-  const [viewFilter, setViewFilter] = useState<ViewFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "nuevo" | "enConversacion" | "atendido" | "favoritos" | "papelera">("all");
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const router = useRouter();
 
   useEffect(() => {
     loadLeads();
-    const interval = setInterval(loadLeads, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   const loadLeads = async () => {
@@ -34,11 +29,6 @@ export default function Dashboard() {
     if (!error && data) {
       setLeads(data);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("adminSession");
-    router.push("/");
   };
 
   const handleToggleFavorite = async (leadId: string, currentFavorite: boolean) => {
@@ -56,31 +46,19 @@ export default function Dashboard() {
     }
   };
 
-  const handleToggleSelect = (leadId: string) => {
-    setSelectedLeads((prev) =>
-      prev.includes(leadId) ? prev.filter((id) => id !== leadId) : [...prev, leadId]
-    );
-  };
-
-  const handleSelectAll = () => {
-    if (selectedLeads.length === filteredLeads.length) {
-      setSelectedLeads([]);
-    } else {
-      setSelectedLeads(filteredLeads.map((lead) => lead.id));
-    }
-  };
-
-  const handleMoveToTrash = async () => {
-    if (selectedLeads.length === 0) return;
-
+  const handleMoveToTrash = async (leadIds: string[]) => {
     const { error } = await supabase
       .from("leads")
       .update({ is_deleted: true })
-      .in("id", selectedLeads);
+      .in("id", leadIds);
 
     if (!error) {
+      setLeads((prev) =>
+        prev.map((lead) =>
+          leadIds.includes(lead.id) ? { ...lead, is_deleted: true } : lead
+        )
+      );
       setSelectedLeads([]);
-      loadLeads();
     }
   };
 
@@ -91,30 +69,24 @@ export default function Dashboard() {
       .eq("id", leadId);
 
     if (!error) {
-      loadLeads();
-    }
-  };
-
-  const handlePermanentDelete = async (leadId: string) => {
-    if (!confirm("¿Estás seguro de eliminar permanentemente este lead?")) return;
-
-    const { error } = await supabase.from("leads").delete().eq("id", leadId);
-
-    if (!error) {
-      loadLeads();
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId ? { ...lead, is_deleted: false } : lead
+        )
+      );
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "nuevo":
-        return "bg-blue-500/20 text-blue-400 border border-blue-500/30";
+        return "bg-blue-500/90 hover:bg-blue-500 text-white";
       case "enConversacion":
-        return "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30";
+        return "bg-yellow-500/90 hover:bg-yellow-500 text-white";
       case "atendido":
-        return "bg-green-500/20 text-green-400 border border-green-500/30";
+        return "bg-green-500/90 hover:bg-green-500 text-white";
       default:
-        return "bg-gray-500/20 text-gray-400 border border-gray-500/30";
+        return "bg-gray-500/90 hover:bg-gray-500 text-white";
     }
   };
 
@@ -123,7 +95,7 @@ export default function Dashboard() {
       case "nuevo":
         return "Nuevo";
       case "enConversacion":
-        return "En conversación";
+        return "En Chat";
       case "atendido":
         return "Atendido";
       default:
@@ -132,295 +104,353 @@ export default function Dashboard() {
   };
 
   const filteredLeads = leads.filter((lead) => {
-    const matchesSearch =
+    const matchesSearch = 
       lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.whatsapp.includes(searchQuery);
-    const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
-    const matchesView =
-      (viewFilter === "all" && !lead.is_deleted) ||
-      (viewFilter === "favorites" && lead.is_favorite && !lead.is_deleted) ||
-      (viewFilter === "trash" && lead.is_deleted);
-    return matchesSearch && matchesStatus && matchesView;
+    
+    if (statusFilter === "favoritos") {
+      return matchesSearch && lead.is_favorite;
+    }
+    if (statusFilter === "papelera") {
+      return matchesSearch && lead.is_deleted;
+    }
+    if (statusFilter === "all") {
+      return matchesSearch && !lead.is_deleted;
+    }
+    return matchesSearch && lead.status === statusFilter && !lead.is_deleted;
   });
 
+  const handleSelectAll = () => {
+    setSelectedLeads(filteredLeads.map(l => l.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedLeads([]);
+  };
+
+  const handleToggleSelect = (leadId: string) => {
+    setSelectedLeads(prev => 
+      prev.includes(leadId) 
+        ? prev.filter(id => id !== leadId)
+        : [...prev, leadId]
+    );
+  };
+
+  const activeLeads = leads.filter(l => !l.is_deleted);
+  const newLeads = activeLeads.filter(l => l.status === "nuevo");
+  const inConversationLeads = activeLeads.filter(l => l.status === "enConversacion");
+  const attendedLeads = activeLeads.filter(l => l.status === "atendido");
+  const trashedLeads = leads.filter(l => l.is_deleted);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
-      <div className="container mx-auto p-6 max-w-7xl">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-serif font-bold text-gold mb-2">
-              Dashboard de Leads
-            </h1>
-            <p className="text-muted-foreground">Gestiona tus consultas espirituales</p>
+    <div className="flex min-h-screen bg-background">
+      {/* Sidebar */}
+      <div className="w-64 bg-card border-r border-border p-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
+            <span className="text-gold text-xl">✦</span>
           </div>
+          <h1 className="font-serif text-lg text-gold">Portal Maestro</h1>
+        </div>
+
+        {/* Filtros principales */}
+        <div className="space-y-2">
+          <Button
+            variant={statusFilter === "all" ? "default" : "ghost"}
+            onClick={() => setStatusFilter("all")}
+            className="w-full justify-between"
+          >
+            <span className="flex items-center gap-2">
+              📋 LEADS
+            </span>
+            <span className="text-xs">{activeLeads.length}</span>
+          </Button>
+
+          <Button
+            variant={statusFilter === "atendido" ? "default" : "ghost"}
+            onClick={() => setStatusFilter("atendido")}
+            className="w-full justify-between"
+          >
+            <span className="flex items-center gap-2">
+              ✅ LISTO
+            </span>
+            <span className="text-xs">{attendedLeads.length}</span>
+          </Button>
+
+          <Button
+            variant={statusFilter === "papelera" ? "default" : "ghost"}
+            onClick={() => setStatusFilter("papelera")}
+            className="w-full justify-between"
+          >
+            <span className="flex items-center gap-2">
+              🗑️ PAPELERA
+            </span>
+            <span className="text-xs">{trashedLeads.length}</span>
+          </Button>
+        </div>
+
+        {/* Botones de selección */}
+        <div className="space-y-2 pt-4 border-t border-border">
+          <Button
+            variant="outline"
+            onClick={handleSelectAll}
+            className="w-full text-xs"
+          >
+            ☑️ Seleccionar todo
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleDeselectAll}
+            className="w-full text-xs"
+          >
+            ❌ Deseleccionar
+          </Button>
+        </div>
+
+        {/* Estado del ritual */}
+        <div className="pt-4 border-t border-border">
+          <h3 className="text-xs font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+            <span>⚡</span> ESTADO DEL RITUAL
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant={statusFilter === "all" ? "default" : "outline"}
+              onClick={() => setStatusFilter("all")}
+              className="text-xs h-auto py-2"
+              size="sm"
+            >
+              📊 Todos
+              <span className="block text-[10px] mt-0.5">{activeLeads.length}</span>
+            </Button>
+            <Button
+              variant={statusFilter === "nuevo" ? "default" : "outline"}
+              onClick={() => setStatusFilter("nuevo")}
+              className="text-xs h-auto py-2"
+              size="sm"
+            >
+              🆕 Nuevo
+              <span className="block text-[10px] mt-0.5">{newLeads.length}</span>
+            </Button>
+            <Button
+              variant={statusFilter === "enConversacion" ? "default" : "outline"}
+              onClick={() => setStatusFilter("enConversacion")}
+              className="text-xs h-auto py-2"
+              size="sm"
+            >
+              💬 En Chat
+              <span className="block text-[10px] mt-0.5">{inConversationLeads.length}</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="text-xs h-auto py-2"
+              size="sm"
+              disabled
+            >
+              ⭐ Calificó
+              <span className="block text-[10px] mt-0.5">0</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="text-xs h-auto py-2"
+              size="sm"
+              disabled
+            >
+              📝 Lista
+              <span className="block text-[10px] mt-0.5">0</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="text-xs h-auto py-2"
+              size="sm"
+              disabled
+            >
+              💰 Ganacia
+              <span className="block text-[10px] mt-0.5">0</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="text-xs h-auto py-2"
+              size="sm"
+              disabled
+            >
+              ❌ Perdida
+              <span className="block text-[10px] mt-0.5">0</span>
+            </Button>
+            <Button
+              variant={statusFilter === "favoritos" ? "default" : "outline"}
+              onClick={() => setStatusFilter("favoritos")}
+              className="text-xs h-auto py-2"
+              size="sm"
+            >
+              ⭐ Favoritos
+              <span className="block text-[10px] mt-0.5">{leads.filter(l => l.is_favorite).length}</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-4xl font-serif font-bold text-gold mb-2">Portal Maestro</h1>
+              <p className="text-muted-foreground">Gestión de almas y consultas espirituales</p>
+              <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
+                <span>📊 {leads.length} leads cargados</span>
+                <span>🔍 {filteredLeads.length} Filtrados</span>
+                <span>📈 Total: {leads.length} Leads</span>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/Suafazon/perfil")}
+                className="flex items-center gap-2"
+              >
+                <User className="w-4 h-4" />
+                Perfil
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  localStorage.removeItem("adminSession");
+                  router.push("/");
+                }}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Salir
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats cards */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-4 text-center">
+              <div className="text-3xl font-bold text-blue-400">{activeLeads.length}</div>
+              <div className="text-sm text-blue-300 mt-1">📋 LEADS</div>
+            </div>
+            <div className="bg-green-500/20 border-2 border-green-500/40 rounded-xl p-4 text-center">
+              <div className="text-3xl font-bold text-green-400">{attendedLeads.length}</div>
+              <div className="text-sm text-green-300 mt-1">✅ LISTO</div>
+            </div>
+            <div className="bg-red-500/20 border-2 border-red-500/40 rounded-xl p-4 text-center">
+              <div className="text-3xl font-bold text-red-400">{trashedLeads.length}</div>
+              <div className="text-sm text-red-300 mt-1">🗑️ PAPELERA</div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
           <div className="flex gap-3">
             <Button
-              onClick={() => router.push("/Suafazon/perfil")}
-              className="bg-gold/90 hover:bg-gold text-background"
-            >
-              Perfil
-            </Button>
-            <Button onClick={handleLogout} variant="destructive">
-              <LogOut className="w-4 h-4 mr-2" />
-              Salir
-            </Button>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
-            <p className="text-muted-foreground text-sm mb-2">Total Leads</p>
-            <p className="text-3xl font-bold text-foreground">
-              {leads.filter((l) => !l.is_deleted).length}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
-            <p className="text-muted-foreground text-sm mb-2">Nuevos</p>
-            <p className="text-3xl font-bold text-blue-400">
-              {leads.filter((l) => l.status === "nuevo" && !l.is_deleted).length}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
-            <p className="text-muted-foreground text-sm mb-2">En conversación</p>
-            <p className="text-3xl font-bold text-yellow-400">
-              {leads.filter((l) => l.status === "enConversacion" && !l.is_deleted).length}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
-            <p className="text-muted-foreground text-sm mb-2">Atendidos</p>
-            <p className="text-3xl font-bold text-green-400">
-              {leads.filter((l) => l.status === "atendido" && !l.is_deleted).length}
-            </p>
-          </div>
-        </div>
-
-        {/* Filtros de vista */}
-        <div className="flex gap-4 mb-6">
-          <Button
-            variant={viewFilter === "all" ? "default" : "outline"}
-            onClick={() => setViewFilter("all")}
-            className="flex items-center gap-2"
-          >
-            Todos ({leads.filter((l) => !l.is_deleted).length})
-          </Button>
-          <Button
-            variant={viewFilter === "favorites" ? "default" : "outline"}
-            onClick={() => setViewFilter("favorites")}
-            className="flex items-center gap-2"
-          >
-            <Heart className="w-4 h-4" />
-            Favoritos ({leads.filter((l) => l.is_favorite && !l.is_deleted).length})
-          </Button>
-          <Button
-            variant={viewFilter === "trash" ? "default" : "outline"}
-            onClick={() => setViewFilter("trash")}
-            className="flex items-center gap-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            Papelera ({leads.filter((l) => l.is_deleted).length})
-          </Button>
-        </div>
-
-        {/* Filtros y búsqueda */}
-        <div className="flex gap-4 mb-6">
-          <Input
-            placeholder="Buscar por nombre o WhatsApp..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1"
-          />
-          <Button
-            variant={statusFilter === "all" ? "default" : "outline"}
-            onClick={() => setStatusFilter("all")}
-          >
-            Todos
-          </Button>
-          <Button
-            variant={statusFilter === "nuevo" ? "default" : "outline"}
-            onClick={() => setStatusFilter("nuevo")}
-          >
-            Nuevos
-          </Button>
-          <Button
-            variant={statusFilter === "enConversacion" ? "default" : "outline"}
-            onClick={() => setStatusFilter("enConversacion")}
-          >
-            En conversación
-          </Button>
-          <Button
-            variant={statusFilter === "atendido" ? "default" : "outline"}
-            onClick={() => setStatusFilter("atendido")}
-          >
-            Atendidos
-          </Button>
-        </div>
-
-        {/* Acciones masivas */}
-        {selectedLeads.length > 0 && viewFilter !== "trash" && (
-          <div className="mb-6 p-4 bg-card border border-border rounded-xl flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              {selectedLeads.length} lead(s) seleccionado(s)
-            </p>
-            <Button
-              variant="destructive"
-              onClick={handleMoveToTrash}
+              variant="outline"
+              onClick={handleSelectAll}
               className="flex items-center gap-2"
             >
-              <Trash2 className="w-4 h-4" />
-              Mover a papelera
+              ☑️ Seleccionar todo
             </Button>
+            {selectedLeads.length > 0 && statusFilter !== "papelera" && (
+              <Button
+                variant="destructive"
+                onClick={() => handleMoveToTrash(selectedLeads)}
+                className="flex items-center gap-2"
+              >
+                ❌ Deseleccionar ({selectedLeads.length})
+              </Button>
+            )}
           </div>
-        )}
+        </div>
 
-        {/* Lista de leads */}
+        {/* Leads list */}
         <div className="space-y-4">
-          {filteredLeads.length > 0 && viewFilter !== "trash" && (
-            <div className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl">
-              <input
-                type="checkbox"
-                checked={selectedLeads.length === filteredLeads.length}
-                onChange={handleSelectAll}
-                className="w-5 h-5 rounded border-border"
-              />
-              <span className="text-sm text-muted-foreground">Seleccionar todos</span>
-            </div>
-          )}
-
           {filteredLeads.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                {viewFilter === "trash"
-                  ? "No hay leads en la papelera"
-                  : "No hay leads que coincidan con tu búsqueda"}
-              </p>
+            <div className="text-center py-12 text-muted-foreground">
+              No hay leads en esta categoría
             </div>
           ) : (
-            <>
-              {filteredLeads.map((lead) => (
-                <motion.div
-                  key={lead.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ scale: 1.01 }}
-                  className="bg-card border border-border rounded-xl p-6 shadow-lg hover:shadow-xl transition-all"
-                >
-                  <div className="flex items-start gap-4">
-                    {viewFilter !== "trash" && (
-                      <input
-                        type="checkbox"
-                        checked={selectedLeads.includes(lead.id)}
-                        onChange={() => handleToggleSelect(lead.id)}
-                        className="mt-1 w-5 h-5 rounded border-border"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    )}
+            filteredLeads.map((lead) => (
+              <motion.div
+                key={lead.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card/60 border-2 border-gold/20 rounded-xl p-6 hover:border-gold/40 transition-all"
+              >
+                <div className="flex items-start gap-4">
+                  {/* Checkbox */}
+                  <Checkbox
+                    checked={selectedLeads.includes(lead.id)}
+                    onCheckedChange={() => handleToggleSelect(lead.id)}
+                    className="mt-1"
+                  />
 
-                    <div
-                      className="flex-1 flex items-start gap-4 cursor-pointer"
-                      onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                    >
-                      <Avatar className="h-14 w-14">
-                        <AvatarFallback className="bg-primary/20 text-primary text-xl">
-                          {lead.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                  {/* Avatar */}
+                  <Avatar className="h-12 w-12 border-2 border-gold/30">
+                    <AvatarFallback className="bg-gold/20 text-gold text-lg font-bold">
+                      {lead.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-serif font-bold text-foreground truncate">
-                            {lead.name}
-                          </h3>
-                          {lead.is_favorite && <span className="text-amber-400 text-xl">⭐</span>}
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>📱</span>
-                            <span>
-                              {lead.country_code} {lead.whatsapp}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>🔮</span>
-                            <span>
-                              {lead.cards_selected && lead.cards_selected.length > 0
-                                ? lead.cards_selected[0]
-                                : "Sin carta"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>📅</span>
-                            <span>
-                              {new Date(lead.created_at).toLocaleDateString("es-MX", {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                              })}
-                            </span>
-                            <span>•</span>
-                            <span>
-                              {new Date(lead.created_at).toLocaleTimeString("es-MX", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        {viewFilter !== "trash" && (
-                          <Button
-                            variant={lead.is_favorite ? "default" : "outline"}
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleFavorite(lead.id, lead.is_favorite);
-                            }}
-                          >
-                            <Star className={`h-4 w-4 ${lead.is_favorite ? "fill-current" : ""}`} />
-                          </Button>
-                        )}
-
-                        {viewFilter === "trash" ? (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRestoreFromTrash(lead.id);
-                              }}
-                            >
-                              Restaurar
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handlePermanentDelete(lead.id);
-                              }}
-                            >
-                              Eliminar
-                            </Button>
-                          </>
-                        ) : (
-                          <span
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium ${getStatusColor(
-                              lead.status
-                            )}`}
-                          >
-                            {getStatusText(lead.status)}
-                          </span>
-                        )}
-                      </div>
+                  {/* Info */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-serif font-bold text-lg text-foreground">
+                        {lead.name}
+                      </h3>
+                      <button
+                        onClick={() => handleToggleFavorite(lead.id, lead.is_favorite || false)}
+                      >
+                        <Star className={`w-5 h-5 ${lead.is_favorite ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
+                      </button>
                     </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      📱 {lead.country_code} {lead.whatsapp}
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Registrado {new Date(lead.created_at).toLocaleDateString("es-MX", { 
+                        day: "2-digit", 
+                        month: "2-digit", 
+                        year: "numeric" 
+                      })} - {new Date(lead.created_at).toLocaleTimeString("es-MX", { 
+                        hour: "2-digit", 
+                        minute: "2-digit" 
+                      })}
+                    </p>
+                    <div className="mb-4">
+                      <div className="text-xs font-semibold text-muted-foreground mb-1">CONSULTA:</div>
+                      <p className="text-sm text-foreground/90">{lead.problem}</p>
+                    </div>
+                    
+                    {statusFilter === "papelera" ? (
+                      <Button
+                        onClick={() => handleRestoreFromTrash(lead.id)}
+                        className="w-full bg-green-500/90 hover:bg-green-500"
+                      >
+                        ♻️ Restaurar
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                        className="w-full bg-gradient-to-r from-gold/80 to-accent/80 hover:from-gold hover:to-accent"
+                      >
+                        💬 Ver Chat Completo
+                      </Button>
+                    )}
                   </div>
-                </motion.div>
-              ))}
-            </>
+
+                  {/* Status */}
+                  {!lead.is_deleted && (
+                    <Button
+                      size="sm"
+                      className={getStatusColor(lead.status)}
+                    >
+                      {getStatusText(lead.status)}
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+            ))
           )}
         </div>
       </div>
