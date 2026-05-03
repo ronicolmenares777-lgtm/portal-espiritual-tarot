@@ -161,25 +161,37 @@ export default function Home() {
     setFormErrors(errors);
 
     if (errors.name || errors.whatsapp || errors.problem) {
+      console.log("❌ Errores de validación:", errors);
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Crear el lead en Supabase
-      console.log("📝 Creando lead en Supabase...");
-      const result = await LeadService.create({
+      console.log("📝 Datos del formulario:", {
         name: formData.name,
         whatsapp: formData.whatsapp,
         country_code: formData.countryCode,
-        problem: formData.problem,
+        problem: formData.problem
+      });
+
+      // Crear el lead en Supabase
+      const result = await LeadService.create({
+        name: formData.name.trim(),
+        whatsapp: formData.whatsapp.trim(),
+        country_code: formData.countryCode,
+        problem: formData.problem.trim(),
         status: "nuevo"
       });
 
+      console.log("📊 Resultado de create():", result);
+
       if (result.error) {
         console.error("❌ Error creando lead:", result.error);
-        setFormErrors({ ...formErrors, problem: "Error al guardar. Intenta de nuevo." });
+        setFormErrors({ 
+          ...formErrors, 
+          problem: "Error al guardar. Por favor intenta de nuevo." 
+        });
         setIsSubmitting(false);
         return;
       }
@@ -189,11 +201,20 @@ export default function Home() {
         setLeadId(result.data.id);
         localStorage.setItem("currentLeadId", result.data.id);
         setCurrentScreen("loading");
+      } else {
+        console.error("❌ No se recibió data del lead");
+        setFormErrors({ 
+          ...formErrors, 
+          problem: "Error inesperado. Intenta de nuevo." 
+        });
+        setIsSubmitting(false);
       }
     } catch (error: any) {
       console.error("❌ Error en handleSubmit:", error);
-      setFormErrors({ ...formErrors, problem: "Error de conexión. Intenta de nuevo." });
-    } finally {
+      setFormErrors({ 
+        ...formErrors, 
+        problem: `Error: ${error.message || 'Intenta de nuevo'}` 
+      });
       setIsSubmitting(false);
     }
   };

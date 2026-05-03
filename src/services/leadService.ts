@@ -19,26 +19,42 @@ export const LeadService = {
     country_code: string;
     problem: string;
     status?: Lead["status"];
-  }) {
-    const { data, error } = await supabase
-      .from("leads")
-      .insert({
+  }): Promise<{ data: Lead | null; error: any }> {
+    try {
+      const insertData = {
         name: leadData.name,
         whatsapp: leadData.whatsapp,
         country_code: leadData.country_code,
         problem: leadData.problem,
         status: leadData.status || "nuevo",
-      })
-      .select()
-      .single();
+        is_favorite: false,
+        notes: null,
+        answers: null,
+        cards_selected: null,
+        user_answers: null,
+        last_interaction_at: null,
+        deleted_at: null
+      };
 
-    if (error) {
-      console.error("Error creando lead:", error);
-      return { data: null, error };
+      console.log("📝 Insertando lead en Supabase:", insertData);
+
+      const { data, error } = await supabase
+        .from("leads")
+        .insert([insertData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("❌ Error de Supabase:", error);
+        return { data: null, error };
+      }
+
+      console.log("✅ Lead creado exitosamente:", data);
+      return { data, error: null };
+    } catch (err: any) {
+      console.error("❌ Error en create():", err);
+      return { data: null, error: err };
     }
-
-    console.log("✅ Lead creado exitosamente");
-    return { data, error: null };
   },
 
   /**
