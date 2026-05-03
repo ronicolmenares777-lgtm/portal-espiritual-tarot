@@ -201,6 +201,18 @@ export default function Dashboard() {
             </span>
             <span className="text-xs">{trashedLeads.length}</span>
           </Button>
+
+          <div className="h-px bg-border my-2" />
+
+          <Button
+            variant="outline"
+            onClick={() => router.push("/Suafazon/monitoreo")}
+            className="w-full justify-start"
+          >
+            <span className="flex items-center gap-2">
+              📊 MONITOREO
+            </span>
+          </Button>
         </div>
 
         {/* Botones de selección */}
@@ -303,6 +315,18 @@ export default function Dashboard() {
                     >
                       <User className="h-4 w-4" />
                       Editar Perfil
+                    </button>
+                    <button
+                      onClick={() => {
+                        router.push("/Suafazon/monitoreo");
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-accent/10 rounded-md transition-colors text-left"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      Monitoreo
                     </button>
                     <button
                       onClick={() => {

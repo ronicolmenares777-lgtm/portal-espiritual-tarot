@@ -10,6 +10,7 @@ import { WarningMessage } from "@/components/WarningMessage";
 import { ChatMaestro } from "@/components/ChatMaestro";
 import { sanitizeText, validateName, validatePhone, validateProblem, rateLimiter, detectSuspiciousContent } from "@/lib/security";
 import { LeadService } from "@/services/leadService";
+import { analyticsService } from "@/services/analyticsService";
 import type { TarotCard } from "@/lib/tarotCards";
 import { useState, useEffect } from "react";
 import { Moon, Sparkles } from "lucide-react";
@@ -60,6 +61,7 @@ export default function Home() {
     problem: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStarted, setFormStarted] = useState(false);
   const router = useRouter();
 
   // Validación de longitud de número según código de país
@@ -113,6 +115,11 @@ export default function Home() {
   useEffect(() => {
     console.log("🔄 Pantalla actual:", currentScreen);
   }, [currentScreen]);
+
+  // Tracking de página vista
+  useEffect(() => {
+    analyticsService.trackPageView();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -200,6 +207,10 @@ export default function Home() {
         console.log("✅ Lead creado con ID:", result.data.id);
         setLeadId(result.data.id);
         localStorage.setItem("currentLeadId", result.data.id);
+        
+        // Track formulario completado
+        analyticsService.trackFormComplete(result.data.id);
+        
         setCurrentScreen("loading");
       } else {
         console.error("❌ No se recibió data del lead");
@@ -224,6 +235,10 @@ export default function Home() {
     setSelectedCard(card);
     setSelectedCardIndex(cardIndex);
     setSelectedCards([card]);
+    
+    // Track selección de carta
+    analyticsService.trackCardSelect(card.name);
+    
     setCurrentScreen("suspense");
   };
 
@@ -327,6 +342,9 @@ export default function Home() {
       console.error("❌ [CHAT] No hay leadId disponible");
       return;
     }
+
+    // Track inicio de chat
+    analyticsService.trackChatStart(leadId);
 
     // Guardar leadId en localStorage para persistencia
     localStorage.setItem("currentLeadId", leadId);
@@ -492,7 +510,13 @@ export default function Home() {
                         type="text"
                         placeholder="Nombre completo"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) => {
+                          if (!formStarted) {
+                            analyticsService.trackFormStart();
+                            setFormStarted(true);
+                          }
+                          setFormData({ ...formData, name: e.target.value });
+                        }}
                         className="w-full bg-secondary/30 border-2 border-gold/30 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all"
                         required
                       />
