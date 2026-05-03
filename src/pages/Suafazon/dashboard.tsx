@@ -365,7 +365,7 @@ export default function Dashboard() {
             <h1 className="text-4xl font-serif font-bold text-gold mb-2">Portal Maestro</h1>
             <p className="text-muted-foreground">Gestión de almas y consultas espirituales</p>
             <div className="flex gap-6 mt-2 text-sm text-muted-foreground">
-              <span>📊 {leads.filter(l => !l.is_deleted).length} leads cargados</span>
+              <span>📊 {leads.filter(l => l.deleted_at === null).length} leads cargados</span>
               <span>✅ Filtrados: {filteredLeads.length}</span>
               <span>🗑️ Total: {leads.length} leads</span>
             </div>
