@@ -5,7 +5,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Upload, Mic, MicOff, User, Sparkles, Download, X, Star, ArrowLeft, Phone } from "lucide-react";
+import { Send, Upload, Mic, MicOff, User, Sparkles, Download, X, Star, ArrowLeft, Phone, Image } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Lead = Tables<"leads">;
@@ -20,14 +20,27 @@ export default function ChatAdmin() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [leadStatus, setLeadStatus] = useState<"nuevo" | "ready">("nuevo");
+  const [leadStatus, setLeadStatus] = useState<"nuevo" | "contactado">("nuevo");
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [adminProfile, setAdminProfile] = useState<{ full_name?: string; avatar_url?: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadAdminProfile = () => {
+    if (typeof window === "undefined") return;
+    
+    const profileData = localStorage.getItem("adminProfile");
+    if (profileData) {
+      try {
+        const profile = JSON.parse(profileData);
+        console.log("👤 Perfil del admin cargado:", profile);
+        setAdminProfile(profile);
+      } catch (error) {
+        console.error("Error parseando perfil del admin:", error);
+      }
+    }
+  };
 
   const loadLead = async () => {
     if (!id || typeof id !== "string") return;
@@ -45,7 +58,7 @@ export default function ChatAdmin() {
       console.log("✅ Lead cargado:", data);
       setLead(data);
       setIsFavorite(data.is_favorite || false);
-      setLeadStatus((data.status === "ready" ? "ready" : "nuevo") as "nuevo" | "ready");
+      setLeadStatus((data.status === "contactado" ? "contactado" : "nuevo") as "nuevo" | "contactado");
     }
   };
 
@@ -69,6 +82,7 @@ export default function ChatAdmin() {
 
   useEffect(() => {
     if (id) {
+      loadAdminProfile();
       loadLead();
       loadMessages();
       setIsLoading(false);
@@ -82,7 +96,7 @@ export default function ChatAdmin() {
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     console.log("📝 Cambiando estado a:", value);
-    if (value === "nuevo" || value === "ready") {
+    if (value === "nuevo" || value === "contactado") {
       updateLeadStatus(value);
     }
   };
@@ -161,7 +175,7 @@ export default function ChatAdmin() {
     }
   };
 
-  const updateLeadStatus = async (newStatus: "nuevo" | "ready") => {
+  const updateLeadStatus = async (newStatus: "nuevo" | "contactado") => {
     if (!id || typeof id !== "string") return;
 
     console.log("🔄 Actualizando estado a:", newStatus);
@@ -179,23 +193,109 @@ export default function ChatAdmin() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Stub para compilación - funcionalidad básica
-    console.log("File upload triggered");
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
   };
 
-  const startRecording = () => {
-    setRecording(true);
-    console.log("Recording started");
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !id || typeof id !== "string") return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("chat-files")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("chat-files").getPublicUrl(fileName);
+
+      const { error: messageError } = await supabase.from("messages").insert({
+        lead_id: id,
+        text: "",
+        image_url: data.publicUrl,
+        is_from_maestro: true,
+        is_read: false,
+      });
+
+      if (messageError) throw messageError;
+
+      loadMessages();
+    } catch (error) {
+      console.error("Error subiendo archivo:", error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  let mediaRecorder: MediaRecorder | null = null;
+  let audioChunks: Blob[] = [];
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        await uploadAudio(audioBlob);
+      };
+
+      mediaRecorder.start();
+      setRecording(true);
+    } catch (error) {
+      console.error("Error iniciando grabación:", error);
+    }
   };
 
   const stopRecording = () => {
-    setRecording(false);
-    console.log("Recording stopped");
+    if (mediaRecorder && recording) {
+      mediaRecorder.stop();
+      setRecording(false);
+      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    }
   };
 
-  const handleImageClick = (imageUrl: string) => {
-    setSelectedImage(imageUrl);
+  const uploadAudio = async (audioBlob: Blob) => {
+    if (!id || typeof id !== "string") return;
+
+    setUploading(true);
+    try {
+      const fileName = `${id}/${Date.now()}.webm`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("chat-files")
+        .upload(fileName, audioBlob);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("chat-files").getPublicUrl(fileName);
+
+      const { error: messageError } = await supabase.from("messages").insert({
+        lead_id: id,
+        text: "",
+        audio_url: data.publicUrl,
+        is_from_maestro: true,
+        is_read: false,
+      });
+
+      if (messageError) throw messageError;
+
+      loadMessages();
+    } catch (error) {
+      console.error("Error subiendo audio:", error);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -259,7 +359,7 @@ export default function ChatAdmin() {
               className="px-3 py-1.5 rounded-lg border border-gold/20 bg-background text-sm text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none cursor-pointer"
             >
               <option value="nuevo">💬 EN CHAT</option>
-              <option value="ready">✅ LISTO</option>
+              <option value="contactado">✅ LISTO</option>
             </select>
           </div>
         </div>
@@ -277,45 +377,44 @@ export default function ChatAdmin() {
               className={`flex gap-3 ${msg.is_from_maestro ? "justify-start" : "justify-end"}`}
             >
               {msg.is_from_maestro && (
-                <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
-                  <AvatarFallback className="bg-primary/20 text-primary">
-                    <Sparkles className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              <div
-                className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                  msg.is_from_maestro
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card text-card-foreground border border-border"
-                }`}
-              >
-                {isImage && (
-                  <div 
-                    className="rounded-lg overflow-hidden mb-2 cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => setSelectedImage(msg.text?.replace("[IMG]", "") || "")}
-                  >
-                    <img
-                      src={msg.text?.replace("[IMG]", "") || ""}
-                      alt="Imagen"
-                      className="max-w-full h-auto"
-                      loading="lazy"
-                    />
+                <div className="flex items-start gap-2 justify-end">
+                  <div className="max-w-[70%] bg-gradient-to-br from-gold/20 to-accent/10 border border-gold/30 rounded-lg p-3">
+                    {msg.image_url && (
+                      <img
+                        src={msg.image_url}
+                        alt="Imagen"
+                        className="max-w-full rounded-lg mb-2 cursor-pointer"
+                        onClick={() => handleImageClick(msg.image_url!)}
+                      />
+                    )}
+                    {msg.audio_url && (
+                      <audio controls className="max-w-full mb-2">
+                        <source src={msg.audio_url} type="audio/webm" />
+                      </audio>
+                    )}
+                    <p className="text-sm text-foreground">{msg.text}</p>
+                    <p className="text-xs text-foreground/50 mt-1 text-right">
+                      {msg.created_at
+                        ? new Date(msg.created_at).toLocaleTimeString("es-MX", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : ""}
+                    </p>
                   </div>
-                )}
-                
-                {isAudio && (
-                  <audio controls className="mb-2 w-full max-w-xs">
-                    <source src={msg.text?.replace("[AUDIO]", "") || ""} type="audio/webm" />
-                  </audio>
-                )}
-                
-                {!isImage && !isAudio && msg.text && (
-                  <p className="text-sm break-words whitespace-pre-wrap">{msg.text}</p>
-                )}
-                
-                <p className="text-[10px] mt-1 opacity-70">{formatTime(msg.created_at)}</p>
-              </div>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold to-accent flex items-center justify-center text-black font-bold text-xs shrink-0 overflow-hidden">
+                    {adminProfile?.avatar_url ? (
+                      <img 
+                        src={adminProfile.avatar_url} 
+                        alt="Admin" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      "M"
+                    )}
+                  </div>
+                </div>
+              )}
               {!msg.is_from_maestro && (
                 <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
                   <AvatarFallback className="bg-accent/20 text-accent">
@@ -330,63 +429,53 @@ export default function ChatAdmin() {
       </div>
 
       {/* Input área */}
-      <form onSubmit={(e) => {
-        e.preventDefault();
-        handleSendMessage();
-      }} className="sticky bottom-0 bg-card border-t border-border p-4">
+      <div className="bg-gradient-to-r from-muted to-background border-t border-gold/10 p-4">
         <div className="flex items-center gap-2">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept="image/*"
-            className="hidden"
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="flex-shrink-0"
-          >
-            <Upload className="h-5 w-5" />
-          </Button>
-          
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
+          {/* Botón de imagen */}
+          <label className="cursor-pointer p-2 hover:bg-muted rounded-lg transition-colors">
+            <Image className="h-5 w-5 text-gold" />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
+
+          {/* Botón de audio */}
+          <button
             onMouseDown={startRecording}
             onMouseUp={stopRecording}
+            onMouseLeave={stopRecording}
             onTouchStart={startRecording}
             onTouchEnd={stopRecording}
             disabled={uploading}
-            className={`flex-shrink-0 ${recording ? "text-destructive animate-pulse" : ""}`}
+            className={`p-2 hover:bg-muted rounded-lg transition-colors ${
+              recording ? "bg-red-500/20 text-red-400" : "text-gold"
+            }`}
           >
             <Mic className="h-5 w-5" />
-          </Button>
+          </button>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && !isSending && sendMessage()}
-              placeholder="Escribe un mensaje..."
-              disabled={isSending}
-              className="flex-1 px-4 py-2 rounded-lg border border-gold/20 bg-background text-foreground placeholder:text-foreground/50 focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none disabled:opacity-50"
-            />
-            <button
-              onClick={sendMessage}
-              disabled={isSending || !newMessage.trim()}
-              className="px-4 py-2 bg-gradient-to-r from-gold to-accent text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-gold/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Send className="h-5 w-5" />
-            </button>
-          </div>
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && !isSending && sendMessage()}
+            placeholder="Escribe un mensaje..."
+            disabled={isSending || uploading}
+            className="flex-1 px-4 py-2 rounded-lg border border-gold/20 bg-background text-foreground placeholder:text-foreground/50 focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none disabled:opacity-50"
+          />
+          <button
+            onClick={sendMessage}
+            disabled={isSending || !newMessage.trim() || uploading}
+            className="px-4 py-2 bg-gradient-to-r from-gold to-accent text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-gold/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Send className="h-5 w-5" />
+          </button>
         </div>
-      </form>
+      </div>
 
       {/* Modal de imagen para admin (con descarga) */}
       <AnimatePresence>
