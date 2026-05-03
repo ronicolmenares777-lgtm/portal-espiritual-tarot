@@ -40,6 +40,7 @@ import {
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
 type Lead = LeadRow;
@@ -69,10 +70,11 @@ export default function Dashboard() {
 
   const [activeTab, setActiveTab] = useState<"leads" | "listo" | "papelera">("leads");
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "nuevo" | "enConversacion" | "atendido">("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [favoriteFilter, setFavoriteFilter] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("todos");
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<Tables<"leads">[]>([]);
   const [loading, setLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
   const [newLeadsCount, setNewLeadsCount] = useState(0);
@@ -193,6 +195,48 @@ export default function Dashboard() {
 
   const handleSaveProfile = () => {
     setShowProfile(false);
+  };
+
+  // Funciones helper
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "nuevo":
+        return "bg-blue-500/20 text-blue-400 border border-blue-500/30";
+      case "enConversacion":
+        return "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30";
+      case "atendido":
+        return "bg-green-500/20 text-green-400 border border-green-500/30";
+      default:
+        return "bg-gray-500/20 text-gray-400 border border-gray-500/30";
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "nuevo":
+        return "Nuevo";
+      case "enConversacion":
+        return "En conversación";
+      case "atendido":
+        return "Atendido";
+      default:
+        return status;
+    }
+  };
+
+  const handleToggleFavorite = async (leadId: string, currentFavorite: boolean) => {
+    const { error } = await supabase
+      .from("leads")
+      .update({ is_favorite: !currentFavorite })
+      .eq("id", leadId);
+
+    if (!error) {
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId ? { ...lead, is_favorite: !currentFavorite } : lead
+        )
+      );
+    }
   };
   
   // Filtrar leads según tab activo y filtros aplicados
