@@ -170,8 +170,8 @@ export default function Dashboard() {
         {/* Filtros principales */}
         <div className="space-y-2">
           <Button
-            variant={statusFilter === "all" ? "default" : "ghost"}
-            onClick={() => setStatusFilter("all")}
+            variant={currentView === "leads" ? "default" : "ghost"}
+            onClick={() => setCurrentView("leads")}
             className="w-full justify-between"
           >
             <span className="flex items-center gap-2">
@@ -181,8 +181,8 @@ export default function Dashboard() {
           </Button>
 
           <Button
-            variant={statusFilter === "atendido" ? "default" : "ghost"}
-            onClick={() => setStatusFilter("atendido")}
+            variant={currentView === "listo" ? "default" : "ghost"}
+            onClick={() => setCurrentView("listo")}
             className="w-full justify-between"
           >
             <span className="flex items-center gap-2">
@@ -192,8 +192,8 @@ export default function Dashboard() {
           </Button>
 
           <Button
-            variant={statusFilter === "papelera" ? "default" : "ghost"}
-            onClick={() => setStatusFilter("papelera")}
+            variant={currentView === "papelera" ? "default" : "ghost"}
+            onClick={() => setCurrentView("papelera")}
             className="w-full justify-between"
           >
             <span className="flex items-center gap-2">
@@ -465,7 +465,7 @@ export default function Dashboard() {
                       <p className="text-sm text-foreground/90">{lead.problem}</p>
                     </div>
                     
-                    {statusFilter === "papelera" ? (
+                    {currentView === "papelera" ? (
                       <Button
                         onClick={() => handleRestoreFromTrash(lead.id)}
                         className="w-full bg-green-500/90 hover:bg-green-500"
