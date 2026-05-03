@@ -34,10 +34,12 @@ import {
   Menu,
   Phone,
   MessageSquare,
-  Calendar
+  Calendar,
+  Input
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
 type Lead = LeadRow;
@@ -564,6 +566,49 @@ export default function Dashboard() {
                 </div>
               </div>
 
+              {/* Header con filtros */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Buscar por nombre o WhatsApp..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full text-sm sm:text-base"
+                  />
+                </div>
+                
+                <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+                  <Button
+                    variant={statusFilter === "all" ? "default" : "outline"}
+                    onClick={() => setStatusFilter("all")}
+                    className="text-xs sm:text-sm whitespace-nowrap"
+                  >
+                    Todos ({leads.length})
+                  </Button>
+                  <Button
+                    variant={statusFilter === "nuevo" ? "default" : "outline"}
+                    onClick={() => setStatusFilter("nuevo")}
+                    className="text-xs sm:text-sm whitespace-nowrap"
+                  >
+                    Nuevos ({leads.filter(l => l.status === "nuevo").length})
+                  </Button>
+                  <Button
+                    variant={statusFilter === "enConversacion" ? "default" : "outline"}
+                    onClick={() => setStatusFilter("enConversacion")}
+                    className="text-xs sm:text-sm whitespace-nowrap"
+                  >
+                    En conversación ({leads.filter(l => l.status === "enConversacion").length})
+                  </Button>
+                  <Button
+                    variant={statusFilter === "atendido" ? "default" : "outline"}
+                    onClick={() => setStatusFilter("atendido")}
+                    className="text-xs sm:text-sm whitespace-nowrap"
+                  >
+                    Atendidos ({leads.filter(l => l.status === "atendido").length})
+                  </Button>
+                </div>
+              </div>
+
               {/* Tabs de navegación en área principal */}
               <div className="bg-card/40 border border-gold/10 rounded-2xl p-4 lg:p-6 mb-4 lg:mb-6 shadow-lg shadow-black/30 shrink-0">
                 <div className="grid grid-cols-3 gap-2 lg:gap-3 mb-4 lg:mb-6">
@@ -694,42 +739,36 @@ export default function Dashboard() {
                       key={lead.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`bg-card/50 border-2 rounded-2xl p-4 lg:p-6 hover:shadow-xl transition-all ${
-                        selectedLeads.has(lead.id) 
-                          ? "border-primary shadow-xl shadow-primary/30" 
-                          : "border-border hover:border-primary/50"
-                      }`}
+                      whileHover={{ scale: 1.01 }}
+                      className="bg-card border border-border rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                      onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
                     >
-                      {/* Contenido del lead card - se mantiene igual */}
-                      <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                        {/* Checkbox */}
-                        <input
-                          type="checkbox"
-                          checked={selectedLeads.has(lead.id)}
-                          onChange={() => handleSelectLead(lead.id)}
-                          className="w-5 h-5 rounded border-2 border-border bg-background checked:bg-primary checked:border-primary cursor-pointer"
-                        />
-
-                        {/* Info del lead */}
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        <Avatar className="h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0">
+                          <AvatarFallback className="bg-primary/20 text-primary text-base sm:text-lg">
+                            {lead.name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-serif font-bold text-foreground truncate">
+                            <h3 className="text-base sm:text-lg font-serif font-bold text-foreground truncate">
                               {lead.name}
                             </h3>
                             {lead.is_favorite && (
-                              <span className="text-amber-400 text-xl">⭐</span>
+                              <span className="text-amber-400 text-lg sm:text-xl flex-shrink-0">⭐</span>
                             )}
                           </div>
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                               <span>📱</span>
-                              <span>{lead.country_code} {lead.whatsapp}</span>
+                              <span className="truncate">{lead.country_code} {lead.whatsapp}</span>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                               <span>🔮</span>
-                              <span>{lead.cards_selected && lead.cards_selected.length > 0 ? lead.cards_selected[0] : "Sin carta"}</span>
+                              <span className="truncate">{lead.cards_selected && lead.cards_selected.length > 0 ? lead.cards_selected[0] : "Sin carta"}</span>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground flex-wrap">
                               <span>📅</span>
                               <span>{new Date(lead.created_at).toLocaleDateString("es-MX", { 
                                 day: "2-digit", 
@@ -744,14 +783,24 @@ export default function Dashboard() {
                             </div>
                           </div>
                         </div>
-
-                        {/* Botón de acción */}
-                        <button
-                          onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                          className="px-6 py-3 bg-gradient-to-r from-primary via-amber-500 to-primary hover:opacity-90 text-primary-foreground rounded-xl font-semibold transition-all shadow-lg"
-                        >
-                          Ver Chat
-                        </button>
+                      
+                        <div className="flex flex-col gap-2 flex-shrink-0">
+                          <Button
+                            variant={lead.is_favorite ? "default" : "outline"}
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleFavorite(lead.id, lead.is_favorite);
+                            }}
+                            className="w-8 h-8 sm:w-9 sm:h-9 p-0"
+                          >
+                            <Star className={`h-4 w-4 ${lead.is_favorite ? "fill-current" : ""}`} />
+                          </Button>
+                          
+                          <span className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${getStatusColor(lead.status)}`}>
+                            {getStatusText(lead.status)}
+                          </span>
+                        </div>
                       </div>
                     </motion.div>
                   ))

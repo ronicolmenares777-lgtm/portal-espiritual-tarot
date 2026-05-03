@@ -6,8 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 import { AuthService } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, Mail, Save, Upload, ArrowLeft, Check, X } from "lucide-react";
+import { User, Mail, Save, Upload, ArrowLeft, Check, X, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function PerfilMaestro() {
   const router = useRouter();
@@ -246,148 +248,84 @@ export default function PerfilMaestro() {
   }
 
   return (
-    <>
-      <SEO 
-        title="Mi Perfil - Portal Espiritual Admin"
-        description="Configura tu perfil de maestro espiritual"
-      />
-
-      <div className="min-h-screen bg-background text-foreground p-6">
-        <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-2xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-card rounded-xl sm:rounded-2xl shadow-xl border border-border p-6 sm:p-8 lg:p-10"
+        >
           {/* Header */}
-          <div className="mb-8">
-            <Link
-              href="/Suafazon/dashboard"
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Volver al Dashboard</span>
-            </Link>
-            
-            <h1 className="text-4xl font-serif font-bold bg-gradient-to-r from-gold via-amber-400 to-gold bg-clip-text text-transparent mb-2">
-              Mi Perfil
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-gold mb-2">
+              Perfil del Maestro
             </h1>
-            <p className="text-muted-foreground">
-              Personaliza tu información y foto de perfil
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Personaliza tu información y avatar
             </p>
           </div>
 
-          {/* Mensaje de éxito/error */}
-          {message && (
-            <div className={`mb-6 p-4 rounded-xl border-2 flex items-center gap-3 ${
-              message.type === "success" 
-                ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
-                : "bg-red-500/10 border-red-500/40 text-red-400"
-            }`}>
-              {message.type === "success" ? (
-                <Check className="w-5 h-5 shrink-0" />
-              ) : (
-                <X className="w-5 h-5 shrink-0" />
-              )}
-              <p className="text-sm font-medium">{message.text}</p>
-            </div>
-          )}
-
-          {/* Card principal */}
-          <div className="bg-card/50 border-2 border-gold/20 rounded-2xl p-8 shadow-2xl">
-            {/* Foto de perfil */}
-            <div className="flex flex-col items-center mb-8">
-              <div className="relative mb-4">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary shadow-xl">
-                  {profile.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt={profile.full_name || "Maestro"}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center">
-                      <User className="w-16 h-16 text-primary-foreground" />
-                    </div>
-                  )}
-                </div>
-                
-                {uploading && (
-                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                  </div>
+          {/* Avatar */}
+          <div className="flex flex-col items-center mb-6 sm:mb-8">
+            <div className="relative group">
+              <Avatar className="h-28 w-28 sm:h-32 sm:w-32 border-4 border-gold/40 shadow-lg">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" className="object-cover" />
+                ) : (
+                  <AvatarFallback className="bg-gradient-to-br from-gold/20 to-accent/20 text-gold text-3xl sm:text-4xl">
+                    <Sparkles className="h-14 w-14 sm:h-16 sm:w-16" />
+                  </AvatarFallback>
                 )}
-              </div>
-
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageChange}
-                accept="image/*"
-                className="hidden"
-              />
-
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading || saving}
-                variant="outline"
-                className="gap-2"
-              >
-                <Upload className="w-4 h-4" />
-                {uploading ? "Subiendo..." : "Cambiar Foto"}
-              </Button>
+              </Avatar>
               
-              <p className="text-xs text-muted-foreground mt-2">
-                Máximo 2MB - JPG, PNG o GIF
-              </p>
-            </div>
-
-            {/* Formulario */}
-            <div className="space-y-6">
-              {/* Nombre completo */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <User className="w-4 h-4 text-primary" />
-                  Nombre Completo
-                </label>
-                <Input
-                  type="text"
-                  value={profile.full_name}
-                  onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                  placeholder="Ej: Maestro Espiritual"
-                  className="bg-secondary/50 border-border text-foreground"
-                  disabled={saving}
+              {/* Botón de cambiar avatar */}
+              <label className="absolute bottom-0 right-0 bg-gold hover:bg-accent text-background rounded-full p-2 sm:p-2.5 cursor-pointer shadow-lg transition-all">
+                <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Este nombre aparecerá en los chats con tus consultantes
-                </p>
-              </div>
-
-              {/* Email (solo lectura) */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-primary" />
-                  Email
-                </label>
-                <Input
-                  type="email"
-                  value={profile.email}
-                  disabled
-                  className="bg-muted/50 border-border text-muted-foreground cursor-not-allowed"
-                />
-                <p className="text-xs text-muted-foreground">
-                  El email no se puede cambiar
-                </p>
-              </div>
-
-              {/* Botón guardar */}
-              <Button
-                onClick={handleSave}
-                disabled={saving || uploading}
-                className="w-full gap-2 bg-gradient-to-r from-primary via-amber-500 to-primary hover:opacity-90 transition-opacity"
-              >
-                <Save className="w-4 h-4" />
-                {saving ? "Guardando..." : "Guardar Cambios"}
-              </Button>
+              </label>
             </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4 text-center">
+              Click en el icono para cambiar tu avatar
+            </p>
           </div>
-        </div>
+
+          {/* Formulario */}
+          <div className="space-y-4 sm:space-y-6">
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-foreground mb-2">
+                Nombre del Maestro
+              </label>
+              <Input
+                value={profile.full_name}
+                onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                placeholder="Ingresa tu nombre"
+                className="w-full text-sm sm:text-base"
+                disabled={saving}
+              />
+            </div>
+
+            <Button
+              onClick={handleSave}
+              disabled={saving || uploading}
+              className="w-full bg-gradient-to-r from-gold to-accent hover:from-accent hover:to-gold text-background font-bold py-2.5 sm:py-3 text-sm sm:text-base"
+            >
+              {saving ? "Guardando..." : "Guardar Cambios"}
+            </Button>
+          </div>
+
+          {/* Info adicional */}
+          <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-muted/30 rounded-xl">
+            <p className="text-xs sm:text-sm text-muted-foreground text-center">
+              Tu nombre y avatar se mostrarán en todas las conversaciones con los usuarios
+            </p>
+          </div>
+        </motion.div>
       </div>
-    </>
+    </div>
   );
 }
