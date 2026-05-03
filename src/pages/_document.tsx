@@ -8,12 +8,12 @@ export default function Document() {
     "@graph": [
       {
         "@type": "Organization",
-        "@id": "https://portal-espiritual.com/#organization",
+        "@id": "https://centrodeamor.com/#organization",
         "name": "Portal Espiritual",
-        "url": "https://portal-espiritual.com",
+        "url": "https://centrodeamor.com",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://portal-espiritual.com/og-image.png",
+          "url": "https://centrodeamor.com/og-image.png",
           "width": 1200,
           "height": 630
         },
@@ -32,21 +32,21 @@ export default function Document() {
       },
       {
         "@type": "WebSite",
-        "@id": "https://portal-espiritual.com/#website",
-        "url": "https://portal-espiritual.com",
+        "@id": "https://centrodeamor.com/#website",
+        "url": "https://centrodeamor.com",
         "name": "Portal Espiritual - Lectura de Tarot Online",
         "description": "Descubre tu destino con lecturas de tarot personalizadas",
         "publisher": {
-          "@id": "https://portal-espiritual.com/#organization"
+          "@id": "https://centrodeamor.com/#organization"
         },
         "inLanguage": "es-MX"
       },
       {
         "@type": "Service",
-        "@id": "https://portal-espiritual.com/#service",
+        "@id": "https://centrodeamor.com/#service",
         "serviceType": "Lectura de Tarot y Consulta Espiritual",
         "provider": {
-          "@id": "https://portal-espiritual.com/#organization"
+          "@id": "https://centrodeamor.com/#organization"
         },
         "areaServed": {
           "@type": "Country",
@@ -54,7 +54,7 @@ export default function Document() {
         },
         "availableChannel": {
           "@type": "ServiceChannel",
-          "serviceUrl": "https://portal-espiritual.com",
+          "serviceUrl": "https://centrodeamor.com",
           "serviceType": "Online Service"
         },
         "description": "Lecturas de tarot personalizadas con maestros espirituales certificados. Consultas místicas online para descubrir tu destino."

@@ -17,13 +17,13 @@ export function SEO({
   title = "Portal Espiritual - Lectura de Tarot Online | Consulta con Maestros",
   description = "Descubre tu destino con lecturas de tarot personalizadas. Maestros espirituales te guían en un viaje místico revelador. Consulta espiritual online en México y Latinoamérica.",
   image = "/og-image.png",
-  url = "https://portal-espiritual.com",
+  url = "https://centrodeamor.com",
   type = "website",
   keywords = "tarot online, lectura de tarot, consulta espiritual, guía espiritual, tarot gratis, lectura de cartas, maestro espiritual, tarot en línea México, consulta mística, destino espiritual"
 }: SEOProps) {
   const siteTitle = title.includes("Portal Espiritual") ? title : `${title} | Portal Espiritual`;
-  const fullUrl = url.startsWith("http") ? url : `https://portal-espiritual.com${url}`;
-  const fullImage = image.startsWith("http") ? image : `https://portal-espiritual.com${image}`;
+  const fullUrl = url.startsWith("http") ? url : `https://centrodeamor.com${url}`;
+  const fullImage = image.startsWith("http") ? image : `https://centrodeamor.com${image}`;
 
   return (
     <Head>

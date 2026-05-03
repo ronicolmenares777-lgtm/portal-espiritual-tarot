@@ -27,7 +27,7 @@ Allow: /favicon.svg
 Allow: /tarot/*.jpg
 
 # Sitemap
-Sitemap: https://portal-espiritual.com/sitemap.xml
+Sitemap: https://centrodeamor.com/sitemap.xml
 
 # Configuración para bots específicos
 User-agent: Googlebot

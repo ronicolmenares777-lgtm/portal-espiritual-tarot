@@ -6,16 +6,16 @@
 
   <!-- Página Principal - Prioridad máxima -->
   <url>
-    <loc>https://portal-espiritual.com/</loc>
-    <lastmod>2026-04-24</lastmod>
+    <loc>https://centrodeamor.com/</loc>
+    <lastmod>2026-05-03</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Chat Usuario - Alta prioridad (punto de conversión) -->
   <url>
-    <loc>https://portal-espiritual.com/chat-usuario</loc>
-    <lastmod>2026-04-24</lastmod>
+    <loc>https://centrodeamor.com/chat-usuario</loc>
+    <lastmod>2026-05-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
