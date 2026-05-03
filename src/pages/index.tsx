@@ -430,22 +430,22 @@ export default function Home() {
                 {/* Resplandor de fondo */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-gold/20 via-accent/20 to-gold/20 rounded-3xl blur-2xl opacity-60" />
                 
-                <div className="relative bg-card/80 backdrop-blur-xl border-2 border-gold/30 rounded-3xl p-6 lg:p-10 shadow-2xl shadow-black/50">
+                <div className="relative bg-card/80 backdrop-blur-xl border-2 border-gold/30 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-10 shadow-2xl shadow-black/50">
                   {/* Título del formulario */}
-                  <div className="text-center mb-6 lg:mb-8">
-                    <div className="inline-flex items-center gap-3 mb-3">
-                      <div className="h-px w-12 bg-gradient-to-r from-transparent to-gold/50" />
-                      <div className="h-px w-12 bg-gradient-to-l from-transparent to-gold/50" />
+                  <div className="text-center mb-4 sm:mb-6 lg:mb-8">
+                    <div className="inline-flex items-center gap-3 mb-2 sm:mb-3">
+                      <div className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-gold/50" />
+                      <div className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-gold/50" />
                     </div>
-                    <h2 className="text-xl lg:text-2xl font-serif font-bold text-foreground mb-2">
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-serif font-bold text-foreground mb-2">
                       Canal de Conexión
                     </h2>
-                    <p className="text-sm text-muted-foreground/80 max-w-md mx-auto">
+                    <p className="text-xs sm:text-sm text-muted-foreground/80 max-w-md mx-auto px-2">
                       Comparte tu información para que podamos guiarte en tu camino espiritual
                     </p>
                   </div>
 
-                  <form onSubmit={handleSubmit} className="space-y-5 lg:space-y-6">
+                  <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 lg:space-y-6">
                     {/* Nombre */}
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
@@ -457,14 +457,14 @@ export default function Home() {
                         placeholder="Nombre completo"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all text-base"
+                        className="w-full bg-secondary/30 border-2 border-gold/30 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all"
                         required
                       />
                     </div>
 
                     {/* WhatsApp */}
                     <div className="space-y-2">
-                      <label className="block text-gold text-sm font-medium tracking-wide flex items-center gap-2">
+                      <label className="block text-gold text-xs sm:text-sm font-medium tracking-wide flex items-center gap-2">
                         <span className="text-gold text-base">✦</span>
                         WHATSAPP
                       </label>
@@ -474,7 +474,7 @@ export default function Home() {
                           onChange={(e) => {
                             setFormData({ ...formData, countryCode: e.target.value, whatsapp: "" });
                           }}
-                          className="w-24 px-4 py-3 bg-background/50 border-2 border-gold/30 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all backdrop-blur-sm"
+                          className="w-20 sm:w-24 px-2 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-background/50 border-2 border-gold/30 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all backdrop-blur-sm"
                           required
                         >
                           <option value="+1">🇺🇸 +1</option>
@@ -497,7 +497,7 @@ export default function Home() {
                             }
                           }}
                           placeholder="Número de WhatsApp"
-                          className="flex-1 px-4 py-3 bg-background/50 border-2 border-gold/30 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all backdrop-blur-sm"
+                          className="flex-1 px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-background/50 border-2 border-gold/30 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all backdrop-blur-sm"
                           required
                         />
                       </div>
@@ -519,7 +519,7 @@ export default function Home() {
                         value={formData.problem}
                         onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
                         rows={4}
-                        className="w-full bg-secondary/30 border-2 border-gold/30 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all resize-none text-base"
+                        className="w-full bg-secondary/30 border-2 border-gold/30 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/60 focus:bg-secondary/40 transition-all resize-none"
                         required
                       />
                     </div>
@@ -530,7 +530,7 @@ export default function Home() {
                       disabled={!formData.name || !formData.whatsapp || !formData.problem || isSubmitting}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full relative group overflow-hidden rounded-xl py-3.5 font-bold text-lg tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-gold/30 hover:shadow-2xl hover:shadow-gold/50"
+                      className="w-full relative group overflow-hidden rounded-xl py-3 sm:py-3.5 font-bold text-base sm:text-lg tracking-wide transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-gold/30 hover:shadow-2xl hover:shadow-gold/50"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-gold via-accent to-gold transition-all group-hover:scale-105" />
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -541,7 +541,7 @@ export default function Home() {
                   </form>
 
                   {/* Nota de privacidad */}
-                  <p className="text-center text-xs text-muted-foreground/60 mt-5 lg:mt-6">
+                  <p className="text-center text-xs text-muted-foreground/60 mt-4 sm:mt-5 lg:mt-6 px-2">
                     🔒 Tu información está protegida y solo será usada para tu lectura espiritual
                   </p>
                 </div>

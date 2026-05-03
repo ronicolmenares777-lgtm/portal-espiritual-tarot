@@ -57,8 +57,8 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
           CANALIZANDO ENERGÍA ESPIRITUAL
         </motion.h1>
 
-        {/* Contenedor de 3 círculos */}
-        <div className="flex items-center justify-center gap-8 flex-wrap">
+        {/* Contenedor de 3 círculos - Responsive mejorado */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8 flex-wrap px-4">
           {/* Botón "Probar tarot" */}
           <motion.button
             onClick={onComplete}
@@ -67,28 +67,28 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.8 }}
-            className="relative w-64 h-64 rounded-full bg-gradient-to-br from-primary via-accent to-amber-600 hover:from-accent hover:via-primary hover:to-amber-500 shadow-2xl shadow-primary/50 hover:shadow-primary/70 transition-all flex flex-col items-center justify-center group cursor-pointer border-4 border-gold/40"
+            className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-gradient-to-br from-primary via-accent to-amber-600 hover:from-accent hover:via-primary hover:to-amber-500 shadow-2xl shadow-primary/50 hover:shadow-primary/70 transition-all flex flex-col items-center justify-center group cursor-pointer border-4 border-gold/40"
           >
             {/* Resplandor exterior */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-gold/30 to-primary/30 rounded-full blur-3xl animate-pulse-glow" />
             
             {/* Contenido del botón */}
-            <div className="relative z-10 text-center space-y-4">
+            <div className="relative z-10 text-center space-y-3 sm:space-y-4">
               {/* Icono de cartas de tarot */}
-              <div className="text-6xl">🔮</div>
+              <div className="text-5xl sm:text-6xl">🔮</div>
               
               {/* Texto principal */}
               <div>
-                <p className="text-white font-bold text-2xl drop-shadow-lg">
+                <p className="text-white font-bold text-xl sm:text-2xl drop-shadow-lg">
                   Probar
                 </p>
-                <p className="text-white font-bold text-3xl drop-shadow-lg">
+                <p className="text-white font-bold text-2xl sm:text-3xl drop-shadow-lg">
                   TAROT
                 </p>
               </div>
               
               {/* Subtexto */}
-              <p className="text-white/90 text-sm px-4">
+              <p className="text-white/90 text-xs sm:text-sm px-4">
                 Descubre tu destino
               </p>
             </div>
@@ -126,7 +126,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative w-64 h-64"
+            className="relative w-56 h-56 sm:w-64 sm:h-64"
           >
             {/* Resplandor exterior */}
             <div className="absolute inset-0 bg-gradient-to-r from-gold/30 via-accent/30 to-gold/30 rounded-full blur-3xl animate-pulse-glow" />
@@ -162,7 +162,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
               {/* Centro brillante */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 bg-gold/40 rounded-full blur-xl animate-pulse" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gold/40 rounded-full blur-xl animate-pulse" />
               </div>
             </div>
           </motion.div>
@@ -177,16 +177,16 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="relative w-64 h-64 rounded-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 shadow-2xl shadow-green-500/50 hover:shadow-green-500/70 transition-all flex flex-col items-center justify-center group cursor-pointer border-4 border-green-400/40"
+            className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 shadow-2xl shadow-green-500/50 hover:shadow-green-500/70 transition-all flex flex-col items-center justify-center group cursor-pointer border-4 border-green-400/40"
           >
             {/* Resplandor exterior del botón */}
             <div className="absolute inset-0 bg-gradient-to-r from-green-500/30 via-green-400/30 to-green-500/30 rounded-full blur-3xl animate-pulse-glow" />
             
             {/* Contenido del botón */}
-            <div className="relative z-10 text-center space-y-4">
+            <div className="relative z-10 text-center space-y-3 sm:space-y-4">
               {/* Icono de WhatsApp */}
               <svg
-                className="w-24 h-24 text-white drop-shadow-lg mx-auto"
+                className="w-20 h-20 sm:w-24 sm:h-24 text-white drop-shadow-lg mx-auto"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
@@ -195,16 +195,16 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
               
               {/* Texto */}
               <div>
-                <p className="text-white font-bold text-xl drop-shadow-lg">
+                <p className="text-white font-bold text-lg sm:text-xl drop-shadow-lg">
                   Conversar por
                 </p>
-                <p className="text-white font-bold text-2xl drop-shadow-lg">
+                <p className="text-white font-bold text-xl sm:text-2xl drop-shadow-lg">
                   WHATSAPP
                 </p>
               </div>
               
               {/* Subtexto */}
-              <p className="text-white/90 text-sm px-4">
+              <p className="text-white/90 text-xs sm:text-sm px-4">
                 Atención inmediata
               </p>
             </div>

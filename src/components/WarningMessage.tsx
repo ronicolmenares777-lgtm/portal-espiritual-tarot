@@ -121,15 +121,15 @@ export function WarningMessage({ onOpenChat }: WarningMessageProps) {
           </div>
         </div>
 
-        {/* Contenedor de bola de cristal y botón WhatsApp */}
-        <div className="flex items-center justify-center gap-8 my-12">
+        {/* Contenedor de bola de cristal y botón WhatsApp - Responsive mejorado */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-8 my-12 px-4">
           {/* Bola de cristal interactiva */}
           <div className="relative flex flex-col items-center gap-4">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.8 }}
-              className="relative w-48 h-48 md:w-64 md:h-64 cursor-pointer"
+              className="relative w-56 h-56 sm:w-48 sm:h-48 md:w-64 md:h-64 cursor-pointer"
               onMouseDown={handlePressStart}
               onMouseUp={handlePressEnd}
               onMouseLeave={handlePressEnd}
@@ -208,7 +208,7 @@ export function WarningMessage({ onOpenChat }: WarningMessageProps) {
                       rotate: { duration: 20, repeat: Infinity, ease: "linear" },
                       scale: { duration: isPressing ? 0.5 : 2, repeat: Infinity },
                     }}
-                    className="text-6xl md:text-7xl"
+                    className="text-5xl sm:text-6xl md:text-7xl"
                   >
                     🔮
                   </motion.div>
@@ -221,14 +221,14 @@ export function WarningMessage({ onOpenChat }: WarningMessageProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="text-gold/80 text-sm md:text-base font-medium text-center"
+              className="text-gold/80 text-xs sm:text-sm md:text-base font-medium text-center max-w-[200px] sm:max-w-none"
             >
               {isPressing ? (
                 <span className="text-gold font-bold animate-pulse">
-                  ✨ Manteniendo presión... {Math.round(pressProgress)}%
+                  ✨ {Math.round(pressProgress)}%
                 </span>
               ) : (
-                "Mantén presionada para abrir chat con el maestro"
+                "Mantén presionada para abrir chat"
               )}
             </motion.p>
           </div>
@@ -243,7 +243,7 @@ export function WarningMessage({ onOpenChat }: WarningMessageProps) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.8 }}
-            className="relative w-48 h-48 md:w-64 md:h-64 flex flex-col items-center justify-center gap-4 group cursor-pointer"
+            className="relative w-56 h-56 sm:w-48 sm:h-48 md:w-64 md:h-64 flex flex-col items-center justify-center gap-4 group cursor-pointer"
           >
             {/* Círculo del botón */}
             <div className="relative w-full h-full rounded-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 shadow-2xl shadow-green-500/50 hover:shadow-green-500/70 transition-all flex items-center justify-center border-4 border-green-400/40">
@@ -253,7 +253,7 @@ export function WarningMessage({ onOpenChat }: WarningMessageProps) {
               {/* Icono de WhatsApp */}
               <div className="relative z-10">
                 <svg
-                  className="w-24 h-24 md:w-32 md:h-32 text-white drop-shadow-lg"
+                  className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 text-white drop-shadow-lg"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -267,10 +267,10 @@ export function WarningMessage({ onOpenChat }: WarningMessageProps) {
 
             {/* Texto debajo del botón */}
             <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
-              <p className="text-green-400 font-bold text-lg md:text-xl drop-shadow-lg">
+              <p className="text-green-400 font-bold text-base sm:text-lg md:text-xl drop-shadow-lg">
                 Conversar por
               </p>
-              <p className="text-green-300 font-bold text-xl md:text-2xl drop-shadow-lg">
+              <p className="text-green-300 font-bold text-lg sm:text-xl md:text-2xl drop-shadow-lg">
                 WHATSAPP
               </p>
             </div>
