@@ -20,7 +20,7 @@ export default function ChatAdmin() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [leadStatus, setLeadStatus] = useState<"nuevo" | "contactado">("nuevo");
+  const [leadStatus, setLeadStatus] = useState<"nuevo" | "convertido">("nuevo");
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export default function ChatAdmin() {
       console.log("✅ Lead cargado:", data);
       setLead(data);
       setIsFavorite(data.is_favorite || false);
-      setLeadStatus((data.status === "contactado" ? "contactado" : "nuevo") as "nuevo" | "contactado");
+      setLeadStatus((data.status === "convertido" ? "convertido" : "nuevo") as "nuevo" | "convertido");
     }
   };
 
@@ -96,7 +96,7 @@ export default function ChatAdmin() {
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     console.log("📝 Cambiando estado a:", value);
-    if (value === "nuevo" || value === "contactado") {
+    if (value === "nuevo" || value === "convertido") {
       updateLeadStatus(value);
     }
   };
@@ -175,7 +175,7 @@ export default function ChatAdmin() {
     }
   };
 
-  const updateLeadStatus = async (newStatus: "nuevo" | "contactado") => {
+  const updateLeadStatus = async (newStatus: "nuevo" | "convertido") => {
     if (!id || typeof id !== "string") return;
 
     console.log("🔄 Actualizando estado a:", newStatus);
@@ -361,7 +361,7 @@ export default function ChatAdmin() {
               className="px-3 py-1.5 rounded-lg border border-gold/20 bg-background text-sm text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none cursor-pointer"
             >
               <option value="nuevo">💬 EN CHAT</option>
-              <option value="contactado">✅ LISTO</option>
+              <option value="convertido">✅ LISTO</option>
             </select>
           </div>
         </div>

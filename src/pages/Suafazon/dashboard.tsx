@@ -36,7 +36,7 @@ export default function Dashboard() {
   // Stats - calcular basado en el status de los leads
   const stats = {
     leads: leads.filter(l => l.status === "nuevo").length,
-    listo: leads.filter(l => l.status === "contactado").length,
+    listo: leads.filter(l => l.status === "convertido").length,
     papelera: leads.filter(l => l.status === "archive").length,
   };
 
@@ -97,7 +97,7 @@ export default function Dashboard() {
     if (statusFilter === "leads") {
       filtered = leads.filter(l => l.status === "nuevo");
     } else if (statusFilter === "listo") {
-      filtered = leads.filter(l => l.status === "contactado");
+      filtered = leads.filter(l => l.status === "convertido");
     } else if (statusFilter === "papelera") {
       filtered = leads.filter(l => l.status === "archive");
     }
