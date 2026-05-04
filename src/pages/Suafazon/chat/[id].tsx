@@ -69,7 +69,8 @@ export default function ChatAdmin() {
   const loadMessages = async () => {
     if (!id || typeof id !== "string") return;
 
-    console.log("📡 Cargando mensajes para lead:", id);
+    console.log("📥 Cargando mensajes para lead:", id);
+
     const { data, error } = await supabase
       .from("messages")
       .select("*")
@@ -77,11 +78,40 @@ export default function ChatAdmin() {
       .order("created_at", { ascending: true });
 
     if (error) {
-      console.error("❌ Error cargando mensajes:", error);
-    } else {
-      console.log("✅ Mensajes cargados:", data?.length || 0);
-      setMessages(data || []);
+      console.error("Error cargando mensajes:", error);
+      return;
     }
+
+    console.log("✅ Mensajes cargados:", data?.length || 0);
+    setMessages(data || []);
+  };
+
+  const subscribeToMessages = () => {
+    if (!id || typeof id !== "string") return;
+
+    console.log("🔄 Suscribiéndose a mensajes en tiempo real para lead:", id);
+
+    const channel = supabase
+      .channel(`messages:${id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `lead_id=eq.${id}`,
+        },
+        (payload) => {
+          console.log("📨 Nuevo mensaje recibido:", payload.new);
+          setMessages((prev) => [...prev, payload.new as Message]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log("🔌 Desuscribiéndose del canal de mensajes");
+      channel.unsubscribe();
+    };
   };
 
   useEffect(() => {
