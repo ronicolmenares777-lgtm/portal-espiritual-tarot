@@ -19,6 +19,8 @@ import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 
+type ScreenType = "form" | "loading" | "cards" | "reveal" | "question" | "warning" | "chat";
+
 const nombreEjemplos = [
   "María González",
   "Ana Martínez", 
@@ -250,6 +252,12 @@ export default function Home() {
     analyticsService.trackCardSelect(card.name);
     
     setCurrentScreen("suspense");
+  };
+
+  const handleCardSelection = (cardName: string) => {
+    console.log("🎴 Carta seleccionada:", cardName);
+    setSelectedCards([cardName]);
+    setCurrentScreen("reveal");
   };
 
   const handleFinalSubmit = async () => {
