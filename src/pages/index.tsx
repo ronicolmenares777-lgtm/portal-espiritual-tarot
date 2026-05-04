@@ -761,12 +761,7 @@ export default function Home() {
         )}
 
         {currentScreen === "loading" && (
-          <LoadingScreen 
-            onComplete={() => {
-              console.log("✅ LoadingScreen completado, avanzando a cards");
-              setCurrentScreen("cards");
-            }}
-          />
+          <LoadingScreen onComplete={() => setCurrentScreen("cards")} />
         )}
 
         {currentScreen === "cards" && (
