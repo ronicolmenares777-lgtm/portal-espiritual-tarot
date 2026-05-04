@@ -392,10 +392,45 @@ export default function Home() {
     return lengths[countryCode] || 10;
   };
 
+  // Validación de longitud de número por país
+  const getRequiredDigits = (countryCode: string): number => {
+    switch (countryCode) {
+      case "+1":   // USA/Canadá
+      case "+52":  // México
+        return 10;
+      case "+504": // Honduras
+      case "+502": // Guatemala
+        return 8;
+      default:
+        return 10;
+    }
+  };
+
+  const validatePhoneNumber = (countryCode: string, phoneNumber: string): { valid: boolean; message: string } => {
+    const requiredDigits = getRequiredDigits(countryCode);
+    const phoneDigits = phoneNumber.replace(/\D/g, "");
+    
+    if (phoneDigits.length !== requiredDigits) {
+      return {
+        valid: false,
+        message: `El número para ${countryCode} debe tener exactamente ${requiredDigits} dígitos`
+      };
+    }
+    
+    return { valid: true, message: "" };
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("📝 Formulario enviado:", formData);
     console.log("🌍 Código de país seleccionado:", formData.countryCode);
+
+    // Validar longitud del número según el país
+    const validation = validatePhoneNumber(formData.countryCode, formData.whatsapp);
+    if (!validation.valid) {
+      alert(validation.message);
+      return;
+    }
 
     analyticsService.trackFormStart();
 
@@ -421,7 +456,7 @@ export default function Home() {
       }
 
       console.log("✅ Lead guardado con WhatsApp:", data.whatsapp);
-      setLeadId(data.id);
+      setCurrentLeadId(data.id);
 
       analyticsService.trackFormComplete(data.id);
 
@@ -443,8 +478,10 @@ export default function Home() {
         return;
       }
 
-      if (!/^\d{10}$/.test(loginData.whatsapp)) {
-        setLoginError("El número de WhatsApp debe tener exactamente 10 dígitos");
+      // Validar longitud del número según el país
+      const validation = validatePhoneNumber(loginData.countryCode, loginData.whatsapp);
+      if (!validation.valid) {
+        setLoginError(validation.message);
         setIsLoggingIn(false);
         return;
       }
@@ -633,18 +670,21 @@ export default function Home() {
                           name="whatsapp"
                           value={formData.whatsapp}
                           onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, ""); // Solo números
-                            if (value.length <= 10) {
+                            const value = e.target.value.replace(/\D/g, "");
+                            const maxDigits = getRequiredDigits(formData.countryCode);
+                            if (value.length <= maxDigits) {
                               setFormData({ ...formData, whatsapp: value });
                             }
                           }}
-                          placeholder="3312345678"
+                          placeholder={getRequiredDigits(formData.countryCode) === 10 ? "3312345678" : "33123456"}
                           required
-                          maxLength={10}
+                          maxLength={getRequiredDigits(formData.countryCode)}
                           className="flex-1 px-4 py-2 rounded-lg border border-gold/20 bg-background text-foreground placeholder:text-foreground/40 focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
                         />
                       </div>
-                      <p className="text-xs text-foreground/50">Ingresa tu número de 10 dígitos (sin prefijo)</p>
+                      <p className="text-xs text-foreground/50">
+                        Selecciona tu país e ingresa tu número de {getRequiredDigits(formData.countryCode)} dígitos
+                      </p>
                       {formData.whatsapp && !formErrors.whatsapp && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {formData.whatsapp.length} / {getPhoneLength(formData.countryCode).max} dígitos
@@ -815,13 +855,21 @@ export default function Home() {
                     type="tel"
                     value={loginData.whatsapp}
                     onChange={(e) => {
-                      setLoginData({ ...loginData, whatsapp: e.target.value.replace(/\D/g, "") });
-                      setLoginError("");
+                      const value = e.target.value.replace(/\D/g, "");
+                      const maxDigits = getRequiredDigits(loginData.countryCode);
+                      if (value.length <= maxDigits) {
+                        setLoginData({ ...loginData, whatsapp: value });
+                      }
                     }}
-                    placeholder="1234567890"
-                    className="flex-1 px-4 py-3 bg-muted/30 border border-gold/20 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
+                    placeholder={getRequiredDigits(loginData.countryCode) === 10 ? "3312345678" : "33123456"}
+                    required
+                    maxLength={getRequiredDigits(loginData.countryCode)}
+                    className="flex-1 px-4 py-2 rounded-lg border border-gold/20 bg-background text-foreground placeholder:text-foreground/40 focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
                   />
                 </div>
+                <p className="text-xs text-foreground/50">
+                  Selecciona el mismo país y número ({getRequiredDigits(loginData.countryCode)} dígitos) que usaste al registrarte
+                </p>
               </div>
 
               {loginError && (
