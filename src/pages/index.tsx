@@ -118,7 +118,7 @@ export default function Home() {
 
   // Tracking de página vista
   useEffect(() => {
-    analyticsService.trackPageView();
+    // analyticsService.trackPageView(); // Desactivado temporalmente
   }, []);
 
   useEffect(() => {
@@ -432,7 +432,7 @@ export default function Home() {
       return;
     }
 
-    analyticsService.trackFormStart();
+    // analyticsService.trackFormStart(); // Desactivado temporalmente
 
     // Concatenar prefijo + número
     const whatsappWithPrefix = `${formData.countryCode}${formData.whatsapp}`;
@@ -458,7 +458,7 @@ export default function Home() {
       console.log("✅ Lead guardado con WhatsApp:", data.whatsapp);
       setCurrentLeadId(data.id);
 
-      analyticsService.trackFormComplete(data.id);
+      // analyticsService.trackFormComplete(data.id); // Desactivado temporalmente
 
       setCurrentScreen("loading");
     } catch (error) {
