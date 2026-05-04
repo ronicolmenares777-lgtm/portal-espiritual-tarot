@@ -27,7 +27,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState<"leads" | "listo" | "papelera">("leads");
+  const [statusFilter, setStatusFilter] = useState<"todos" | "leads" | "listo" | "papelera">("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -137,16 +137,20 @@ export default function Dashboard() {
     let filtered = [...leads];
     console.log("📊 [FILTER] Leads antes de filtrar:", filtered.length);
 
-    // Filtrar por estado
-    if (statusFilter === "leads") {
-      filtered = filtered.filter((lead) => lead.status === "nuevo");
-      console.log("🔹 [FILTER] Después de filtrar por status 'nuevo':", filtered.length);
-    } else if (statusFilter === "listo") {
-      filtered = filtered.filter((lead) => lead.status === "listo");
-      console.log("🔹 [FILTER] Después de filtrar por status 'listo':", filtered.length);
-    } else if (statusFilter === "papelera") {
-      filtered = filtered.filter((lead) => lead.status === "archive");
-      console.log("🔹 [FILTER] Después de filtrar por status 'archive':", filtered.length);
+    // Filtrar por estado (solo si NO es "todos")
+    if (statusFilter !== "todos") {
+      if (statusFilter === "leads") {
+        filtered = filtered.filter((lead) => lead.status === "nuevo");
+        console.log("🔹 [FILTER] Después de filtrar por status 'nuevo':", filtered.length);
+      } else if (statusFilter === "listo") {
+        filtered = filtered.filter((lead) => lead.status === "listo");
+        console.log("🔹 [FILTER] Después de filtrar por status 'listo':", filtered.length);
+      } else if (statusFilter === "papelera") {
+        filtered = filtered.filter((lead) => lead.status === "archive");
+        console.log("🔹 [FILTER] Después de filtrar por status 'archive':", filtered.length);
+      }
+    } else {
+      console.log("🔹 [FILTER] Mostrando TODOS los leads (sin filtro de status)");
     }
 
     // Filtrar por búsqueda
@@ -316,44 +320,67 @@ export default function Dashboard() {
 
         {/* Filtros principales */}
         <div className="flex-1 p-4 space-y-2">
-          <button
-            onClick={() => setStatusFilter("leads")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              statusFilter === "leads"
-                ? "bg-gradient-to-r from-gold to-accent text-black font-semibold shadow-xl shadow-gold/30 scale-105"
-                : "text-foreground/70 hover:bg-gradient-to-r hover:from-gold/10 hover:to-accent/10 hover:text-gold hover:scale-102"
-            }`}
-          >
-            <Users className="h-4 w-4" />
-            <span>LEADS</span>
-            <span className="ml-auto text-sm font-bold">{stats.leads}</span>
-          </button>
+          <div className="flex gap-4 mb-6">
+            <button
+              onClick={() => setStatusFilter("todos")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                statusFilter === "todos"
+                  ? "bg-primary text-black font-semibold"
+                  : "bg-card text-foreground/60 hover:bg-card/80"
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              TODOS
+              <span className="ml-2 px-2 py-1 bg-black/20 rounded-full text-sm">
+                {leads.length}
+              </span>
+            </button>
 
-          <button
-            onClick={() => setStatusFilter("listo")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              statusFilter === "listo"
-                ? "bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow-xl shadow-green-500/30 scale-105"
-                : "text-foreground/70 hover:bg-gradient-to-r hover:from-green-500/10 hover:to-green-600/10 hover:text-green-400 hover:scale-102"
-            }`}
-          >
-            <CheckCircle className="h-4 w-4" />
-            <span>LISTO</span>
-            <span className="ml-auto text-sm font-bold">{stats.listo}</span>
-          </button>
+            <button
+              onClick={() => setStatusFilter("leads")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                statusFilter === "leads"
+                  ? "bg-primary text-black font-semibold"
+                  : "bg-card text-foreground/60 hover:bg-card/80"
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              LEADS
+              <span className="ml-2 px-2 py-1 bg-black/20 rounded-full text-sm">
+                {leads.filter((l) => l.status === "nuevo").length}
+              </span>
+            </button>
 
-          <button
-            onClick={() => setStatusFilter("papelera")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-              statusFilter === "papelera"
-                ? "bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold shadow-xl shadow-red-500/30 scale-105"
-                : "text-foreground/70 hover:bg-gradient-to-r hover:from-red-500/10 hover:to-red-600/10 hover:text-red-400 hover:scale-102"
-            }`}
-          >
-            <Trash2 className="h-4 w-4" />
-            <span>PAPELERA</span>
-            <span className="ml-auto text-sm font-bold">{stats.papelera}</span>
-          </button>
+            <button
+              onClick={() => setStatusFilter("listo")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                statusFilter === "listo"
+                  ? "bg-green-600 text-white font-semibold"
+                  : "bg-card text-foreground/60 hover:bg-card/80"
+              }`}
+            >
+              <CheckCircle className="w-5 h-5" />
+              LISTO
+              <span className="ml-2 px-2 py-1 bg-black/20 rounded-full text-sm">
+                {leads.filter((l) => l.status === "listo").length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setStatusFilter("papelera")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                statusFilter === "papelera"
+                  ? "bg-red-600 text-white font-semibold"
+                  : "bg-card text-foreground/60 hover:bg-card/80"
+              }`}
+            >
+              <Trash2 className="w-5 h-5" />
+              PAPELERA
+              <span className="ml-2 px-2 py-1 bg-black/20 rounded-full text-sm">
+                {leads.filter((l) => l.status === "archive").length}
+              </span>
+            </button>
+          </div>
 
           <div className="my-4 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
 
