@@ -710,33 +710,29 @@ export default function Home() {
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-wider text-gold/80 mb-2">
+                <label className="block text-sm font-medium text-foreground/80">
                   Tu WhatsApp
                 </label>
-                <div className="flex gap-2">
-                  <select
-                    value={loginData.countryCode}
-                    onChange={(e) => setLoginData({ ...loginData, countryCode: e.target.value })}
-                    className="px-3 py-3 bg-muted/30 border border-gold/20 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
-                  >
-                    <option value="+1">🇺🇸 +1</option>
-                    <option value="+52">🇲🇽 +52</option>
-                    <option value="+34">🇪🇸 +34</option>
-                    <option value="+54">🇦🇷 +54</option>
-                    <option value="+57">🇨🇴 +57</option>
-                    <option value="+58">🇻🇪 +58</option>
-                  </select>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-2 bg-muted border border-gold/20 rounded-lg text-foreground/60 text-sm">
+                    +52
+                  </span>
                   <input
                     type="tel"
                     value={loginData.whatsapp}
                     onChange={(e) => {
-                      setLoginData({ ...loginData, whatsapp: e.target.value.replace(/\D/g, "") });
-                      setLoginError("");
+                      const value = e.target.value.replace(/\D/g, "");
+                      if (value.length <= 10) {
+                        setLoginData({ ...loginData, whatsapp: value });
+                      }
                     }}
-                    placeholder="1234567890"
-                    className="flex-1 px-4 py-3 bg-muted/30 border border-gold/20 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
+                    placeholder="3312345678"
+                    required
+                    maxLength={10}
+                    className="flex-1 px-4 py-2 rounded-lg border border-gold/20 bg-background text-foreground placeholder:text-foreground/40 focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
                   />
                 </div>
+                <p className="text-xs text-foreground/50">Ingresa el mismo número de 10 dígitos que usaste al registrarte</p>
               </div>
 
               {loginError && (
