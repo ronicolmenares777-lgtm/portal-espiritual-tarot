@@ -281,6 +281,22 @@ export default function Dashboard() {
     router.push("/Suafazon");
   };
 
+  const handleSelectAll = () => {
+    if (selectedLeads.length === filteredLeads.length && filteredLeads.length > 0) {
+      // Si todos están seleccionados, deseleccionar todos
+      setSelectedLeads([]);
+    } else {
+      // Seleccionar todos los leads filtrados
+      setSelectedLeads(filteredLeads.map(lead => lead.id));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedLeads((prev) =>
+      prev.includes(id) ? prev.filter((leadId) => leadId !== id) : [...prev, id]
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
