@@ -342,10 +342,10 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => router.push("/Suafazon")}
+                onClick={() => router.push("/Suafazon/perfil")}
                 className="px-4 py-2 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors text-sm font-semibold"
               >
-                🏠 Perfil
+                👤 Perfil
               </button>
               <button
                 onClick={handleLogout}

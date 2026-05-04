@@ -25,6 +25,10 @@ export default function ChatAdmin() {
   const [recording, setRecording] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [adminProfile, setAdminProfile] = useState<{ full_name?: string; avatar_url?: string } | null>(null);
+  const [maestroProfile, setMaestroProfile] = useState({
+    full_name: "Maestro Espiritual",
+    avatar_url: "",
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const loadAdminProfile = () => {
@@ -81,13 +85,48 @@ export default function ChatAdmin() {
   };
 
   useEffect(() => {
-    if (id) {
-      loadAdminProfile();
+    if (id && typeof id === "string") {
       loadLead();
       loadMessages();
-      setIsLoading(false);
+      loadMaestroProfile();
+      subscribeToMessages();
     }
+
+    return () => {
+      if (id && typeof id === "string") {
+        supabase.channel(`messages:${id}`).unsubscribe();
+      }
+    };
   }, [id]);
+
+  const loadMaestroProfile = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) return;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error cargando perfil del maestro:", error);
+        return;
+      }
+
+      if (data) {
+        setMaestroProfile({
+          full_name: data.full_name || "Maestro Espiritual",
+          avatar_url: data.avatar_url || "",
+        });
+        console.log("✅ Perfil del maestro cargado:", data);
+      }
+    } catch (error) {
+      console.error("Error en loadMaestroProfile:", error);
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -409,56 +448,39 @@ export default function ChatAdmin() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-muted to-background border-b border-gold/10 p-4">
-        <div className="flex items-center justify-between">
+      {/* Header del chat */}
+      <header className="bg-card border-b border-border px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/Suafazon/dashboard")}
+            className="p-2 hover:bg-background/50 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-foreground/60" />
+          </button>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push("/Suafazon/dashboard")}
-              className="text-gold hover:text-gold/80 transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold to-accent flex items-center justify-center text-black font-bold">
-              {lead?.name?.charAt(0).toUpperCase() || "?"}
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border-2 border-primary/30">
+              {maestroProfile.avatar_url ? (
+                <img
+                  src={maestroProfile.avatar_url}
+                  alt={maestroProfile.full_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="w-5 h-5 text-primary" />
+              )}
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-foreground">{lead?.name || "Cargando..."}</h2>
-                <button
-                  onClick={toggleFavorite}
-                  className="text-gold hover:text-gold/80 transition-colors"
-                >
-                  <Star className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
-                </button>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-foreground/60">
-                <Phone className="h-3 w-3" />
-                <a
-                  href={`https://wa.me/${lead?.whatsapp?.replace(/\D/g, "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-400 hover:underline"
-                >
-                  {lead?.whatsapp}
-                </a>
-              </div>
+              <h2 className="font-semibold text-foreground">
+                {maestroProfile.full_name}
+              </h2>
+              <p className="text-xs text-green-500 flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                En línea
+              </p>
             </div>
           </div>
-          
-          {/* Dropdown de estado */}
-          <div className="flex items-center gap-2">
-            <select
-              value={leadStatus}
-              onChange={handleStatusChange}
-              className="px-3 py-1.5 rounded-lg border border-gold/20 bg-background text-sm text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none cursor-pointer"
-            >
-              <option value="nuevo">💬 EN CHAT</option>
-              <option value="convertido">✅ LISTO</option>
-            </select>
-          </div>
         </div>
-      </div>
+      </header>
 
       {/* Área de mensajes */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
