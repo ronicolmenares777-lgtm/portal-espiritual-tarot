@@ -271,8 +271,11 @@ export default function Home() {
     try {
       // Actualizar el lead con las cartas seleccionadas y respuestas
       console.log("📝 Actualizando lead con cartas y respuestas...");
+      
+      const cardsToSave = selectedCard ? [selectedCard.name] : [];
+      
       const result = await LeadService.update(leadId, {
-        cards_selected: selectedCards.map(c => c.name),
+        cards_selected: cardsToSave,
         user_answers: answers.length > 0 ? { answers } : undefined,
         status: "enConversacion"
       });
@@ -286,7 +289,7 @@ export default function Home() {
       console.error("❌ Error en handleFinalSubmit:", error);
     }
     
-    console.log("📝 Cartas seleccionadas:", selectedCards.map(c => c.name));
+    console.log("📝 Cartas seleccionadas:", selectedCard ? [selectedCard.name] : []);
     console.log("📝 Respuestas:", answers);
     console.log("✅ Continuando al siguiente paso");
     
@@ -772,7 +775,7 @@ export default function Home() {
               console.log("🎴 Carta seleccionada:", card);
               setSelectedCard(card);
               setSelectedCardIndex(cardIndex);
-              setSelectedCards([card]);
+              setSelectedCards([card.name]);
               console.log("➡️ Avanzando inmediatamente a suspense");
               setCurrentScreen("suspense");
             }}
@@ -787,16 +790,17 @@ export default function Home() {
 
         {currentScreen === "reveal" && selectedCard && (
           <CardReveal
-            selectedCard={selectedCard.name}
+            card={selectedCard}
             onComplete={() => setCurrentScreen("question")}
           />
         )}
 
         {currentScreen === "question" && currentLeadId && selectedCard && (
           <QuestionScreen
-            leadId={currentLeadId}
-            cardName={selectedCard.name}
-            onComplete={() => setCurrentScreen("warning")}
+            card={selectedCard}
+            onSubmit={(answers) => {
+              handleFinalSubmit(currentLeadId, answers);
+            }}
           />
         )}
 
