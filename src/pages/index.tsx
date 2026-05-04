@@ -115,7 +115,15 @@ export default function Home() {
   };
 
   useEffect(() => {
-    console.log("🔄 Pantalla actual:", currentScreen);
+    if (currentLeadId) {
+      console.log("🔄 [STATE] currentLeadId cambió a:", currentLeadId);
+    } else {
+      console.log("🔄 [STATE] currentLeadId es null");
+    }
+  }, [currentLeadId]);
+
+  useEffect(() => {
+    console.log("🔄 [STATE] currentScreen cambió a:", currentScreen);
   }, [currentScreen]);
 
   // Tracking de página vista
@@ -460,7 +468,10 @@ export default function Home() {
       console.log("✅ WhatsApp guardado:", data.whatsapp);
       
       setCurrentLeadId(data.id);
+      console.log("✅ currentLeadId establecido a:", data.id);
+      
       setCurrentScreen("loading");
+      console.log("➡️ Cambiando a pantalla: loading");
     } catch (error) {
       console.error("❌ Error en handleFormSubmit:", error);
       alert("Error al procesar tu solicitud. Por favor intenta de nuevo.");
@@ -790,26 +801,37 @@ export default function Home() {
           />
         )}
 
-        {currentScreen === "warning" && (
-          <WarningMessage onOpenChat={handleOpenChat} />
+        {currentScreen === "warning" && currentLeadId && (
+          <WarningMessage 
+            onOpenChat={() => {
+              console.log("🔮 [BALL] Abriendo chat con leadId:", currentLeadId);
+              setCurrentScreen("chat");
+            }}
+          />
         )}
 
         {currentScreen === "chat" && currentLeadId && (
-          <ChatMaestro leadId={currentLeadId} />
+          <>
+            {console.log("💬 [RENDER CHAT] currentLeadId disponible:", currentLeadId)}
+            <ChatMaestro leadId={currentLeadId} />
+          </>
         )}
 
         {currentScreen === "chat" && !currentLeadId && (
-          <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="text-center text-foreground/60">
-              <p>Error: No se pudo cargar la sesión.</p>
-              <button
-                onClick={() => setCurrentScreen("form")}
-                className="mt-4 px-6 py-2 bg-gold text-black rounded-lg"
-              >
-                Volver al inicio
-              </button>
+          <>
+            {console.log("❌ [RENDER CHAT] NO HAY currentLeadId")}
+            <div className="min-h-screen flex items-center justify-center p-4">
+              <div className="text-center text-foreground/60">
+                <p>Error: No se pudo cargar la sesión.</p>
+                <button
+                  onClick={() => setCurrentScreen("form")}
+                  className="mt-4 px-6 py-2 bg-gold text-black rounded-lg"
+                >
+                  Volver al inicio
+                </button>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 
