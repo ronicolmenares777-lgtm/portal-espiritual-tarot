@@ -441,16 +441,16 @@ export default function Home() {
       return;
     }
 
-    // Concatenar prefijo + número
-    const whatsappWithPrefix = `${formData.countryCode}${formData.whatsapp}`;
-    console.log("📱 WhatsApp completo a guardar:", whatsappWithPrefix);
+    console.log("📱 Guardando - Country Code:", formData.countryCode);
+    console.log("📱 Guardando - WhatsApp:", formData.whatsapp);
 
     try {
       const { data, error } = await supabase
         .from("leads")
         .insert({
           name: formData.name,
-          whatsapp: whatsappWithPrefix,
+          whatsapp: formData.whatsapp,  // Solo el número
+          country_code: formData.countryCode,  // Prefijo separado
           problem: formData.problem,
           status: "nuevo",
         })
@@ -466,6 +466,7 @@ export default function Home() {
       console.log("✅ Lead guardado exitosamente:", data);
       console.log("✅ Lead ID:", data.id);
       console.log("✅ WhatsApp guardado:", data.whatsapp);
+      console.log("✅ Country Code guardado:", data.country_code);
       
       setCurrentLeadId(data.id);
       console.log("✅ currentLeadId establecido a:", data.id);
@@ -498,17 +499,21 @@ export default function Home() {
         return;
       }
 
-      const whatsappWithPrefix = `${loginData.countryCode}${loginData.whatsapp}`;
-      console.log("🔍 Buscando lead con WhatsApp:", whatsappWithPrefix);
+      console.log("🔍 Buscando lead con:");
+      console.log("  - Nombre:", loginData.name.trim());
+      console.log("  - Country Code:", loginData.countryCode);
+      console.log("  - WhatsApp:", loginData.whatsapp);
 
       const { data: existingLead, error } = await supabase
         .from("leads")
         .select("*")
         .eq("name", loginData.name.trim())
-        .eq("whatsapp", whatsappWithPrefix)
+        .eq("country_code", loginData.countryCode)
+        .eq("whatsapp", loginData.whatsapp)
         .single();
 
       if (error || !existingLead) {
+        console.error("❌ No se encontró el lead:", error);
         setLoginError("Datos incorrectos. Verifica tu nombre, país y número de WhatsApp exactos.");
         setIsLoggingIn(false);
         return;
