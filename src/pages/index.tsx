@@ -661,10 +661,17 @@ export default function Home() {
                       <label className="block text-sm font-medium text-foreground/80">
                         WhatsApp
                       </label>
-                      <div className="flex items-center gap-2">
-                        <span className="px-3 py-2 bg-muted border border-gold/20 rounded-lg text-foreground/60 text-sm">
-                          +52
-                        </span>
+                      <div className="flex gap-2">
+                        <select
+                          value={formData.countryCode}
+                          onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
+                          className="w-28 px-3 py-2 rounded-lg border border-gold/20 bg-background text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none text-sm"
+                        >
+                          <option value="+1">🇺🇸 +1</option>
+                          <option value="+52">🇲🇽 +52</option>
+                          <option value="+504">🇭🇳 +504</option>
+                          <option value="+502">🇬🇹 +502</option>
+                        </select>
                         <input
                           type="tel"
                           name="whatsapp"
@@ -836,15 +843,15 @@ export default function Home() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-gold/80 mb-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-foreground/80">
                   Tu WhatsApp
                 </label>
                 <div className="flex gap-2">
                   <select
                     value={loginData.countryCode}
                     onChange={(e) => setLoginData({ ...loginData, countryCode: e.target.value })}
-                    className="px-3 py-2 rounded-lg border border-gold/20 bg-background text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
+                    className="w-28 px-3 py-2 rounded-lg border border-gold/20 bg-background text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none text-sm"
                   >
                     <option value="+1">🇺🇸 +1</option>
                     <option value="+52">🇲🇽 +52</option>
@@ -885,8 +892,8 @@ export default function Home() {
                 <button
                   onClick={() => {
                     setShowLoginModal(false);
+                    setLoginData({ name: "", whatsapp: "", countryCode: "+1" });
                     setLoginError("");
-                    setLoginData({ name: "", whatsapp: "", countryCode: "+52" });
                   }}
                   className="flex-1 px-4 py-3 rounded-xl border-2 border-gold/30 text-muted-foreground hover:text-foreground hover:border-gold/50 transition-all font-medium"
                 >
