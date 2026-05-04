@@ -36,8 +36,8 @@ export default function Home() {
   
   const [formData, setFormData] = useState({
     name: "",
-    countryCode: "+1",
     whatsapp: "",
+    countryCode: "+1",
     problem: "",
   });
   
@@ -49,10 +49,10 @@ export default function Home() {
   const [answers, setAnswers] = useState<string[]>([]);
   const [nombrePlaceholder, setNombrePlaceholder] = useState(nombreEjemplos[0]);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [loginData, setLoginData] = useState({
-    name: "",
+  const [loginData, setLoginData] = useState({ 
+    name: "", 
     whatsapp: "",
-    countryCode: "+52"
+    countryCode: "+1"
   });
   const [loginError, setLoginError] = useState("");
   const [formErrors, setFormErrors] = useState({
@@ -431,6 +431,54 @@ export default function Home() {
     }
   };
 
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    setIsLoggingIn(true);
+
+    try {
+      if (!loginData.name || !loginData.whatsapp) {
+        setLoginError("Por favor completa todos los campos");
+        setIsLoggingIn(false);
+        return;
+      }
+
+      if (!/^\d{10}$/.test(loginData.whatsapp)) {
+        setLoginError("El número de WhatsApp debe tener exactamente 10 dígitos");
+        setIsLoggingIn(false);
+        return;
+      }
+
+      const whatsappWithPrefix = `${loginData.countryCode}${loginData.whatsapp}`;
+      console.log("🔍 Buscando lead con WhatsApp:", whatsappWithPrefix);
+
+      const { data: existingLead, error } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("name", loginData.name.trim())
+        .eq("whatsapp", whatsappWithPrefix)
+        .single();
+
+      if (error || !existingLead) {
+        setLoginError("Datos incorrectos. Verifica tu nombre, país y número de WhatsApp exactos.");
+        setIsLoggingIn(false);
+        return;
+      }
+
+      console.log("✅ Login exitoso:", existingLead);
+      setCurrentLeadId(existingLead.id);
+      setShowLoginModal(false);
+      setCurrentScreen("chat");
+
+      setLoginData({ name: "", whatsapp: "", countryCode: "+1" });
+    } catch (error) {
+      console.error("Error en login:", error);
+      setLoginError("Error al iniciar sesión. Intenta de nuevo.");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   return (
     <>
       <SEO 
@@ -756,14 +804,12 @@ export default function Home() {
                   <select
                     value={loginData.countryCode}
                     onChange={(e) => setLoginData({ ...loginData, countryCode: e.target.value })}
-                    className="px-3 py-3 bg-muted/30 border border-gold/20 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all"
+                    className="px-3 py-2 rounded-lg border border-gold/20 bg-background text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
                   >
                     <option value="+1">🇺🇸 +1</option>
                     <option value="+52">🇲🇽 +52</option>
-                    <option value="+34">🇪🇸 +34</option>
-                    <option value="+54">🇦🇷 +54</option>
-                    <option value="+57">🇨🇴 +57</option>
-                    <option value="+58">🇻🇪 +58</option>
+                    <option value="+504">🇭🇳 +504</option>
+                    <option value="+502">🇬🇹 +502</option>
                   </select>
                   <input
                     type="tel"
