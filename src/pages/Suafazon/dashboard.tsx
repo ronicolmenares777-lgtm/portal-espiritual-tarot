@@ -165,17 +165,20 @@ export default function Dashboard() {
     document.body.removeChild(link);
   };
 
-  const sendToPapelera = async () => {
-    if (selectedLeads.length === 0) return;
+  const moveToArchive = async (leadIds: string[]) => {
+    console.log("🗑️ Moviendo a archivo:", leadIds);
     
     const { error } = await supabase
       .from("leads")
       .update({ status: "archive" })
-      .in("id", selectedLeads);
+      .in("id", leadIds);
 
-    if (!error) {
-      setSelectedLeads([]);
+    if (error) {
+      console.error("❌ Error moviendo a archivo:", error);
+    } else {
+      console.log("✅ Leads archivados correctamente");
       loadLeads();
+      setSelectedLeads([]);
     }
   };
 
@@ -411,7 +414,7 @@ export default function Dashboard() {
               </button>
               {selectedLeads.length > 0 && (
                 <button
-                  onClick={sendToPapelera}
+                  onClick={() => moveToArchive(selectedLeads)}
                   className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/30 bg-gradient-to-r from-red-500/10 to-red-600/10 text-red-400 hover:from-red-500/20 hover:to-red-600/20 hover:shadow-lg hover:shadow-red-500/20 transition-all duration-200 text-sm animate-in slide-in-from-left-2 hover:scale-105"
                 >
                   <Trash2 className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
