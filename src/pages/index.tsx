@@ -36,10 +36,10 @@ export default function Home() {
   
   const [formData, setFormData] = useState({
     name: "",
-    countryCode: "+1",
     whatsapp: "",
     problem: "",
   });
+  const [countryCode, setCountryCode] = useState("+1"); // Predeterminado: USA/Canadá
   
   const [leadId, setLeadId] = useState<string | null>(null);
   const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
@@ -49,11 +49,8 @@ export default function Home() {
   const [answers, setAnswers] = useState<string[]>([]);
   const [nombrePlaceholder, setNombrePlaceholder] = useState(nombreEjemplos[0]);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [loginData, setLoginData] = useState({
-    name: "",
-    whatsapp: "",
-    countryCode: "+52"
-  });
+  const [loginData, setLoginData] = useState({ name: "", whatsapp: "" });
+  const [loginCountryCode, setLoginCountryCode] = useState("+1");
   const [loginError, setLoginError] = useState("");
   const [formErrors, setFormErrors] = useState({
     name: "",
@@ -155,88 +152,39 @@ export default function Home() {
     checkSession();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("📝 Formulario enviado:", formData);
 
-    // Validaciones
-    const errors = {
-      name: formData.name.trim() === "" ? "El nombre es requerido" : "",
-      whatsapp: validateWhatsApp(formData.whatsapp, formData.countryCode),
-      problem: formData.problem.trim() === "" ? "Describe tu problema" : "",
-    };
-
-    setFormErrors(errors);
-
-    if (errors.name || errors.whatsapp || errors.problem) {
-      console.log("❌ Errores de validación:", errors);
-      return;
-    }
-
-    setIsSubmitting(true);
+    // Agregar prefijo del país seleccionado al WhatsApp antes de guardar
+    const whatsappWithPrefix = `${countryCode}${formData.whatsapp}`;
 
     try {
-      console.log("📝 Datos del formulario:", {
-        name: formData.name,
-        whatsapp: formData.whatsapp,
-        country_code: formData.countryCode,
-        problem: formData.problem
-      });
+      const { data, error } = await supabase
+        .from("leads")
+        .insert({
+          name: formData.name,
+          whatsapp: whatsappWithPrefix,
+          problem: formData.problem,
+          status: "nuevo",
+        })
+        .select()
+        .single();
 
-      // Crear el lead en Supabase
-      const result = await LeadService.create({
-        name: formData.name.trim(),
-        whatsapp: formData.whatsapp.trim(),
-        country_code: formData.countryCode,
-        problem: formData.problem.trim(),
-        status: "nuevo"
-      });
-
-      console.log("📊 Resultado de create():", result);
-
-      if (result.error) {
-        console.error("❌ Error creando lead:", result.error);
-        
-        // Detectar error de WhatsApp duplicado
-        if (result.error.code === "DUPLICATE_WHATSAPP") {
-          setFormErrors({ 
-            ...formErrors, 
-            whatsapp: result.error.message
-          });
-        } else {
-          setFormErrors({ 
-            ...formErrors, 
-            problem: "Error al guardar. Por favor intenta de nuevo." 
-          });
-        }
-        
-        setIsSubmitting(false);
+      if (error) {
+        console.error("❌ Error guardando lead:", error);
         return;
       }
 
-      if (result.data) {
-        console.log("✅ Lead creado con ID:", result.data.id);
-        setLeadId(result.data.id);
-        localStorage.setItem("currentLeadId", result.data.id);
-        
-        // Track formulario completado
-        analyticsService.trackFormComplete(result.data.id);
-        
-        setCurrentScreen("loading");
-      } else {
-        console.error("❌ No se recibió data del lead");
-        setFormErrors({ 
-          ...formErrors, 
-          problem: "Error inesperado. Intenta de nuevo." 
-        });
-        setIsSubmitting(false);
-      }
-    } catch (error: any) {
-      console.error("❌ Error en handleSubmit:", error);
-      setFormErrors({ 
-        ...formErrors, 
-        problem: `Error: ${error.message || 'Intenta de nuevo'}` 
-      });
-      setIsSubmitting(false);
+      console.log("✅ Lead guardado:", data);
+      setCurrentLeadId(data.id);
+
+      // Track form complete
+      analyticsService.trackFormComplete(data.id);
+
+      setCurrentScreen("loading");
+    } catch (error) {
+      console.error("❌ Error en handleFormSubmit:", error);
     }
   };
 
@@ -392,6 +340,59 @@ export default function Home() {
     return lengths[countryCode] || 10;
   };
 
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    setIsLoggingIn(true);
+
+    try {
+      if (!loginData.name || !loginData.whatsapp) {
+        setLoginError("Por favor completa todos los campos");
+        setIsLoggingIn(false);
+        return;
+      }
+
+      // Validar formato de WhatsApp (solo números, 10 dígitos)
+      if (!/^\d{10}$/.test(loginData.whatsapp)) {
+        setLoginError("El número de WhatsApp debe tener exactamente 10 dígitos");
+        setIsLoggingIn(false);
+        return;
+      }
+
+      // Agregar prefijo del país seleccionado al WhatsApp antes de buscar
+      const whatsappWithPrefix = `${loginCountryCode}${loginData.whatsapp}`;
+
+      // Buscar lead existente por nombre y WhatsApp
+      const { data: existingLead, error } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("name", loginData.name.trim())
+        .eq("whatsapp", whatsappWithPrefix)
+        .single();
+
+      if (error || !existingLead) {
+        setLoginError("Datos incorrectos. Verifica tu nombre, país y número de WhatsApp exactos.");
+        setIsLoggingIn(false);
+        return;
+      }
+
+      // Login exitoso
+      console.log("✅ Login exitoso:", existingLead);
+      setCurrentLeadId(existingLead.id);
+      setShowLoginModal(false);
+      setCurrentScreen("chat");
+
+      // Limpiar formulario
+      setLoginData({ name: "", whatsapp: "" });
+      setLoginCountryCode("+1");
+    } catch (error) {
+      console.error("Error en login:", error);
+      setLoginError("Error al iniciar sesión. Intenta de nuevo.");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   return (
     <>
       <SEO 
@@ -509,7 +510,7 @@ export default function Home() {
                     </p>
                   </div>
 
-                  <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 lg:space-y-6">
+                  <form onSubmit={handleFormSubmit} className="space-y-4 sm:space-y-5 lg:space-y-6">
                     {/* Nombre */}
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
@@ -537,16 +538,23 @@ export default function Home() {
                       <label className="block text-sm font-medium text-foreground/80">
                         WhatsApp
                       </label>
-                      <div className="flex items-center gap-2">
-                        <span className="px-3 py-2 bg-muted border border-gold/20 rounded-lg text-foreground/60 text-sm">
-                          +52
-                        </span>
+                      <div className="flex gap-2">
+                        <select
+                          value={countryCode}
+                          onChange={(e) => setCountryCode(e.target.value)}
+                          className="px-3 py-2 rounded-lg border border-gold/20 bg-background text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
+                        >
+                          <option value="+1">🇺🇸 +1</option>
+                          <option value="+52">🇲🇽 +52</option>
+                          <option value="+504">🇭🇳 +504</option>
+                          <option value="+502">🇬🇹 +502</option>
+                        </select>
                         <input
                           type="tel"
                           name="whatsapp"
                           value={formData.whatsapp}
                           onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, ""); // Solo números
+                            const value = e.target.value.replace(/\D/g, "");
                             if (value.length <= 10) {
                               setFormData({ ...formData, whatsapp: value });
                             }
@@ -557,7 +565,7 @@ export default function Home() {
                           className="flex-1 px-4 py-2 rounded-lg border border-gold/20 bg-background text-foreground placeholder:text-foreground/40 focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
                         />
                       </div>
-                      <p className="text-xs text-foreground/50">Ingresa tu número de 10 dígitos (sin prefijo)</p>
+                      <p className="text-xs text-foreground/50">Selecciona tu país e ingresa tu número de 10 dígitos</p>
                       {formData.whatsapp && !formErrors.whatsapp && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {formData.whatsapp.length} / {getPhoneLength(formData.countryCode).max} dígitos
@@ -709,14 +717,21 @@ export default function Home() {
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <label className="block text-sm font-medium text-foreground/80">
                   Tu WhatsApp
                 </label>
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-2 bg-muted border border-gold/20 rounded-lg text-foreground/60 text-sm">
-                    +52
-                  </span>
+                <div className="flex gap-2">
+                  <select
+                    value={loginCountryCode}
+                    onChange={(e) => setLoginCountryCode(e.target.value)}
+                    className="px-3 py-2 rounded-lg border border-gold/20 bg-background text-foreground focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
+                  >
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+52">🇲🇽 +52</option>
+                    <option value="+504">🇭🇳 +504</option>
+                    <option value="+502">🇬🇹 +502</option>
+                  </select>
                   <input
                     type="tel"
                     value={loginData.whatsapp}
@@ -732,7 +747,7 @@ export default function Home() {
                     className="flex-1 px-4 py-2 rounded-lg border border-gold/20 bg-background text-foreground placeholder:text-foreground/40 focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
                   />
                 </div>
-                <p className="text-xs text-foreground/50">Ingresa el mismo número de 10 dígitos que usaste al registrarte</p>
+                <p className="text-xs text-foreground/50">Selecciona el mismo país y número que usaste al registrarte</p>
               </div>
 
               {loginError && (
