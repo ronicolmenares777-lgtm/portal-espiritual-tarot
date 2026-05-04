@@ -225,13 +225,42 @@ export default function Dashboard() {
     }
   };
 
-  const toggleFavorite = async (leadId: string, currentFavorite: boolean) => {
-    const { error } = await supabase
-      .from("leads")
-      .update({ is_favorite: !currentFavorite })
-      .eq("id", leadId);
+  const handleStatusChange = async (leadId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .update({ status: newStatus })
+        .eq("id", leadId);
 
-    if (!error) loadLeads();
+      if (error) {
+        console.error("Error actualizando status:", error);
+        return;
+      }
+
+      console.log("✅ Status actualizado:", leadId, "→", newStatus);
+      loadLeads();
+    } catch (error) {
+      console.error("Error en handleStatusChange:", error);
+    }
+  };
+
+  const toggleFavorite = async (leadId: string, currentFavorite: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .update({ is_favorite: !currentFavorite })
+        .eq("id", leadId);
+
+      if (error) {
+        console.error("Error actualizando favorito:", error);
+        return;
+      }
+
+      console.log("✅ Favorito actualizado:", leadId);
+      loadLeads();
+    } catch (error) {
+      console.error("Error en toggleFavorite:", error);
+    }
   };
 
   const exportToCSV = () => {
@@ -564,6 +593,101 @@ export default function Dashboard() {
                   </th>
                 </tr>
               </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-12 text-foreground/60">
+                      Cargando leads...
+                    </td>
+                  </tr>
+                ) : filteredLeads.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-12 text-foreground/60">
+                      No hay leads que coincidan con los filtros
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLeads.map((lead) => (
+                    <tr
+                      key={lead.id}
+                      className="border-b border-border hover:bg-card/50 transition-colors"
+                    >
+                      <td className="p-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedLeads.includes(lead.id)}
+                          onChange={() => toggleSelect(lead.id)}
+                          className="w-4 h-4"
+                        />
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                            {lead.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-foreground">{lead.name}</p>
+                            {newMessageLeadId === lead.id && (
+                              <span className="text-xs text-accent font-semibold">Nuevo</span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 text-foreground/80">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-foreground/60">{lead.country_code}</span>
+                          <span>{lead.whatsapp}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-foreground/60 text-sm max-w-xs truncate">
+                        {lead.problem}
+                      </td>
+                      <td className="p-4 text-foreground/60 text-sm">
+                        {new Date(lead.created_at).toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="p-4">
+                        <select
+                          value={lead.status || "nuevo"}
+                          onChange={(e) => handleStatusChange(lead.id, e.target.value)}
+                          className="px-3 py-1 rounded-lg bg-card border border-border text-sm text-foreground"
+                        >
+                          <option value="nuevo">Nuevo</option>
+                          <option value="enConversacion">En Conversación</option>
+                          <option value="caliente">Caliente</option>
+                          <option value="listo">Listo</option>
+                          <option value="cerrado">Cerrado</option>
+                          <option value="perdido">Perdido</option>
+                          <option value="archive">Archive</option>
+                        </select>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                            className="px-4 py-2 bg-primary text-black rounded-lg hover:bg-accent transition-colors font-semibold text-sm"
+                          >
+                            💬 Ver Chat Completo
+                          </button>
+                          <button
+                            onClick={() => toggleFavorite(lead.id, lead.is_favorite || false)}
+                            className="p-2 rounded-lg hover:bg-card transition-colors"
+                          >
+                            <Star
+                              className={`w-5 h-5 ${
+                                lead.is_favorite ? "fill-accent text-accent" : "text-foreground/40"
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
             </table>
           </div>
         </div>
