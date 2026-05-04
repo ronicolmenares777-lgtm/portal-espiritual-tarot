@@ -234,7 +234,7 @@ export default function ChatAdmin() {
   const handleSendImage = async (file: File) => {
     if (!id || typeof id !== "string") return;
 
-    setIsUploading(true);
+    setUploading(true);
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `${id}/${fileName}`;
@@ -248,7 +248,7 @@ export default function ChatAdmin() {
     if (error) {
       console.error("❌ Error subiendo imagen:", error);
       alert("Error al subir imagen. Intenta de nuevo.");
-      setIsUploading(false);
+      setUploading(false);
       return;
     }
 
@@ -276,7 +276,7 @@ export default function ChatAdmin() {
       loadMessages();
     }
 
-    setIsUploading(false);
+    setUploading(false);
   };
 
   let mediaRecorder: MediaRecorder | null = null;
@@ -320,12 +320,12 @@ export default function ChatAdmin() {
       const fileName = `${id}/${Date.now()}.webm`;
 
       const { error: uploadError } = await supabase.storage
-        .from("chat-files")
+        .from("chat-media")
         .upload(fileName, audioBlob);
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from("chat-files").getPublicUrl(fileName);
+      const { data } = supabase.storage.from("chat-media").getPublicUrl(fileName);
 
       const { error: messageError } = await supabase.from("messages").insert({
         lead_id: id,
@@ -348,7 +348,7 @@ export default function ChatAdmin() {
   const handleSendAudio = async (audioBlob: Blob) => {
     if (!id || typeof id !== "string") return;
 
-    setIsUploading(true);
+    setUploading(true);
     const fileName = `${Date.now()}.webm`;
     const filePath = `${id}/${fileName}`;
 
@@ -361,7 +361,7 @@ export default function ChatAdmin() {
     if (error) {
       console.error("❌ Error subiendo audio:", error);
       alert("Error al subir audio. Intenta de nuevo.");
-      setIsUploading(false);
+      setUploading(false);
       return;
     }
 
@@ -389,8 +389,8 @@ export default function ChatAdmin() {
       loadMessages();
     }
 
-    setIsUploading(false);
-    setIsRecording(false);
+    setUploading(false);
+    setRecording(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
