@@ -143,7 +143,6 @@ export default function ChatAdmin() {
       lead_id: id,
       text: newMessage,
       is_from_maestro: true,
-      is_read: false,
     });
 
     if (error) {
@@ -220,7 +219,6 @@ export default function ChatAdmin() {
         media_url: data.publicUrl,
         media_type: "image",
         is_from_maestro: true,
-        is_read: false,
       });
 
       if (messageError) throw messageError;
@@ -287,7 +285,6 @@ export default function ChatAdmin() {
         media_url: data.publicUrl,
         media_type: "audio",
         is_from_maestro: true,
-        is_read: false,
       });
 
       if (messageError) throw messageError;
