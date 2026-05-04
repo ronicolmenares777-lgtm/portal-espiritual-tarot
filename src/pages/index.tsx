@@ -30,9 +30,7 @@ const nombreEjemplos = [
 ];
 
 export default function Home() {
-  const [currentScreen, setCurrentScreen] = useState<
-    "form" | "loading" | "cards" | "suspense" | "reveal" | "questions" | "warning" | "chat"
-  >("form");
+  const [currentScreen, setCurrentScreen] = useState<ScreenType>("form");
   
   const [formData, setFormData] = useState({
     name: "",
@@ -42,7 +40,7 @@ export default function Home() {
   });
   
   const [leadId, setLeadId] = useState<string | null>(null);
-  const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
+  const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
   const [selectedCardIndex, setSelectedCardIndex] = useState(0);
   const [currentCardReveal, setCurrentCardReveal] = useState(0);
@@ -62,6 +60,8 @@ export default function Home() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formStarted, setFormStarted] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [currentLeadId, setCurrentLeadId] = useState<string | null>(null);
   const router = useRouter();
 
   // Validación de longitud de número según código de país
