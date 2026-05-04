@@ -259,17 +259,8 @@ export default function Home() {
     setCurrentScreen("reveal");
   };
 
-  const handleFinalSubmit = async () => {
-    console.log("📝 Finalizando lectura...");
-    
-    if (!leadId) {
-      console.error("❌ Error: No hay leadId");
-      setCurrentScreen("warning");
-      return;
-    }
-
+  const handleFinalSubmit = async (leadId: string, answers: any[]) => {
     try {
-      // Actualizar el lead con las cartas seleccionadas y respuestas
       console.log("📝 Actualizando lead con cartas y respuestas...");
       
       const cardsToSave = selectedCard ? [selectedCard.name] : [];
