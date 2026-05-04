@@ -19,7 +19,7 @@ import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 
-type ScreenType = "form" | "loading" | "cards" | "reveal" | "question" | "warning" | "chat";
+type ScreenType = "form" | "loading" | "cards" | "reveal" | "suspense" | "question" | "questions" | "warning" | "chat";
 
 const nombreEjemplos = [
   "María González",
@@ -243,15 +243,14 @@ export default function Home() {
   };
 
   const handleCardSelected = (card: TarotCard, cardIndex: number) => {
-    console.log("🎴 Carta seleccionada:", card);
+    console.log("🎴 Carta seleccionada:", card.name);
+    setSelectedCards([card.name]);
     setSelectedCard(card);
-    setSelectedCardIndex(cardIndex);
-    setSelectedCards([card]);
-    
-    // Track selección de carta
-    analyticsService.trackCardSelect(card.name);
-    
     setCurrentScreen("suspense");
+
+    setTimeout(() => {
+      setCurrentScreen("questions");
+    }, 3000);
   };
 
   const handleCardSelection = (cardName: string) => {
@@ -786,21 +785,18 @@ export default function Home() {
           />
         )}
 
-        {currentScreen === "reveal" && selectedCards.length > 0 && (
+        {currentScreen === "reveal" && selectedCard && (
           <CardReveal
-            card={selectedCards[currentCardReveal]}
-            onContinue={handleCardRevealComplete}
+            selectedCard={selectedCard.name}
+            onComplete={() => setCurrentScreen("question")}
           />
         )}
 
-        {currentScreen === "questions" && selectedCard && (
+        {currentScreen === "question" && currentLeadId && selectedCard && (
           <QuestionScreen
-            card={selectedCard}
-            onAnswersComplete={(userAnswers) => {
-              console.log("📝 Respuestas completadas:", userAnswers);
-              setAnswers(userAnswers);
-              setCurrentScreen("warning");
-            }}
+            leadId={currentLeadId}
+            cardName={selectedCard.name}
+            onComplete={() => setCurrentScreen("warning")}
           />
         )}
 
