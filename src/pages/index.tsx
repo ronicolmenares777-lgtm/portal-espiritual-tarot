@@ -803,10 +803,8 @@ export default function Home() {
           <WarningMessage onOpenChat={handleOpenChat} />
         )}
 
-        {currentScreen === "chat" && (
-          <ChatMaestro 
-            leadId={leadId!} 
-          />
+        {currentScreen === "chat" && currentLeadId && (
+          <ChatMaestro leadId={currentLeadId} />
         )}
       </div>
 
