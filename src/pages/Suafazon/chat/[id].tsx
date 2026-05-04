@@ -231,6 +231,54 @@ export default function ChatAdmin() {
     }
   };
 
+  const handleSendImage = async (file: File) => {
+    if (!id || typeof id !== "string") return;
+
+    setIsUploading(true);
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `${id}/${fileName}`;
+
+    console.log("📤 Subiendo imagen:", filePath);
+
+    const { data, error } = await supabase.storage
+      .from("chat-media")
+      .upload(filePath, file);
+
+    if (error) {
+      console.error("❌ Error subiendo imagen:", error);
+      alert("Error al subir imagen. Intenta de nuevo.");
+      setIsUploading(false);
+      return;
+    }
+
+    console.log("✅ Imagen subida:", data.path);
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("chat-media")
+      .getPublicUrl(data.path);
+
+    console.log("🔗 URL pública:", publicUrl);
+
+    const { error: messageError } = await supabase.from("messages").insert({
+      lead_id: id,
+      text: "",
+      media_url: publicUrl,
+      media_type: "image",
+      is_from_maestro: true,
+    });
+
+    if (messageError) {
+      console.error("❌ Error guardando mensaje con imagen:", messageError);
+      alert("Error al enviar imagen. Intenta de nuevo.");
+    } else {
+      console.log("✅ Mensaje con imagen enviado");
+      loadMessages();
+    }
+
+    setIsUploading(false);
+  };
+
   let mediaRecorder: MediaRecorder | null = null;
   let audioChunks: Blob[] = [];
 
@@ -295,6 +343,54 @@ export default function ChatAdmin() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleSendAudio = async (audioBlob: Blob) => {
+    if (!id || typeof id !== "string") return;
+
+    setIsUploading(true);
+    const fileName = `${Date.now()}.webm`;
+    const filePath = `${id}/${fileName}`;
+
+    console.log("📤 Subiendo audio:", filePath);
+
+    const { data, error } = await supabase.storage
+      .from("chat-media")
+      .upload(filePath, audioBlob);
+
+    if (error) {
+      console.error("❌ Error subiendo audio:", error);
+      alert("Error al subir audio. Intenta de nuevo.");
+      setIsUploading(false);
+      return;
+    }
+
+    console.log("✅ Audio subido:", data.path);
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("chat-media")
+      .getPublicUrl(data.path);
+
+    console.log("🔗 URL pública:", publicUrl);
+
+    const { error: messageError } = await supabase.from("messages").insert({
+      lead_id: id,
+      text: "",
+      media_url: publicUrl,
+      media_type: "audio",
+      is_from_maestro: true,
+    });
+
+    if (messageError) {
+      console.error("❌ Error guardando mensaje con audio:", messageError);
+      alert("Error al enviar audio. Intenta de nuevo.");
+    } else {
+      console.log("✅ Mensaje con audio enviado");
+      loadMessages();
+    }
+
+    setIsUploading(false);
+    setIsRecording(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
