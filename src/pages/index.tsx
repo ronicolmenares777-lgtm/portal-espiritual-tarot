@@ -392,6 +392,45 @@ export default function Home() {
     return lengths[countryCode] || 10;
   };
 
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("📝 Formulario enviado:", formData);
+    console.log("🌍 Código de país seleccionado:", formData.countryCode);
+
+    analyticsService.trackFormStart();
+
+    // Concatenar prefijo + número
+    const whatsappWithPrefix = `${formData.countryCode}${formData.whatsapp}`;
+    console.log("📱 WhatsApp completo a guardar:", whatsappWithPrefix);
+
+    try {
+      const { data, error } = await supabase
+        .from("leads")
+        .insert({
+          name: formData.name,
+          whatsapp: whatsappWithPrefix,
+          problem: formData.problem,
+          status: "nuevo",
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("❌ Error guardando lead:", error);
+        return;
+      }
+
+      console.log("✅ Lead guardado con WhatsApp:", data.whatsapp);
+      setLeadId(data.id);
+
+      analyticsService.trackFormComplete(data.id);
+
+      setCurrentScreen("loading");
+    } catch (error) {
+      console.error("❌ Error en handleFormSubmit:", error);
+    }
+  };
+
   return (
     <>
       <SEO 
@@ -509,7 +548,7 @@ export default function Home() {
                     </p>
                   </div>
 
-                  <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 lg:space-y-6">
+                  <form onSubmit={handleFormSubmit} className="space-y-4 sm:space-y-5 lg:space-y-6">
                     {/* Nombre */}
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-foreground/90 uppercase tracking-wider flex items-center gap-2">
