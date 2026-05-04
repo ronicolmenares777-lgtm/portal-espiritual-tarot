@@ -534,45 +534,30 @@ export default function Home() {
 
                     {/* WhatsApp */}
                     <div className="space-y-2">
-                      <label className="block text-gold text-xs sm:text-sm font-medium tracking-wide flex items-center gap-2">
-                        <span className="text-gold text-base">✦</span>
-                        WHATSAPP
+                      <label className="block text-sm font-medium text-foreground/80">
+                        WhatsApp
                       </label>
-                      <div className="flex gap-2">
-                        <select
-                          value={formData.countryCode}
-                          onChange={(e) => {
-                            setFormData({ ...formData, countryCode: e.target.value, whatsapp: "" });
-                            setFormErrors({ ...formErrors, whatsapp: "" });
-                          }}
-                          className="w-20 sm:w-24 px-2 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-background/50 border-2 border-gold/30 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all backdrop-blur-sm"
-                          required
-                        >
-                          <option value="+1">🇺🇸 +1</option>
-                          <option value="+52">🇲🇽 +52</option>
-                          <option value="+34">🇪🇸 +34</option>
-                          <option value="+54">🇦🇷 +54</option>
-                          <option value="+56">🇨🇱 +56</option>
-                          <option value="+57">🇨🇴 +57</option>
-                          <option value="+51">🇵🇪 +51</option>
-                          <option value="+58">🇻🇪 +58</option>
-                        </select>
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-2 bg-muted border border-gold/20 rounded-lg text-foreground/60 text-sm">
+                          +52
+                        </span>
                         <input
                           type="tel"
+                          name="whatsapp"
                           value={formData.whatsapp}
                           onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, "");
-                            const maxLength = getPhoneLength(formData.countryCode).max;
-                            if (value.length <= maxLength) {
+                            const value = e.target.value.replace(/\D/g, ""); // Solo números
+                            if (value.length <= 10) {
                               setFormData({ ...formData, whatsapp: value });
-                              setFormErrors({ ...formErrors, whatsapp: "" });
                             }
                           }}
-                          placeholder="Número de WhatsApp"
-                          className="flex-1 px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base bg-background/50 border-2 border-gold/30 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all backdrop-blur-sm"
+                          placeholder="3312345678"
                           required
+                          maxLength={10}
+                          className="flex-1 px-4 py-2 rounded-lg border border-gold/20 bg-background text-foreground placeholder:text-foreground/40 focus:ring-2 focus:ring-gold/50 focus:border-gold/50 outline-none"
                         />
                       </div>
+                      <p className="text-xs text-foreground/50">Ingresa tu número de 10 dígitos (sin prefijo)</p>
                       {formData.whatsapp && !formErrors.whatsapp && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {formData.whatsapp.length} / {getPhoneLength(formData.countryCode).max} dígitos
