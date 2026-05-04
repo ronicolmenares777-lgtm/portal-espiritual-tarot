@@ -41,7 +41,9 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    console.log("🔄 [DASHBOARD] Montando componente, cargando leads...");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🚀 [MOUNT] COMPONENTE DASHBOARD MONTADO");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     loadLeads();
   }, []);
 
@@ -94,6 +96,16 @@ export default function Dashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🔄 [STATE] LEADS CAMBIÓ");
+    console.log("  - Nuevo total:", leads.length);
+    console.log("  - IDs:", leads.map(l => l.id));
+    console.log("  - Nombres:", leads.map(l => l.name));
+    console.log("  - Status:", leads.map(l => l.status));
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  }, [leads]);
+
   // Filtrar leads por el filtro activo y favoritos
   useEffect(() => {
     let filtered = [...leads];
@@ -114,38 +126,60 @@ export default function Dashboard() {
   }, [leads, statusFilter, showOnlyFavorites]);
 
   const filteredLeads = useMemo(() => {
-    console.log("🔍 [FILTER] Filtrando leads. Total:", leads.length);
-    console.log("🔍 [FILTER] Filtro activo:", statusFilter);
-    console.log("🔍 [FILTER] Búsqueda:", searchTerm);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🔍 [FILTER] INICIANDO FILTRADO");
+    console.log("  - Total leads en estado:", leads.length);
+    console.log("  - Filtro activo:", statusFilter);
+    console.log("  - Búsqueda:", searchTerm || "(ninguna)");
+    console.log("  - Solo favoritos:", showOnlyFavorites);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-    let filtered = leads;
+    let filtered = [...leads];
+    console.log("📊 [FILTER] Leads antes de filtrar:", filtered.length);
 
     // Filtrar por estado
     if (statusFilter === "leads") {
       filtered = filtered.filter((lead) => lead.status === "nuevo");
+      console.log("🔹 [FILTER] Después de filtrar por status 'nuevo':", filtered.length);
     } else if (statusFilter === "listo") {
       filtered = filtered.filter((lead) => lead.status === "listo");
+      console.log("🔹 [FILTER] Después de filtrar por status 'listo':", filtered.length);
     } else if (statusFilter === "papelera") {
       filtered = filtered.filter((lead) => lead.status === "archive");
+      console.log("🔹 [FILTER] Después de filtrar por status 'archive':", filtered.length);
     }
 
     // Filtrar por búsqueda
-    if (searchTerm) {
+    if (searchTerm && searchTerm.trim() !== "") {
+      const before = filtered.length;
       filtered = filtered.filter(
         (lead) =>
           lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           lead.whatsapp.includes(searchTerm) ||
-          lead.problem?.toLowerCase().includes(searchTerm.toLowerCase())
+          (lead.problem && lead.problem.toLowerCase().includes(searchTerm.toLowerCase()))
       );
+      console.log(`🔹 [FILTER] Después de búsqueda "${searchTerm}": ${before} → ${filtered.length}`);
     }
 
-    console.log("✅ [FILTER] Leads después de filtrar:", filtered.length);
+    // Filtrar por favoritos
+    if (showOnlyFavorites) {
+      const before = filtered.length;
+      filtered = filtered.filter((lead) => lead.is_favorite);
+      console.log(`🔹 [FILTER] Después de filtrar favoritos: ${before} → ${filtered.length}`);
+    }
+
+    console.log("✅ [FILTER] RESULTADO FINAL:", filtered.length, "leads");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    
     return filtered;
-  }, [leads, statusFilter, searchTerm]);
+  }, [leads, statusFilter, searchTerm, showOnlyFavorites]);
 
   const loadLeads = async () => {
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🔄 [LOAD] INICIANDO CARGA DE LEADS");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    
     setIsLoading(true);
-    console.log("📥 [DASHBOARD] Cargando leads...");
     
     try {
       const { data, error } = await supabase
@@ -153,27 +187,37 @@ export default function Dashboard() {
         .select("*")
         .order("created_at", { ascending: false });
 
+      console.log("📊 [LOAD] Respuesta de Supabase:");
+      console.log("  - Error:", error);
+      console.log("  - Data:", data);
+      console.log("  - Total registros:", data?.length || 0);
+
       if (error) {
-        console.error("❌ [DASHBOARD] Error cargando leads:", error);
-        return;
-      }
-
-      console.log("✅ [DASHBOARD] Leads cargados:", data?.length || 0);
-      console.log("📊 [DASHBOARD] Datos completos:", data);
-
-      if (!data || data.length === 0) {
-        console.warn("⚠️ [DASHBOARD] No hay leads en la base de datos");
+        console.error("❌ [LOAD] ERROR EN SUPABASE:", error);
         setLeads([]);
         setIsLoading(false);
         return;
       }
 
+      if (!data) {
+        console.warn("⚠️ [LOAD] Data es NULL");
+        setLeads([]);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("✅ [LOAD] LEADS CARGADOS EXITOSAMENTE");
+      console.log("📋 [LOAD] Leads completos:", JSON.stringify(data, null, 2));
+      
       setLeads(data);
-      console.log("✅ [DASHBOARD] Estado 'leads' actualizado con", data.length, "registros");
+      console.log("✅ [LOAD] Estado actualizado con", data.length, "leads");
+      
     } catch (error) {
-      console.error("❌ [DASHBOARD] Error en loadLeads:", error);
+      console.error("❌ [LOAD] EXCEPCIÓN:", error);
+      setLeads([]);
     } finally {
       setIsLoading(false);
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     }
   };
 
