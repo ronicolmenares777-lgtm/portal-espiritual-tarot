@@ -44,7 +44,7 @@ export default function Home() {
   const [leadId, setLeadId] = useState<string | null>(null);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
-  const [selectedCardIndex, setSelectedCardIndex] = useState(0);
+  const [selectedCardIndex, setSelectedCardIndex] = useState<number>(-1);
   const [currentCardReveal, setCurrentCardReveal] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [nombrePlaceholder, setNombrePlaceholder] = useState(nombreEjemplos[0]);
@@ -433,8 +433,6 @@ export default function Home() {
       return;
     }
 
-    // analyticsService.trackFormStart(); // Desactivado temporalmente
-
     // Concatenar prefijo + número
     const whatsappWithPrefix = `${formData.countryCode}${formData.whatsapp}`;
     console.log("📱 WhatsApp completo a guardar:", whatsappWithPrefix);
@@ -453,17 +451,19 @@ export default function Home() {
 
       if (error) {
         console.error("❌ Error guardando lead:", error);
+        alert("Error al guardar tus datos. Por favor intenta de nuevo.");
         return;
       }
 
-      console.log("✅ Lead guardado con WhatsApp:", data.whatsapp);
+      console.log("✅ Lead guardado exitosamente:", data);
+      console.log("✅ Lead ID:", data.id);
+      console.log("✅ WhatsApp guardado:", data.whatsapp);
+      
       setCurrentLeadId(data.id);
-
-      // analyticsService.trackFormComplete(data.id); // Desactivado temporalmente
-
       setCurrentScreen("loading");
     } catch (error) {
       console.error("❌ Error en handleFormSubmit:", error);
+      alert("Error al procesar tu solicitud. Por favor intenta de nuevo.");
     }
   };
 
@@ -796,6 +796,20 @@ export default function Home() {
 
         {currentScreen === "chat" && currentLeadId && (
           <ChatMaestro leadId={currentLeadId} />
+        )}
+
+        {currentScreen === "chat" && !currentLeadId && (
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="text-center text-foreground/60">
+              <p>Error: No se pudo cargar la sesión.</p>
+              <button
+                onClick={() => setCurrentScreen("form")}
+                className="mt-4 px-6 py-2 bg-gold text-black rounded-lg"
+              >
+                Volver al inicio
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
