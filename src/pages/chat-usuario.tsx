@@ -205,7 +205,7 @@ export default function ChatUsuario() {
       } else {
         console.log("✅ Mensaje enviado:", data);
         setNewMessage("");
-        loadMessages();
+        // Los mensajes se actualizan automáticamente via realtime
       }
     } catch (error) {
       console.error("❌ Error en handleSendMessage:", error);
