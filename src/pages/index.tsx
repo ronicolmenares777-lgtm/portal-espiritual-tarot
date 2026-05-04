@@ -791,14 +791,14 @@ export default function Home() {
         {currentScreen === "reveal" && selectedCard && (
           <CardReveal
             card={selectedCard}
-            onComplete={() => setCurrentScreen("question")}
+            onContinue={() => setCurrentScreen("question")}
           />
         )}
 
         {currentScreen === "question" && currentLeadId && selectedCard && (
           <QuestionScreen
             card={selectedCard}
-            onSubmit={(answers) => {
+            onAnswersComplete={(answers) => {
               handleFinalSubmit(currentLeadId, answers);
             }}
           />
