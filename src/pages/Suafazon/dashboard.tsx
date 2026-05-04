@@ -111,8 +111,6 @@ export default function Dashboard() {
     if (showOnlyFavorites) {
       filtered = filtered.filter(l => l.is_favorite === true);
     }
-    
-    setFilteredLeads(filtered);
   }, [leads, statusFilter, showOnlyFavorites]);
 
   const filteredLeads = useMemo(() => {
