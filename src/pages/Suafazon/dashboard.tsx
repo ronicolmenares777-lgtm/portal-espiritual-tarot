@@ -26,9 +26,9 @@ type Lead = Tables<"leads">;
 export default function Dashboard() {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<"leads" | "listo" | "papelera">("leads");
+  const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [newMessageLeadId, setNewMessageLeadId] = useState<string | null>(null);
@@ -117,19 +117,18 @@ export default function Dashboard() {
 
   const filteredLeads = useMemo(() => {
     console.log("🔍 [FILTER] Filtrando leads. Total:", leads.length);
-    console.log("🔍 [FILTER] Filtro activo:", activeFilter);
+    console.log("🔍 [FILTER] Filtro activo:", statusFilter);
     console.log("🔍 [FILTER] Búsqueda:", searchTerm);
 
     let filtered = leads;
 
     // Filtrar por estado
-    if (activeFilter !== "Todos") {
-      filtered = filtered.filter((lead) => {
-        if (activeFilter === "LEADS") return lead.status === "nuevo";
-        if (activeFilter === "LISTO") return lead.status === "listo";
-        if (activeFilter === "PAPELERA") return lead.status === "archive";
-        return false;
-      });
+    if (statusFilter === "leads") {
+      filtered = filtered.filter((lead) => lead.status === "nuevo");
+    } else if (statusFilter === "listo") {
+      filtered = filtered.filter((lead) => lead.status === "listo");
+    } else if (statusFilter === "papelera") {
+      filtered = filtered.filter((lead) => lead.status === "archive");
     }
 
     // Filtrar por búsqueda
@@ -144,7 +143,7 @@ export default function Dashboard() {
 
     console.log("✅ [FILTER] Leads después de filtrar:", filtered.length);
     return filtered;
-  }, [leads, activeFilter, searchTerm]);
+  }, [leads, statusFilter, searchTerm]);
 
   const loadLeads = async () => {
     setIsLoading(true);
