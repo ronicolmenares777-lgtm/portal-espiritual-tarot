@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,11 @@ export default function Dashboard() {
     listo: leads.filter(l => l.status === "convertido").length,
     papelera: leads.filter(l => l.status === "archive").length,
   };
+
+  useEffect(() => {
+    console.log("🔄 [DASHBOARD] Montando componente, cargando leads...");
+    loadLeads();
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -110,9 +115,40 @@ export default function Dashboard() {
     setFilteredLeads(filtered);
   }, [leads, statusFilter, showOnlyFavorites]);
 
+  const filteredLeads = useMemo(() => {
+    console.log("🔍 [FILTER] Filtrando leads. Total:", leads.length);
+    console.log("🔍 [FILTER] Filtro activo:", activeFilter);
+    console.log("🔍 [FILTER] Búsqueda:", searchTerm);
+
+    let filtered = leads;
+
+    // Filtrar por estado
+    if (activeFilter !== "Todos") {
+      filtered = filtered.filter((lead) => {
+        if (activeFilter === "LEADS") return lead.status === "nuevo";
+        if (activeFilter === "LISTO") return lead.status === "listo";
+        if (activeFilter === "PAPELERA") return lead.status === "archive";
+        return false;
+      });
+    }
+
+    // Filtrar por búsqueda
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (lead) =>
+          lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          lead.whatsapp.includes(searchTerm) ||
+          lead.problem?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    console.log("✅ [FILTER] Leads después de filtrar:", filtered.length);
+    return filtered;
+  }, [leads, activeFilter, searchTerm]);
+
   const loadLeads = async () => {
     setIsLoading(true);
-    console.log("📡 Iniciando carga de leads desde Supabase...");
+    console.log("📥 [DASHBOARD] Cargando leads...");
     
     try {
       const { data, error } = await supabase
@@ -120,16 +156,25 @@ export default function Dashboard() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      console.log("📊 Resultado de Supabase:", { data, error });
-
       if (error) {
-        console.error("❌ Error cargando leads:", error);
-      } else {
-        console.log(`✅ Leads cargados: ${data?.length || 0} registros`);
-        setLeads(data || []);
+        console.error("❌ [DASHBOARD] Error cargando leads:", error);
+        return;
       }
+
+      console.log("✅ [DASHBOARD] Leads cargados:", data?.length || 0);
+      console.log("📊 [DASHBOARD] Datos completos:", data);
+
+      if (!data || data.length === 0) {
+        console.warn("⚠️ [DASHBOARD] No hay leads en la base de datos");
+        setLeads([]);
+        setIsLoading(false);
+        return;
+      }
+
+      setLeads(data);
+      console.log("✅ [DASHBOARD] Estado 'leads' actualizado con", data.length, "registros");
     } catch (error) {
-      console.error("❌ Error en loadLeads:", error);
+      console.error("❌ [DASHBOARD] Error en loadLeads:", error);
     } finally {
       setIsLoading(false);
     }
