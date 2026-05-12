@@ -46,14 +46,26 @@ export default function Monitoreo() {
 
   const loadStats = async () => {
     const now = new Date();
-    const startDate = new Date(now);
-    startDate.setDate(startDate.getDate() - period);
+    let startDate: Date;
+
+    if (period === 1) {
+      // DIARIO: Solo HOY desde las 00:00:00
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      console.log("📅 [DIARIO] Filtrando solo HOY desde:", startDate.toISOString());
+    } else {
+      // 7, 15, 30 días: Desde hace N días
+      startDate = new Date(now);
+      startDate.setDate(startDate.getDate() - period);
+      console.log(`📅 [${period} DÍAS] Filtrando desde:`, startDate.toISOString());
+    }
 
     const { data: events } = await supabase
       .from("analytics_events")
       .select("*")
       .gte("created_at", startDate.toISOString())
       .order("created_at", { ascending: true });
+
+    console.log("📊 [STATS] Eventos cargados:", events?.length || 0);
 
     if (!events) return;
 
@@ -112,6 +124,13 @@ export default function Monitoreo() {
       uniqueVisitors: visitorSet.size,
       mobileUsers: mobileCount,
       desktopUsers: desktopCount,
+    });
+
+    console.log("✅ [STATS] Stats actualizados:", {
+      period: period === 1 ? "SOLO HOY" : `${period} días`,
+      totalEvents: events.length,
+      pageViews: events.filter((e) => e.event_type === "page_view").length,
+      uniqueVisitors: visitorSet.size,
     });
   };
 
@@ -191,7 +210,7 @@ export default function Monitoreo() {
               onClick={() => setPeriod(1)}
               size="sm"
             >
-              DIARIO
+              📅 DIARIO (HOY)
             </Button>
             <Button
               variant={period === 7 ? "default" : "outline"}
@@ -301,7 +320,16 @@ export default function Monitoreo() {
         {/* Gráfico de Visitas */}
         <Card className="p-6 mb-8">
           <h3 className="text-lg font-serif font-bold mb-4 text-foreground">
-            📈 Visitas por Día
+            📈 Visitas por Día 
+            {period === 1 ? (
+              <span className="text-sm font-normal text-foreground/60 ml-2">
+                (Solo hoy - {new Date().toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })})
+              </span>
+            ) : (
+              <span className="text-sm font-normal text-foreground/60 ml-2">
+                (Últimos {period} días)
+              </span>
+            )}
           </h3>
           <div className="space-y-3">
             {stats.length === 0 ? (

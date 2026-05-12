@@ -431,51 +431,111 @@ export default function Home() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("📝 Formulario enviado:", formData);
-    console.log("🌍 Código de país seleccionado:", formData.countryCode);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("📝 [FORM] INICIO DE SUBMIT");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("📋 [FORM] Datos completos:", {
+      name: formData.name,
+      whatsapp: formData.whatsapp,
+      countryCode: formData.countryCode,
+      problem: formData.problem,
+      problemLength: formData.problem.length
+    });
 
     // Validar longitud del número según el país
     const validation = validatePhoneNumber(formData.countryCode, formData.whatsapp);
     if (!validation.valid) {
+      console.error("❌ [FORM] Validación de teléfono falló:", validation.message);
       alert(validation.message);
       return;
     }
 
-    console.log("📱 Guardando - Country Code:", formData.countryCode);
-    console.log("📱 Guardando - WhatsApp:", formData.whatsapp);
+    console.log("✅ [FORM] Validación de teléfono pasó");
+    console.log("📱 [FORM] Country Code a guardar:", formData.countryCode);
+    console.log("📱 [FORM] WhatsApp a guardar:", formData.whatsapp);
+
+    setIsSubmitting(true);
 
     try {
+      console.log("🔄 [FORM] Insertando en Supabase...");
+      
+      const insertData = {
+        name: formData.name.trim(),
+        whatsapp: formData.whatsapp.trim(),
+        country_code: formData.countryCode,
+        problem: formData.problem.trim(),
+        status: "nuevo",
+      };
+
+      console.log("📦 [FORM] Datos a insertar:", insertData);
+
       const { data, error } = await supabase
         .from("leads")
-        .insert({
-          name: formData.name,
-          whatsapp: formData.whatsapp,  // Solo el número
-          country_code: formData.countryCode,  // Prefijo separado
-          problem: formData.problem,
-          status: "nuevo",
-        })
+        .insert(insertData)
         .select()
         .single();
 
+      console.log("📊 [FORM] Respuesta de Supabase:");
+      console.log("  - Data:", data);
+      console.log("  - Error:", error);
+
       if (error) {
-        console.error("❌ Error guardando lead:", error);
-        alert("Error al guardar tus datos. Por favor intenta de nuevo.");
+        console.error("❌ [FORM] ERROR DE SUPABASE:", error);
+        console.error("  - Code:", error.code);
+        console.error("  - Message:", error.message);
+        console.error("  - Details:", error.details);
+        console.error("  - Hint:", error.hint);
+        
+        // Mostrar error específico al usuario
+        let errorMessage = "Error al guardar tus datos.";
+        
+        if (error.code === "23505") {
+          errorMessage = "Este WhatsApp ya está registrado. Usa 'Ingresar' para acceder a tu consulta.";
+        } else if (error.code === "42501") {
+          errorMessage = "Error de permisos. Por favor contacta al administrador.";
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        alert(errorMessage);
+        setIsSubmitting(false);
         return;
       }
 
-      console.log("✅ Lead guardado exitosamente:", data);
-      console.log("✅ Lead ID:", data.id);
-      console.log("✅ WhatsApp guardado:", data.whatsapp);
-      console.log("✅ Country Code guardado:", data.country_code);
+      if (!data) {
+        console.error("❌ [FORM] No se recibió data después del INSERT");
+        alert("Error: No se pudo guardar la información. Intenta de nuevo.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      console.log("✅ [FORM] Lead guardado exitosamente");
+      console.log("✅ [FORM] Lead ID:", data.id);
+      console.log("✅ [FORM] WhatsApp guardado:", data.whatsapp);
+      console.log("✅ [FORM] Country Code guardado:", data.country_code);
+      console.log("✅ [FORM] Name guardado:", data.name);
+      console.log("✅ [FORM] Problem guardado:", data.problem);
       
       setCurrentLeadId(data.id);
-      console.log("✅ currentLeadId establecido a:", data.id);
+      console.log("✅ [FORM] currentLeadId establecido a:", data.id);
+      
+      // Track formulario completado
+      analyticsService.trackFormComplete(data.id);
+      console.log("✅ [FORM] Analytics tracked");
       
       setCurrentScreen("loading");
-      console.log("➡️ Cambiando a pantalla: loading");
-    } catch (error) {
-      console.error("❌ Error en handleFormSubmit:", error);
-      alert("Error al procesar tu solicitud. Por favor intenta de nuevo.");
+      console.log("➡️ [FORM] Cambiando a pantalla: loading");
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    } catch (error: any) {
+      console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.error("❌ [FORM] EXCEPCIÓN CAPTURADA:");
+      console.error("  - Error completo:", error);
+      console.error("  - Message:", error.message);
+      console.error("  - Stack:", error.stack);
+      console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      
+      alert(`Error al procesar tu solicitud: ${error.message || 'Intenta de nuevo'}`);
+      setIsSubmitting(false);
     }
   };
 
