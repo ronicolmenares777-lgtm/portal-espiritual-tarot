@@ -169,13 +169,21 @@ export default function ChatUsuario() {
     };
   }, [leadId]);
 
-  // Auto-scroll solo al cargar el chat inicialmente
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ 
+      behavior: "smooth",  // Cambiar de "auto" a "smooth" para transición suave
+      block: "end" 
+    });
+  };
+
   useEffect(() => {
-    if (messages.length > 0 && !hasScrolledInitially.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      hasScrolledInitially.current = true;
-    }
-  }, [messages.length]);
+    // Scroll suave cuando cambian los mensajes
+    const timeoutId = setTimeout(() => {
+      scrollToBottom();
+    }, 100); // Pequeño delay para que el DOM se actualice
+
+    return () => clearTimeout(timeoutId);
+  }, [messages]);
 
   // Enviar mensaje de texto
   const handleSendMessage = async () => {

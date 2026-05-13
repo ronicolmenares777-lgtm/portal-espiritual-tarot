@@ -698,12 +698,74 @@ export default function Dashboard() {
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
+                          {/* Botones de cambio rápido de estado */}
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleStatusChange(lead.id, "nuevo")}
+                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                                lead.status === "nuevo"
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+                              }`}
+                              title="Nuevo"
+                            >
+                              N
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(lead.id, "enConversacion")}
+                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                                lead.status === "enConversacion"
+                                  ? "bg-yellow-500 text-white"
+                                  : "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
+                              }`}
+                              title="En Conversación"
+                            >
+                              C
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(lead.id, "caliente")}
+                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                                lead.status === "caliente"
+                                  ? "bg-orange-500 text-white"
+                                  : "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30"
+                              }`}
+                              title="Caliente"
+                            >
+                              🔥
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(lead.id, "listo")}
+                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                                lead.status === "listo"
+                                  ? "bg-green-500 text-white"
+                                  : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                              }`}
+                              title="Listo"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(lead.id, "cerrado")}
+                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                                lead.status === "cerrado"
+                                  ? "bg-gray-500 text-white"
+                                  : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/30"
+                              }`}
+                              title="Cerrado"
+                            >
+                              X
+                            </button>
+                          </div>
+                          
+                          {/* Botón de ver chat */}
                           <button
                             onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
                             className="px-4 py-2 bg-primary text-black rounded-lg hover:bg-accent transition-colors font-semibold text-sm"
                           >
-                            💬 Ver Chat Completo
+                            💬 Ver Chat
                           </button>
+                          
+                          {/* Botón de favorito */}
                           <button
                             onClick={() => toggleFavorite(lead.id, lead.is_favorite || false)}
                             className="p-2 rounded-lg hover:bg-card transition-colors"
