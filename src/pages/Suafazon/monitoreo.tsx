@@ -40,8 +40,50 @@ export default function Monitoreo() {
 
   useEffect(() => {
     loadStats();
-    const interval = setInterval(loadStats, 30000);
-    return () => clearInterval(interval);
+
+    // Suscripción en tiempo real a analytics_events
+    console.log("🔄 [REALTIME] Suscribiendo a analytics_events...");
+    const analyticsChannel = supabase
+      .channel("analytics_realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "analytics_events",
+        },
+        (payload) => {
+          console.log("📊 [REALTIME] Nuevo evento de analytics:", payload);
+          // Recargar stats cuando hay cambios
+          loadStats();
+        }
+      )
+      .subscribe();
+
+    // Suscripción en tiempo real a leads
+    console.log("🔄 [REALTIME] Suscribiendo a leads...");
+    const leadsChannel = supabase
+      .channel("leads_realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "leads",
+        },
+        (payload) => {
+          console.log("👤 [REALTIME] Cambio en leads:", payload);
+          // Recargar stats cuando hay cambios en leads
+          loadStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log("🔌 [REALTIME] Desuscribiendo de canales...");
+      supabase.removeChannel(analyticsChannel);
+      supabase.removeChannel(leadsChannel);
+    };
   }, [period]);
 
   const loadStats = async () => {

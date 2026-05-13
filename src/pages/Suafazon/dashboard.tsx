@@ -45,6 +45,38 @@ export default function Dashboard() {
     console.log("🚀 [MOUNT] COMPONENTE DASHBOARD MONTADO");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     loadLeads();
+
+    // Suscripción en tiempo real a la tabla leads
+    console.log("🔄 [REALTIME] Suscribiendo a cambios en leads...");
+    const channel = supabase
+      .channel("leads_dashboard_realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // INSERT, UPDATE, DELETE
+          schema: "public",
+          table: "leads",
+        },
+        (payload) => {
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.log("📡 [REALTIME] CAMBIO DETECTADO EN LEADS");
+          console.log("  - Evento:", payload.eventType);
+          console.log("  - Datos nuevos:", payload.new);
+          console.log("  - Datos viejos:", payload.old);
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          
+          // Recargar leads automáticamente
+          loadLeads();
+        }
+      )
+      .subscribe((status) => {
+        console.log("📡 [REALTIME] Estado de suscripción:", status);
+      });
+
+    return () => {
+      console.log("🔌 [REALTIME] Desuscribiendo del canal de leads");
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
