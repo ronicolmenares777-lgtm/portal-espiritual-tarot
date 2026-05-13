@@ -137,13 +137,16 @@ export default function ChatUsuario() {
     return () => clearInterval(interval);
   }, []);
 
-  // Sistema de POLLING - actualiza mensajes cada 2 segundos
+  // Sistema de TIEMPO REAL - suscripción a cambios en messages
   useEffect(() => {
     if (!leadId) return;
     
     const finalLeadId = Array.isArray(leadId) ? leadId[0] : leadId;
     if (!finalLeadId) return;
 
+    console.log("🔄 [REALTIME] Iniciando carga inicial y suscripción para lead:", finalLeadId);
+
+    // Carga inicial de mensajes
     const loadMessages = async () => {
       const { data, error } = await supabase
         .from("messages")
@@ -152,35 +155,57 @@ export default function ChatUsuario() {
         .order("created_at", { ascending: true });
 
       if (error) {
-        console.error("Error loading messages:", error);
+        console.error("❌ [REALTIME] Error cargando mensajes:", error);
         return;
       }
 
       if (data) {
-        setMessages(prevMessages => {
-          // NUNCA vaciar mensajes existentes
-          // Solo actualizar si:
-          // 1. Es la primera carga (prevMessages vacío)
-          // 2. O si hay MÁS mensajes (nuevo mensaje llegó)
-          if (prevMessages.length === 0 || data.length > prevMessages.length) {
-            console.log("📥 Actualizando mensajes:", {
-              prevCount: prevMessages.length,
-              newCount: data.length
-            });
-            return data;
-          }
-          
-          // Mantener mensajes actuales si no hay cambios reales
-          return prevMessages;
-        });
+        console.log("✅ [REALTIME] Mensajes iniciales cargados:", data.length);
+        setMessages(data);
       }
     };
 
     loadMessages();
-    const interval = setInterval(loadMessages, 2000);
+
+    // Suscripción en tiempo real
+    const channel = supabase
+      .channel(`messages_user_${finalLeadId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "messages",
+          filter: `lead_id=eq.${finalLeadId}`,
+        },
+        (payload) => {
+          console.log("📡 [REALTIME] Cambio detectado:", payload.eventType);
+          
+          if (payload.eventType === "INSERT") {
+            console.log("➕ [REALTIME] Nuevo mensaje:", payload.new);
+            setMessages((prev) => [...prev, payload.new as any]);
+          } else if (payload.eventType === "UPDATE") {
+            console.log("✏️ [REALTIME] Mensaje actualizado:", payload.new);
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === (payload.new as any).id ? (payload.new as any) : msg
+              )
+            );
+          } else if (payload.eventType === "DELETE") {
+            console.log("🗑️ [REALTIME] Mensaje eliminado:", payload.old);
+            setMessages((prev) =>
+              prev.filter((msg) => msg.id !== (payload.old as any).id)
+            );
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log("📡 [REALTIME] Estado de suscripción:", status);
+      });
 
     return () => {
-      clearInterval(interval);
+      console.log("🔌 [REALTIME] Desuscribiendo del canal");
+      supabase.removeChannel(channel);
     };
   }, [leadId]);
 
