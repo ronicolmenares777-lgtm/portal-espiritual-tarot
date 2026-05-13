@@ -157,7 +157,22 @@ export default function ChatUsuario() {
       }
 
       if (data) {
-        setMessages(data);
+        // Solo actualizar si los mensajes realmente cambiaron (evita sobrescritura)
+        setMessages(prevMessages => {
+          // Si no hay mensajes previos, actualizar
+          if (prevMessages.length === 0) return data;
+          
+          // Si la cantidad cambió, actualizar
+          if (prevMessages.length !== data.length) return data;
+          
+          // Si los IDs del último mensaje son diferentes, actualizar
+          const lastPrevId = prevMessages[prevMessages.length - 1]?.id;
+          const lastNewId = data[data.length - 1]?.id;
+          if (lastPrevId !== lastNewId) return data;
+          
+          // No hay cambios, mantener mensajes actuales
+          return prevMessages;
+        });
       }
     };
 
@@ -191,12 +206,28 @@ export default function ChatUsuario() {
       is_from_maestro: false
     });
 
+    // Guardar el mensaje antes de enviarlo
+    const messageToSend = newMessage;
+    const finalLeadId = Array.isArray(leadId) ? leadId[0] : leadId;
+
+    // Actualización optimista - agregar mensaje inmediatamente
+    const optimisticMessage = {
+      id: `temp-${Date.now()}`,
+      lead_id: finalLeadId,
+      text: messageToSend,
+      is_from_maestro: false,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, optimisticMessage]);
+    setNewMessage(""); // Limpiar input inmediatamente
+
     try {
       const { data, error } = await supabase
         .from("messages")
         .insert({
-          lead_id: leadId,
-          text: newMessage,
+          lead_id: finalLeadId,
+          text: messageToSend,
           is_from_maestro: false,
         })
         .select()
@@ -204,14 +235,21 @@ export default function ChatUsuario() {
 
       if (error) {
         console.error("❌ Error enviando mensaje:", error);
+        // Revertir mensaje optimista en caso de error
+        setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+        setNewMessage(messageToSend); // Restaurar texto
         alert("Error al enviar mensaje. Intenta de nuevo.");
       } else {
         console.log("✅ Mensaje enviado:", data);
-        setNewMessage("");
-        // Los mensajes se actualizan automáticamente via realtime
+        // Reemplazar mensaje temporal con el real
+        setMessages(prev => 
+          prev.map(m => m.id === optimisticMessage.id ? data : m)
+        );
       }
     } catch (error) {
       console.error("❌ Error en handleSendMessage:", error);
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+      setNewMessage(messageToSend);
     } finally {
       setSending(false);
     }
