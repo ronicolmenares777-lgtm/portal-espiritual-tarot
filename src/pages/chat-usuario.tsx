@@ -157,11 +157,20 @@ export default function ChatUsuario() {
       }
 
       if (data) {
-        // Actualizar si la cantidad de mensajes cambió o es la primera carga
         setMessages(prevMessages => {
-          if (prevMessages.length !== data.length) {
+          // NUNCA vaciar mensajes existentes
+          // Solo actualizar si:
+          // 1. Es la primera carga (prevMessages vacío)
+          // 2. O si hay MÁS mensajes (nuevo mensaje llegó)
+          if (prevMessages.length === 0 || data.length > prevMessages.length) {
+            console.log("📥 Actualizando mensajes:", {
+              prevCount: prevMessages.length,
+              newCount: data.length
+            });
             return data;
           }
+          
+          // Mantener mensajes actuales si no hay cambios reales
           return prevMessages;
         });
       }
