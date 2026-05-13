@@ -171,18 +171,13 @@ export default function ChatUsuario() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ 
-      behavior: "smooth",  // Cambiar de "auto" a "smooth" para transición suave
+      behavior: "auto",  // Volver a "auto" como estaba originalmente
       block: "end" 
     });
   };
 
   useEffect(() => {
-    // Scroll suave cuando cambian los mensajes
-    const timeoutId = setTimeout(() => {
-      scrollToBottom();
-    }, 100); // Pequeño delay para que el DOM se actualice
-
-    return () => clearTimeout(timeoutId);
+    scrollToBottom();
   }, [messages]);
 
   // Enviar mensaje de texto
