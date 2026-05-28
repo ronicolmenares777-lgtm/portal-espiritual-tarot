@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { LeadService } from "@/services/leadService";
+import { leadService } from "@/services/leadService";
 import type { Tables } from "@/integrations/supabase/types";
 import { 
   Users, 
@@ -22,8 +22,6 @@ import {
 } from "lucide-react";
 
 type Lead = Tables<"leads">;
-
-const leadService = new LeadService();
 
 export default function Dashboard() {
   const router = useRouter();
@@ -401,11 +399,6 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <p className="font-medium text-white">{lead.name}</p>
-                          {lead.unread_count > 0 && (
-                            <Badge className="mt-1 bg-red-500/20 text-red-400 border-red-500/30 text-xs">
-                              {lead.unread_count} nuevo(s)
-                            </Badge>
-                          )}
                         </div>
                       </div>
                     </td>
