@@ -61,18 +61,27 @@ export default function Dashboard() {
 
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
-      const matchesSearch =
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.whatsapp.includes(searchTerm);
-
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "active" && ["nuevo", "enConversacion", "caliente"].includes(lead.status)) ||
-        lead.status === statusFilter;
-
-      return matchesSearch && matchesStatus;
+      // IMPORTANTE: Excluir leads en papelera (status "perdido") del dashboard principal
+      if (lead.status === "perdido") return false;
+      
+      // Filtrar por status seleccionado
+      if (statusFilter === "all") return true;
+      if (statusFilter === "active") {
+        return ["nuevo", "enConversacion", "caliente"].includes(lead.status);
+      }
+      if (statusFilter === "listo") return lead.status === "listo";
+      if (statusFilter === "archive") return lead.status === "cerrado";
+      return lead.status === statusFilter;
+    }).filter((lead) => {
+      // Filtrar por búsqueda
+      if (!searchTerm) return true;
+      const query = searchTerm.toLowerCase();
+      return (
+        lead.name.toLowerCase().includes(query) ||
+        lead.whatsapp.toLowerCase().includes(query)
+      );
     });
-  }, [leads, searchTerm, statusFilter]);
+  }, [leads, statusFilter, searchTerm]);
 
   const toggleSelectLead = (id: string) => {
     const newSelected = new Set(selectedLeads);
