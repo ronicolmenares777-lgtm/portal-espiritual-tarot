@@ -4,8 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { leadService } from "@/services/leadService";
-import type { Lead } from "@/integrations/supabase/types";
+import { LeadService } from "@/services/leadService";
+import type { Tables } from "@/integrations/supabase/types";
 import { 
   Users, 
   CheckCircle2, 
@@ -20,6 +20,10 @@ import {
   RefreshCw,
   Sparkles
 } from "lucide-react";
+
+type Lead = Tables<"leads">;
+
+const leadService = new LeadService();
 
 export default function Dashboard() {
   const router = useRouter();
