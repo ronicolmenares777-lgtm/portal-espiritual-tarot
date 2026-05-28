@@ -91,14 +91,16 @@ export default function Monitoreo() {
     let startDate: Date;
 
     if (period === 1) {
-      // DIARIO: Solo HOY desde las 00:00:00
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-      console.log("📅 [DIARIO] Filtrando solo HOY desde:", startDate.toISOString());
+      // DIARIO: Solo HOY en UTC (desde las 00:00:00 UTC del día actual)
+      const nowUTC = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
+      startDate = nowUTC;
+      console.log("📅 [DIARIO] Filtrando HOY (UTC):", startDate.toISOString());
     } else {
-      // 7, 15, 30 días: Desde hace N días
-      startDate = new Date(now);
-      startDate.setDate(startDate.getDate() - period);
-      console.log(`📅 [${period} DÍAS] Filtrando desde:`, startDate.toISOString());
+      // 7, 15, 30 días: Desde hace N días completos en UTC
+      const daysAgo = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
+      daysAgo.setUTCDate(daysAgo.getUTCDate() - period);
+      startDate = daysAgo;
+      console.log(`📅 [${period} DÍAS] Filtrando desde (UTC):`, startDate.toISOString());
     }
 
     const { data: events } = await supabase
@@ -169,7 +171,7 @@ export default function Monitoreo() {
     });
 
     console.log("✅ [STATS] Stats actualizados:", {
-      period: period === 1 ? "SOLO HOY" : `${period} días`,
+      period: period === 1 ? "HOY (UTC)" : `${period} días`,
       totalEvents: events.length,
       pageViews: events.filter((e) => e.event_type === "page_view").length,
       uniqueVisitors: visitorSet.size,
@@ -178,8 +180,18 @@ export default function Monitoreo() {
 
   const loadCountryStats = async () => {
     const now = new Date();
-    const startDate = new Date(now);
-    startDate.setDate(startDate.getDate() - period);
+    let startDate: Date;
+
+    if (period === 1) {
+      // DIARIO: Solo HOY en UTC
+      const nowUTC = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
+      startDate = nowUTC;
+    } else {
+      // 7, 15, 30 días: Desde hace N días completos en UTC
+      const daysAgo = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
+      daysAgo.setUTCDate(daysAgo.getUTCDate() - period);
+      startDate = daysAgo;
+    }
 
     const { data: events } = await supabase
       .from("analytics_events")
