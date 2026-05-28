@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { supabase } from "@/integrations/supabase/client";
+import { verifyAdminCredentials } from "@/middleware/auth";
 import { motion } from "framer-motion";
 
 export default function AdminLogin() {
@@ -8,37 +8,38 @@ export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     console.log("🔐 Intentando login con:", email);
 
     try {
-      const { data: profile, error: authError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("email", email)
-        .eq("role", "admin")
-        .single();
+      // USAR AUTENTICACIÓN REAL que verifica email Y contraseña
+      const result = await verifyAdminCredentials(email, password);
 
-      if (authError || !profile) {
-        console.error("❌ Autenticación fallida:", authError);
-        setError("Credenciales inválidas");
+      if (!result.success) {
+        console.error("❌ Autenticación fallida:", result.error);
+        setError(result.error || "Credenciales inválidas");
+        setLoading(false);
         return;
       }
 
-      console.log("✅ Autenticación exitosa:", profile);
+      console.log("✅ Autenticación exitosa:", result.user);
       console.log("🔄 Redirigiendo a dashboard...");
 
+      // Guardar sesión
       localStorage.setItem("adminSession", "logged_in");
-      localStorage.setItem("adminProfile", JSON.stringify(profile));
+      localStorage.setItem("adminProfile", JSON.stringify(result.user));
 
       router.push("/Suafazon/dashboard");
     } catch (err) {
       console.error("❌ Error en login:", err);
       setError("Error al iniciar sesión");
+      setLoading(false);
     }
   };
 
@@ -127,9 +128,10 @@ export default function AdminLogin() {
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-gold via-accent to-gold text-background font-semibold py-3 px-6 rounded-lg hover:shadow-lg hover:shadow-gold/50 transition-all duration-300 transform hover:scale-105"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-gold via-accent to-gold text-background font-semibold py-3 px-6 rounded-lg hover:shadow-lg hover:shadow-gold/50 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-wait disabled:transform-none"
               >
-                Ingresar al Portal
+                {loading ? "Verificando..." : "Ingresar al Portal"}
               </button>
             </form>
           </div>
