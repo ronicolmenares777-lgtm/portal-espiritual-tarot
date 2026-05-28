@@ -199,6 +199,13 @@ export default function Dashboard() {
             </div>
             <div className="flex gap-3">
               <Button
+                onClick={() => router.push("/Suafazon/monitoreo")}
+                variant="outline"
+                className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-yellow-500"
+              >
+                Monitoreo
+              </Button>
+              <Button
                 onClick={() => router.push("/Suafazon/perfil")}
                 variant="outline"
                 className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-yellow-500"
@@ -327,6 +334,15 @@ export default function Dashboard() {
               >
                 Archivados
               </Button>
+              <Button
+                onClick={() => router.push("/Suafazon/papelera")}
+                variant="outline"
+                size="sm"
+                className="border-red-700 text-red-400 hover:bg-red-950"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Papelera
+              </Button>
             </div>
 
             {/* Bulk Actions */}
@@ -433,6 +449,15 @@ export default function Dashboard() {
                         >
                           <MessageCircle className="w-4 h-4 mr-1" />
                           Chat
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleQuickStatus(lead.id, "perdido")}
+                          className="text-red-400 hover:text-red-300 hover:bg-red-950"
+                          title="Enviar a papelera"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </td>
