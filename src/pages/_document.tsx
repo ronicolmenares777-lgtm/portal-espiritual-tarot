@@ -2,89 +2,40 @@ import { Html, Head, Main, NextScript } from "next/document";
 import { SEOElements } from "@/components/SEO";
 
 export default function Document() {
-  // Schema.org JSON-LD para SEO avanzado
-  const schemaOrgData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        "@id": "https://centrodeamor.com/#organization",
-        "name": "Portal Espiritual",
-        "url": "https://centrodeamor.com",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://centrodeamor.com/og-image.png",
-          "width": 1200,
-          "height": 630
-        },
-        "description": "Servicios de lectura de tarot y guía espiritual online con maestros certificados",
-        "address": {
-          "@type": "PostalAddress",
-          "addressCountry": "MX",
-          "addressLocality": "México"
-        },
-        "contactPoint": {
-          "@type": "ContactPoint",
-          "contactType": "customer service",
-          "availableLanguage": ["Spanish"]
-        },
-        "sameAs": []
-      },
-      {
-        "@type": "WebSite",
-        "@id": "https://centrodeamor.com/#website",
-        "url": "https://centrodeamor.com",
-        "name": "Portal Espiritual - Lectura de Tarot Online",
-        "description": "Descubre tu destino con lecturas de tarot personalizadas",
-        "publisher": {
-          "@id": "https://centrodeamor.com/#organization"
-        },
-        "inLanguage": "es-MX"
-      },
-      {
-        "@type": "Service",
-        "@id": "https://centrodeamor.com/#service",
-        "serviceType": "Lectura de Tarot y Consulta Espiritual",
-        "provider": {
-          "@id": "https://centrodeamor.com/#organization"
-        },
-        "areaServed": {
-          "@type": "Country",
-          "name": "México"
-        },
-        "availableChannel": {
-          "@type": "ServiceChannel",
-          "serviceUrl": "https://centrodeamor.com",
-          "serviceType": "Online Service"
-        },
-        "description": "Lecturas de tarot personalizadas con maestros espirituales certificados. Consultas místicas online para descubrir tu destino."
-      }
-    ]
-  };
-
   return (
-    <Html lang="es-MX">
+    <Html lang="es">
       <Head>
         <SEOElements />
         
-        {/* Schema.org JSON-LD */}
+        {/* Meta Pixel Code */}
         <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrgData) }}
+          dangerouslySetInnerHTML={{
+            __html: `
+              !function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+              fbq('init', '1262802585929836');
+              fbq('track', 'PageView');
+              console.log('✅ [FB PIXEL] PageView tracked');
+            `,
+          }}
         />
-
-        {/* Google Fonts - Cormorant Garamond y Raleway */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-
-        {/* Preload important resources */}
-        <link rel="preload" href="/og-image.png" as="image" />
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src="https://www.facebook.com/tr?id=1262802585929836&ev=PageView&noscript=1"
+          />
+        </noscript>
+        {/* End Meta Pixel Code */}
       </Head>
-      <body>
+      <body className="antialiased">
         <Main />
         <NextScript />
       </body>

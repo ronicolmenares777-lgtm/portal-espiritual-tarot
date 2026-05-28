@@ -220,6 +220,37 @@ export default function ChatUsuario() {
     scrollToBottom();
   }, [messages]);
 
+  // Cargar lead cuando tenemos leadId
+  useEffect(() => {
+    const loadLead = async () => {
+      if (!leadId) return;
+      
+      const finalLeadId = Array.isArray(leadId) ? leadId[0] : leadId;
+      console.log("🔍 [CHAT] Buscando lead con ID:", finalLeadId);
+
+      const lead = await leadService.getById(finalLeadId);
+      if (lead) {
+        console.log("✅ [CHAT] Lead cargado:", lead);
+        setCurrentLead(lead);
+        
+        // Facebook Pixel: Contact event (usuario inició chat)
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+          (window as any).fbq('track', 'Contact', {
+            content_name: 'Chat Maestro Espiritual',
+            content_category: 'Conversación Iniciada'
+          });
+          console.log('✅ [FB PIXEL] Contact tracked - Chat iniciado');
+        }
+      } else {
+        console.error("❌ [CHAT] Lead no encontrado");
+        setError("No se encontró la consulta.");
+      }
+      setLoading(false);
+    };
+
+    loadLead();
+  }, [leadId]);
+
   // Enviar mensaje de texto
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !leadId || sending) return;
