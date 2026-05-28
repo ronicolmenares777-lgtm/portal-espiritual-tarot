@@ -39,12 +39,15 @@ export default function Dashboard() {
   const loadLeads = async () => {
     setLoading(true);
     try {
-      const data = await leadService.getAll();
-      setLeads(data || []);
+      const result = await LeadService.getAll();
+      if (result.data) {
+        setLeads(result.data);
+      }
     } catch (error) {
-      console.error("Error loading leads:", error);
+      console.error("Error cargando leads:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const stats = useMemo(() => {
@@ -107,21 +110,12 @@ export default function Dashboard() {
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedLeads.size === 0) return;
-
-    const confirmed = confirm(`¿ELIMINAR PERMANENTEMENTE ${selectedLeads.size} lead(s)?`);
-    if (!confirmed) return;
-
+  const handleQuickStatus = async (leadId: string, newStatus: Lead["status"]) => {
     try {
-      for (const leadId of selectedLeads) {
-        await leadService.delete(leadId);
-      }
+      await LeadService.update(leadId, { status: newStatus });
       await loadLeads();
-      setSelectedLeads(new Set());
     } catch (error) {
-      console.error("Error deleting leads:", error);
-      alert("Error al eliminar los leads");
+      console.error("Error actualizando estado:", error);
     }
   };
 
@@ -351,10 +345,6 @@ export default function Dashboard() {
                 <Button size="sm" onClick={() => handleBulkStatusChange("archive")} variant="outline" className="border-gray-700 text-gray-400 hover:bg-gray-800">
                   Archivar
                 </Button>
-                <Button size="sm" onClick={handleBulkDelete} variant="outline" className="border-red-700 text-red-400 hover:bg-red-950">
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Eliminar
-                </Button>
               </div>
             )}
           </div>
@@ -426,14 +416,25 @@ export default function Dashboard() {
                       </Badge>
                     </td>
                     <td className="p-4">
-                      <Button
-                        onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                        size="sm"
-                        className="bg-yellow-500 text-black hover:bg-yellow-600"
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Ver Chat
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                          className="text-gray-400 hover:text-white hover:bg-gray-800"
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          Ver
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                          className="bg-yellow-600 hover:bg-yellow-700 text-black"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          Chat
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
