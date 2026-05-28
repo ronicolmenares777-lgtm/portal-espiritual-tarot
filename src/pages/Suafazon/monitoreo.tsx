@@ -1,10 +1,41 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, TrendingUp, Users, MousePointerClick, MessageCircle, Eye } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import {
+  BarChart3,
+  Users,
+  MessageSquare,
+  TrendingUp,
+  Globe,
+  Smartphone,
+  Monitor,
+  Calendar as CalendarIcon,
+} from "lucide-react";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface DailyStats {
   date: string;
@@ -15,7 +46,18 @@ interface DailyStats {
   chat_starts: number;
 }
 
-interface CountryStats {
+interface TotalStats {
+  pageViews: number;
+  formStarts: number;
+  formCompletes: number;
+  cardSelects: number;
+  chatStarts: number;
+  uniqueVisitors: number;
+  mobileUsers: number;
+  desktopUsers: number;
+}
+
+interface CountryStat {
   country: string;
   country_code: string;
   count: number;
@@ -23,9 +65,8 @@ interface CountryStats {
 
 export default function Monitoreo() {
   const router = useRouter();
-  const [period, setPeriod] = useState<1 | 7 | 15 | 30>(7);
   const [stats, setStats] = useState<DailyStats[]>([]);
-  const [totalStats, setTotalStats] = useState({
+  const [totalStats, setTotalStats] = useState<TotalStats>({
     pageViews: 0,
     formStarts: 0,
     formCompletes: 0,
@@ -35,83 +76,78 @@ export default function Monitoreo() {
     mobileUsers: 0,
     desktopUsers: 0,
   });
+  const [period, setPeriod] = useState(1); // 1=HOY, 7=7días, 15=15días, 30=30días
+  const [countryStats, setCountryStats] = useState<CountryStat[]>([]);
   const [showCountryModal, setShowCountryModal] = useState(false);
-  const [countryStats, setCountryStats] = useState<CountryStats[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
-  useEffect(() => {
-    loadStats();
+  // Función para convertir fecha a zona horaria de Colombia (UTC-5)
+  const getColombiaDate = (date: Date = new Date()) => {
+    // Convertir a Colombia (UTC-5)
+    const colombiaOffset = -5 * 60; // -5 horas en minutos
+    const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
+    const colombiaTime = new Date(utcTime + (colombiaOffset * 60000));
+    return colombiaTime;
+  };
 
-    // Suscripción en tiempo real a analytics_events
-    console.log("🔄 [REALTIME] Suscribiendo a analytics_events...");
-    const analyticsChannel = supabase
-      .channel("analytics_realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "analytics_events",
-        },
-        (payload) => {
-          console.log("📊 [REALTIME] Nuevo evento de analytics:", payload);
-          // Recargar stats cuando hay cambios
-          loadStats();
-        }
-      )
-      .subscribe();
-
-    // Suscripción en tiempo real a leads
-    console.log("🔄 [REALTIME] Suscribiendo a leads...");
-    const leadsChannel = supabase
-      .channel("leads_realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "leads",
-        },
-        (payload) => {
-          console.log("👤 [REALTIME] Cambio en leads:", payload);
-          // Recargar stats cuando hay cambios en leads
-          loadStats();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log("🔌 [REALTIME] Desuscribiendo de canales...");
-      supabase.removeChannel(analyticsChannel);
-      supabase.removeChannel(leadsChannel);
-    };
-  }, [period]);
+  const getColombiaDateString = (date: Date = new Date()) => {
+    const colombiaDate = getColombiaDate(date);
+    const year = colombiaDate.getFullYear();
+    const month = String(colombiaDate.getMonth() + 1).padStart(2, '0');
+    const day = String(colombiaDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const loadStats = async () => {
-    const now = new Date();
     let startDate: Date;
+    let endDate: Date;
+    const now = new Date();
 
     if (period === 1) {
-      // DIARIO: Solo HOY en UTC (desde las 00:00:00 UTC del día actual)
-      const nowUTC = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
-      startDate = nowUTC;
-      console.log("📅 [DIARIO] Filtrando HOY (UTC):", startDate.toISOString());
+      // HOY en Colombia - usar selectedDate si existe
+      const targetDate = selectedDate || now;
+      const colombiaDateStr = getColombiaDateString(targetDate);
+      
+      // Inicio del día en Colombia (00:00:00)
+      startDate = new Date(`${colombiaDateStr}T00:00:00-05:00`);
+      // Fin del día en Colombia (23:59:59)
+      endDate = new Date(`${colombiaDateStr}T23:59:59-05:00`);
+      
+      console.log("📅 [HOY COLOMBIA] Filtrando:", {
+        fecha: colombiaDateStr,
+        desde: startDate.toISOString(),
+        hasta: endDate.toISOString()
+      });
     } else {
-      // 7, 15, 30 días: Desde hace N días completos en UTC
-      const daysAgo = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
-      daysAgo.setUTCDate(daysAgo.getUTCDate() - period);
-      startDate = daysAgo;
-      console.log(`📅 [${period} DÍAS] Filtrando desde (UTC):`, startDate.toISOString());
+      // 7, 15, 30 días: Desde hace N días en Colombia hasta ahora
+      const colombiaToday = getColombiaDateString(now);
+      endDate = new Date(`${colombiaToday}T23:59:59-05:00`);
+      
+      const colombiaDaysAgo = getColombiaDate(now);
+      colombiaDaysAgo.setDate(colombiaDaysAgo.getDate() - period);
+      const daysAgoStr = getColombiaDateString(colombiaDaysAgo);
+      startDate = new Date(`${daysAgoStr}T00:00:00-05:00`);
+      
+      console.log(`📅 [${period} DÍAS COLOMBIA] Filtrando:`, {
+        desde: startDate.toISOString(),
+        hasta: endDate.toISOString()
+      });
     }
 
     const { data: events } = await supabase
       .from("analytics_events")
       .select("*")
       .gte("created_at", startDate.toISOString())
+      .lte("created_at", endDate.toISOString())
       .order("created_at", { ascending: true });
 
     console.log("📊 [STATS] Eventos cargados:", events?.length || 0);
 
-    if (!events) return;
+    if (!events) {
+      console.warn("⚠️ [STATS] No se cargaron eventos");
+      return;
+    }
 
     const dailyMap = new Map<string, DailyStats>();
     const visitorSet = new Set<string>();
@@ -119,8 +155,11 @@ export default function Monitoreo() {
     let desktopCount = 0;
 
     events.forEach((event) => {
-      const date = new Date(event.created_at).toISOString().split("T")[0];
-      
+      // Convertir la fecha del evento a Colombia para agrupar correctamente
+      const eventDate = new Date(event.created_at);
+      const colombiaEventDate = getColombiaDate(eventDate);
+      const date = getColombiaDateString(colombiaEventDate);
+
       if (!dailyMap.has(date)) {
         dailyMap.set(date, {
           date,
@@ -156,7 +195,7 @@ export default function Monitoreo() {
       }
     });
 
-    const statsArray = Array.from(dailyMap.values());
+    const statsArray = Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date));
     setStats(statsArray);
 
     setTotalStats({
@@ -171,33 +210,40 @@ export default function Monitoreo() {
     });
 
     console.log("✅ [STATS] Stats actualizados:", {
-      period: period === 1 ? "HOY (UTC)" : `${period} días`,
+      period: period === 1 ? `HOY (${getColombiaDateString(selectedDate || now)})` : `${period} días`,
       totalEvents: events.length,
       pageViews: events.filter((e) => e.event_type === "page_view").length,
       uniqueVisitors: visitorSet.size,
+      formCompletes: events.filter((e) => e.event_type === "form_complete").length,
     });
   };
 
   const loadCountryStats = async () => {
-    const now = new Date();
     let startDate: Date;
+    let endDate: Date;
+    const now = new Date();
 
     if (period === 1) {
-      // DIARIO: Solo HOY en UTC
-      const nowUTC = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
-      startDate = nowUTC;
+      const targetDate = selectedDate || now;
+      const colombiaDateStr = getColombiaDateString(targetDate);
+      startDate = new Date(`${colombiaDateStr}T00:00:00-05:00`);
+      endDate = new Date(`${colombiaDateStr}T23:59:59-05:00`);
     } else {
-      // 7, 15, 30 días: Desde hace N días completos en UTC
-      const daysAgo = new Date(now.toISOString().split('T')[0] + 'T00:00:00.000Z');
-      daysAgo.setUTCDate(daysAgo.getUTCDate() - period);
-      startDate = daysAgo;
+      const colombiaToday = getColombiaDateString(now);
+      endDate = new Date(`${colombiaToday}T23:59:59-05:00`);
+      
+      const colombiaDaysAgo = getColombiaDate(now);
+      colombiaDaysAgo.setDate(colombiaDaysAgo.getDate() - period);
+      const daysAgoStr = getColombiaDateString(colombiaDaysAgo);
+      startDate = new Date(`${daysAgoStr}T00:00:00-05:00`);
     }
 
     const { data: events } = await supabase
       .from("analytics_events")
       .select("country, country_code")
       .eq("event_type", "page_view")
-      .gte("created_at", startDate.toISOString());
+      .gte("created_at", startDate.toISOString())
+      .lte("created_at", endDate.toISOString());
 
     if (!events) return;
 
@@ -221,403 +267,381 @@ export default function Monitoreo() {
     setShowCountryModal(true);
   };
 
-  const maxViews = Math.max(...stats.map((s) => s.page_views), 1);
+  useEffect(() => {
+    loadStats();
+  }, [period, selectedDate]);
 
-  const conversionRate = totalStats.pageViews > 0 
-    ? ((totalStats.chatStarts / totalStats.pageViews) * 100).toFixed(1)
-    : "0.0";
+  const conversionRate =
+    totalStats.formStarts > 0
+      ? ((totalStats.formCompletes / totalStats.formStarts) * 100).toFixed(1)
+      : "0";
 
-  const getCountryFlag = (countryCode: string) => {
-    const flags: { [key: string]: string } = {
-      MX: "🇲🇽", US: "🇺🇸", ES: "🇪🇸", CO: "🇨🇴", AR: "🇦🇷",
-      CL: "🇨🇱", PE: "🇵🇪", VE: "🇻🇪", EC: "🇪🇨", GT: "🇬🇹",
-      CU: "🇨🇺", BO: "🇧🇴", DO: "🇩🇴", HN: "🇭🇳", PY: "🇵🇾",
-      SV: "🇸🇻", NI: "🇳🇮", CR: "🇨🇷", PA: "🇵🇦", UY: "🇺🇾",
-    };
-    return flags[countryCode] || "🌍";
+  const COLORS = ["#8b5cf6", "#ec4899", "#f59e0b", "#10b981"];
+
+  const deviceData = [
+    { name: "Móvil", value: totalStats.mobileUsers },
+    { name: "Desktop", value: totalStats.desktopUsers },
+  ];
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+      setPeriod(1); // Cambiar a modo "HOY" cuando se selecciona una fecha
+      setDatePickerOpen(false);
+    }
+  };
+
+  const getPeriodLabel = () => {
+    if (period === 1 && selectedDate) {
+      const colombiaDateStr = getColombiaDateString(selectedDate);
+      return format(new Date(colombiaDateStr), "d 'de' MMMM, yyyy", { locale: es });
+    }
+    switch (period) {
+      case 1: return "Hoy";
+      case 7: return "Últimos 7 días";
+      case 15: return "Últimos 15 días";
+      case 30: return "Últimos 30 días";
+      default: return "Período seleccionado";
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => router.push("/Suafazon/dashboard")}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Volver
-            </Button>
-            <div>
-              <h1 className="text-4xl font-serif font-bold text-gold">Monitoreo y Analytics</h1>
-              <p className="text-muted-foreground mt-1">Métricas en tiempo real de tu portal espiritual</p>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-black p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-amber-400 mb-2">
+              📊 Monitoreo & Analytics
+            </h1>
+            <p className="text-purple-200">
+              Análisis en tiempo real - Zona horaria: Colombia (UTC-5)
+            </p>
           </div>
+          <Button
+            onClick={() => router.push("/Suafazon/dashboard")}
+            variant="outline"
+            className="border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-purple-900"
+          >
+            ← Volver al Dashboard
+          </Button>
+        </div>
 
-          {/* Selector de período */}
+        {/* Period Selector */}
+        <div className="flex flex-wrap items-center gap-4 mb-8">
           <div className="flex gap-2">
             <Button
-              variant={period === 1 ? "default" : "outline"}
-              onClick={() => setPeriod(1)}
-              size="sm"
+              onClick={() => {
+                setSelectedDate(new Date());
+                setPeriod(1);
+              }}
+              variant={period === 1 && !selectedDate ? "default" : "outline"}
+              className={
+                period === 1 && !selectedDate
+                  ? "bg-amber-400 text-purple-900"
+                  : "border-purple-400 text-purple-200 hover:bg-purple-800"
+              }
             >
-              📅 DIARIO (HOY)
+              Hoy
             </Button>
             <Button
-              variant={period === 7 ? "default" : "outline"}
               onClick={() => setPeriod(7)}
-              size="sm"
+              variant={period === 7 ? "default" : "outline"}
+              className={
+                period === 7
+                  ? "bg-amber-400 text-purple-900"
+                  : "border-purple-400 text-purple-200 hover:bg-purple-800"
+              }
             >
               7 días
             </Button>
             <Button
-              variant={period === 15 ? "default" : "outline"}
               onClick={() => setPeriod(15)}
-              size="sm"
+              variant={period === 15 ? "default" : "outline"}
+              className={
+                period === 15
+                  ? "bg-amber-400 text-purple-900"
+                  : "border-purple-400 text-purple-200 hover:bg-purple-800"
+              }
             >
               15 días
             </Button>
             <Button
-              variant={period === 30 ? "default" : "outline"}
               onClick={() => setPeriod(30)}
-              size="sm"
+              variant={period === 30 ? "default" : "outline"}
+              className={
+                period === 30
+                  ? "bg-amber-400 text-purple-900"
+                  : "border-purple-400 text-purple-200 hover:bg-purple-800"
+              }
             >
               30 días
             </Button>
           </div>
+
+          {/* Date Picker */}
+          <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-purple-900"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                Fecha específica
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-purple-900 border-amber-400">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelect}
+                locale={es}
+                disabled={(date) => date > new Date()}
+                className="rounded-md text-purple-100"
+              />
+            </PopoverContent>
+          </Popover>
+
+          <div className="ml-auto text-purple-200 font-semibold">
+            {getPeriodLabel()}
+          </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          <Card 
-            className="p-4 hover:border-gold/40 transition-all cursor-pointer"
-            onClick={loadCountryStats}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <Eye className="h-5 w-5 text-blue-400" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-foreground">{totalStats.pageViews}</div>
-                <div className="text-xs text-muted-foreground">Visitas Totales</div>
-                <div className="text-xs text-gold mt-1">👆 Click para ver países</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <Users className="h-5 w-5 text-purple-400" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-foreground">{totalStats.uniqueVisitors}</div>
-                <div className="text-xs text-muted-foreground">Visitantes Únicos</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                <MousePointerClick className="h-5 w-5 text-yellow-400" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-foreground">{totalStats.formStarts}</div>
-                <div className="text-xs text-muted-foreground">Formularios Iniciados</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                <svg className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-foreground">{totalStats.formCompletes}</div>
-                <div className="text-xs text-muted-foreground">Formularios Completados</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
-                <span className="text-lg">🎴</span>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-foreground">{totalStats.cardSelects}</div>
-                <div className="text-xs text-muted-foreground">Cartas Seleccionadas</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
-                <MessageCircle className="h-5 w-5 text-gold" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-foreground">{totalStats.chatStarts}</div>
-                <div className="text-xs text-muted-foreground">Chats Iniciados</div>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Gráfico de Visitas */}
-        <Card className="p-6 mb-8">
-          <h3 className="text-lg font-serif font-bold mb-4 text-foreground">
-            📈 Visitas por Día 
-            {period === 1 ? (
-              <span className="text-sm font-normal text-foreground/60 ml-2">
-                (Solo hoy - {new Date().toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })})
-              </span>
-            ) : (
-              <span className="text-sm font-normal text-foreground/60 ml-2">
-                (Últimos {period} días)
-              </span>
-            )}
-          </h3>
-          <div className="space-y-3">
-            {stats.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No hay datos para el período seleccionado
-              </div>
-            ) : (
-              stats.map((stat) => (
-                <div key={stat.date} className="flex items-center gap-4">
-                  <div className="w-24 text-sm text-muted-foreground">
-                    {new Date(stat.date).toLocaleDateString("es-MX", {
-                      day: "2-digit",
-                      month: "short",
-                    })}
-                  </div>
-                  <div className="flex-1 bg-muted/30 rounded-full h-8 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(stat.page_views / maxViews) * 100}%` }}
-                      transition={{ duration: 0.5 }}
-                      className="h-full bg-gradient-to-r from-gold to-accent flex items-center justify-end pr-3"
-                    >
-                      <span className="text-xs font-bold text-background">
-                        {stat.page_views}
-                      </span>
-                    </motion.div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
-
-        {/* Distribución de Dispositivos */}
-        <Card className="p-6 mb-8">
-          <h3 className="text-lg font-serif font-bold mb-4 text-foreground">
-            📱 Distribución de Dispositivos
-          </h3>
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">📱 Móvil</span>
-                <span className="text-lg font-bold text-foreground">{totalStats.mobileUsers}</span>
-              </div>
-              <ProgressBar
-                value={totalStats.mobileUsers}
-                max={totalStats.mobileUsers + totalStats.desktopUsers}
-                color="bg-blue-500"
-              />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">💻 Desktop</span>
-                <span className="text-lg font-bold text-foreground">{totalStats.desktopUsers}</span>
-              </div>
-              <ProgressBar
-                value={totalStats.desktopUsers}
-                max={totalStats.mobileUsers + totalStats.desktopUsers}
-                color="bg-green-500"
-              />
-            </div>
-          </div>
-        </Card>
-
-        {/* Embudo de Conversión */}
-        <Card className="p-6">
-          <h3 className="text-lg font-serif font-bold mb-4 text-foreground">
-            🔄 Embudo de Conversión
-          </h3>
-          <div className="space-y-4">
-            <FunnelStep
-              label="👁️ Visitas"
-              value={totalStats.pageViews}
-              percentage={100}
-              color="bg-blue-500"
-            />
-            <FunnelStep
-              label="📝 Formulario Iniciado"
-              value={totalStats.formStarts}
-              percentage={(totalStats.formStarts / totalStats.pageViews) * 100}
-              color="bg-yellow-500"
-            />
-            <FunnelStep
-              label="✅ Formulario Completado"
-              value={totalStats.formCompletes}
-              percentage={(totalStats.formCompletes / totalStats.pageViews) * 100}
-              color="bg-green-500"
-            />
-            <FunnelStep
-              label="🎴 Carta Seleccionada"
-              value={totalStats.cardSelects}
-              percentage={(totalStats.cardSelects / totalStats.pageViews) * 100}
-              color="bg-pink-500"
-            />
-            <FunnelStep
-              label="💬 Chat Iniciado"
-              value={totalStats.chatStarts}
-              percentage={(totalStats.chatStarts / totalStats.pageViews) * 100}
-              color="bg-gold"
-            />
-          </div>
-          <div className="mt-6 p-4 bg-gold/10 border border-gold/30 rounded-lg">
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-purple-900/50 border-purple-700 p-6">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gold">Tasa de Conversión Total</span>
-              <span className="text-2xl font-bold text-gold">{conversionRate}%</span>
+              <div>
+                <p className="text-purple-300 text-sm">Visitantes únicos</p>
+                <h3 className="text-3xl font-bold text-amber-400">
+                  {totalStats.uniqueVisitors}
+                </h3>
+              </div>
+              <Users className="h-12 w-12 text-purple-400" />
             </div>
-            <p className="text-xs text-gold/70 mt-1">
-              De cada 100 visitantes, {conversionRate} inician chat
-            </p>
-          </div>
-        </Card>
-      </div>
+          </Card>
 
-      {/* Modal de Países */}
-      <AnimatePresence>
-        {showCountryModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
-            onClick={() => setShowCountryModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-card border-2 border-gold/30 rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl shadow-gold/20"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-serif text-gold">🌍 Visitas por País</h2>
-                <button
-                  onClick={() => setShowCountryModal(false)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  ✕
-                </button>
+          <Card className="bg-purple-900/50 border-purple-700 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-300 text-sm">Vistas de página</p>
+                <h3 className="text-3xl font-bold text-amber-400">
+                  {totalStats.pageViews}
+                </h3>
               </div>
+              <BarChart3 className="h-12 w-12 text-purple-400" />
+            </div>
+          </Card>
 
-              <div className="space-y-3">
-                {countryStats.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No hay datos de países disponibles
-                  </div>
-                ) : (
-                  countryStats.map((stat) => (
-                    <div
-                      key={stat.country_code}
-                      className="flex items-center justify-between p-3 bg-muted/20 rounded-lg hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{getCountryFlag(stat.country_code)}</span>
-                        <div>
-                          <div className="font-medium text-foreground">{stat.country}</div>
-                          <div className="text-xs text-muted-foreground">{stat.country_code}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-gold">{stat.count}</div>
-                        <div className="text-xs text-muted-foreground">visitas</div>
-                      </div>
-                    </div>
-                  ))
-                )}
+          <Card className="bg-purple-900/50 border-purple-700 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-300 text-sm">Formularios completados</p>
+                <h3 className="text-3xl font-bold text-amber-400">
+                  {totalStats.formCompletes}
+                </h3>
               </div>
+              <MessageSquare className="h-12 w-12 text-purple-400" />
+            </div>
+          </Card>
 
-              <div className="mt-6 pt-6 border-t border-gold/10">
-                <div className="text-center text-sm text-muted-foreground">
-                  Total de países: <span className="text-gold font-bold">{countryStats.length}</span>
-                </div>
+          <Card className="bg-purple-900/50 border-purple-700 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-300 text-sm">Tasa de conversión</p>
+                <h3 className="text-3xl font-bold text-amber-400">
+                  {conversionRate}%
+                </h3>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function FunnelStep({
-  label,
-  value,
-  percentage,
-  color,
-}: {
-  label: string;
-  value: number;
-  percentage: number;
-  color: string;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-muted-foreground">{label}</span>
-        <div className="text-right">
-          <span className="text-lg font-bold text-foreground">{value}</span>
-          <span className="text-xs text-muted-foreground ml-2">
-            ({percentage.toFixed(1)}%)
-          </span>
+              <TrendingUp className="h-12 w-12 text-purple-400" />
+            </div>
+          </Card>
         </div>
-      </div>
-      <ProgressBar value={value} max={value} percentage={percentage} color={color} />
-    </div>
-  );
-}
 
-function ProgressBar({
-  value,
-  max,
-  percentage,
-  color,
-}: {
-  value: number;
-  max: number;
-  percentage?: number;
-  color: string;
-}) {
-  const finalPercentage = percentage ?? (max > 0 ? (value / max) * 100 : 0);
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Line Chart */}
+          <Card className="bg-purple-900/50 border-purple-700 p-6">
+            <h3 className="text-xl font-bold text-amber-400 mb-4">
+              Actividad diaria
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={stats}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#6b21a8" />
+                <XAxis dataKey="date" stroke="#c4b5fd" />
+                <YAxis stroke="#c4b5fd" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#581c87",
+                    border: "1px solid #a855f7",
+                  }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="page_views"
+                  stroke="#8b5cf6"
+                  name="Vistas"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="form_completes"
+                  stroke="#f59e0b"
+                  name="Conversiones"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </Card>
 
-  return (
-    <div className="w-full bg-muted/30 rounded-full h-6 overflow-hidden">
-      <motion.div
-        initial={{ width: 0 }}
-        animate={{ width: `${finalPercentage}%` }}
-        transition={{ duration: 0.5 }}
-        className={`h-full ${color} flex items-center justify-center`}
-      >
-        {value > 0 && (
-          <span className="text-xs font-bold text-white">
-            {finalPercentage.toFixed(0)}%
-          </span>
+          {/* Bar Chart */}
+          <Card className="bg-purple-900/50 border-purple-700 p-6">
+            <h3 className="text-xl font-bold text-amber-400 mb-4">
+              Embudo de conversión
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={[
+                  {
+                    name: "Visitantes",
+                    value: totalStats.uniqueVisitors,
+                  },
+                  {
+                    name: "Iniciaron form",
+                    value: totalStats.formStarts,
+                  },
+                  {
+                    name: "Completaron",
+                    value: totalStats.formCompletes,
+                  },
+                  {
+                    name: "Iniciaron chat",
+                    value: totalStats.chatStarts,
+                  },
+                ]}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#6b21a8" />
+                <XAxis dataKey="name" stroke="#c4b5fd" />
+                <YAxis stroke="#c4b5fd" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#581c87",
+                    border: "1px solid #a855f7",
+                  }}
+                />
+                <Bar dataKey="value" fill="#f59e0b" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </div>
+
+        {/* Device Stats & Country Stats */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Device Distribution */}
+          <Card className="bg-purple-900/50 border-purple-700 p-6">
+            <h3 className="text-xl font-bold text-amber-400 mb-4">
+              Dispositivos
+            </h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={deviceData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {deviceData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex justify-around mt-4">
+              <div className="flex items-center gap-2">
+                <Smartphone className="h-5 w-5 text-purple-400" />
+                <span className="text-purple-200">
+                  {totalStats.mobileUsers} móvil
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Monitor className="h-5 w-5 text-purple-400" />
+                <span className="text-purple-200">
+                  {totalStats.desktopUsers} desktop
+                </span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Country Stats */}
+          <Card className="bg-purple-900/50 border-purple-700 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-amber-400">
+                Países visitantes
+              </h3>
+              <Button
+                onClick={loadCountryStats}
+                size="sm"
+                variant="outline"
+                className="border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-purple-900"
+              >
+                <Globe className="h-4 w-4 mr-2" />
+                Ver detalles
+              </Button>
+            </div>
+            <p className="text-purple-300">
+              Click en "Ver detalles" para análisis geográfico completo
+            </p>
+          </Card>
+        </div>
+
+        {/* Country Modal */}
+        {showCountryModal && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <Card className="bg-purple-900 border-amber-400 p-6 max-w-2xl w-full max-h-[80vh] overflow-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-amber-400">
+                  Visitantes por país
+                </h2>
+                <Button
+                  onClick={() => setShowCountryModal(false)}
+                  variant="outline"
+                  className="border-purple-400 text-purple-200"
+                >
+                  Cerrar
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {countryStats.map((stat, index) => (
+                  <div
+                    key={stat.country_code}
+                    className="flex items-center justify-between bg-purple-800/50 p-4 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl font-bold text-purple-400">
+                        #{index + 1}
+                      </span>
+                      <span className="text-2xl">{stat.country_code}</span>
+                      <span className="text-purple-200 font-medium">
+                        {stat.country}
+                      </span>
+                    </div>
+                    <span className="text-amber-400 font-bold text-xl">
+                      {stat.count} visitas
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }
