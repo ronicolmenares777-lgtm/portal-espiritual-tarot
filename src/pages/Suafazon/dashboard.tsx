@@ -1,590 +1,453 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
-import { Card, CardContent } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
-import {
-  Users,
-  CheckCircle,
-  Trash2,
-  Star,
-  MessageCircle,
-  LogOut,
-  RefreshCw,
-  Calendar,
-  CheckSquare,
-  XSquare,
-  BarChart3,
-  Download,
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { leadService } from "@/services/leadService";
+import type { Lead } from "@/integrations/supabase/types";
+import { 
+  Users, 
+  CheckCircle2, 
+  Archive, 
   Search,
-  Filter,
+  MessageCircle,
+  Calendar,
+  Phone,
+  Eye,
+  Trash2,
+  Download,
+  RefreshCw,
+  Sparkles
 } from "lucide-react";
-
-type Lead = Tables<"leads">;
 
 export default function Dashboard() {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState<"todos" | "leads" | "listo" | "papelera">("todos");
+  const [loading, setLoading] = useState(true);
+  const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
-  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [newMessageLeadId, setNewMessageLeadId] = useState<string | null>(null);
-
-  const stats = {
-    leads: leads.filter(l => l.status === "nuevo").length,
-    listo: leads.filter(l => l.status === "listo").length,
-    papelera: leads.filter(l => l.status === "archive").length,
-  };
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
-    console.log("🚀 [MOUNT] Dashboard montado");
     loadLeads();
-
-    const channel = supabase
-      .channel("leads_dashboard_realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "leads",
-        },
-        (payload) => {
-          console.log("📡 [REALTIME] Cambio detectado:", payload.eventType);
-          loadLeads();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    
-    const adminSession = localStorage.getItem("adminSession");
-    if (!adminSession) {
-      router.push("/Suafazon");
-      return;
-    }
-
-    const messagesSubscription = supabase
-      .channel("messages_channel")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: "is_from_maestro=eq.false",
-        },
-        (payload) => {
-          const newMessage = payload.new as any;
-          setNewMessageLeadId(newMessage.lead_id);
-          loadLeads();
-          setTimeout(() => setNewMessageLeadId(null), 5000);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      messagesSubscription.unsubscribe();
-    };
-  }, []);
-
-  const filteredLeads = useMemo(() => {
-    let filtered = [...leads];
-
-    if (statusFilter !== "todos") {
-      if (statusFilter === "leads") {
-        filtered = filtered.filter((lead) => lead.status === "nuevo");
-      } else if (statusFilter === "listo") {
-        filtered = filtered.filter((lead) => lead.status === "listo");
-      } else if (statusFilter === "papelera") {
-        filtered = filtered.filter((lead) => lead.status === "archive");
-      }
-    }
-
-    if (searchTerm && searchTerm.trim() !== "") {
-      filtered = filtered.filter(
-        (lead) =>
-          lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          lead.whatsapp.includes(searchTerm) ||
-          (lead.problem && lead.problem.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-
-    if (showOnlyFavorites) {
-      filtered = filtered.filter((lead) => lead.is_favorite);
-    }
-
-    return filtered;
-  }, [leads, statusFilter, searchTerm, showOnlyFavorites]);
 
   const loadLeads = async () => {
-    setIsLoading(true);
-    
+    setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("leads")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("❌ Error:", error);
-        setLeads([]);
-        return;
-      }
-
+      const data = await leadService.getAll();
       setLeads(data || []);
     } catch (error) {
-      console.error("❌ Excepción:", error);
-      setLeads([]);
-    } finally {
-      setIsLoading(false);
+      console.error("Error loading leads:", error);
+    }
+    setLoading(false);
+  };
+
+  const stats = useMemo(() => {
+    const total = leads.length;
+    const leadsCount = leads.filter(l => l.status === 'nuevo' || l.status === 'enConversacion' || l.status === 'caliente').length;
+    const ready = leads.filter(l => l.status === 'listo').length;
+    const archived = leads.filter(l => l.status === 'archive').length;
+
+    return { total, leadsCount, ready, archived };
+  }, [leads]);
+
+  const filteredLeads = useMemo(() => {
+    return leads.filter((lead) => {
+      const matchesSearch =
+        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.whatsapp.includes(searchTerm);
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && ["nuevo", "enConversacion", "caliente"].includes(lead.status)) ||
+        lead.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [leads, searchTerm, statusFilter]);
+
+  const toggleSelectLead = (id: string) => {
+    const newSelected = new Set(selectedLeads);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedLeads(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedLeads.size === filteredLeads.length) {
+      setSelectedLeads(new Set());
+    } else {
+      setSelectedLeads(new Set(filteredLeads.map(l => l.id)));
     }
   };
 
-  const handleStatusChange = async (leadId: string, newStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from("leads")
-        .update({ status: newStatus })
-        .eq("id", leadId);
+  const handleBulkStatusChange = async (newStatus: string) => {
+    if (selectedLeads.size === 0) return;
 
-      if (!error) loadLeads();
+    const confirmed = confirm(`¿Cambiar ${selectedLeads.size} lead(s) a estado "${newStatus}"?`);
+    if (!confirmed) return;
+
+    try {
+      for (const leadId of selectedLeads) {
+        await leadService.update(leadId, { status: newStatus });
+      }
+      await loadLeads();
+      setSelectedLeads(new Set());
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error updating leads:", error);
+      alert("Error al actualizar los leads");
     }
   };
 
-  const toggleFavorite = async (leadId: string, currentFavorite: boolean) => {
-    try {
-      const { error } = await supabase
-        .from("leads")
-        .update({ is_favorite: !currentFavorite })
-        .eq("id", leadId);
+  const handleBulkDelete = async () => {
+    if (selectedLeads.size === 0) return;
 
-      if (!error) loadLeads();
+    const confirmed = confirm(`¿ELIMINAR PERMANENTEMENTE ${selectedLeads.size} lead(s)?`);
+    if (!confirmed) return;
+
+    try {
+      for (const leadId of selectedLeads) {
+        await leadService.delete(leadId);
+      }
+      await loadLeads();
+      setSelectedLeads(new Set());
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error deleting leads:", error);
+      alert("Error al eliminar los leads");
     }
   };
 
   const exportToCSV = () => {
-    const csvHeaders = "Nombre,WhatsApp,Problema,Estado,Fecha\n";
-    const csvRows = filteredLeads.map(lead => {
-      const date = lead.created_at 
-        ? new Date(lead.created_at).toLocaleDateString("es-MX")
-        : "N/A";
-      return `"${lead.name}","${lead.whatsapp}","${lead.problem}","${lead.status}","${date}"`;
-    }).join("\n");
-    
-    const csvContent = csvHeaders + csvRows;
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
+    const selectedData = filteredLeads.filter(l => selectedLeads.has(l.id));
+    const dataToExport = selectedData.length > 0 ? selectedData : filteredLeads;
+
+    const csv = [
+      ["Nombre", "WhatsApp", "País", "Problema", "Estado", "Fecha"],
+      ...dataToExport.map(l => [
+        l.name,
+        l.whatsapp,
+        l.country_code || "",
+        l.problem || "",
+        l.status,
+        new Date(l.created_at).toLocaleDateString()
+      ])
+    ].map(row => row.join(",")).join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `leads_${new Date().toISOString().split("T")[0]}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
   };
 
-  const moveToArchive = async (leadIds: string[]) => {
-    const { error } = await supabase
-      .from("leads")
-      .update({ status: "archive" })
-      .in("id", leadIds);
-
-    if (!error) {
-      loadLeads();
-      setSelectedLeads([]);
-    }
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const handleLogout = () => {
-    if (typeof window === "undefined") return;
-    localStorage.removeItem("adminSession");
-    localStorage.removeItem("adminProfile");
-    router.push("/Suafazon");
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      nuevo: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+      enConversacion: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+      caliente: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+      cerrado: "bg-red-500/20 text-red-400 border-red-500/30",
+      listo: "bg-green-500/20 text-green-400 border-green-500/30",
+      perdido: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+      archive: "bg-gray-500/20 text-gray-400 border-gray-500/30"
+    };
+    return colors[status] || colors.nuevo;
   };
 
-  const handleSelectAll = () => {
-    if (selectedLeads.length === filteredLeads.length && filteredLeads.length > 0) {
-      setSelectedLeads([]);
-    } else {
-      setSelectedLeads(filteredLeads.map(lead => lead.id));
-    }
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      nuevo: "Nuevo",
+      enConversacion: "En Conversación",
+      caliente: "Caliente",
+      cerrado: "Cerrado",
+      listo: "Listo",
+      perdido: "Perdido",
+      archive: "Archivado"
+    };
+    return labels[status] || status;
   };
 
-  const toggleSelect = (id: string) => {
-    setSelectedLeads((prev) =>
-      prev.includes(id) ? prev.filter((leadId) => leadId !== id) : [...prev, id]
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 text-yellow-500 animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Cargando dashboard...</p>
+        </div>
+      </div>
     );
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950">
-      {/* Notificación nuevo mensaje */}
-      {newMessageLeadId && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
-          <div className="bg-gradient-to-r from-amber-400 to-amber-500 text-purple-950 px-6 py-3 rounded-lg shadow-2xl border border-amber-300 flex items-center gap-3">
-            <MessageCircle className="h-5 w-5 animate-pulse" />
-            <div>
-              <p className="font-bold text-sm">¡Nuevo mensaje!</p>
-              <p className="text-xs">Un usuario acaba de escribir</p>
-            </div>
-            <button
-              onClick={() => setNewMessageLeadId(null)}
-              className="ml-4 hover:bg-purple-950/20 rounded p-1"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
+    <div className="min-h-screen bg-black">
       {/* Header */}
-      <header className="border-b border-amber-400/20 bg-purple-900/30 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-gray-800 bg-gray-950/50 backdrop-blur-xl sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-serif text-amber-400 flex items-center gap-2">
-                <span className="text-2xl">🔮</span>
+              <h1 className="text-2xl font-bold text-yellow-500 flex items-center gap-2">
+                <Sparkles className="w-6 h-6" />
                 Portal Maestro
               </h1>
-              <p className="text-sm text-amber-100/60">
-                Gestión de consultas espirituales
-              </p>
+              <p className="text-sm text-gray-400 mt-1">Gestión de almas y consultas espirituales</p>
             </div>
-            <div className="flex items-center gap-2">
-              <button
+            <div className="flex gap-3">
+              <Button
                 onClick={() => router.push("/Suafazon/perfil")}
-                className="px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all text-sm font-semibold border border-amber-400/30"
+                variant="outline"
+                className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-yellow-500"
               >
-                👤 Perfil
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all text-sm font-semibold border border-red-400/30"
+                Perfil
+              </Button>
+              <Button
+                onClick={() => router.push("/")}
+                variant="outline"
+                className="border-red-700 text-red-400 hover:bg-red-950"
               >
-                <LogOut className="h-4 w-4 inline mr-1" />
                 Salir
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-gradient-to-br from-purple-900/50 to-purple-800/50 border-amber-400/20 backdrop-blur-sm hover:shadow-xl hover:shadow-amber-400/10 transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-amber-100/60 mb-1">Total</p>
-                  <p className="text-3xl font-bold text-amber-400">{leads.length}</p>
-                </div>
-                <div className="p-3 bg-amber-400/10 rounded-lg">
-                  <Users className="w-6 h-6 text-amber-400" />
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="bg-gray-900 border-gray-800 p-6 hover:border-gray-700 transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Total Consultas</p>
+                <p className="text-3xl font-bold text-white">{stats.total}</p>
               </div>
-            </CardContent>
+              <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
+                <Users className="w-6 h-6 text-gray-400" />
+              </div>
+            </div>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-900/50 to-blue-800/50 border-blue-400/20 backdrop-blur-sm hover:shadow-xl hover:shadow-blue-400/10 transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-100/60 mb-1">Leads</p>
-                  <p className="text-3xl font-bold text-blue-400">{stats.leads}</p>
-                </div>
-                <div className="p-3 bg-blue-400/10 rounded-lg">
-                  <Users className="w-6 h-6 text-blue-400" />
-                </div>
+          <Card className="bg-gray-900 border-gray-800 p-6 hover:border-blue-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Leads Activos</p>
+                <p className="text-3xl font-bold text-blue-400">{stats.leadsCount}</p>
               </div>
-            </CardContent>
+              <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                <MessageCircle className="w-6 h-6 text-blue-400" />
+              </div>
+            </div>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-900/50 to-green-800/50 border-green-400/20 backdrop-blur-sm hover:shadow-xl hover:shadow-green-400/10 transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-100/60 mb-1">Listos</p>
-                  <p className="text-3xl font-bold text-green-400">{stats.listo}</p>
-                </div>
-                <div className="p-3 bg-green-400/10 rounded-lg">
-                  <CheckCircle className="w-6 h-6 text-green-400" />
-                </div>
+          <Card className="bg-gray-900 border-gray-800 p-6 hover:border-green-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Listos</p>
+                <p className="text-3xl font-bold text-green-400">{stats.ready}</p>
               </div>
-            </CardContent>
+              <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6 text-green-400" />
+              </div>
+            </div>
           </Card>
 
-          <Card className="bg-gradient-to-br from-red-900/50 to-red-800/50 border-red-400/20 backdrop-blur-sm hover:shadow-xl hover:shadow-red-400/10 transition-all">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-red-100/60 mb-1">Archivados</p>
-                  <p className="text-3xl font-bold text-red-400">{stats.papelera}</p>
-                </div>
-                <div className="p-3 bg-red-400/10 rounded-lg">
-                  <Trash2 className="w-6 h-6 text-red-400" />
-                </div>
+          <Card className="bg-gray-900 border-gray-800 p-6 hover:border-gray-600 transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Archivados</p>
+                <p className="text-3xl font-bold text-gray-400">{stats.archived}</p>
               </div>
-            </CardContent>
+              <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
+                <Archive className="w-6 h-6 text-gray-500" />
+              </div>
+            </div>
           </Card>
         </div>
 
-        {/* Filtros y búsqueda */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-          {/* Filtros de estado */}
-          <Card className="lg:col-span-2 bg-purple-900/30 border-amber-400/20 backdrop-blur-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Filter className="w-4 h-4 text-amber-400" />
-                <p className="text-sm font-semibold text-amber-100">Filtrar por estado</p>
+        {/* Filters & Actions */}
+        <Card className="bg-gray-900 border-gray-800 p-6">
+          <div className="space-y-4">
+            {/* Search & Refresh */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Input
+                  placeholder="Buscar por nombre o WhatsApp..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-gray-950 border-gray-800 text-white placeholder:text-gray-500 focus:border-yellow-500"
+                />
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button
-                  onClick={() => setStatusFilter("todos")}
-                  className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                    statusFilter === "todos"
-                      ? "bg-gradient-to-r from-amber-500 to-amber-600 text-purple-950 shadow-lg"
-                      : "bg-purple-800/50 text-amber-100/70 hover:bg-purple-800"
-                  }`}
-                >
-                  Todos <span className="ml-1 text-xs">({leads.length})</span>
-                </button>
-                <button
-                  onClick={() => setStatusFilter("leads")}
-                  className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                    statusFilter === "leads"
-                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
-                      : "bg-purple-800/50 text-amber-100/70 hover:bg-purple-800"
-                  }`}
-                >
-                  Leads <span className="ml-1 text-xs">({stats.leads})</span>
-                </button>
-                <button
-                  onClick={() => setStatusFilter("listo")}
-                  className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                    statusFilter === "listo"
-                      ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg"
-                      : "bg-purple-800/50 text-amber-100/70 hover:bg-purple-800"
-                  }`}
-                >
-                  Listos <span className="ml-1 text-xs">({stats.listo})</span>
-                </button>
-                <button
-                  onClick={() => setStatusFilter("papelera")}
-                  className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                    statusFilter === "papelera"
-                      ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
-                      : "bg-purple-800/50 text-amber-100/70 hover:bg-purple-800"
-                  }`}
-                >
-                  Papelera <span className="ml-1 text-xs">({stats.papelera})</span>
-                </button>
+              <Button
+                onClick={loadLeads}
+                variant="outline"
+                className="border-gray-700 text-gray-300 hover:bg-gray-800"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Actualizar
+              </Button>
+            </div>
+
+            {/* Status Filters */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => setStatusFilter("all")}
+                variant={statusFilter === "all" ? "default" : "outline"}
+                size="sm"
+                className={statusFilter === "all" ? "bg-yellow-500 text-black hover:bg-yellow-600" : "border-gray-700 text-gray-400 hover:bg-gray-800"}
+              >
+                Todos
+              </Button>
+              <Button
+                onClick={() => setStatusFilter("active")}
+                variant={statusFilter === "active" ? "default" : "outline"}
+                size="sm"
+                className={statusFilter === "active" ? "bg-blue-500 text-white hover:bg-blue-600" : "border-gray-700 text-gray-400 hover:bg-gray-800"}
+              >
+                Activos
+              </Button>
+              <Button
+                onClick={() => setStatusFilter("listo")}
+                variant={statusFilter === "listo" ? "default" : "outline"}
+                size="sm"
+                className={statusFilter === "listo" ? "bg-green-500 text-white hover:bg-green-600" : "border-gray-700 text-gray-400 hover:bg-gray-800"}
+              >
+                Listos
+              </Button>
+              <Button
+                onClick={() => setStatusFilter("archive")}
+                variant={statusFilter === "archive" ? "default" : "outline"}
+                size="sm"
+                className={statusFilter === "archive" ? "bg-gray-600 text-white hover:bg-gray-700" : "border-gray-700 text-gray-400 hover:bg-gray-800"}
+              >
+                Archivados
+              </Button>
+            </div>
+
+            {/* Bulk Actions */}
+            {selectedLeads.size > 0 && (
+              <div className="flex flex-wrap gap-2 p-3 bg-gray-950 border border-gray-800 rounded-lg">
+                <span className="text-sm text-gray-400 self-center">
+                  {selectedLeads.size} seleccionado(s):
+                </span>
+                <Button size="sm" onClick={exportToCSV} variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                  <Download className="w-4 h-4 mr-1" />
+                  Exportar
+                </Button>
+                <Button size="sm" onClick={() => handleBulkStatusChange("listo")} variant="outline" className="border-green-700 text-green-400 hover:bg-green-950">
+                  Marcar Listo
+                </Button>
+                <Button size="sm" onClick={() => handleBulkStatusChange("archive")} variant="outline" className="border-gray-700 text-gray-400 hover:bg-gray-800">
+                  Archivar
+                </Button>
+                <Button size="sm" onClick={handleBulkDelete} variant="outline" className="border-red-700 text-red-400 hover:bg-red-950">
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Eliminar
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
+        </Card>
 
-          {/* Búsqueda */}
-          <Card className="bg-purple-900/30 border-amber-400/20 backdrop-blur-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Search className="w-4 h-4 text-amber-400" />
-                <p className="text-sm font-semibold text-amber-100">Buscar</p>
-              </div>
-              <input
-                type="text"
-                placeholder="Nombre, WhatsApp, problema..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2.5 bg-purple-800/50 border border-amber-400/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-400/50 text-sm"
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Acciones rápidas */}
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-          <button
-            onClick={() => router.push("/Suafazon/monitoreo")}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-400/30 transition-all text-sm font-semibold"
-          >
-            <BarChart3 className="h-4 w-4" />
-            Monitoreo
-          </button>
-          <button
-            onClick={exportToCSV}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-400/30 transition-all text-sm font-semibold"
-          >
-            <Download className="h-4 w-4" />
-            Exportar CSV
-          </button>
-          <button
-            onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-semibold ${
-              showOnlyFavorites
-                ? "bg-amber-500/30 text-amber-300 border border-amber-400/50"
-                : "bg-purple-800/30 text-amber-100/70 border border-amber-400/20 hover:bg-purple-800/50"
-            }`}
-          >
-            <Star className={`h-4 w-4 ${showOnlyFavorites ? "fill-current" : ""}`} />
-            Favoritos
-          </button>
-          <button
-            onClick={handleSelectAll}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-800/30 text-amber-100/70 hover:bg-purple-800/50 border border-amber-400/20 transition-all text-sm font-semibold"
-          >
-            <CheckSquare className="h-4 w-4" />
-            {selectedLeads.length === filteredLeads.length && filteredLeads.length > 0 ? "Deseleccionar" : "Seleccionar todo"}
-          </button>
-          {selectedLeads.length > 0 && (
-            <button
-              onClick={() => moveToArchive(selectedLeads)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-400/30 transition-all text-sm font-semibold animate-in slide-in-from-left-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Archivar ({selectedLeads.length})
-            </button>
-          )}
-          <button
-            onClick={loadLeads}
-            disabled={isLoading}
-            className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-400/30 transition-all text-sm font-semibold disabled:opacity-50"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-            Actualizar
-          </button>
-        </div>
-
-        {/* Tabla de leads */}
-        <Card className="bg-purple-900/30 border-amber-400/20 backdrop-blur-sm overflow-hidden">
+        {/* Leads Table */}
+        <Card className="bg-gray-900 border-gray-800 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-              <thead className="bg-purple-900/50 border-b border-amber-400/20">
-                <tr>
-                  <th className="text-left p-4">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-800">
+                  <th className="text-left p-4 bg-gray-950">
                     <input
                       type="checkbox"
-                      onChange={handleSelectAll}
-                      checked={selectedLeads.length === filteredLeads.length && filteredLeads.length > 0}
-                      className="w-4 h-4 accent-amber-500"
+                      checked={selectedLeads.size === filteredLeads.length && filteredLeads.length > 0}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-yellow-500 focus:ring-yellow-500"
                     />
                   </th>
-                  <th className="text-left p-4 text-sm font-semibold text-amber-400">NOMBRE</th>
-                  <th className="text-left p-4 text-sm font-semibold text-amber-400">WHATSAPP</th>
-                  <th className="text-left p-4 text-sm font-semibold text-amber-400">PROBLEMA</th>
-                  <th className="text-left p-4 text-sm font-semibold text-amber-400">FECHA</th>
-                  <th className="text-left p-4 text-sm font-semibold text-amber-400">ESTADO</th>
-                  <th className="text-left p-4 text-sm font-semibold text-amber-400">ACCIONES</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-400 bg-gray-950">NOMBRE</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-400 bg-gray-950">WHATSAPP</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-400 bg-gray-950">PROBLEMA</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-400 bg-gray-950">FECHA</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-400 bg-gray-950">ESTADO</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-400 bg-gray-950">ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-12 text-amber-100/60">
-                      <RefreshCw className="w-8 h-8 mx-auto mb-2 animate-spin text-amber-400" />
-                      Cargando leads...
+                {filteredLeads.map((lead) => (
+                  <tr key={lead.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
+                    <td className="p-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedLeads.has(lead.id)}
+                        onChange={() => toggleSelectLead(lead.id)}
+                        className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-yellow-500 focus:ring-yellow-500"
+                      />
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-sm font-semibold text-yellow-500 border border-gray-700">
+                          {getInitials(lead.name)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">{lead.name}</p>
+                          {lead.unread_count > 0 && (
+                            <Badge className="mt-1 bg-red-500/20 text-red-400 border-red-500/30 text-xs">
+                              {lead.unread_count} nuevo(s)
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2 text-gray-300">
+                        <Phone className="w-4 h-4 text-gray-500" />
+                        {lead.whatsapp}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <p className="text-sm text-gray-400 max-w-xs truncate">
+                        {lead.problem || "—"}
+                      </p>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2 text-gray-400 text-sm">
+                        <Calendar className="w-4 h-4 text-gray-500" />
+                        {new Date(lead.created_at).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <Badge className={`${getStatusColor(lead.status)} border px-3 py-1`}>
+                        {getStatusLabel(lead.status)}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      <Button
+                        onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
+                        size="sm"
+                        className="bg-yellow-500 text-black hover:bg-yellow-600"
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        Ver Chat
+                      </Button>
                     </td>
                   </tr>
-                ) : filteredLeads.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-12 text-amber-100/60">
-                      No hay leads que coincidan
-                    </td>
-                  </tr>
-                ) : (
-                  filteredLeads.map((lead) => (
-                    <tr
-                      key={lead.id}
-                      className="border-b border-amber-400/10 hover:bg-purple-900/30 transition-colors"
-                    >
-                      <td className="p-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedLeads.includes(lead.id)}
-                          onChange={() => toggleSelect(lead.id)}
-                          className="w-4 h-4 accent-amber-500"
-                        />
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-950 font-bold shadow-lg">
-                            {lead.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-amber-100">{lead.name}</p>
-                            {newMessageLeadId === lead.id && (
-                              <span className="text-xs text-amber-400 font-semibold">✨ Nuevo mensaje</span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-1 text-amber-100/80">
-                          <span className="text-xs text-amber-100/50">{lead.country_code}</span>
-                          <span className="text-sm">{lead.whatsapp}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <p className="text-sm text-amber-100/60 max-w-xs truncate">{lead.problem}</p>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-1 text-amber-100/60 text-sm">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {new Date(lead.created_at).toLocaleDateString("es-ES")}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <select
-                          value={lead.status || "nuevo"}
-                          onChange={(e) => handleStatusChange(lead.id, e.target.value)}
-                          className="px-3 py-1.5 rounded-lg bg-purple-800/50 border border-amber-400/20 text-sm text-amber-100 focus:outline-none focus:border-amber-400/50"
-                        >
-                          <option value="nuevo">Nuevo</option>
-                          <option value="enConversacion">En Conversación</option>
-                          <option value="caliente">Caliente</option>
-                          <option value="listo">Listo</option>
-                          <option value="cerrado">Cerrado</option>
-                          <option value="perdido">Perdido</option>
-                          <option value="archive">Archive</option>
-                        </select>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-purple-950 rounded-lg font-semibold text-sm transition-all shadow-lg hover:shadow-xl"
-                          >
-                            💬 Chat
-                          </button>
-                          <button
-                            onClick={() => toggleFavorite(lead.id, lead.is_favorite || false)}
-                            className="p-2 rounded-lg hover:bg-purple-800/50 transition-colors"
-                          >
-                            <Star
-                              className={`w-5 h-5 ${
-                                lead.is_favorite ? "fill-amber-400 text-amber-400" : "text-amber-100/40"
-                              }`}
-                            />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
+
+            {filteredLeads.length === 0 && (
+              <div className="text-center py-12">
+                <Users className="w-12 h-12 text-gray-700 mx-auto mb-3" />
+                <p className="text-gray-500">No se encontraron consultas</p>
+              </div>
+            )}
           </div>
         </Card>
       </main>
