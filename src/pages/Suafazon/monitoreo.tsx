@@ -55,7 +55,6 @@ type TotalStats = {
   mobileUsers: number;
   desktopUsers: number;
   browsers?: { browser: string; count: number }[];
-  operatingSystems?: { os: string; count: number }[];
   devicesByCountry?: { country: string; mobile: number; desktop: number }[];
 };
 
@@ -137,7 +136,6 @@ export default function Monitoreo() {
 
     // Nuevas métricas de dispositivos
     const browserMap = new Map<string, number>();
-    const osMap = new Map<string, number>();
     const deviceCountryMap = new Map<string, { mobile: number; desktop: number; country: string }>();
 
     events.forEach((event) => {
@@ -168,9 +166,6 @@ export default function Monitoreo() {
           // Métricas detalladas de dispositivos
           if (event.browser) {
             browserMap.set(event.browser, (browserMap.get(event.browser) || 0) + 1);
-          }
-          if (event.os) {
-            osMap.set(event.os, (osMap.get(event.os) || 0) + 1);
           }
           
           // Dispositivos por país
@@ -212,9 +207,6 @@ export default function Monitoreo() {
       desktopUsers: desktopCount,
       browsers: Array.from(browserMap.entries())
         .map(([browser, count]) => ({ browser, count }))
-        .sort((a, b) => b.count - a.count),
-      operatingSystems: Array.from(osMap.entries())
-        .map(([os, count]) => ({ os, count }))
         .sort((a, b) => b.count - a.count),
       devicesByCountry: Array.from(deviceCountryMap.values())
         .sort((a, b) => (b.mobile + b.desktop) - (a.mobile + a.desktop)),
@@ -570,12 +562,12 @@ export default function Monitoreo() {
         </div>
 
         {/* Nuevas secciones de dispositivos detallados */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Navegadores */}
           <Card className="bg-black/40 border-gray-800 backdrop-blur-sm p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Globe className="w-5 h-5 text-cyan-500" />
-              Navegadores
+              Navegadores Más Usados
             </h3>
             {totalStats?.browsers && totalStats.browsers.length > 0 ? (
               <div className="space-y-3">
@@ -586,7 +578,7 @@ export default function Monitoreo() {
                     <div key={index} className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-300">{item.browser}</span>
-                        <span className="text-yellow-500 font-semibold">{percentage}%</span>
+                        <span className="text-yellow-500 font-semibold">{item.count} visitas ({percentage}%)</span>
                       </div>
                       <div className="w-full bg-gray-800 rounded-full h-2">
                         <div
@@ -599,39 +591,7 @@ export default function Monitoreo() {
                 })}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">Sin datos</p>
-            )}
-          </Card>
-
-          {/* Sistemas Operativos */}
-          <Card className="bg-black/40 border-gray-800 backdrop-blur-sm p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Monitor className="w-5 h-5 text-indigo-500" />
-              Sistemas Operativos
-            </h3>
-            {totalStats?.operatingSystems && totalStats.operatingSystems.length > 0 ? (
-              <div className="space-y-3">
-                {totalStats.operatingSystems.slice(0, 5).map((item, index) => {
-                  const total = totalStats.operatingSystems?.reduce((sum, os) => sum + os.count, 0) || 1;
-                  const percentage = ((item.count / total) * 100).toFixed(1);
-                  return (
-                    <div key={index} className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-300">{item.os}</span>
-                        <span className="text-yellow-500 font-semibold">{percentage}%</span>
-                      </div>
-                      <div className="w-full bg-gray-800 rounded-full h-2">
-                        <div
-                          className="bg-indigo-500 h-2 rounded-full transition-all"
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-sm">Sin datos</p>
+              <p className="text-gray-500 text-sm">Sin datos de navegadores</p>
             )}
           </Card>
 
