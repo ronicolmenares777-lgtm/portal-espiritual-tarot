@@ -1,5 +1,5 @@
 /**
- * Script para crear usuario administrador
+ * Script para crear/actualizar usuario administrador
  * Ejecutar: npx tsx scripts/create-admin.ts
  */
 
@@ -34,94 +34,92 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   }
 });
 
-async function createAdminUser() {
-  const email = 'templogaleano@gmail.com';
-  const password = 'Pepe.2002';
-  
-  console.log('🔐 Creando usuario admin...');
-  console.log('📧 Email:', email);
+const ADMIN_EMAIL = 'templogaleano@gmail.com';
+const ADMIN_PASSWORD = 'Pepe.2002';
 
-  try {
-    // 1. Crear usuario en Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true, // Auto-confirmar email
+async function createOrUpdateAdmin() {
+  console.log('🔐 Configurando cuenta de administrador...\n');
+  
+  // Paso 1: Listar usuarios para encontrar el existente
+  const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+  
+  if (listError) {
+    console.error('❌ Error listando usuarios:', listError.message);
+    process.exit(1);
+  }
+  
+  const existingUser = users.users.find(u => u.email === ADMIN_EMAIL);
+  
+  let userId: string;
+  
+  if (existingUser) {
+    console.log('✅ Usuario existente encontrado');
+    console.log('🆔 User ID:', existingUser.id);
+    userId = existingUser.id;
+    
+    // Actualizar contraseña
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      userId,
+      { password: ADMIN_PASSWORD }
+    );
+    
+    if (updateError) {
+      console.error('❌ Error actualizando contraseña:', updateError.message);
+      process.exit(1);
+    }
+    
+    console.log('✅ Contraseña actualizada\n');
+  } else {
+    // Crear nuevo usuario
+    console.log('📝 Creando nuevo usuario...');
+    
+    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+      email: ADMIN_EMAIL,
+      password: ADMIN_PASSWORD,
+      email_confirm: true,
       user_metadata: {
-        role: 'admin'
+        full_name: 'Administrador'
       }
     });
-
+    
     if (authError) {
-      console.error('❌ Error creando usuario en Auth:', authError.message);
-      
-      // Si el usuario ya existe, intentar actualizar la contraseña
-      if (authError.message.includes('already registered')) {
-        console.log('⚠️ Usuario ya existe, actualizando contraseña...');
-        
-        // Obtener el usuario
-        const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
-        if (listError) throw listError;
-        
-        const existingUser = users.find(u => u.email === email);
-        if (!existingUser) throw new Error('Usuario no encontrado');
-        
-        // Actualizar contraseña
-        const { error: updateError } = await supabase.auth.admin.updateUserById(
-          existingUser.id,
-          { password }
-        );
-        
-        if (updateError) throw updateError;
-        console.log('✅ Contraseña actualizada');
-        
-        // Usar el usuario existente
-        authData.user = existingUser;
-      } else {
-        throw authError;
-      }
-    } else {
-      console.log('✅ Usuario creado en Auth:', authData.user?.id);
+      console.error('❌ Error creando usuario:', authError.message);
+      process.exit(1);
     }
-
-    const userId = authData.user?.id;
-    if (!userId) throw new Error('No se obtuvo ID de usuario');
-
-    // 2. Crear o actualizar perfil en tabla profiles
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert({
-        id: userId,
-        email: email,
-        role: 'admin',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'id'
-      });
-
-    if (profileError) {
-      console.error('❌ Error creando perfil:', profileError.message);
-      throw profileError;
-    }
-
-    console.log('✅ Perfil admin creado/actualizado');
-    console.log('\n🎉 CUENTA ADMIN LISTA:');
-    console.log('📧 Email:', email);
-    console.log('🔑 Contraseña: Pepe.2002');
-    console.log('🔗 URL: /Suafazon');
-    console.log('\n✅ Puedes iniciar sesión ahora');
-
-  } catch (error) {
-    console.error('❌ Error:', error);
-    throw error;
+    
+    userId = authUser.user.id;
+    console.log('✅ Usuario creado');
+    console.log('🆔 User ID:', userId, '\n');
   }
+  
+  // Paso 2: Asegurar perfil admin
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .upsert({
+      id: userId,
+      email: ADMIN_EMAIL,
+      role: 'admin',
+      full_name: 'Administrador'
+    });
+  
+  if (profileError) {
+    console.error('❌ Error configurando perfil:', profileError.message);
+    process.exit(1);
+  }
+  
+  console.log('✅ Perfil admin configurado\n');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('✅ CUENTA ADMIN LISTA PARA USAR');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📧 Email:', ADMIN_EMAIL);
+  console.log('🔑 Contraseña:', ADMIN_PASSWORD);
+  console.log('🔗 URL: /Suafazon');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
 
-// Ejecutar
-createAdminUser()
+createOrUpdateAdmin()
   .then(() => {
-    console.log('\n✅ Script completado');
+    console.log('\n✅ Proceso completado exitosamente');
     process.exit(0);
   })
   .catch((error) => {
