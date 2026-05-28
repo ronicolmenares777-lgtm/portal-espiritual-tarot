@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { leadService } from "@/services/leadService";
+import { LeadService } from "@/services/leadService";
 import type { Tables } from "@/integrations/supabase/types";
 import { 
   Users, 
@@ -25,6 +25,7 @@ type Lead = Tables<"leads">;
 
 export default function Dashboard() {
   const router = useRouter();
+  const leadService = LeadService;
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
