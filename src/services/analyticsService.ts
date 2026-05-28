@@ -110,6 +110,34 @@ class AnalyticsService {
     return 'Other';
   }
 
+  private getDeviceInfo() {
+    if (typeof window === "undefined") {
+      return { device_type: "desktop", browser: null };
+    }
+
+    const ua = window.navigator.userAgent;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    
+    // Detectar navegador
+    let browser = "Unknown";
+    if (ua.includes("Edg/")) {
+      browser = "Edge";
+    } else if (ua.includes("Chrome") && !ua.includes("Edg")) {
+      browser = "Chrome";
+    } else if (ua.includes("Safari") && !ua.includes("Chrome")) {
+      browser = "Safari";
+    } else if (ua.includes("Firefox")) {
+      browser = "Firefox";
+    } else if (ua.includes("Opera") || ua.includes("OPR/")) {
+      browser = "Opera";
+    }
+
+    return {
+      device_type: isMobile ? "mobile" : "desktop",
+      browser: browser,
+    };
+  }
+
   // Registrar evento genérico
   private async trackEvent(
     eventType: string,

@@ -154,29 +154,32 @@ export default function Monitoreo() {
 
       const dayStats = dailyMap.get(date)!;
 
+      // Contar dispositivos en TODOS los eventos (no solo page_view)
+      if (event.device_type === "mobile") mobileCount++;
+      if (event.device_type === "desktop") desktopCount++;
+      
+      // Visitantes únicos solo en page_view
+      if (event.event_type === "page_view") {
+        visitorSet.add(event.visitor_id);
+      }
+      
+      // Métricas de navegador (solo eventos con browser disponible)
+      if (event.browser) {
+        browserMap.set(event.browser, (browserMap.get(event.browser) || 0) + 1);
+      }
+      
+      // Dispositivos por país (todos los eventos)
+      const countryKey = event.country || "Unknown";
+      if (!deviceCountryMap.has(countryKey)) {
+        deviceCountryMap.set(countryKey, { mobile: 0, desktop: 0, country: event.country || "Unknown" });
+      }
+      const countryData = deviceCountryMap.get(countryKey)!;
+      if (event.device_type === "mobile") countryData.mobile++;
+      if (event.device_type === "desktop") countryData.desktop++;
+
       switch (event.event_type) {
         case "page_view":
           dayStats.page_views++;
-          visitorSet.add(event.visitor_id);
-          
-          // Contar dispositivos
-          if (event.device_type === "mobile") mobileCount++;
-          if (event.device_type === "desktop") desktopCount++;
-          
-          // Métricas detalladas de dispositivos
-          if (event.browser) {
-            browserMap.set(event.browser, (browserMap.get(event.browser) || 0) + 1);
-          }
-          
-          // Dispositivos por país
-          const countryKey = event.country || "Unknown";
-          if (!deviceCountryMap.has(countryKey)) {
-            deviceCountryMap.set(countryKey, { mobile: 0, desktop: 0, country: event.country || "Unknown" });
-          }
-          const countryData = deviceCountryMap.get(countryKey)!;
-          if (event.device_type === "mobile") countryData.mobile++;
-          if (event.device_type === "desktop") countryData.desktop++;
-          
           break;
         case "form_start":
           dayStats.form_starts++;
@@ -591,7 +594,11 @@ export default function Monitoreo() {
                 })}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">Sin datos de navegadores</p>
+              <div className="text-center py-8">
+                <Globe className="w-12 h-12 text-gray-700 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm mb-2">Sin datos de navegadores</p>
+                <p className="text-gray-600 text-xs">Los datos empezarán a aparecer con las nuevas visitas</p>
+              </div>
             )}
           </Card>
 
