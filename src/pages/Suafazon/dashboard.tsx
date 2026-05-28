@@ -9,16 +9,15 @@ import {
   Trash2,
   Star,
   MessageCircle,
-  User,
   LogOut,
   RefreshCw,
-  Phone,
   Calendar,
   CheckSquare,
   XSquare,
-  Sparkles,
   BarChart3,
   Download,
+  Search,
+  Filter,
 } from "lucide-react";
 
 type Lead = Tables<"leads">;
@@ -33,48 +32,33 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [newMessageLeadId, setNewMessageLeadId] = useState<string | null>(null);
 
-  // Stats - calcular basado en el status de los leads
   const stats = {
     leads: leads.filter(l => l.status === "nuevo").length,
-    listo: leads.filter(l => l.status === "convertido").length,
+    listo: leads.filter(l => l.status === "listo").length,
     papelera: leads.filter(l => l.status === "archive").length,
   };
 
   useEffect(() => {
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🚀 [MOUNT] COMPONENTE DASHBOARD MONTADO");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🚀 [MOUNT] Dashboard montado");
     loadLeads();
 
-    // Suscripción en tiempo real a la tabla leads
-    console.log("🔄 [REALTIME] Suscribiendo a cambios en leads...");
     const channel = supabase
       .channel("leads_dashboard_realtime")
       .on(
         "postgres_changes",
         {
-          event: "*", // INSERT, UPDATE, DELETE
+          event: "*",
           schema: "public",
           table: "leads",
         },
         (payload) => {
-          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          console.log("📡 [REALTIME] CAMBIO DETECTADO EN LEADS");
-          console.log("  - Evento:", payload.eventType);
-          console.log("  - Datos nuevos:", payload.new);
-          console.log("  - Datos viejos:", payload.old);
-          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          
-          // Recargar leads automáticamente
+          console.log("📡 [REALTIME] Cambio detectado:", payload.eventType);
           loadLeads();
         }
       )
-      .subscribe((status) => {
-        console.log("📡 [REALTIME] Estado de suscripción:", status);
-      });
+      .subscribe();
 
     return () => {
-      console.log("🔌 [REALTIME] Desuscribiendo del canal de leads");
       supabase.removeChannel(channel);
     };
   }, []);
@@ -83,18 +67,11 @@ export default function Dashboard() {
     if (typeof window === "undefined") return;
     
     const adminSession = localStorage.getItem("adminSession");
-    console.log("🔐 Verificando sesión admin:", adminSession);
-    
     if (!adminSession) {
-      console.log("❌ No hay sesión activa, redirigiendo a login...");
       router.push("/Suafazon");
       return;
     }
 
-    console.log("✅ Sesión activa detectada, cargando leads...");
-    loadLeads();
-
-    // Configurar Realtime para escuchar nuevos mensajes
     const messagesSubscription = supabase
       .channel("messages_channel")
       .on(
@@ -106,19 +83,10 @@ export default function Dashboard() {
           filter: "is_from_maestro=eq.false",
         },
         (payload) => {
-          console.log("🔔 Nuevo mensaje recibido:", payload);
           const newMessage = payload.new as any;
-          
-          // Mostrar notificación
           setNewMessageLeadId(newMessage.lead_id);
-          
-          // Recargar leads para actualizar contadores
           loadLeads();
-          
-          // Ocultar notificación después de 5 segundos
-          setTimeout(() => {
-            setNewMessageLeadId(null);
-          }, 5000);
+          setTimeout(() => setNewMessageLeadId(null), 5000);
         }
       )
       .subscribe();
@@ -128,93 +96,36 @@ export default function Dashboard() {
     };
   }, []);
 
-  useEffect(() => {
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🔄 [STATE] LEADS CAMBIÓ");
-    console.log("  - Nuevo total:", leads.length);
-    console.log("  - IDs:", leads.map(l => l.id));
-    console.log("  - Nombres:", leads.map(l => l.name));
-    console.log("  - Status:", leads.map(l => l.status));
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  }, [leads]);
-
-  // Filtrar leads por el filtro activo y favoritos
-  useEffect(() => {
-    let filtered = [...leads];
-    
-    // Filtro por estado
-    if (statusFilter === "leads") {
-      filtered = leads.filter(l => l.status === "nuevo");
-    } else if (statusFilter === "listo") {
-      filtered = leads.filter(l => l.status === "convertido");
-    } else if (statusFilter === "papelera") {
-      filtered = leads.filter(l => l.status === "archive");
-    }
-    
-    // Filtro adicional por favoritos
-    if (showOnlyFavorites) {
-      filtered = filtered.filter(l => l.is_favorite === true);
-    }
-  }, [leads, statusFilter, showOnlyFavorites]);
-
   const filteredLeads = useMemo(() => {
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🔍 [FILTER] INICIANDO FILTRADO");
-    console.log("  - Total leads en estado:", leads.length);
-    console.log("  - Filtro activo:", statusFilter);
-    console.log("  - Búsqueda:", searchTerm || "(ninguna)");
-    console.log("  - Solo favoritos:", showOnlyFavorites);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
     let filtered = [...leads];
-    console.log("📊 [FILTER] Leads antes de filtrar:", filtered.length);
 
-    // Filtrar por estado (solo si NO es "todos")
     if (statusFilter !== "todos") {
       if (statusFilter === "leads") {
         filtered = filtered.filter((lead) => lead.status === "nuevo");
-        console.log("🔹 [FILTER] Después de filtrar por status 'nuevo':", filtered.length);
       } else if (statusFilter === "listo") {
         filtered = filtered.filter((lead) => lead.status === "listo");
-        console.log("🔹 [FILTER] Después de filtrar por status 'listo':", filtered.length);
       } else if (statusFilter === "papelera") {
         filtered = filtered.filter((lead) => lead.status === "archive");
-        console.log("🔹 [FILTER] Después de filtrar por status 'archive':", filtered.length);
       }
-    } else {
-      console.log("🔹 [FILTER] Mostrando TODOS los leads (sin filtro de status)");
     }
 
-    // Filtrar por búsqueda
     if (searchTerm && searchTerm.trim() !== "") {
-      const before = filtered.length;
       filtered = filtered.filter(
         (lead) =>
           lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           lead.whatsapp.includes(searchTerm) ||
           (lead.problem && lead.problem.toLowerCase().includes(searchTerm.toLowerCase()))
       );
-      console.log(`🔹 [FILTER] Después de búsqueda "${searchTerm}": ${before} → ${filtered.length}`);
     }
 
-    // Filtrar por favoritos
     if (showOnlyFavorites) {
-      const before = filtered.length;
       filtered = filtered.filter((lead) => lead.is_favorite);
-      console.log(`🔹 [FILTER] Después de filtrar favoritos: ${before} → ${filtered.length}`);
     }
 
-    console.log("✅ [FILTER] RESULTADO FINAL:", filtered.length, "leads");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    
     return filtered;
   }, [leads, statusFilter, searchTerm, showOnlyFavorites]);
 
   const loadLeads = async () => {
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🔄 [LOAD] INICIANDO CARGA DE LEADS");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    
     setIsLoading(true);
     
     try {
@@ -223,37 +134,18 @@ export default function Dashboard() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      console.log("📊 [LOAD] Respuesta de Supabase:");
-      console.log("  - Error:", error);
-      console.log("  - Data:", data);
-      console.log("  - Total registros:", data?.length || 0);
-
       if (error) {
-        console.error("❌ [LOAD] ERROR EN SUPABASE:", error);
+        console.error("❌ Error:", error);
         setLeads([]);
-        setIsLoading(false);
         return;
       }
 
-      if (!data) {
-        console.warn("⚠️ [LOAD] Data es NULL");
-        setLeads([]);
-        setIsLoading(false);
-        return;
-      }
-
-      console.log("✅ [LOAD] LEADS CARGADOS EXITOSAMENTE");
-      console.log("📋 [LOAD] Leads completos:", JSON.stringify(data, null, 2));
-      
-      setLeads(data);
-      console.log("✅ [LOAD] Estado actualizado con", data.length, "leads");
-      
+      setLeads(data || []);
     } catch (error) {
-      console.error("❌ [LOAD] EXCEPCIÓN:", error);
+      console.error("❌ Excepción:", error);
       setLeads([]);
     } finally {
       setIsLoading(false);
-      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     }
   };
 
@@ -264,15 +156,9 @@ export default function Dashboard() {
         .update({ status: newStatus })
         .eq("id", leadId);
 
-      if (error) {
-        console.error("Error actualizando status:", error);
-        return;
-      }
-
-      console.log("✅ Status actualizado:", leadId, "→", newStatus);
-      loadLeads();
+      if (!error) loadLeads();
     } catch (error) {
-      console.error("Error en handleStatusChange:", error);
+      console.error("Error:", error);
     }
   };
 
@@ -283,15 +169,9 @@ export default function Dashboard() {
         .update({ is_favorite: !currentFavorite })
         .eq("id", leadId);
 
-      if (error) {
-        console.error("Error actualizando favorito:", error);
-        return;
-      }
-
-      console.log("✅ Favorito actualizado:", leadId);
-      loadLeads();
+      if (!error) loadLeads();
     } catch (error) {
-      console.error("Error en toggleFavorite:", error);
+      console.error("Error:", error);
     }
   };
 
@@ -317,17 +197,12 @@ export default function Dashboard() {
   };
 
   const moveToArchive = async (leadIds: string[]) => {
-    console.log("🗑️ Moviendo a archivo:", leadIds);
-    
     const { error } = await supabase
       .from("leads")
       .update({ status: "archive" })
       .in("id", leadIds);
 
-    if (error) {
-      console.error("❌ Error moviendo a archivo:", error);
-    } else {
-      console.log("✅ Leads archivados correctamente");
+    if (!error) {
       loadLeads();
       setSelectedLeads([]);
     }
@@ -335,8 +210,6 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     if (typeof window === "undefined") return;
-    
-    console.log("🚪 Cerrando sesión...");
     localStorage.removeItem("adminSession");
     localStorage.removeItem("adminProfile");
     router.push("/Suafazon");
@@ -344,10 +217,8 @@ export default function Dashboard() {
 
   const handleSelectAll = () => {
     if (selectedLeads.length === filteredLeads.length && filteredLeads.length > 0) {
-      // Si todos están seleccionados, deseleccionar todos
       setSelectedLeads([]);
     } else {
-      // Seleccionar todos los leads filtrados
       setSelectedLeads(filteredLeads.map(lead => lead.id));
     }
   };
@@ -359,333 +230,326 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950">
+      {/* Notificación nuevo mensaje */}
+      {newMessageLeadId && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
+          <div className="bg-gradient-to-r from-amber-400 to-amber-500 text-purple-950 px-6 py-3 rounded-lg shadow-2xl border border-amber-300 flex items-center gap-3">
+            <MessageCircle className="h-5 w-5 animate-pulse" />
+            <div>
+              <p className="font-bold text-sm">¡Nuevo mensaje!</p>
+              <p className="text-xs">Un usuario acaba de escribir</p>
+            </div>
+            <button
+              onClick={() => setNewMessageLeadId(null)}
+              className="ml-4 hover:bg-purple-950/20 rounded p-1"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <header className="border-b border-border bg-card/30 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-amber-400/20 bg-purple-900/30 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold font-serif text-primary">
+              <h1 className="text-2xl sm:text-3xl font-serif text-amber-400 flex items-center gap-2">
+                <span className="text-2xl">🔮</span>
                 Portal Maestro
               </h1>
-              <p className="text-xs sm:text-sm text-foreground/60">
-                Gestión de almas y consultas espirituales
+              <p className="text-sm text-amber-100/60">
+                Gestión de consultas espirituales
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => router.push("/Suafazon/perfil")}
-                className="px-4 py-2 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors text-sm font-semibold"
+                className="px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all text-sm font-semibold border border-amber-400/30"
               >
                 👤 Perfil
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 rounded-lg bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-colors text-sm font-semibold"
+                className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all text-sm font-semibold border border-red-400/30"
               >
-                🚪 Salir
+                <LogOut className="h-4 w-4 inline mr-1" />
+                Salir
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Contenido principal - Responsive */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Notificación de nuevo mensaje */}
-        {newMessageLeadId && (
-          <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
-            <div className="bg-gradient-to-r from-gold to-accent text-black px-6 py-3 rounded-lg shadow-2xl shadow-gold/50 border border-gold/30 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center animate-pulse">
-                <MessageCircle className="h-5 w-5" />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-gradient-to-br from-purple-900/50 to-purple-800/50 border-amber-400/20 backdrop-blur-sm hover:shadow-xl hover:shadow-amber-400/10 transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-amber-100/60 mb-1">Total</p>
+                  <p className="text-3xl font-bold text-amber-400">{leads.length}</p>
+                </div>
+                <div className="p-3 bg-amber-400/10 rounded-lg">
+                  <Users className="w-6 h-6 text-amber-400" />
+                </div>
               </div>
-              <div>
-                <p className="font-bold text-sm">¡Nuevo mensaje!</p>
-                <p className="text-xs opacity-90">Un usuario acaba de escribir</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-blue-900/50 to-blue-800/50 border-blue-400/20 backdrop-blur-sm hover:shadow-xl hover:shadow-blue-400/10 transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-100/60 mb-1">Leads</p>
+                  <p className="text-3xl font-bold text-blue-400">{stats.leads}</p>
+                </div>
+                <div className="p-3 bg-blue-400/10 rounded-lg">
+                  <Users className="w-6 h-6 text-blue-400" />
+                </div>
               </div>
-              <button
-                onClick={() => setNewMessageLeadId(null)}
-                className="ml-4 hover:bg-black/20 rounded p-1 transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
+            </CardContent>
+          </Card>
 
-        {/* Sidebar */}
-        <div className="w-64 bg-gradient-to-b from-black via-black to-purple-950/20 border-r border-gold/20 flex flex-col shadow-2xl">
-          {/* Logo */}
-          <div className="p-6 border-b border-gold/20">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold via-accent to-gold/80 flex items-center justify-center shadow-lg shadow-gold/30 animate-pulse-glow">
-                <span className="text-lg">🔮</span>
+          <Card className="bg-gradient-to-br from-green-900/50 to-green-800/50 border-green-400/20 backdrop-blur-sm hover:shadow-xl hover:shadow-green-400/10 transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-100/60 mb-1">Listos</p>
+                  <p className="text-3xl font-bold text-green-400">{stats.listo}</p>
+                </div>
+                <div className="p-3 bg-green-400/10 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-green-400" />
+                </div>
               </div>
-              <div>
-                <h1 className="text-gold font-serif text-xl font-bold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-gold to-accent">Portal Maestro</h1>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-red-900/50 to-red-800/50 border-red-400/20 backdrop-blur-sm hover:shadow-xl hover:shadow-red-400/10 transition-all">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-red-100/60 mb-1">Archivados</p>
+                  <p className="text-3xl font-bold text-red-400">{stats.papelera}</p>
+                </div>
+                <div className="p-3 bg-red-400/10 rounded-lg">
+                  <Trash2 className="w-6 h-6 text-red-400" />
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* Filtros de estado - Mejorados */}
-          <div className="flex flex-wrap gap-3 mb-6">
-            <button
-              onClick={() => setStatusFilter("todos")}
-              className={`group relative flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${
-                statusFilter === "todos"
-                  ? "bg-gradient-to-r from-primary to-accent text-black shadow-lg shadow-primary/50 scale-105"
-                  : "bg-card/50 text-foreground/70 hover:bg-card hover:scale-105 hover:shadow-md"
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              <span className="font-semibold">TODOS</span>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                statusFilter === "todos" ? "bg-black/30 text-white" : "bg-primary/20 text-primary"
-              }`}>
-                {leads.length}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setStatusFilter("leads")}
-              className={`group relative flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${
-                statusFilter === "leads"
-                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/50 scale-105"
-                  : "bg-card/50 text-foreground/70 hover:bg-card hover:scale-105 hover:shadow-md"
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              <span className="font-semibold">LEADS</span>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                statusFilter === "leads" ? "bg-white/30 text-white" : "bg-blue-500/20 text-blue-500"
-              }`}>
-                {leads.filter((l) => l.status === "nuevo").length}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setStatusFilter("listo")}
-              className={`group relative flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${
-                statusFilter === "listo"
-                  ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/50 scale-105"
-                  : "bg-card/50 text-foreground/70 hover:bg-card hover:scale-105 hover:shadow-md"
-              }`}
-            >
-              <CheckCircle className="w-5 h-5" />
-              <span className="font-semibold">LISTO</span>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                statusFilter === "listo" ? "bg-white/30 text-white" : "bg-green-500/20 text-green-500"
-              }`}>
-                {leads.filter((l) => l.status === "listo").length}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setStatusFilter("papelera")}
-              className={`group relative flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${
-                statusFilter === "papelera"
-                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/50 scale-105"
-                  : "bg-card/50 text-foreground/70 hover:bg-card hover:scale-105 hover:shadow-md"
-              }`}
-            >
-              <Trash2 className="w-5 h-5" />
-              <span className="font-semibold">PAPELERA</span>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                statusFilter === "papelera" ? "bg-white/30 text-white" : "bg-red-500/20 text-red-500"
-              }`}>
-                {leads.filter((l) => l.status === "archive").length}
-              </span>
-            </button>
-          </div>
-
-          <div className="my-4 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
-
-          <button
-            onClick={() => {
-              const allIds = filteredLeads.map(l => l.id);
-              setSelectedLeads(allIds);
-            }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-sm rounded-lg text-foreground/70 hover:bg-muted hover:text-gold transition-all"
-          >
-            <CheckSquare className="h-3.5 w-3.5" />
-            <span>Seleccionar todo</span>
-          </button>
-
-          <button
-            onClick={() => setSelectedLeads([])}
-            className="w-full flex items-center gap-2 px-4 py-2 text-sm rounded-lg text-foreground/70 hover:bg-muted hover:text-red-400 transition-all"
-          >
-            <XSquare className="h-3.5 w-3.5" />
-            <span>Deseleccionar</span>
-          </button>
-
-          <div className="my-4 h-px bg-gold/10" />
-
-          {/* Estado del Ritual - Simplificado */}
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-foreground/60 mb-3 tracking-wider">
-              ESTADO DEL RITUAL
-            </h3>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                  showOnlyFavorites
-                    ? "bg-accent text-black font-semibold shadow-md"
-                    : "bg-card/50 text-foreground/60 hover:bg-card hover:shadow-sm"
-                }`}
-              >
-                <Star className={`w-4 h-4 ${showOnlyFavorites ? "fill-current" : ""}`} />
-                Favoritos
-              </button>
-
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card/50 text-foreground/60 hover:bg-card hover:shadow-sm transition-all duration-300">
-                <Calendar className="w-4 h-4" />
-                Hoy
-              </button>
-            </div>
-          </div>
-
-          <div className="my-4 h-px bg-gold/10" />
-
-          <button className="w-full flex items-center gap-2 px-4 py-2 text-sm rounded-lg text-foreground/70 hover:bg-muted hover:text-gold transition-all">
-            <MessageCircle className="h-3.5 w-3.5" />
-            <span>En Chat</span>
-          </button>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Botones Actualizar + Monitoreo + Exportar + Papelera */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+        {/* Filtros y búsqueda */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          {/* Filtros de estado */}
+          <Card className="lg:col-span-2 bg-purple-900/30 border-amber-400/20 backdrop-blur-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Filter className="w-4 h-4 text-amber-400" />
+                <p className="text-sm font-semibold text-amber-100">Filtrar por estado</p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  onClick={() => setStatusFilter("todos")}
+                  className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                    statusFilter === "todos"
+                      ? "bg-gradient-to-r from-amber-500 to-amber-600 text-purple-950 shadow-lg"
+                      : "bg-purple-800/50 text-amber-100/70 hover:bg-purple-800"
+                  }`}
+                >
+                  Todos <span className="ml-1 text-xs">({leads.length})</span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter("leads")}
+                  className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                    statusFilter === "leads"
+                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+                      : "bg-purple-800/50 text-amber-100/70 hover:bg-purple-800"
+                  }`}
+                >
+                  Leads <span className="ml-1 text-xs">({stats.leads})</span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter("listo")}
+                  className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                    statusFilter === "listo"
+                      ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg"
+                      : "bg-purple-800/50 text-amber-100/70 hover:bg-purple-800"
+                  }`}
+                >
+                  Listos <span className="ml-1 text-xs">({stats.listo})</span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter("papelera")}
+                  className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                    statusFilter === "papelera"
+                      ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
+                      : "bg-purple-800/50 text-amber-100/70 hover:bg-purple-800"
+                  }`}
+                >
+                  Papelera <span className="ml-1 text-xs">({stats.papelera})</span>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Búsqueda */}
+          <Card className="bg-purple-900/30 border-amber-400/20 backdrop-blur-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Search className="w-4 h-4 text-amber-400" />
+                <p className="text-sm font-semibold text-amber-100">Buscar</p>
+              </div>
+              <input
+                type="text"
+                placeholder="Nombre, WhatsApp, problema..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2.5 bg-purple-800/50 border border-amber-400/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-400/50 text-sm"
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Acciones rápidas */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <button
+            onClick={() => router.push("/Suafazon/monitoreo")}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-400/30 transition-all text-sm font-semibold"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Monitoreo
+          </button>
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-400/30 transition-all text-sm font-semibold"
+          >
+            <Download className="h-4 w-4" />
+            Exportar CSV
+          </button>
+          <button
+            onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-semibold ${
+              showOnlyFavorites
+                ? "bg-amber-500/30 text-amber-300 border border-amber-400/50"
+                : "bg-purple-800/30 text-amber-100/70 border border-amber-400/20 hover:bg-purple-800/50"
+            }`}
+          >
+            <Star className={`h-4 w-4 ${showOnlyFavorites ? "fill-current" : ""}`} />
+            Favoritos
+          </button>
+          <button
+            onClick={handleSelectAll}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-800/30 text-amber-100/70 hover:bg-purple-800/50 border border-amber-400/20 transition-all text-sm font-semibold"
+          >
+            <CheckSquare className="h-4 w-4" />
+            {selectedLeads.length === filteredLeads.length && filteredLeads.length > 0 ? "Deseleccionar" : "Seleccionar todo"}
+          </button>
+          {selectedLeads.length > 0 && (
             <button
-              onClick={() => router.push("/Suafazon/monitoreo")}
-              className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/30 bg-gradient-to-r from-purple-500/10 to-purple-600/10 text-purple-400 hover:from-purple-500/20 hover:to-purple-600/20 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-200 text-sm hover:scale-105"
+              onClick={() => moveToArchive(selectedLeads)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-400/30 transition-all text-sm font-semibold animate-in slide-in-from-left-2"
             >
-              <BarChart3 className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
-              <span className="font-medium">Monitoreo</span>
+              <Trash2 className="h-4 w-4" />
+              Archivar ({selectedLeads.length})
             </button>
-            <button
-              onClick={exportToCSV}
-              className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-500/30 bg-gradient-to-r from-blue-500/10 to-blue-600/10 text-blue-400 hover:from-blue-500/20 hover:to-blue-600/20 hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-200 text-sm hover:scale-105"
-            >
-              <Download className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
-              <span className="font-medium">Exportar</span>
-            </button>
-            {selectedLeads.length > 0 && (
-              <button
-                onClick={() => moveToArchive(selectedLeads)}
-                className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-500/30 bg-gradient-to-r from-red-500/10 to-red-600/10 text-red-400 hover:from-red-500/20 hover:to-red-600/20 hover:shadow-lg hover:shadow-red-500/20 transition-all duration-200 text-sm animate-in slide-in-from-left-2 hover:scale-105"
-              >
-                <Trash2 className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
-                <span className="font-medium">Enviar a Papelera ({selectedLeads.length})</span>
-              </button>
-            )}
-          </div>
+          )}
           <button
             onClick={loadLeads}
             disabled={isLoading}
-            className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gold/30 bg-gradient-to-r from-gold/10 to-accent/10 text-gold hover:from-gold/20 hover:to-accent/20 hover:shadow-lg hover:shadow-gold/20 transition-all duration-200 disabled:opacity-50 text-sm hover:scale-105"
+            className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-400/30 transition-all text-sm font-semibold disabled:opacity-50"
           >
-            <RefreshCw className={`h-3.5 w-3.5 group-hover:scale-110 transition-transform ${isLoading ? "animate-spin" : ""}`} />
-            <span className="font-medium">Actualizar</span>
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            Actualizar
           </button>
         </div>
 
-        {/* Lista de leads - Responsive */}
-        <div className="bg-card/30 rounded-xl border border-border overflow-hidden">
+        {/* Tabla de leads */}
+        <Card className="bg-purple-900/30 border-amber-400/20 backdrop-blur-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[800px]">
-              <thead>
-                <tr className="border-b border-border bg-card/50">
-                  <th className="text-left p-4 text-sm font-semibold text-foreground/80">
+              <thead className="bg-purple-900/50 border-b border-amber-400/20">
+                <tr>
+                  <th className="text-left p-4">
                     <input
                       type="checkbox"
                       onChange={handleSelectAll}
                       checked={selectedLeads.length === filteredLeads.length && filteredLeads.length > 0}
-                      className="w-4 h-4"
+                      className="w-4 h-4 accent-amber-500"
                     />
                   </th>
-                  <th className="text-left p-4 text-sm font-semibold text-foreground/80">
-                    NOMBRE
-                  </th>
-                  <th className="text-left p-4 text-sm font-semibold text-foreground/80">
-                    WHATSAPP
-                  </th>
-                  <th className="text-left p-4 text-sm font-semibold text-foreground/80">
-                    PROBLEMA
-                  </th>
-                  <th className="text-left p-4 text-sm font-semibold text-foreground/80">
-                    FECHA
-                  </th>
-                  <th className="text-left p-4 text-sm font-semibold text-foreground/80">
-                    ESTADO
-                  </th>
-                  <th className="text-left p-4 text-sm font-semibold text-foreground/80">
-                    ACCIONES
-                  </th>
+                  <th className="text-left p-4 text-sm font-semibold text-amber-400">NOMBRE</th>
+                  <th className="text-left p-4 text-sm font-semibold text-amber-400">WHATSAPP</th>
+                  <th className="text-left p-4 text-sm font-semibold text-amber-400">PROBLEMA</th>
+                  <th className="text-left p-4 text-sm font-semibold text-amber-400">FECHA</th>
+                  <th className="text-left p-4 text-sm font-semibold text-amber-400">ESTADO</th>
+                  <th className="text-left p-4 text-sm font-semibold text-amber-400">ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-12 text-foreground/60">
+                    <td colSpan={7} className="text-center py-12 text-amber-100/60">
+                      <RefreshCw className="w-8 h-8 mx-auto mb-2 animate-spin text-amber-400" />
                       Cargando leads...
                     </td>
                   </tr>
                 ) : filteredLeads.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-12 text-foreground/60">
-                      No hay leads que coincidan con los filtros
+                    <td colSpan={7} className="text-center py-12 text-amber-100/60">
+                      No hay leads que coincidan
                     </td>
                   </tr>
                 ) : (
                   filteredLeads.map((lead) => (
                     <tr
                       key={lead.id}
-                      className="border-b border-border hover:bg-card/50 transition-colors"
+                      className="border-b border-amber-400/10 hover:bg-purple-900/30 transition-colors"
                     >
                       <td className="p-4">
                         <input
                           type="checkbox"
                           checked={selectedLeads.includes(lead.id)}
                           onChange={() => toggleSelect(lead.id)}
-                          className="w-4 h-4"
+                          className="w-4 h-4 accent-amber-500"
                         />
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-purple-950 font-bold shadow-lg">
                             {lead.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-semibold text-foreground">{lead.name}</p>
+                            <p className="font-semibold text-amber-100">{lead.name}</p>
                             {newMessageLeadId === lead.id && (
-                              <span className="text-xs text-accent font-semibold">Nuevo</span>
+                              <span className="text-xs text-amber-400 font-semibold">✨ Nuevo mensaje</span>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="p-4 text-foreground/80">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-foreground/60">{lead.country_code}</span>
-                          <span>{lead.whatsapp}</span>
+                      <td className="p-4">
+                        <div className="flex items-center gap-1 text-amber-100/80">
+                          <span className="text-xs text-amber-100/50">{lead.country_code}</span>
+                          <span className="text-sm">{lead.whatsapp}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-foreground/60 text-sm max-w-xs truncate">
-                        {lead.problem}
+                      <td className="p-4">
+                        <p className="text-sm text-amber-100/60 max-w-xs truncate">{lead.problem}</p>
                       </td>
-                      <td className="p-4 text-foreground/60 text-sm">
-                        {new Date(lead.created_at).toLocaleDateString("es-ES", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                        })}
+                      <td className="p-4">
+                        <div className="flex items-center gap-1 text-amber-100/60 text-sm">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {new Date(lead.created_at).toLocaleDateString("es-ES")}
+                        </div>
                       </td>
                       <td className="p-4">
                         <select
                           value={lead.status || "nuevo"}
                           onChange={(e) => handleStatusChange(lead.id, e.target.value)}
-                          className="px-3 py-1 rounded-lg bg-card border border-border text-sm text-foreground"
+                          className="px-3 py-1.5 rounded-lg bg-purple-800/50 border border-amber-400/20 text-sm text-amber-100 focus:outline-none focus:border-amber-400/50"
                         >
                           <option value="nuevo">Nuevo</option>
                           <option value="enConversacion">En Conversación</option>
@@ -698,81 +562,19 @@ export default function Dashboard() {
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          {/* Botones de cambio rápido de estado */}
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => handleStatusChange(lead.id, "nuevo")}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                                lead.status === "nuevo"
-                                  ? "bg-blue-500 text-white"
-                                  : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
-                              }`}
-                              title="Nuevo"
-                            >
-                              N
-                            </button>
-                            <button
-                              onClick={() => handleStatusChange(lead.id, "enConversacion")}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                                lead.status === "enConversacion"
-                                  ? "bg-yellow-500 text-white"
-                                  : "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
-                              }`}
-                              title="En Conversación"
-                            >
-                              C
-                            </button>
-                            <button
-                              onClick={() => handleStatusChange(lead.id, "caliente")}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                                lead.status === "caliente"
-                                  ? "bg-orange-500 text-white"
-                                  : "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30"
-                              }`}
-                              title="Caliente"
-                            >
-                              🔥
-                            </button>
-                            <button
-                              onClick={() => handleStatusChange(lead.id, "listo")}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                                lead.status === "listo"
-                                  ? "bg-green-500 text-white"
-                                  : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                              }`}
-                              title="Listo"
-                            >
-                              ✓
-                            </button>
-                            <button
-                              onClick={() => handleStatusChange(lead.id, "cerrado")}
-                              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                                lead.status === "cerrado"
-                                  ? "bg-gray-500 text-white"
-                                  : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/30"
-                              }`}
-                              title="Cerrado"
-                            >
-                              X
-                            </button>
-                          </div>
-                          
-                          {/* Botón de ver chat */}
                           <button
                             onClick={() => router.push(`/Suafazon/chat/${lead.id}`)}
-                            className="px-4 py-2 bg-primary text-black rounded-lg hover:bg-accent transition-colors font-semibold text-sm"
+                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-purple-950 rounded-lg font-semibold text-sm transition-all shadow-lg hover:shadow-xl"
                           >
-                            💬 Ver Chat
+                            💬 Chat
                           </button>
-                          
-                          {/* Botón de favorito */}
                           <button
                             onClick={() => toggleFavorite(lead.id, lead.is_favorite || false)}
-                            className="p-2 rounded-lg hover:bg-card transition-colors"
+                            className="p-2 rounded-lg hover:bg-purple-800/50 transition-colors"
                           >
                             <Star
                               className={`w-5 h-5 ${
-                                lead.is_favorite ? "fill-accent text-accent" : "text-foreground/40"
+                                lead.is_favorite ? "fill-amber-400 text-amber-400" : "text-amber-100/40"
                               }`}
                             />
                           </button>
@@ -784,7 +586,7 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       </main>
     </div>
   );
