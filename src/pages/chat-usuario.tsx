@@ -228,24 +228,30 @@ export default function ChatUsuario() {
       const finalLeadId = Array.isArray(leadId) ? leadId[0] : leadId;
       console.log("🔍 [CHAT] Buscando lead con ID:", finalLeadId);
 
-      const lead = await leadService.getById(finalLeadId);
-      if (lead) {
-        console.log("✅ [CHAT] Lead cargado:", lead);
-        setCurrentLead(lead);
-        
-        // Facebook Pixel: Contact event (usuario inició chat)
-        if (typeof window !== 'undefined' && (window as any).fbq) {
-          (window as any).fbq('track', 'Contact', {
-            content_name: 'Chat Maestro Espiritual',
-            content_category: 'Conversación Iniciada'
-          });
-          console.log('✅ [FB PIXEL] Contact tracked - Chat iniciado');
+      try {
+        const lead = await leadService.getById(finalLeadId);
+        if (lead) {
+          console.log("✅ [CHAT] Lead cargado:", lead);
+          setCurrentLead(lead);
+          
+          // Facebook Pixel: Contact event (usuario inició chat)
+          if (typeof window !== 'undefined' && (window as any).fbq) {
+            (window as any).fbq('track', 'Contact', {
+              content_name: 'Chat Maestro Espiritual',
+              content_category: 'Conversación Iniciada'
+            });
+            console.log('✅ [FB PIXEL] Contact tracked - Chat iniciado');
+          }
+        } else {
+          console.error("❌ [CHAT] Lead no encontrado");
+          setError("No se encontró la consulta.");
         }
-      } else {
-        console.error("❌ [CHAT] Lead no encontrado");
-        setError("No se encontró la consulta.");
+      } catch (error) {
+        console.error("❌ [CHAT] Error cargando lead:", error);
+        setError("Error al cargar la consulta.");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     loadLead();
