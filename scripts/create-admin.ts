@@ -1,23 +1,29 @@
 /**
  * Script para crear usuario administrador
- * Ejecutar una sola vez para crear la cuenta admin
+ * Ejecutar: npx tsx scripts/create-admin.ts
  */
 
 import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
+import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-// Cargar variables de entorno desde .env.local
-dotenv.config({ path: resolve(__dirname, '../.env.local') });
+// Leer variables de entorno manualmente desde .env.local
+const envPath = resolve(__dirname, '../.env.local');
+const envContent = readFileSync(envPath, 'utf8');
+const envVars: Record<string, string> = {};
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+envContent.split('\n').forEach(line => {
+  const match = line.match(/^([^=]+)=(.+)$/);
+  if (match) {
+    envVars[match[1]] = match[2];
+  }
+});
+
+const supabaseUrl = envVars.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = envVars.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('❌ Error: Variables de entorno no encontradas');
-  console.error('Asegúrate que .env.local tenga:');
-  console.error('- NEXT_PUBLIC_SUPABASE_URL');
-  console.error('- SUPABASE_SERVICE_ROLE_KEY');
+  console.error('❌ Error: Variables de entorno no encontradas en .env.local');
   process.exit(1);
 }
 
