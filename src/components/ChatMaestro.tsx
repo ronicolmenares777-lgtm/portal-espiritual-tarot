@@ -113,16 +113,19 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
 
       const mediaType = file.type.startsWith("image/") ? "image" : "audio";
 
-      // Insertar mensaje en la base de datos
-      const { error: dbError } = await supabase.from("messages").insert({
-        lead_id: leadId,
-        media_url: publicUrl,
-        media_type: mediaType,
-        is_from_maestro: false,
-      });
+      // Subir archivo y crear mensaje
+      const { error: insertError } = await supabase
+        .from("messages")
+        .insert({
+          lead_id: leadId,
+          text: "",
+          media_url: mediaUrl,
+          media_type: file.type,
+          is_from_maestro: false,
+        });
 
-      if (dbError) {
-        console.error("Error insertando mensaje:", dbError);
+      if (insertError) {
+        console.error("Error insertando mensaje:", insertError);
       }
     } catch (err) {
       console.error("Error:", err);
