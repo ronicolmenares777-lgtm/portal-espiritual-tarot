@@ -92,24 +92,22 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
       const fileName = `${leadId}/${Date.now()}.${fileExt}`;
       
       // Intentar subir directamente
-      const { error: uploadError } = await supabase.storage
-        .from("chat-media")
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("lead-media")
         .upload(fileName, file, {
-          cacheControl: "3600",
-          upsert: false
+          contentType: file.type,
+          upsert: false,
         });
 
       if (uploadError) {
-        console.error("Error uploading file:", uploadError);
-        alert("Error al subir archivo. Por favor verifica las políticas del bucket en Supabase.");
-        setUploading(false);
-        return;
+        console.error("Error subiendo archivo:", uploadError);
+        throw uploadError;
       }
 
-      // Obtener URL pública
+      // Obtener URL pública del archivo subido
       const { data: { publicUrl } } = supabase.storage
-        .from("chat-media")
-        .getPublicUrl(fileName);
+        .from("lead-media")
+        .getPublicUrl(uploadData.path);
 
       const mediaType = file.type.startsWith("image/") ? "image" : "audio";
 
@@ -119,7 +117,7 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
         .insert({
           lead_id: leadId,
           text: "",
-          media_url: mediaUrl,
+          media_url: publicUrl,
           media_type: file.type,
           is_from_maestro: false,
         });
