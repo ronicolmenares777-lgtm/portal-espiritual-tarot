@@ -168,7 +168,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
           </motion.div>
 
           {/* Botón de WhatsApp */}
-          <a
+          <motion.a
             href="https://api.whatsapp.com/message/UVYGXIAXHYGTC1"
             target="_blank"
             rel="noopener noreferrer"
@@ -235,7 +235,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
                 />
               ))}
             </div>
-          </a>
+          </motion.a>
         </div>
 
         {/* Barra de progreso */}
