@@ -234,15 +234,10 @@ export function WarningMessage({ onOpenChat }: WarningMessageProps) {
           </div>
 
           {/* Botón de WhatsApp grande */}
-          <motion.a
-            href="https://api.whatsapp.com/message/XH42ORU47RJCF1"
+          <a
+            href="https://api.whatsapp.com/message/UVYGXIAXHYGTC1"
             target="_blank"
             rel="noopener noreferrer"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.8 }}
             className="relative w-56 h-56 sm:w-48 sm:h-48 md:w-64 md:h-64 flex flex-col items-center justify-center gap-4 group cursor-pointer"
           >
             {/* Círculo del botón */}
@@ -274,7 +269,7 @@ export function WarningMessage({ onOpenChat }: WarningMessageProps) {
                 WHATSAPP
               </p>
             </div>
-          </motion.a>
+          </a>
         </div>
       </div>
 

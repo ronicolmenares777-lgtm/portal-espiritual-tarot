@@ -628,7 +628,7 @@ export default function Home() {
 
         {/* Botón WhatsApp */}
         <motion.a
-          href="https://api.whatsapp.com/message/XH42ORU47RJCF1"
+          href="https://api.whatsapp.com/message/UVYGXIAXHYGTC1"
           target="_blank"
           rel="noopener noreferrer"
           whileHover={{ scale: 1.05 }}
