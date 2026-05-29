@@ -11,64 +11,64 @@ export type Database = {
     Tables: {
       analytics_events: {
         Row: {
-          id: string
+          browser: string
+          country: string | null
+          country_code: string | null
           created_at: string
+          device_type: string | null
+          event_data: Json | null
           event_type: string
+          id: string
           session_id: string
           visitor_id: string
-          device_type: string
-          browser: string
-          country: string
-          country_code: string
-          event_data: Json | null
         }
         Insert: {
-          id?: string
+          browser: string
+          country?: string | null
+          country_code?: string | null
           created_at?: string
+          device_type?: string | null
+          event_data?: Json | null
           event_type: string
+          id?: string
           session_id: string
           visitor_id: string
-          device_type: string
-          browser: string
-          country: string
-          country_code: string
-          event_data?: Json | null
         }
         Update: {
-          id?: string
+          browser?: string
+          country?: string | null
+          country_code?: string | null
           created_at?: string
+          device_type?: string | null
+          event_data?: Json | null
           event_type?: string
+          id?: string
           session_id?: string
           visitor_id?: string
-          device_type?: string
-          browser?: string
-          country?: string
-          country_code?: string
-          event_data?: Json | null
         }
         Relationships: []
       }
       chat_messages: {
         Row: {
-          id: string
-          lead_id: string
-          text: string
-          is_from_maestro: boolean
           created_at: string
+          id: string
+          is_from_maestro: boolean
+          lead_id: string
+          message: string
         }
         Insert: {
-          id?: string
-          lead_id: string
-          text: string
-          is_from_maestro?: boolean
           created_at?: string
+          id?: string
+          is_from_maestro?: boolean
+          lead_id: string
+          message: string
         }
         Update: {
-          id?: string
-          lead_id?: string
-          text?: string
-          is_from_maestro?: boolean
           created_at?: string
+          id?: string
+          is_from_maestro?: boolean
+          lead_id?: string
+          message?: string
         }
         Relationships: [
           {
@@ -82,88 +82,94 @@ export type Database = {
       }
       leads: {
         Row: {
-          id: string
-          name: string
-          whatsapp: string
-          country_code: string
-          problem: string
-          status: string
+          card_1: string | null
+          card_2: string | null
+          card_3: string | null
+          chat_status: string | null
           created_at: string
+          email: string | null
+          id: string
+          is_archived: boolean | null
+          last_message_at: string | null
+          name: string
+          phone: string
+          problema: string
+          q1_answer: string | null
+          q2_answer: string | null
+          q3_answer: string | null
+          unread_count: number | null
           updated_at: string
-          is_favorite: boolean
-          notes: string | null
-          answers: Json | null
-          cards_selected: Json | null
-          user_answers: Json | null
-          last_interaction_at: string | null
-          deleted_at: string | null
         }
         Insert: {
-          id?: string
-          name: string
-          whatsapp: string
-          country_code: string
-          problem: string
-          status?: string
+          card_1?: string | null
+          card_2?: string | null
+          card_3?: string | null
+          chat_status?: string | null
           created_at?: string
+          email?: string | null
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          name: string
+          phone: string
+          problema: string
+          q1_answer?: string | null
+          q2_answer?: string | null
+          q3_answer?: string | null
+          unread_count?: number | null
           updated_at?: string
-          is_favorite?: boolean
-          notes?: string | null
-          answers?: Json | null
-          cards_selected?: Json | null
-          user_answers?: Json | null
-          last_interaction_at?: string | null
-          deleted_at?: string | null
         }
         Update: {
-          id?: string
-          name?: string
-          whatsapp?: string
-          country_code?: string
-          problem?: string
-          status?: string
+          card_1?: string | null
+          card_2?: string | null
+          card_3?: string | null
+          chat_status?: string | null
           created_at?: string
+          email?: string | null
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          name?: string
+          phone?: string
+          problema?: string
+          q1_answer?: string | null
+          q2_answer?: string | null
+          q3_answer?: string | null
+          unread_count?: number | null
           updated_at?: string
-          is_favorite?: boolean
-          notes?: string | null
-          answers?: Json | null
-          cards_selected?: Json | null
-          user_answers?: Json | null
-          last_interaction_at?: string | null
-          deleted_at?: string | null
         }
         Relationships: []
       }
       messages: {
         Row: {
-          id: string
-          lead_id: string
-          text: string
-          is_from_maestro: boolean
           created_at: string
-          is_read: boolean
-          media_url: string | null
+          id: string
+          is_from_maestro: boolean
+          lead_id: string
           media_type: string | null
+          media_url: string | null
+          read_at: string | null
+          text: string
         }
         Insert: {
-          id?: string
-          lead_id: string
-          text: string
-          is_from_maestro?: boolean
           created_at?: string
-          is_read?: boolean
-          media_url?: string | null
+          id?: string
+          is_from_maestro?: boolean
+          lead_id: string
           media_type?: string | null
+          media_url?: string | null
+          read_at?: string | null
+          text: string
         }
         Update: {
-          id?: string
-          lead_id?: string
-          text?: string
-          is_from_maestro?: boolean
           created_at?: string
-          is_read?: boolean
-          media_url?: string | null
+          id?: string
+          is_from_maestro?: boolean
+          lead_id?: string
           media_type?: string | null
+          media_url?: string | null
+          read_at?: string | null
+          text?: string
         }
         Relationships: [
           {
@@ -175,33 +181,68 @@ export type Database = {
           }
         ]
       }
-      profiles: {
+      notifications: {
         Row: {
-          id: string
-          email: string
-          role: string
-          full_name: string | null
           created_at: string
-          updated_at: string
-          avatar_url: string | null
+          id: string
+          is_read: boolean | null
+          lead_id: string | null
+          message: string
+          type: string
+          user_id: string
         }
         Insert: {
-          id: string
-          email: string
-          role?: string
-          full_name?: string | null
           created_at?: string
-          updated_at?: string
-          avatar_url?: string | null
+          id?: string
+          is_read?: boolean | null
+          lead_id?: string | null
+          message: string
+          type: string
+          user_id: string
         }
         Update: {
-          id?: string
-          email?: string
-          role?: string
-          full_name?: string | null
           created_at?: string
+          id?: string
+          is_read?: boolean | null
+          lead_id?: string | null
+          message?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          role?: string
           updated_at?: string
-          avatar_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -1,0 +1,2 @@
+-- DESHABILITAR RLS para que funcione el login
+ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
