@@ -2,14 +2,18 @@
 // Types are generated from the Supabase database schema using the Supabase CLI.
  
 
-import type { Database as DB } from './database.types';
+import type { Database } from "./database.types";
 
-export type Database = DB;
+export type Tables<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Row"];
+export type Inserts<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Insert"];
+export type Updates<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Update"];
 
-// Re-export commonly used types for convenience
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
-export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T];
-export type Functions<T extends keyof Database['public']['Functions']> = Database['public']['Functions'][T];
+// Tipos específicos de las tablas
+export type Lead = Tables<"leads">;
+export type Profile = Tables<"profiles">;
+export type Message = Tables<"messages">;
+export type ChatMessage = Tables<"chat_messages">;
+export type AnalyticsEvent = Tables<"analytics_events">;
 
 // Project reference: lqyogtdozblvdkyhpxiq
 // Last updated: 2026-05-13T00:57:22.048588
