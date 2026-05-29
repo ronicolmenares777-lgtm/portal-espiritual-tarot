@@ -187,13 +187,15 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
 
     const { data } = supabase.storage.from("chat-media").getPublicUrl(fileName);
 
-    const { error: insertError } = await supabase.from("messages").insert({
-      lead_id: leadId,
-      text: "Audio",
-      is_from_maestro: false,
-      media_url: data.publicUrl,
-      media_type: "audio",
-    });
+    const { error: insertError } = await supabase
+      .from("messages")
+      .insert({
+        lead_id: leadId,
+        text: "", // Mensaje vacío cuando solo hay media
+        media_url: data.publicUrl,
+        media_type: audioBlob.type,
+        is_from_maestro: false,
+      });
 
     if (insertError) {
       console.error("❌ [USUARIO] Error guardando mensaje de audio:", insertError);

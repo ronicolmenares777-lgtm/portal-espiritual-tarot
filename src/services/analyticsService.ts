@@ -156,6 +156,7 @@ class AnalyticsService {
         session_id: this.sessionId,
         visitor_id: this.visitorId,
         device_type: this.getDeviceType(),
+        browser: navigator.userAgent || "unknown",
         country: this.countryData?.country || "Unknown",
         country_code: this.countryData?.country_code || "XX",
         event_data: Object.keys(metadata).length > 0 ? metadata : null,
