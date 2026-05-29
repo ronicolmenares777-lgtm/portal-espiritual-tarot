@@ -123,20 +123,42 @@ export default function Monitoreo() {
       query.lte("created_at", endDate.toISOString());
     }
 
-    const { data: events } = await query;
+    const { data: events, error } = await query;
+
+    if (error) {
+      console.error("❌ [STATS] Error cargando eventos:", error);
+      return;
+    }
 
     console.log("📊 [STATS] Eventos cargados:", events?.length || 0);
 
-    if (!events) return;
+    if (!events || events.length === 0) {
+      console.log("⚠️ [STATS] No hay eventos para este período");
+      setStats([]);
+      setTotalStats({
+        pageViews: 0,
+        formStarts: 0,
+        formCompletes: 0,
+        cardSelects: 0,
+        chatStarts: 0,
+        uniqueVisitors: 0,
+        mobileUsers: 0,
+        desktopUsers: 0,
+        browsers: [],
+        devicesByCountry: [],
+      });
+      return;
+    }
 
     const dailyMap = new Map<string, DailyStats>();
     const visitorSet = new Set<string>();
     let mobileCount = 0;
     let desktopCount = 0;
+    let tabletCount = 0;
 
     // Nuevas métricas de dispositivos
     const browserMap = new Map<string, number>();
-    const deviceCountryMap = new Map<string, { mobile: number; desktop: number; country: string }>();
+    const deviceCountryMap = new Map<string, { mobile: number; desktop: number; tablet: number; country: string }>();
 
     events.forEach((event) => {
       const date = new Date(event.created_at).toISOString().split("T")[0];
@@ -154,28 +176,36 @@ export default function Monitoreo() {
 
       const dayStats = dailyMap.get(date)!;
 
-      // Contar dispositivos en TODOS los eventos (no solo page_view)
+      // Contar dispositivos en TODOS los eventos
       if (event.device_type === "mobile") mobileCount++;
       if (event.device_type === "desktop") desktopCount++;
+      if (event.device_type === "tablet") tabletCount++;
       
-      // Visitantes únicos solo en page_view
-      if (event.event_type === "page_view") {
-        visitorSet.add(event.visitor_id);
+      // Visitantes únicos (basado en visitor_id o session_id)
+      const visitorKey = event.visitor_id || event.session_id;
+      if (visitorKey) {
+        visitorSet.add(visitorKey);
       }
       
-      // Métricas de navegador (solo eventos con browser disponible)
-      if (event.browser) {
+      // Métricas de navegador (todos los eventos que tengan browser)
+      if (event.browser && event.browser !== "Unknown") {
         browserMap.set(event.browser, (browserMap.get(event.browser) || 0) + 1);
       }
       
       // Dispositivos por país (todos los eventos)
       const countryKey = event.country || "Unknown";
       if (!deviceCountryMap.has(countryKey)) {
-        deviceCountryMap.set(countryKey, { mobile: 0, desktop: 0, country: event.country || "Unknown" });
+        deviceCountryMap.set(countryKey, { 
+          mobile: 0, 
+          desktop: 0, 
+          tablet: 0,
+          country: event.country || "Unknown" 
+        });
       }
       const countryData = deviceCountryMap.get(countryKey)!;
       if (event.device_type === "mobile") countryData.mobile++;
       if (event.device_type === "desktop") countryData.desktop++;
+      if (event.device_type === "tablet") countryData.tablet++;
 
       switch (event.event_type) {
         case "page_view":
@@ -199,6 +229,13 @@ export default function Monitoreo() {
     const statsArray = Array.from(dailyMap.values());
     setStats(statsArray);
 
+    const browsers = Array.from(browserMap.entries())
+      .map(([browser, count]) => ({ browser, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const devicesByCountry = Array.from(deviceCountryMap.values())
+      .sort((a, b) => (b.mobile + b.desktop + b.tablet) - (a.mobile + a.desktop + a.tablet));
+
     setTotalStats({
       pageViews: events.filter((e) => e.event_type === "page_view").length,
       formStarts: events.filter((e) => e.event_type === "form_start").length,
@@ -208,14 +245,18 @@ export default function Monitoreo() {
       uniqueVisitors: visitorSet.size,
       mobileUsers: mobileCount,
       desktopUsers: desktopCount,
-      browsers: Array.from(browserMap.entries())
-        .map(([browser, count]) => ({ browser, count }))
-        .sort((a, b) => b.count - a.count),
-      devicesByCountry: Array.from(deviceCountryMap.values())
-        .sort((a, b) => (b.mobile + b.desktop) - (a.mobile + a.desktop)),
+      browsers: browsers.length > 0 ? browsers : undefined,
+      devicesByCountry: devicesByCountry.length > 0 ? devicesByCountry : undefined,
     });
 
-    console.log("✅ [STATS] Stats actualizados");
+    console.log("✅ [STATS] Métricas actualizadas:", {
+      pageViews: events.filter((e) => e.event_type === "page_view").length,
+      formStarts: events.filter((e) => e.event_type === "form_start").length,
+      uniqueVisitors: visitorSet.size,
+      mobile: mobileCount,
+      desktop: desktopCount,
+      browsers: browsers.length,
+    });
   };
 
   const loadCountryStats = async () => {
