@@ -225,7 +225,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!profile) return null;
 
@@ -265,10 +265,15 @@ export const checkAdminAuth = async () => {
       .from("profiles")
       .select("role, full_name, email")
       .eq("id", session.user.id)
-      .single();
+      .maybeSingle();
 
     if (profileError) {
       console.error("Error obteniendo perfil:", profileError);
+      return { isAuthenticated: true, isAdmin: false, user: session.user };
+    }
+
+    if (!profile) {
+      console.warn("Perfil no encontrado para usuario:", session.user.id);
       return { isAuthenticated: true, isAdmin: false, user: session.user };
     }
 
