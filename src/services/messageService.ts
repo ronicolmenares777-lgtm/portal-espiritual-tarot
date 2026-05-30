@@ -13,7 +13,7 @@ export const messageService = {
   },
 
   async sendMessage(leadId: string, text: string, isFromMaestro: boolean) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("messages")
       .insert({
         lead_id: leadId,

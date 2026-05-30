@@ -190,8 +190,10 @@ export default function ChatAdmin() {
     const messageText = newMessage;
     setNewMessage("");
 
+    const leadId = Array.isArray(id) ? id[0] : id;
+
     const { error } = await supabase.from("messages").insert({
-      lead_id: id,
+      lead_id: leadId,
       topic: "chat",
       extension: "admin",
       text: messageText,
