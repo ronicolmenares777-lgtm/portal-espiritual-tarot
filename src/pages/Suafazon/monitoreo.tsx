@@ -361,7 +361,7 @@ export default function Monitoreo() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
-                onClick={() => router.push("/Suafazon")}
+                onClick={() => router.push("/Suafazon/dashboard")}
                 variant="ghost"
                 size="sm"
                 className="text-gray-400 hover:text-yellow-500"
