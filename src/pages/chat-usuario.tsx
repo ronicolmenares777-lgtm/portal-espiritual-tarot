@@ -239,6 +239,8 @@ export default function ChatUsuario() {
         .from("messages")
         .insert({
           lead_id: finalLeadId,
+          topic: "chat",
+          extension: "user",
           text: messageToSend,
           is_from_maestro: false,
         })
@@ -293,10 +295,12 @@ export default function ChatUsuario() {
         const base64String = reader.result as string;
         console.log("✅ [USER-UPLOAD] Archivo convertido a base64");
 
-        const messageContent = `[IMG]${base64String}`;
+        const messageContent = `[IMAGEN]${base64String}`;
 
         const { data, error: dbError } = await supabase.from("messages").insert({
           lead_id: finalLeadId,
+          topic: "chat",
+          extension: "user",
           text: messageContent,
           is_from_maestro: false,
         }).select();
@@ -384,6 +388,8 @@ export default function ChatUsuario() {
 
         const { data, error: dbError } = await supabase.from("messages").insert({
           lead_id: finalLeadId,
+          topic: "chat",
+          extension: "user",
           text: messageContent,
           is_from_maestro: false,
         }).select();

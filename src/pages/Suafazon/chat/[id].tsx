@@ -191,7 +191,9 @@ export default function ChatAdmin() {
     setNewMessage("");
 
     const { error } = await supabase.from("messages").insert({
-      lead_id: id as string,
+      lead_id: id,
+      topic: "chat",
+      extension: "admin",
       text: messageText,
       is_from_maestro: true,
     });
@@ -210,6 +212,8 @@ export default function ChatAdmin() {
     setIsSending(true);
     const { error } = await supabase.from("messages").insert({
       lead_id: id,
+      topic: "chat",
+      extension: "admin",
       text: newMessage,
       is_from_maestro: true,
     });
@@ -284,6 +288,8 @@ export default function ChatAdmin() {
 
       const { error: messageError } = await supabase.from("messages").insert({
         lead_id: id,
+        topic: "chat",
+        extension: "admin",
         text: "",
         media_url: data.publicUrl,
         media_type: "image",
@@ -331,6 +337,8 @@ export default function ChatAdmin() {
 
     const { error: messageError } = await supabase.from("messages").insert({
       lead_id: id,
+      topic: "chat",
+      extension: "admin",
       text: "",
       media_url: publicUrl,
       media_type: "image",
@@ -398,6 +406,8 @@ export default function ChatAdmin() {
 
       const { error: messageError } = await supabase.from("messages").insert({
         lead_id: id,
+        topic: "chat",
+        extension: "admin",
         text: "",
         media_url: data.publicUrl,
         media_type: "audio",
@@ -444,6 +454,8 @@ export default function ChatAdmin() {
 
     const { error: messageError } = await supabase.from("messages").insert({
       lead_id: id,
+      topic: "chat",
+      extension: "admin",
       text: "",
       media_url: publicUrl,
       media_type: "audio",

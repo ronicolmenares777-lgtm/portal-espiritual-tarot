@@ -60,6 +60,8 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
 
     const { error } = await supabase.from("messages").insert({
       lead_id: leadId,
+      topic: "chat",
+      extension: "user",
       text: messageText,
       is_from_maestro: false,
     });
@@ -116,6 +118,8 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
         .from("messages")
         .insert({
           lead_id: leadId,
+          topic: "chat",
+          extension: "user",
           text: "",
           media_url: publicUrl,
           media_type: file.type,
@@ -192,6 +196,8 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
       .from("messages")
       .insert({
         lead_id: leadId,
+        topic: "chat",
+        extension: "user",
         text: "", // Mensaje vacío cuando solo hay media
         media_url: data.publicUrl,
         media_type: audioBlob.type,
@@ -225,6 +231,8 @@ export function ChatMaestro({ leadId }: ChatMaestroProps) {
 
         const { data, error: dbError } = await supabase.from("messages").insert({
           lead_id: leadId,
+          topic: "chat",
+          extension: "user",
           text: messageContent,
           is_from_maestro: false,
         }).select();
