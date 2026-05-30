@@ -174,32 +174,53 @@ export type Database = {
         Row: {
           id: string
           lead_id: string
+          topic: string
           text: string | null
           is_from_maestro: boolean
+          extension: string
           created_at: string
+          payload: Json | null
+          event: string | null
           is_read: boolean | null
           media_type: string | null
+          private: boolean | null
           media_url: string | null
+          updated_at: string
+          inserted_at: string
         }
         Insert: {
           id?: string
           lead_id: string
+          topic: string
           text?: string | null
           is_from_maestro?: boolean
+          extension: string
           created_at?: string
+          payload?: Json | null
+          event?: string | null
           is_read?: boolean | null
           media_type?: string | null
+          private?: boolean | null
           media_url?: string | null
+          updated_at?: string
+          inserted_at?: string
         }
         Update: {
           id?: string
           lead_id?: string
+          topic?: string
           text?: string | null
           is_from_maestro?: boolean
+          extension?: string
           created_at?: string
+          payload?: Json | null
+          event?: string | null
           is_read?: boolean | null
           media_type?: string | null
+          private?: boolean | null
           media_url?: string | null
+          updated_at?: string
+          inserted_at?: string
         }
         Relationships: [
           {
