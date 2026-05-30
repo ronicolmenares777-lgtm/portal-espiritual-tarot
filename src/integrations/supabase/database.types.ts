@@ -6,47 +6,37 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       analytics_events: {
         Row: {
-          browser: string
-          country: string | null
-          country_code: string | null
           created_at: string
-          device_type: string | null
           event_data: Json | null
           event_type: string
           id: string
-          session_id: string
-          visitor_id: string
+          lead_id: string | null
+          user_agent: string | null
+          user_id: string | null
         }
         Insert: {
-          browser: string
-          country?: string | null
-          country_code?: string | null
           created_at?: string
-          device_type?: string | null
           event_data?: Json | null
           event_type: string
           id?: string
-          session_id: string
-          visitor_id: string
+          lead_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Update: {
-          browser?: string
-          country?: string | null
-          country_code?: string | null
           created_at?: string
-          device_type?: string | null
           event_data?: Json | null
           event_type?: string
           id?: string
-          session_id?: string
-          visitor_id?: string
+          lead_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
-        Relationships: []
       }
       chat_messages: {
         Row: {
@@ -54,91 +44,120 @@ export type Database = {
           id: string
           is_from_maestro: boolean
           lead_id: string
-          message: string
+          media_type: string | null
+          media_url: string | null
+          read_at: string | null
+          text: string
         }
         Insert: {
           created_at?: string
           id?: string
           is_from_maestro?: boolean
           lead_id: string
-          message: string
+          media_type?: string | null
+          media_url?: string | null
+          read_at?: string | null
+          text: string
         }
         Update: {
           created_at?: string
           id?: string
           is_from_maestro?: boolean
           lead_id?: string
-          message?: string
+          media_type?: string | null
+          media_url?: string | null
+          read_at?: string | null
+          text?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "chat_messages_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          }
-        ]
       }
       leads: {
         Row: {
-          card_1: string | null
-          card_2: string | null
-          card_3: string | null
-          chat_status: string | null
+          answers: Json | null
+          card_1: string
+          card_2: string
+          card_3: string
+          cards_selected: Json | null
+          chat_status: string
+          country_code: string
           created_at: string
-          email: string | null
+          deleted_at: string | null
+          email: string
           id: string
-          is_archived: boolean | null
-          last_message_at: string | null
+          is_archived: boolean
+          is_favorite: boolean
+          last_interaction_at: string | null
+          last_message_at: string
           name: string
+          notes: string | null
           phone: string
-          problema: string
-          q1_answer: string | null
-          q2_answer: string | null
-          q3_answer: string | null
-          unread_count: number | null
+          problem: string
+          q1_answer: string
+          q2_answer: string
+          q3_answer: string
+          status: string
+          unread_count: number
           updated_at: string
+          user_answers: Json | null
+          whatsapp: string
         }
         Insert: {
-          card_1?: string | null
-          card_2?: string | null
-          card_3?: string | null
-          chat_status?: string | null
+          answers?: Json | null
+          card_1: string
+          card_2: string
+          card_3: string
+          cards_selected?: Json | null
+          chat_status?: string
+          country_code: string
           created_at?: string
-          email?: string | null
+          deleted_at?: string | null
+          email: string
           id?: string
-          is_archived?: boolean | null
-          last_message_at?: string | null
+          is_archived?: boolean
+          is_favorite?: boolean
+          last_interaction_at?: string | null
+          last_message_at?: string
           name: string
+          notes?: string | null
           phone: string
-          problema: string
-          q1_answer?: string | null
-          q2_answer?: string | null
-          q3_answer?: string | null
-          unread_count?: number | null
+          problem: string
+          q1_answer: string
+          q2_answer: string
+          q3_answer: string
+          status?: string
+          unread_count?: number
           updated_at?: string
+          user_answers?: Json | null
+          whatsapp: string
         }
         Update: {
-          card_1?: string | null
-          card_2?: string | null
-          card_3?: string | null
-          chat_status?: string | null
+          answers?: Json | null
+          card_1?: string
+          card_2?: string
+          card_3?: string
+          cards_selected?: Json | null
+          chat_status?: string
+          country_code?: string
           created_at?: string
-          email?: string | null
+          deleted_at?: string | null
+          email?: string
           id?: string
-          is_archived?: boolean | null
-          last_message_at?: string | null
+          is_archived?: boolean
+          is_favorite?: boolean
+          last_interaction_at?: string | null
+          last_message_at?: string
           name?: string
+          notes?: string | null
           phone?: string
-          problema?: string
-          q1_answer?: string | null
-          q2_answer?: string | null
-          q3_answer?: string | null
-          unread_count?: number | null
+          problem?: string
+          q1_answer?: string
+          q2_answer?: string
+          q3_answer?: string
+          status?: string
+          unread_count?: number
           updated_at?: string
+          user_answers?: Json | null
+          whatsapp?: string
         }
-        Relationships: []
       }
       messages: {
         Row: {
@@ -171,80 +190,41 @@ export type Database = {
           read_at?: string | null
           text?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      notifications: {
-        Row: {
-          created_at: string
-          id: string
-          is_read: boolean | null
-          lead_id: string | null
-          message: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          lead_id?: string | null
-          message: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          lead_id?: string | null
-          message?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          }
-        ]
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           created_at: string
           email: string
-          full_name: string | null
+          full_name: string
           id: string
+          phone: string | null
           role: string
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email: string
-          full_name?: string | null
+          full_name: string
           id: string
+          phone?: string | null
           role?: string
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string
-          full_name?: string | null
+          full_name?: string
           id?: string
+          phone?: string | null
           role?: string
           updated_at?: string
         }
-        Relationships: []
       }
     }
     Views: {
@@ -256,90 +236,5 @@ export type Database = {
     Enums: {
       [_ in never]: never
     }
-    CompositeTypes: {
-      [_ in never]: never
-    }
   }
 }
-
-type PublicSchema = Database[Extract<keyof Database, "public">]
-
-export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
-    | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
-    : never
