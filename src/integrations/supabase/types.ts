@@ -17,3 +17,4 @@ export type Profile = Tables<"profiles">;
 export type Message = Tables<"messages">;
 export type ChatMessage = Tables<"chat_messages">;
 export type AnalyticsEvent = Tables<"analytics_events">;
+export type TarotCard = Tables<"tarot_cards">;

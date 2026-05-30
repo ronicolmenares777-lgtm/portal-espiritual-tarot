@@ -11,219 +11,254 @@ export interface Database {
     Tables: {
       analytics_events: {
         Row: {
-          created_at: string
-          event_data: Json | null
-          event_type: string
           id: string
-          lead_id: string | null
+          event_type: string
+          session_id: string
           user_agent: string | null
-          user_id: string | null
+          device_type: string | null
+          browser: string | null
+          page_path: string | null
+          referrer: string | null
+          event_data: Json | null
+          created_at: string | null
+          country: string | null
+          country_code: string | null
+          visitor_id: string | null
         }
         Insert: {
-          created_at?: string
-          event_data?: Json | null
-          event_type: string
           id?: string
-          lead_id?: string | null
+          event_type: string
+          session_id: string
           user_agent?: string | null
-          user_id?: string | null
+          device_type?: string | null
+          browser?: string | null
+          page_path?: string | null
+          referrer?: string | null
+          event_data?: Json | null
+          created_at?: string | null
+          country?: string | null
+          country_code?: string | null
+          visitor_id?: string | null
         }
         Update: {
-          created_at?: string
-          event_data?: Json | null
-          event_type?: string
           id?: string
-          lead_id?: string | null
+          event_type?: string
+          session_id?: string
           user_agent?: string | null
-          user_id?: string | null
+          device_type?: string | null
+          browser?: string | null
+          page_path?: string | null
+          referrer?: string | null
+          event_data?: Json | null
+          created_at?: string | null
+          country?: string | null
+          country_code?: string | null
+          visitor_id?: string | null
         }
       }
       chat_messages: {
         Row: {
-          created_at: string
           id: string
-          is_from_maestro: boolean
           lead_id: string
-          media_type: string | null
+          text: string | null
           media_url: string | null
-          read_at: string | null
-          text: string
+          media_type: string | null
+          is_from_maestro: boolean
+          is_read: boolean | null
+          created_at: string | null
         }
         Insert: {
-          created_at?: string
           id?: string
-          is_from_maestro?: boolean
           lead_id: string
-          media_type?: string | null
+          text?: string | null
           media_url?: string | null
-          read_at?: string | null
-          text: string
+          media_type?: string | null
+          is_from_maestro?: boolean
+          is_read?: boolean | null
+          created_at?: string | null
         }
         Update: {
-          created_at?: string
           id?: string
-          is_from_maestro?: boolean
           lead_id?: string
-          media_type?: string | null
+          text?: string | null
           media_url?: string | null
-          read_at?: string | null
-          text?: string
+          media_type?: string | null
+          is_from_maestro?: boolean
+          is_read?: boolean | null
+          created_at?: string | null
         }
       }
       leads: {
         Row: {
-          answers: Json | null
-          card_1: string
-          card_2: string
-          card_3: string
-          cards_selected: Json | null
-          chat_status: string
-          country_code: string
-          created_at: string
-          deleted_at: string | null
-          email: string
           id: string
-          is_archived: boolean
-          is_favorite: boolean
-          last_interaction_at: string | null
-          last_message_at: string
           name: string
-          notes: string | null
-          phone: string
-          problem: string
-          q1_answer: string
-          q2_answer: string
-          q3_answer: string
-          status: string
-          unread_count: number
-          updated_at: string
-          user_answers: Json | null
           whatsapp: string
+          country_code: string | null
+          problem: string
+          status: string | null
+          tarot_card_name: string | null
+          tarot_card_image: string | null
+          tarot_interpretation: string | null
+          is_favorite: boolean | null
+          notes: string | null
+          tags: string[] | null
+          last_interaction_at: string | null
+          created_at: string | null
+          updated_at: string | null
+          deleted_at: string | null
+          answers: Json | null
+          selected_card_id: string | null
+          cards_selected: string[] | null
+          user_answers: Json | null
+          classification: string | null
         }
         Insert: {
-          answers?: Json | null
-          card_1: string
-          card_2: string
-          card_3: string
-          cards_selected?: Json | null
-          chat_status?: string
-          country_code: string
-          created_at?: string
-          deleted_at?: string | null
-          email: string
           id?: string
-          is_archived?: boolean
-          is_favorite?: boolean
-          last_interaction_at?: string | null
-          last_message_at?: string
           name: string
-          notes?: string | null
-          phone: string
-          problem: string
-          q1_answer: string
-          q2_answer: string
-          q3_answer: string
-          status?: string
-          unread_count?: number
-          updated_at?: string
-          user_answers?: Json | null
           whatsapp: string
+          country_code?: string | null
+          problem: string
+          status?: string | null
+          tarot_card_name?: string | null
+          tarot_card_image?: string | null
+          tarot_interpretation?: string | null
+          is_favorite?: boolean | null
+          notes?: string | null
+          tags?: string[] | null
+          last_interaction_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+          deleted_at?: string | null
+          answers?: Json | null
+          selected_card_id?: string | null
+          cards_selected?: string[] | null
+          user_answers?: Json | null
+          classification?: string | null
         }
         Update: {
-          answers?: Json | null
-          card_1?: string
-          card_2?: string
-          card_3?: string
-          cards_selected?: Json | null
-          chat_status?: string
-          country_code?: string
-          created_at?: string
-          deleted_at?: string | null
-          email?: string
           id?: string
-          is_archived?: boolean
-          is_favorite?: boolean
-          last_interaction_at?: string | null
-          last_message_at?: string
           name?: string
-          notes?: string | null
-          phone?: string
-          problem?: string
-          q1_answer?: string
-          q2_answer?: string
-          q3_answer?: string
-          status?: string
-          unread_count?: number
-          updated_at?: string
-          user_answers?: Json | null
           whatsapp?: string
+          country_code?: string | null
+          problem?: string
+          status?: string | null
+          tarot_card_name?: string | null
+          tarot_card_image?: string | null
+          tarot_interpretation?: string | null
+          is_favorite?: boolean | null
+          notes?: string | null
+          tags?: string[] | null
+          last_interaction_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+          deleted_at?: string | null
+          answers?: Json | null
+          selected_card_id?: string | null
+          cards_selected?: string[] | null
+          user_answers?: Json | null
+          classification?: string | null
         }
       }
       messages: {
         Row: {
-          created_at: string
           id: string
-          is_from_maestro: boolean
           lead_id: string
+          text: string | null
+          is_from_maestro: boolean
+          created_at: string
+          is_read: boolean | null
           media_type: string | null
           media_url: string | null
-          read_at: string | null
-          text: string
         }
         Insert: {
-          created_at?: string
           id?: string
-          is_from_maestro?: boolean
           lead_id: string
+          text?: string | null
+          is_from_maestro?: boolean
+          created_at?: string
+          is_read?: boolean | null
           media_type?: string | null
           media_url?: string | null
-          read_at?: string | null
-          text: string
         }
         Update: {
-          created_at?: string
           id?: string
-          is_from_maestro?: boolean
           lead_id?: string
+          text?: string | null
+          is_from_maestro?: boolean
+          created_at?: string
+          is_read?: boolean | null
           media_type?: string | null
           media_url?: string | null
-          read_at?: string | null
-          text?: string
         }
       }
       profiles: {
         Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string
-          email: string
-          full_name: string
           id: string
+          email: string | null
+          full_name: string | null
+          avatar_url: string | null
+          created_at: string | null
+          updated_at: string | null
           phone: string | null
-          role: string
-          updated_at: string
+          bio: string | null
+          role: string | null
         }
         Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          email: string
-          full_name: string
           id: string
+          email?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          updated_at?: string | null
           phone?: string | null
-          role?: string
-          updated_at?: string
+          bio?: string | null
+          role?: string | null
         }
         Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          email?: string
-          full_name?: string
           id?: string
+          email?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          updated_at?: string | null
           phone?: string | null
-          role?: string
-          updated_at?: string
+          bio?: string | null
+          role?: string | null
+        }
+      }
+      tarot_cards: {
+        Row: {
+          id: string
+          name: string
+          image_url: string
+          meaning_love: string | null
+          meaning_work: string | null
+          meaning_health: string | null
+          meaning_money: string | null
+          keywords: string[] | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          image_url: string
+          meaning_love?: string | null
+          meaning_work?: string | null
+          meaning_health?: string | null
+          meaning_money?: string | null
+          keywords?: string[] | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          image_url?: string
+          meaning_love?: string | null
+          meaning_work?: string | null
+          meaning_health?: string | null
+          meaning_money?: string | null
+          keywords?: string[] | null
+          created_at?: string | null
         }
       }
     }
